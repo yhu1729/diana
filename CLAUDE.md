@@ -97,6 +97,9 @@ doc/                  api, development, verification (trust statement + generate
   `-DDIANA_BUILD_PYTHON=OFF` for a C-only build, as the C-only CI jobs do)
 - C format: `uv sync --group lint && git ls-files '*.c' '*.h' | xargs uv run clang-format -i` (`--dry-run --Werror` to check)
 - Python: `uv sync --group test --group lint && uv run pytest && uv run ruff check python` (the `pyproject.toml` is at the repo root so the sdist can carry the C sources; package code lives in `python/src/diana`)
+- Wheel: `uv run script/check_wheel.py` builds and checks static and shared installed wheels;
+  shared wheels bundle an unversioned runtime beside the extension. Standalone CMake builds
+  retain library versioning and respect `CMAKE_INSTALL_INCLUDEDIR` in the exported target.
 - Coverage: `uv sync --group test --group coverage && uv run pytest --cov=diana`; C and extension coverage via gcovr as in the `coverage_c`/`coverage_python` CI jobs
 - Lean: `cd verification/lean && lake exe cache get && lake build` (Mathlib pinned by `lake-manifest.json`)
 - Rocq: `cd verification/rocq && make && make check` (inside the opam switch, see `CONTRIBUTING.md`).
@@ -106,6 +109,8 @@ doc/                  api, development, verification (trust statement + generate
 - Frama-C: `script/run_framac.sh` (all goals must prove; `script/check_framac.sh` on the report)
 - Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/bisect_aarch64_macos.v src/bisect.c` **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
 - Spec gate: `uv run script/check_spec.py --run --strict` (runs both provers' check files, `--prover lean|rocq` to select one and rewrites the generated report at the end of `doc/verification.md`; commit it, CI does not regenerate it; `--no-report` to leave it alone)
+  Lean CI uses `--run --strict --prover lean --no-report`, so missing Lean proofs fail the gate
+  without requiring Rocq-only layers.
 
 ## Status
 
