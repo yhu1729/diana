@@ -1,0 +1,41 @@
+---
+# Checks consistent with cmake/warning.cmake. The verified kernels must stay
+# C11, allocation-free and libm-free, so the selected checks target the
+# properties the strict warning set cannot express; see doc/development.md.
+Checks: >
+  -*,
+  bugprone-*,
+  cert-*,
+  clang-analyzer-*,
+  misc-*,
+  performance-*,
+  readability-*,
+  -bugprone-easily-swappable-parameters,
+  -readability-identifier-length,
+  -readability-magic-numbers,
+  -readability-function-cognitive-complexity,
+  -readability-braces-around-statements,
+  -readability-isolate-declaration,
+  -misc-include-cleaner,
+  -cert-dcl37-c,
+  -cert-dcl51-cpp,
+  -misc-redundant-expression,
+  -readability-uppercase-literal-suffix,
+  -readability-trailing-comma,
+  -readability-math-missing-parentheses,
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+  -bugprone-signed-bitwise
+WarningsAsErrors: ''
+HeaderFilterRegex: '(include/diana|src)/.*\.h$'
+FormatStyle: file
+CheckOptions:
+  - key: readability-identifier-naming.FunctionCase
+    value: lower_case
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: readability-identifier-naming.MacroDefinitionCase
+    value: UPPER_CASE
+  - key: readability-identifier-naming.TypedefCase
+    value: lower_case
+  - key: readability-identifier-naming.EnumConstantCase
+    value: UPPER_CASE
