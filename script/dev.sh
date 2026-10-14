@@ -59,9 +59,10 @@ dev_config() {
         CMAKE_GENERATOR=Ninja
         export CMAKE_GENERATOR
     fi
-    cmake -S . -B "$build_dir" -DCMAKE_BUILD_TYPE="$build_type" -DDIANA_BUILD_TEST=ON \
-        -DDIANA_SANITIZER="$sanitizer" -DDIANA_WERROR=ON "$@"
     uv_sync
+    cmake -S . -B "$build_dir" -DCMAKE_BUILD_TYPE="$build_type" -DDIANA_BUILD_TEST=ON \
+        -DDIANA_SANITIZER="$sanitizer" -DDIANA_WERROR=ON \
+        -DPython_EXECUTABLE="$PWD/.venv/bin/python" "$@"
 }
 
 dev_build() {
@@ -107,6 +108,9 @@ run_tidy() {
     }
     [ -f "$build_dir/compile_commands.json" ] ||
         fail "$build_dir/compile_commands.json is missing; run script/dev.sh config"
+    grep -q 'python/ext/' "$build_dir/compile_commands.json" ||
+        fail "$build_dir/compile_commands.json has no entry for python/ext;" \
+            "reconfigure with DIANA_BUILD_PYTHON=ON (script/dev.sh config)"
     "$tidy" --version | head -n 1
     git ls-files 'src/*.c' 'src/wrapper/*.c' 'test/c/*.c' 'test/install/*.c' \
         'python/ext/*.c' |
