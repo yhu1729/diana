@@ -10,6 +10,10 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+if(DEFINED SKBUILD)
+    set(DIANA_BUILD_PYTHON ON CACHE BOOL "" FORCE)
+endif()
+
 option(DIANA_BUILD_TEST "Build the C test suite" OFF)
 option(DIANA_SANITIZER "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 option(DIANA_WERROR "Treat warnings as errors" OFF)
@@ -95,4 +99,17 @@ if(DIANA_BUILD_TEST)
                     --test-command consume)
         set_tests_properties(find_package PROPERTIES FIXTURES_REQUIRED diana_install)
     endif()
+endif()
+
+option(DIANA_BUILD_PYTHON "Build the CPython extension module" OFF)
+if(DIANA_BUILD_PYTHON)
+    find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
+    Python_add_library(_diana MODULE WITH_SOABI
+        python/ext/module.c
+        python/ext/convert.c
+        python/ext/status.c
+        python/ext/bisect.c)
+    target_link_libraries(_diana PRIVATE diana::diana)
+    diana_set_strict_flag(_diana)
+    install(TARGETS _diana DESTINATION diana)
 endif()
