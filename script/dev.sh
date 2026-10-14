@@ -75,7 +75,7 @@ dev_test() {
     need_build
     need_venv
     ctest --test-dir "$build_dir" --output-on-failure
-    uv run --no-sync pytest -q
+    uv run --no-sync pytest -q -v
     uv run --no-sync ruff check python test/python script
     uv run --no-sync ruff format --check python test/python script
     find include src test/c test/install python/ext -name '*.[ch]' -print0 |
