@@ -39,6 +39,17 @@ static double recorded_sq(double x, void *ctx) {
   return x * x - 2.0;
 }
 
+static double nan_inside(double x, void *ctx) {
+  (void)ctx;
+  if (x == 0.0) {
+    return -1.0;
+  }
+  if (x == 2.0) {
+    return 1.0;
+  }
+  return (double)NAN;
+}
+
 static void test_state_machine(void) {
   diana_bisect_state s;
   diana_status st;
@@ -128,6 +139,8 @@ static void test_error(void) {
                   DIANA_ERR_ARG);
   CHECK_EQ_STATUS(diana_bisect_init(&s, 0.0, 1.0, (double)NAN, 1.0, 0.0, 10u),
                   DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(diana_bisect_init(&s, 0.0, 1.0, -1.0, (double)NAN, 0.0, 10u),
+                  DIANA_ERR_ARG);
   CHECK_EQ_STATUS(diana_bisect_init(&s, 0.0, 1.0, -1.0, 1.0, (double)NAN, 10u),
                   DIANA_ERR_ARG);
   CHECK_EQ_STATUS(diana_bisect_init(&s, -DBL_MAX, DBL_MAX, -1.0, 1.0, 0.0, 10u),
@@ -169,6 +182,26 @@ static void test_error(void) {
       diana_bisect(sq_minus_2, 0, 1.0, 0.0, 1e-12, 5u, &root, &iter),
       DIANA_ERR_ARG);
   CHECK(iter == 0u);
+
+  /* non-finite callback value at the midpoint: the step error reaches the
+     caller and *root is untouched */
+  root = -1.0;
+  iter = 99u;
+  CHECK_EQ_STATUS(
+      diana_bisect(nan_inside, 0, 0.0, 2.0, 1e-12, 100u, &root, &iter),
+      DIANA_ERR_ARG);
+  CHECK(iter == 0u);
+  CHECK(root == -1.0);
+
+  /* iter is optional */
+  root = 0.0;
+  CHECK_EQ_STATUS(
+      diana_bisect(sq_minus_2, 0, 0.0, 2.0, 1e-12, 100u, &root, (unsigned *)0),
+      DIANA_OK);
+  CHECK(fabs(root - sqrt(2.0)) <= 1e-12);
+  CHECK_EQ_STATUS(diana_bisect((diana_bisect_fn)0, 0, 0.0, 2.0, 1e-12, 5u,
+                               &root, (unsigned *)0),
+                  DIANA_ERR_ARG);
 }
 
 static void test_large_magnitude(void) {
@@ -219,6 +252,59 @@ static void test_worst_case_step_count(void) {
   CHECK_EQ_STATUS(st, DIANA_OK);
   CHECK(s.iter == 2098u);
   CHECK(s.a <= target && target <= s.b);
+}
+
+static void test_init_immediate_ok(void) {
+  diana_bisect_state s;
+  double a, b;
+  double root = 0.0, width = -1.0;
+
+  /* the initial bracket already meets the tolerance */
+  CHECK_EQ_STATUS(diana_bisect_init(&s, 0.0, 1.0, -1.0, 1.0, 2.0, 10u),
+                  DIANA_OK);
+  CHECK(s.iter == 0u);
+  CHECK_EQ_STATUS(diana_bisect_result(&s, &root, &width), DIANA_OK);
+  CHECK(0.0 <= root && root <= 1.0);
+  CHECK(width == 1.0);
+
+  /* adjacent endpoints, tol == 0: the midpoint rounds onto b */
+  a = nextafter(1.0, HUGE_VAL);
+  b = nextafter(a, HUGE_VAL);
+  CHECK_EQ_STATUS(diana_bisect_init(&s, a, b, -1.0, 1.0, 0.0, 10u), DIANA_OK);
+  CHECK(s.iter == 0u);
+  CHECK(s.a == a && s.b == b);
+  CHECK(s.x == b);
+
+  /* below the binade boundary the midpoint rounds onto a instead */
+  b = nextafter(1.0, 0.0);
+  a = nextafter(b, 0.0);
+  CHECK_EQ_STATUS(diana_bisect_init(&s, a, b, -1.0, 1.0, 0.0, 10u), DIANA_OK);
+  CHECK(s.iter == 0u);
+  CHECK(s.a == a && s.b == b);
+  CHECK(s.x == a);
+}
+
+static void test_step_stagnation(void) {
+  diana_bisect_state s;
+  double a = nextafter(nextafter(1.0, 0.0), 0.0);
+  double b = 1.0;
+  double x;
+
+  /* three doubles wide, so init still halves the bracket */
+  CHECK_EQ_STATUS(diana_bisect_init(&s, a, b, -1.0, 1.0, 0.0, 10u),
+                  DIANA_CONTINUE);
+  x = s.x;
+  CHECK(a < x && x < b);
+
+  /* fx keeps the sign of fa: a moves to x, the next midpoint rounds onto b */
+  CHECK_EQ_STATUS(diana_bisect_step(&s, -1.0), DIANA_OK);
+  CHECK(s.a == x && s.b == b && s.iter == 1u);
+
+  /* fx has the sign of fb: b moves to x, the next midpoint rounds onto a */
+  CHECK_EQ_STATUS(diana_bisect_init(&s, a, b, -1.0, 1.0, 0.0, 10u),
+                  DIANA_CONTINUE);
+  CHECK_EQ_STATUS(diana_bisect_step(&s, 1.0), DIANA_OK);
+  CHECK(s.a == a && s.b == x && s.iter == 1u);
 }
 
 static int same_state(const diana_bisect_state *p,
@@ -272,6 +358,8 @@ int main(void) {
   test_exact_hit();
   test_error();
   test_large_magnitude();
+  test_init_immediate_ok();
+  test_step_stagnation();
   test_adjacent_termination();
   test_worst_case_step_count();
   test_error_keeps_state();
