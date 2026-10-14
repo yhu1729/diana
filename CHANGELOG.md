@@ -8,6 +8,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The project name is styled `Diana` in prose; lowercase `diana` stays only where it is an
+  identifier (package, CMake target, library file, URL).
 - `script/dev.sh verify` runs the spec gate with `--strict`, so it fails on a theorem listed in
   `spec/` that no prover proves (`missing`), not only on a disallowed axiom. The CI jobs stay
   non-strict: no CI image can build layers B and C-VST.
@@ -113,7 +115,7 @@ and what it assumes; its generated report gives the status of every theorem.
   with its version and license), `CLAUDE.md` and `CONTRIBUTING.md`.
 - `doc/third-party.md` states the two non-commercial license conditions and how this project meets
   them: CompCert (INRIA) is used only to generate and check the Clight AST in a local opam switch
-  and is never shipped, and Alt-Ergo is only a proof oracle. `diana` itself has no runtime
+  and is never shipped, and Alt-Ergo is only a proof oracle. Diana itself has no runtime
   dependency.
 
 [Unreleased]: https://gitlab.com/yhu1729/diana/-/compare/v0.1.0...main
