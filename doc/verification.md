@@ -25,7 +25,7 @@ inside one Rocq development with no translation step.
   classical reals and functional extensionality (checked the same way), plus any VST axiom listed in
   `script/axiom_allow.yaml`.
 - Frama-C 33.0 / Why3 1.8.2 / Alt-Ergo 2.6.4 as a proof oracle for layer C-WP. WP assumes the
-  contracts of the functions listed in `SKIP` in `script/run_framac.sh`; each such contract is a
+  contracts of the functions listed in `SKIP` in `script/run_frama_c.sh`; each such contract is a
   layer-B theorem (currently only `bisect_mid`, discharged by BIS-B1).
 - `clightgen` as the translation from C to Clight. The committed
   `verification/clight/<kernel>_<target>.v` (today `bisect_aarch64_macos.v`, CompCert configured
@@ -39,7 +39,7 @@ inside one Rocq development with no translation step.
 | A, Lean | `verify_lean`: build and strict axiom gate (`--prover lean`) | `lake build`, `check_spec.py --run --strict` |
 | A, Rocq | `verify_rocq`: compilation only | `make`, `make check`, `check_spec.py --run --strict` |
 | B (Flocq), C-VST, Clight AST | – | `clightgen`, `make`, `make check`, `check_spec.py --run --strict` |
-| C-WP | `verify_framac` (Frama-C 32.1) | `script/run_framac.sh` (Frama-C 33.0) |
+| C-WP | `verify_frama_c` (Frama-C 32.1) | `script/run_frama_c.sh` (Frama-C 33.0) |
 
 A green pipeline therefore does not establish layers B and C-VST, and the CI Frama-C result
 assumes the contract of `bisect_mid`, which only the local Flocq build (BIS-B1) discharges. The
@@ -78,7 +78,7 @@ exact power-of-two scaling) and `DIANA_BISECT_MAX_ACSL` as an exact integer expr
 WP (Frama-C 33.0) rejects hexadecimal float literals in lemmas and mistranslates them in predicates.
 
 The midpoint-in-bracket fact is beyond the SMT float model, so the kernel computes the midpoint in
-the static helper `bisect_mid`. `script/run_framac.sh` passes it to `-wp-skip-fct` (variable `SKIP`),
+the static helper `bisect_mid`. `script/run_frama_c.sh` passes it to `-wp-skip-fct` (variable `SKIP`),
 so WP assumes its contract; Flocq proves it as BIS-B1 (`mid_in_bracket` in
 `verification/rocq/theory/Float/Bisect.v`), and VST proves the C body against that model (BIS-C1).
 `SKIP` is the explicit trust boundary between layer C-WP and layer B: every entry needs a layer-B
@@ -88,15 +88,16 @@ The ACSL predicate `bisect_bracket` is a strict sign change or a bracket collaps
 root, the same as `SignChange` in the Lean and Rocq layer-A models. A weak sign change
 (`fa * fb <= 0`) is not preserved by the sign test `(fx > 0) == (fa > 0)` when `fa == 0`.
 
-`script/run_framac.sh [file...]` runs WP (float model, RTE, Alt-Ergo, 30 s timeout) over the given
+`script/run_frama_c.sh [file...]` runs WP (float model, RTE, Alt-Ergo, 30 s timeout) over the given
 kernels (default `src/bisect.c`). WP does not set a non-zero exit status for an unproved goal,
-so the report must always be checked: `script/check_framac.sh` is the gate.
-`script/check_framac.sh report.txt [framac/expected/<kernel>.txt]` fails unless every goal in the
-report is proved and, when the expected summary is given, the goal count matches it: a drop means a
+so the report must always be checked: `script/check_frama_c.sh` is the gate.
+`verification/frama-c/expectation.txt` stores one `<kernel> <goal-count>` row per kernel, currently
+`bisect 162`. `script/check_frama_c.sh report.txt [kernel]` fails unless every goal in the
+report is proved and, when a kernel is given, the goal count matches its row: a drop means a
 contract or RTE guard silently disappeared. The count also moves with the statement structure, not
 only with the annotations: WP checks an `assigns` clause in one part per write path, so adding
 braces to `src/bisect.c` merged 12 `assigns_normal_part` goals (172 to 160) with every other goal
-unchanged. Before changing `framac/expected/<kernel>.txt`, compare the goal lists of the old and
+unchanged. Before changing `verification/frama-c/expectation.txt`, compare the goal lists of the old and
 new source (`-wp-report-json`) and update the count only when no property kind disappeared.
 
 ## Floating-point helpers without libm
@@ -129,8 +130,8 @@ A real / B float / C code, informal statement, and the fully qualified constant 
    of constants, an empty `Axioms:` block, or any unindented line that is not an axiom is an error
    rather than a silent reinterpretation: the affected constants read `check failed`. Only Rocq's
    stdout is parsed, since the pinned version writes warnings to stderr;
-4. rewrites the report below (unless `--no-report`). The Frama-C column reads the committed summary
-   `framac/expected/<spec>.txt`, which CI compares against a fresh WP run.
+4. rewrites the report below (unless `--no-report`). The Frama-C column reads the committed goal count
+   `verification/frama-c/expectation.txt`, which CI compares against a fresh WP run.
 
 The exit status is non-zero on a structural error and, with `--strict`, also when any theorem is not
 verified (missing prover project, missing constant, disallowed axiom). `script/dev.sh verify` passes
