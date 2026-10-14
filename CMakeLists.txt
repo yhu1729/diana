@@ -33,3 +33,24 @@ set_target_properties(diana PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR})
 diana_set_strict_flag(diana)
+
+if(NOT DEFINED SKBUILD)
+    include(GNUInstallDirs)
+    install(TARGETS diana EXPORT dianaTargets
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    install(DIRECTORY include/diana DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    install(EXPORT dianaTargets NAMESPACE diana:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/diana)
+
+    include(CMakePackageConfigHelpers)
+    configure_package_config_file(cmake/dianaConfig.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/dianaConfig.cmake
+        INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/diana)
+    write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/dianaConfigVersion.cmake
+        COMPATIBILITY SameMinorVersion)
+    install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/dianaConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/dianaConfigVersion.cmake
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/diana)
+endif()
