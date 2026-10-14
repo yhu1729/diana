@@ -1,4 +1,4 @@
-"""diana: formally verified numerical methods in C, with a Python binding.
+"""Diana: formally verified numerical methods in C, with a Python binding.
 
 Every iterative kernel is exposed in reverse-communication form (a small state object) and,
 for convenience, as a function taking a Python callable. The callable loop runs in Python and is

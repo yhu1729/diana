@@ -12,7 +12,7 @@ static PyMethodDef mod_method[] = {{"version", mod_version, METH_NOARGS,
 static struct PyModuleDef mod_def = {
     PyModuleDef_HEAD_INIT,
     .m_name = "diana._diana",
-    .m_doc = "C extension for diana: formally verified numerical methods.",
+    .m_doc = "C extension for Diana: formally verified numerical methods.",
     .m_size = -1,
     .m_methods = mod_method,
 };
