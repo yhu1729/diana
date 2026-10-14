@@ -354,7 +354,7 @@ verify_frama_c:
     - script/verify_frama_c.sh
   artifacts:
     when: always
-    paths: [verification/frama-c/report.txt, verification/frama-c/session]
+    paths: [verification/frama-c/report.txt]
     expire_in: 1 month
 
 verify_lean:

@@ -43,8 +43,9 @@ All notable changes to this project are documented here. The format follows
 - `script/dev.sh verify` runs WP for the last `expectation.txt` row even without a trailing
   newline.
 - `verify_frama_c` runs WP for every `expectation.txt` row through `script/verify_frama_c.sh`,
-  the loop `script/dev.sh verify` uses, instead of only `src/bisect.c`, and uploads one
-  consolidated `verification/frama-c/report.txt` instead of a report per kernel.
+  the loop `script/dev.sh verify` uses, instead of only `src/bisect.c`, and uploads only one
+  consolidated `verification/frama-c/report.txt` instead of a report per kernel and the unused
+  WP session directory.
 - Python `Bisect` objects allocated without successful initialization reject `step()` and
   `result()` instead of reporting a successful zero-valued result.
 - C and Python coverage jobs run on every default-branch pipeline, keeping the README coverage
