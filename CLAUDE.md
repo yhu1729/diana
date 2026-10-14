@@ -101,7 +101,8 @@ doc/                  api, development, verification (trust statement + generate
 - Wheel: `uv run script/check_wheel.py` builds and checks static and shared installed wheels;
   shared wheels bundle an unversioned runtime beside the extension. Standalone CMake builds
   retain library versioning and respect `CMAKE_INSTALL_INCLUDEDIR` in the exported target.
-  Sanitized installations export their runtime link options.
+  Sanitized installations export their runtime link options; macOS install tests inherit the
+  architecture list, SDK, and deployment target.
 - Coverage: `uv sync --group test --group coverage && uv run pytest --cov=diana`; C and extension coverage via gcovr as in the `coverage_c`/`coverage_python` CI jobs
 - Lean: `cd verification/lean && lake exe cache get && lake build` (Mathlib pinned by `lake-manifest.json`)
 - Rocq: `cd verification/rocq && make && make check` (inside the opam switch, see `CONTRIBUTING.md`).

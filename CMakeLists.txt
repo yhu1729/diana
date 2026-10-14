@@ -83,6 +83,12 @@ if(DIANA_BUILD_TEST)
             -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
             -DCMAKE_BUILD_TYPE=$<CONFIG>
             "-DCMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS}")
+        foreach(option CMAKE_OSX_ARCHITECTURES CMAKE_OSX_SYSROOT CMAKE_OSX_DEPLOYMENT_TARGET)
+            if(DEFINED ${option})
+                string(REPLACE ";" "\\;" value "${${option}}")
+                list(APPEND DIANA_INSTALL_TEST_OPTION "-D${option}=${value}")
+            endif()
+        endforeach()
         add_test(NAME install
             COMMAND ${CMAKE_COMMAND} --install ${CMAKE_CURRENT_BINARY_DIR}
                     --prefix ${DIANA_INSTALL_TEST_PREFIX} --config $<CONFIG>)
