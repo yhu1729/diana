@@ -142,15 +142,15 @@ variables:
   before_script:
     - apt-get update -qq && apt-get install -y -qq --no-install-recommends cmake ninja-build > /dev/null
 
-.release_config:
-  variables:
-    BUILD_TYPE: Release
-    SANITIZER: "OFF"
-
 .debug_config:
   variables:
     BUILD_TYPE: Debug
     SANITIZER: "ON"
+
+.release_config:
+  variables:
+    BUILD_TYPE: Release
+    SANITIZER: "OFF"
 
 .build:
   stage: build
@@ -176,17 +176,16 @@ variables:
     paths: [build/Testing]
     expire_in: 1 week
 
-style_python:
+style_name:
   stage: style
-  extends: .uv
+  image: alpine:3.20
   rules:
     - *rule_full
-    - changes: *change_style
+    - changes: *change_any
   script:
-    - uv sync --group lint --group spec
-    - uv run ruff check python test/python script
-    - uv run ruff format --check python test/python script
-    - uv run script/check_spec.py --no-report
+    - |
+      bad=$(find . -maxdepth 2 -type d \( -name tests -o -name docs -o -name scripts -o -name proofs -o -name wrappers -o -name tools \) -not -path "./.git/*" -not -path "./.venv/*" -not -path "./build/*")
+      if [ -n "$bad" ]; then echo "plural directory name not allowed: $bad"; exit 1; fi
 
 style_c:
   stage: style
@@ -201,44 +200,45 @@ style_c:
     - uv run --no-sync clang-format --version
     - find include src test/c test/install python/ext -name '*.[ch]' -print0 | xargs -0 uv run --no-sync clang-format --dry-run --Werror
 
-style_name:
+style_python:
   stage: style
-  image: alpine:3.20
+  extends: .uv
   rules:
     - *rule_full
-    - changes: *change_any
+    - changes: *change_style
   script:
-    - |
-      bad=$(find . -maxdepth 2 -type d \( -name tests -o -name docs -o -name scripts -o -name proofs -o -name wrappers -o -name tools \) -not -path "./.git/*" -not -path "./.venv/*" -not -path "./build/*")
-      if [ -n "$bad" ]; then echo "plural directory name not allowed: $bad"; exit 1; fi
-
-build_gcc_release:
-  extends: [.gcc, .release_config, .build]
+    - uv sync --group lint --group spec
+    - uv run ruff check python test/python script
+    - uv run ruff format --check python test/python script
+    - uv run script/check_spec.py --no-report
 
 build_gcc_debug:
   extends: [.gcc, .debug_config, .build]
 
-build_clang_release:
-  extends: [.clang, .release_config, .build]
+build_gcc_release:
+  extends: [.gcc, .release_config, .build]
 
 build_clang_debug:
   extends: [.clang, .debug_config, .build]
 
-test_gcc_release:
-  extends: [.gcc, .release_config, .test]
-  needs: [build_gcc_release]
+build_clang_release:
+  extends: [.clang, .release_config, .build]
 
 test_gcc_debug:
   extends: [.gcc, .debug_config, .test]
   needs: [build_gcc_debug]
 
-test_clang_release:
-  extends: [.clang, .release_config, .test]
-  needs: [build_clang_release]
+test_gcc_release:
+  extends: [.gcc, .release_config, .test]
+  needs: [build_gcc_release]
 
 test_clang_debug:
   extends: [.clang, .debug_config, .test]
   needs: [build_clang_debug]
+
+test_clang_release:
+  extends: [.clang, .release_config, .test]
+  needs: [build_clang_release]
 
 test_python:
   stage: test
