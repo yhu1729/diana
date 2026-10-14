@@ -6,3 +6,4 @@
 theory/Real/Bisect.v
 theory/Float/Bisect.v
 ../clight/bisect_aarch64_macos.v
+theory/VST/Bisect.v
