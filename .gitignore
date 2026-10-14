@@ -32,7 +32,7 @@ verification/rocq/.Makefile.rocq.d
 .frama-c/
 verification/frama-c/cache/
 verification/frama-c/session/
-verification/frama-c/report-*.txt
+verification/frama-c/report.txt
 .DS_Store
 *.swp
 .idea/
