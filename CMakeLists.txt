@@ -29,7 +29,6 @@ include(GNUInstallDirs)
 if(DIANA_SANITIZER)
     if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
         add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
-        add_link_options(-fsanitize=address,undefined)
     else()
         message(WARNING "DIANA_SANITIZER is only supported with gcc or clang")
     endif()
@@ -47,6 +46,9 @@ set_target_properties(diana PROPERTIES
     C_VISIBILITY_PRESET default
     POSITION_INDEPENDENT_CODE ON)
 diana_set_strict_flag(diana)
+if(DIANA_SANITIZER AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+    target_link_options(diana PUBLIC -fsanitize=address,undefined)
+endif()
 
 if(NOT DEFINED SKBUILD)
     set_target_properties(diana PROPERTIES
@@ -76,15 +78,11 @@ if(DIANA_BUILD_TEST)
     add_subdirectory(test/c)
     if(NOT DEFINED SKBUILD)
         set(DIANA_INSTALL_TEST_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/install-test)
-        set(DIANA_INSTALL_TEST_LINK_FLAG "${CMAKE_EXE_LINKER_FLAGS}")
-        if(DIANA_SANITIZER AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
-            string(APPEND DIANA_INSTALL_TEST_LINK_FLAG " -fsanitize=address,undefined")
-        endif()
         set(DIANA_INSTALL_TEST_OPTION
             -DCMAKE_PREFIX_PATH=${DIANA_INSTALL_TEST_PREFIX}
             -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
             -DCMAKE_BUILD_TYPE=$<CONFIG>
-            "-DCMAKE_EXE_LINKER_FLAGS=${DIANA_INSTALL_TEST_LINK_FLAG}")
+            "-DCMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS}")
         add_test(NAME install
             COMMAND ${CMAKE_COMMAND} --install ${CMAKE_CURRENT_BINARY_DIR}
                     --prefix ${DIANA_INSTALL_TEST_PREFIX} --config $<CONFIG>)
