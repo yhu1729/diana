@@ -15,8 +15,15 @@ Rationale that used to live in code comments. How to run each tool is in `CLAUDE
   with no Python headers passes `-DDIANA_BUILD_PYTHON=OFF`, as the C-only CI jobs do. The extension
   is installed only under scikit-build; `cmake --install` of the C library never carries it.
 - scikit-build-core builds the CPython extension in-tree and sets `SKBUILD`, which forces
-  `DIANA_BUILD_PYTHON=ON` and skips the install rules of the C library, so the wheel carries only
-  the extension module and the Python package.
+  `DIANA_BUILD_PYTHON=ON`. Static wheels carry only the extension module and the Python package.
+  With `BUILD_SHARED_LIBS=ON`, the wheel also carries an unversioned `libdiana` runtime beside the
+  extension, without headers, archives, import libraries, or CMake exports. Standalone CMake
+  installations retain the library's `VERSION`/`SOVERSION`. The wheel extension uses an install
+  RPATH of `@loader_path` on macOS and `$ORIGIN` on Linux; the macOS library has an `@rpath` install
+  name. On Windows, the wheel library exports its functions and its DLL is beside the extension,
+  where CPython's loader searches for dependencies.
+- `GNUInstallDirs` is loaded before configuring the target's installed include directory, so
+  `CMAKE_INSTALL_INCLUDEDIR` controls both header installation and the exported include path.
 - `DIANA_WERROR` (`-Werror`) is OFF by default, so building from the sdist with a newer compiler
   that adds a warning does not fail for an end user. CI turns it ON in every job that compiles (CMake
   `-DDIANA_WERROR=ON`, and `SKBUILD_CMAKE_DEFINE` for the uv jobs that build the extension), and so
@@ -108,6 +115,12 @@ project `test/install/` against it with `find_package(diana)` (test `find_packag
 linked with the parent's `CMAKE_EXE_LINKER_FLAGS` plus the sanitizer flags, so coverage and
 sanitizer builds of the static library link.
 
+`uv run script/check_wheel.py` builds static and shared wheels in separate temporary directories,
+checks their runtime-library contents and absence of development artifacts, removes their build
+trees, and installs each into a fresh uv virtual environment. An isolated Python process outside
+the checkout imports Diana and checks bisection of `x*x - 2`, with loader-path overrides removed.
+This tests the installed wheel without relying on the development environment or build RPATHs.
+
 Expected values in `test/c/test_bisect.c`:
 
 - The state-machine test checks the bracket invariant after every step. The width halves each step,
@@ -147,6 +160,10 @@ job or a file a job reads, extend the matching list.
 - `style_c` checks the C sources (`include/`, `src/`, `test/c/`, `test/install/`, `python/ext/`) with the pinned
   `clang-format --dry-run --Werror`. It installs only the `lint` group (`uv sync --only-group`), so
   it builds nothing and skips the compiler install of `.uv`.
+- `test_install` runs the C suite and installed consumer with
+  `CMAKE_INSTALL_INCLUDEDIR=include/custom`; the release job requires it.
+- `test_python` runs the Python suite and package metadata checks, then `script/check_wheel.py`
+  to check both static and shared installed wheels.
 - `style_name` enforces single-form noun directory names by rejecting plural directories. It runs
   on any selected path and scans the whole tree, so a plural directory added in a doc-only push is
   caught by the next pipeline that runs it.
@@ -161,10 +178,11 @@ job or a file a job reads, extend the matching list.
   without `--run` every prover status would read `planned`, and no CI job runs both Lean and Rocq,
   so the report is regenerated locally with `--run` and committed (see
   [Local verification](#local-verification)).
-- `verify_lean` runs `script/check_spec.py --run --prover lean` with the image's system `python3`
-  (3.11 on Debian bookworm), not with `uv`, so ruff checks `script/` against Python 3.11
+- `verify_lean` runs `script/check_spec.py --run --strict --prover lean --no-report` with the
+  image's system `python3` (3.11 on Debian bookworm), not with `uv`, so ruff checks `script/` against Python 3.11
   (`per-file-target-version` in `pyproject.toml`). The script exits non-zero when the Lean check
-  fails to run or a theorem depends on an axiom outside `script/axiom_allow.yaml`.
+  fails to run, a listed Lean theorem is missing, or a theorem depends on an axiom outside
+  `script/axiom_allow.yaml`. Selecting `--prover lean` excludes Rocq-only layers from this gate.
 - `verify_framac`: 162/162 goals are proved locally with Frama-C 33.0 and Alt-Ergo 2.6.4; the CI
   image is 32.1 until a 33 tag exists. If 32.1 behaves differently, pin the image forward rather
   than re-adding `allow_failure`.
