@@ -36,6 +36,7 @@ stages:
   - src/**/*
   - python/**/*
   - test/python/**/*
+  - script/check_spec.py
   - script/check_wheel.py
 
 .change_style: &change_style
