@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- `verification/rocq/Makefile` gained the `check` target that `script/check_spec.py` and the
+  documentation already assumed, so `script/dev.sh verify` reaches the end of the spec gate instead
+  of reporting every Rocq theorem as `check failed`. `check` compiles the generated `CheckSpec.v`
+  with the `_CoqProject` load paths (the file is deliberately not listed there), and `clean` now
+  removes its artifacts.
+
 ## [0.1.0] - 2026-10-13
 
 First release. The scaffolding, the proof pipeline, and the bisection kernel end-to-end through
