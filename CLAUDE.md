@@ -111,7 +111,9 @@ doc/                  api, development, verification (trust statement + generate
   Layers B and C-VST, the Rocq axiom gate, and the Clight AST are checked **only locally**; run the
   steps in `doc/development.md` (Local verification) before committing a change to `src/`,
   `include/`, `verification/`, or `spec/`
-- Frama-C: `script/run_frama_c.sh` (all goals must prove; `script/check_frama_c.sh` on the report)
+- Frama-C: `script/verify_frama_c.sh` (runs `script/run_frama_c.sh` and `script/check_frama_c.sh`
+  for every `<source> <goal-count>` row of `verification/frama-c/expectation.txt`; all goals must
+  prove and each count must match; `script/dev.sh verify` and CI both call it)
 - Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/bisect_aarch64_macos.v src/bisect.c` **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
 - Spec gate: `uv run script/check_spec.py --run --strict` (runs both provers' check files, `--prover lean|rocq` to select one and rewrites the generated report at the end of `doc/verification.md`; commit it, CI does not regenerate it; `--no-report` to leave it alone)
   The default full strict gate also requires a unique positive Frama-C expectation count for each
