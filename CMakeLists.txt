@@ -20,7 +20,8 @@ endif()
 include(cmake/warning.cmake)
 
 add_library(diana
-    src/status.c)
+    src/status.c
+    src/bisect.c)
 add_library(diana::diana ALIAS diana)
 target_include_directories(diana PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
