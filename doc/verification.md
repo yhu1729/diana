@@ -1,6 +1,6 @@
 # Verification
 
-This file is the trust statement for diana: what the layers mean, where the trust boundaries are,
+This file is the trust statement for Diana: what the layers mean, where the trust boundaries are,
 and, in the generated [report](#report) at the end, the status of every theorem.
 
 ## Layers

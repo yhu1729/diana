@@ -1,7 +1,7 @@
 # Third-party components
 
-`diana` itself is BSD-3-Clause (`LICENSE`). It has **no runtime dependency**: the installed C
-library and the Python wheel contain only diana's own code, so nothing listed below is
+Diana itself is BSD-3-Clause (`LICENSE`). It has **no runtime dependency**: the installed C
+library and the Python wheel contain only Diana's own code, so nothing listed below is
 redistributed with a release artifact.
 
 Everything here is a *development* or *verification* tool. The versions are the pins in
@@ -9,10 +9,10 @@ Everything here is a *development* or *verification* tool. The versions are the 
 
 ## License condition that constrains how this project is used
 
-Two tools are **not** free for commercial use. diana is a research project and neither tool is
+Two tools are **not** free for commercial use. Diana is a research project and neither tool is
 shipped, so the conditions are met; they still have to be stated.
 
-| Tool | Condition | How diana complies |
+| Tool | Condition | How Diana complies |
 |---|---|---|
 | CompCert 3.18 | INRIA Non-Commercial License Agreement: free for research, teaching, personal and evaluation use only | Used only to generate and check the Clight AST in a local opam switch. No CI image and no release artifact contains CompCert, and `ccomp` is never shipped (`doc/verification.md`). |
 | Alt-Ergo 2.6.4 | dual: `LicenseRef-OCamlpro-Non-Commercial` and Apache-2.0 | Used only as the local/CI proof oracle for Frama-C WP. Not shipped. |

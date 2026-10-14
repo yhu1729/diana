@@ -6,7 +6,7 @@ Rationale that used to live in code comments. How to run each tool is in `CLAUDE
 ## Build
 
 - `cmake/warning.cmake` (`diana_set_strict_flag`) applies the strict warning set and strict IEEE
-  binary64 semantics to every diana target. The verified semantics assume no FMA contraction, no
+  binary64 semantics to every Diana target. The verified semantics assume no FMA contraction, no
   fast-math, and SSE2 or AArch64 arithmetic.
 - `DIANA_BUILD_PYTHON` is ON by default, so a plain `cmake -S . -B build` describes `python/ext/`
   in `compile_commands.json`; without it clang-tidy parses those files with a guessed command, fails

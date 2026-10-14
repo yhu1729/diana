@@ -1,4 +1,4 @@
-# diana
+# Diana
 
 [![Release](https://gitlab.com/yhu1729/diana/-/badges/release.svg?key_text=Release&key_width=58)](https://gitlab.com/yhu1729/diana/-/releases)
 [![Pipeline](https://gitlab.com/yhu1729/diana/badges/main/pipeline.svg?key_text=Pipeline&key_width=58&ignore_skipped=true)](https://gitlab.com/yhu1729/diana/-/commits/main)
@@ -39,4 +39,4 @@ uv sync && uv run python -c "import diana; print(diana.bisect(lambda x: x*x - 2,
 
 ## License
 
-BSD-3-Clause, see `LICENSE`. `diana` has no runtime dependency; the development and verification tools, with their versions and licenses, are listed in `doc/third-party.md` (CompCert and Alt-Ergo are not free for commercial use and are never shipped).
+BSD-3-Clause, see `LICENSE`. Diana has no runtime dependency; the development and verification tools, with their versions and licenses, are listed in `doc/third-party.md` (CompCert and Alt-Ergo are not free for commercial use and are never shipped).
