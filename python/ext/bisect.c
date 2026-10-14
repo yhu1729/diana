@@ -8,6 +8,15 @@ typedef struct {
   int status;
 } BisectObject;
 
+static PyObject *bisect_new(PyTypeObject *type, PyObject *args,
+                            PyObject *kwds) {
+  BisectObject *self = (BisectObject *)PyType_GenericNew(type, args, kwds);
+  if (self != NULL) {
+    self->status = DIANA_ERR_ARG;
+  }
+  return (PyObject *)self;
+}
+
 static int bisect_init(BisectObject *self, PyObject *args, PyObject *kwds) {
   static char *kwlist[] = {"a", "b", "fa", "fb", "tol", "max_iter", NULL};
   double a, b, fa, fb, tol = 0.0;
@@ -29,8 +38,13 @@ static int bisect_init(BisectObject *self, PyObject *args, PyObject *kwds) {
 }
 
 static PyObject *bisect_step(BisectObject *self, PyObject *arg) {
-  double fx = PyFloat_AsDouble(arg);
+  double fx;
   diana_status st;
+  if (self->status == DIANA_ERR_ARG) {
+    PyErr_SetString(PyExc_RuntimeError, "Bisect state is not initialized");
+    return NULL;
+  }
+  fx = PyFloat_AsDouble(arg);
   if (fx == -1.0 && PyErr_Occurred()) {
     return NULL;
   }
@@ -51,6 +65,10 @@ static PyObject *bisect_step(BisectObject *self, PyObject *arg) {
 static PyObject *bisect_result(BisectObject *self,
                                PyObject *Py_UNUSED(ignored)) {
   double root, width;
+  if (self->status == DIANA_ERR_ARG) {
+    PyErr_SetString(PyExc_RuntimeError, "Bisect state is not initialized");
+    return NULL;
+  }
   if (diana_bisect_result(&self->s, &root, &width) != DIANA_OK) {
     PyErr_SetString(PyExc_RuntimeError, "invalid Bisect state");
     return NULL;
@@ -99,7 +117,7 @@ static PyTypeObject BisectType = {
     .tp_methods = bisect_method,
     .tp_members = bisect_member,
     .tp_init = (initproc)bisect_init,
-    .tp_new = PyType_GenericNew,
+    .tp_new = bisect_new,
 };
 
 int diana_py_bisect_exec(PyObject *m) {

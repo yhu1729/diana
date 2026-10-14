@@ -38,6 +38,8 @@ API: `doc/api.md`. Build, test, and CI rationale: `doc/development.md`.
 - **Python binding:** C extension sources in `python/ext/` (`module.c` creates `diana._diana` and calls one
   `diana_py_<kernel>_exec` per file; shared helpers in `module.h`); pure-Python package in `python/src/diana/`
   with one private driver module per kernel (`_bisect.py`) re-exported by `__init__.py`.
+  `Bisect` starts with status `ERR_ARG` until initialization succeeds; `step` and `result` reject
+  uninitialized objects, and a failed reinitialization preserves the previous state.
 - **ACSL:** arithmetic on doubles is exact real arithmetic, write rounded values with casts
   `(double)(...)`; no hexadecimal float literal anywhere in ACSL (WP 33.0 rejects them in lemmas and
   mistranslates them in predicates), use exact integer expressions such as `((1 << 53) - 1) << 970`;
