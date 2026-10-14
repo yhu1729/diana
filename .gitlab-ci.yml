@@ -252,6 +252,9 @@ test_install:
     - cmake -S . -B build/install-custom -G Ninja -DCMAKE_BUILD_TYPE=Release -DDIANA_BUILD_TEST=ON -DDIANA_BUILD_PYTHON=OFF -DDIANA_WERROR=ON -DCMAKE_C_COMPILER=$CC -DCMAKE_INSTALL_INCLUDEDIR=include/custom
     - cmake --build build/install-custom
     - ctest --test-dir build/install-custom --output-on-failure
+    - cmake -S . -B build/install-shared -G Ninja -DCMAKE_BUILD_TYPE=Release -DDIANA_BUILD_TEST=ON -DDIANA_BUILD_PYTHON=OFF -DDIANA_WERROR=ON -DCMAKE_C_COMPILER=$CC -DBUILD_SHARED_LIBS=ON
+    - cmake --build build/install-shared
+    - ctest --test-dir build/install-shared --output-on-failure
 
 test_python:
   stage: test
