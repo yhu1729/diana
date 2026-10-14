@@ -8,6 +8,12 @@ Rationale that used to live in code comments. How to run each tool is in `CLAUDE
 - `cmake/warning.cmake` (`diana_set_strict_flag`) applies the strict warning set and strict IEEE
   binary64 semantics to every diana target. The verified semantics assume no FMA contraction, no
   fast-math, and SSE2 or AArch64 arithmetic.
+- `DIANA_BUILD_PYTHON` is ON by default, so a plain `cmake -S . -B build` describes `python/ext/`
+  in `compile_commands.json`; without it clang-tidy parses those files with a guessed command, fails
+  to find `<Python.h>`, and reports a cascade of findings that are artefacts of the failed parse.
+  It needs Python with `Development.Module` (`find_package(... REQUIRED)`), so a build on a machine
+  with no Python headers passes `-DDIANA_BUILD_PYTHON=OFF`, as the C-only CI jobs do. The extension
+  is installed only under scikit-build; `cmake --install` of the C library never carries it.
 - scikit-build-core builds the CPython extension in-tree and sets `SKBUILD`, which forces
   `DIANA_BUILD_PYTHON=ON` and skips the install rules of the C library, so the wheel carries only
   the extension module and the Python package.
@@ -55,6 +61,12 @@ and its suppressions are each a deliberate project convention, so a new finding 
 takes `DIANA_CLANG_TIDY` when set, else the first `clang-tidy` on `PATH`, else the Homebrew LLVM one; when
 none is found the step prints that it is skipped instead of failing, because `clang-tidy` is not a
 pinned dependency (unlike `clang-format`).
+
+The database has to cover `python/ext/`, so `script/dev.sh config` runs `uv sync` before `cmake` and
+passes `-DPython_EXECUTABLE=.venv/bin/python`, which makes the entries describe the same interpreter
+the pytest suite runs against. The step fails outright when the entry is absent: clang-tidy then
+falls back to a guessed compile command, loses `<Python.h>`, and turns the failed parse into findings
+across every file that are artefacts rather than defects.
 
 ## Python binding
 
