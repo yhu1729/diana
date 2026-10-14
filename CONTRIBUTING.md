@@ -71,4 +71,12 @@ git commit -s
 ```
 
 Subject: `<type>[(scope)]: <summary>` with type in `feat fix perf refactor build style test ci doc chore`.
+The subject line is the whole message: no body, and no trailer beyond the `Signed-off-by` that `-s`
+adds. Keep it near 50 characters and drop articles — `feat: add bisect header`, not `feat: add the
+bisection reverse-communication header`. Rationale belongs in `doc/` or `spec/`, not in the log.
+
+Commit one logical step at a time, usually a single file; group files only when they are meaningless
+apart, such as a kernel and the `CMakeLists.txt` line that builds it. A change spanning the library,
+its test and its documentation is three commits.
+
 Update `CHANGELOG.md` `Unreleased` in the same commit as any user-visible change.
