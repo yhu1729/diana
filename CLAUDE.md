@@ -42,7 +42,7 @@ API: `doc/api.md`. Build, test, and CI rationale: `doc/development.md`.
   `(double)(...)`; no hexadecimal float literal anywhere in ACSL (WP 33.0 rejects them in lemmas and
   mistranslates them in predicates), use exact integer expressions such as `((1 << 53) - 1) << 970`;
   a float fact that WP cannot prove goes into a small static helper whose contract is listed in
-  `SKIP` of `script/run_framac.sh` and proved in Flocq. That skip list is the trust boundary between
+  `SKIP` of `script/run_frama_c.sh` and proved in Flocq. That skip list is the trust boundary between
   Frama-C and Rocq; every entry needs a `BIS-B*`-style theorem.
 - **Verified kernel shape:** reverse communication. A kernel is a pure state machine on a caller-owned
   struct (`init` / `step` / `result`) or a function over tabulated arrays. No function pointer in a
@@ -82,8 +82,9 @@ test/c/               ctest                     test/python/        pytest
 test/install/         find_package consumer
 test/reference/       mpmath data (planned)     spec/               theorem list per method
 verification/lean/    Lake project              verification/rocq/  Real/ Float/ VST/
-verification/clight/  committed clightgen out   framac/             WP session/cache
-script/               check_spec, dev, framac   ci/docker/          prover image
+verification/clight/  committed clightgen out
+verification/frama-c/ WP goal count/session/cache
+script/               check_spec, dev, frama_c   ci/docker/          prover image
 doc/                  api, development, verification (trust statement + generated report)
 ```
 
@@ -106,7 +107,7 @@ doc/                  api, development, verification (trust statement + generate
   Layers B and C-VST, the Rocq axiom gate, and the Clight AST are checked **only locally**; run the
   steps in `doc/development.md` (Local verification) before committing a change to `src/`,
   `include/`, `verification/`, or `spec/`
-- Frama-C: `script/run_framac.sh` (all goals must prove; `script/check_framac.sh` on the report)
+- Frama-C: `script/run_frama_c.sh` (all goals must prove; `script/check_frama_c.sh` on the report)
 - Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/bisect_aarch64_macos.v src/bisect.c` **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
 - Spec gate: `uv run script/check_spec.py --run --strict` (runs both provers' check files, `--prover lean|rocq` to select one and rewrites the generated report at the end of `doc/verification.md`; commit it, CI does not regenerate it; `--no-report` to leave it alone)
   Lean CI uses `--run --strict --prover lean --no-report`, so missing Lean proofs fail the gate
