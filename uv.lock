@@ -169,6 +169,7 @@ test = [
     { name = "mpmath" },
     { name = "numpy" },
     { name = "pytest" },
+    { name = "pyyaml" },
 ]
 
 [package.metadata]
@@ -188,6 +189,7 @@ test = [
     { name = "mpmath", specifier = ">=1.3" },
     { name = "numpy", specifier = ">=2" },
     { name = "pytest", specifier = ">=8" },
+    { name = "pyyaml", specifier = ">=6" },
 ]
 
 [[package]]
