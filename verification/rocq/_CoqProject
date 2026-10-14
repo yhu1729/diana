@@ -3,3 +3,4 @@
 -arg -deprecated-syntactic-definition
 
 theory/Real/Bisect.v
+theory/Float/Bisect.v
