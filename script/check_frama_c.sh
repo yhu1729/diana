@@ -2,7 +2,7 @@
 set -eu
 report="$1"
 kernel="${2:-}"
-expected="$(dirname "$0")/../verification/frama-c/expectation.txt"
+expectation="$(dirname "$0")/../verification/frama-c/expectation.txt"
 summary=$(grep -E '^\[wp\] Proved goals:' "$report" | tail -1)
 if ! echo "$summary" | grep -qE '^\[wp\] Proved goals: *[0-9]+ */ *[0-9]+ *$'; then
     echo "no WP summary in $report" >&2
@@ -26,12 +26,12 @@ if [ -n "$kernel" ]; then
             if (count != 1 || invalid) exit 1
             print goals
         }
-    ' "$expected"); then
-        echo "WP: missing, duplicate, or invalid entry for $kernel in $expected" >&2
+    ' "$expectation"); then
+        echo "WP: missing, duplicate, or invalid entry for $kernel in $expectation" >&2
         exit 1
     fi
     if [ "$total" != "$want" ]; then
-        echo "WP: $total goals, expected $want (update $expected if intended)" >&2
+        echo "WP: $total goals, expected $want (update $expectation if intended)" >&2
         exit 1
     fi
 fi
