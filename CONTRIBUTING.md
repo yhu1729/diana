@@ -120,7 +120,8 @@ about those, so they are your responsibility before the commit lands.
   `clang-format`, `clang-tidy`).
 - After a change to `src/`, `include/`, `verification/`, or `spec/`: `script/dev.sh verify`, and
   commit the report it rewrites at the end of `doc/verification.md`. It runs the spec gate with
-  `--strict`, so a theorem listed in `spec/` that no prover proves fails it. The individual steps
+  `--strict`, so a theorem listed in `spec/` that no prover proves fails it, as does an ACSL
+  specification without a valid Frama-C expectation entry. The individual steps
   are under "Local verification" in `doc/development.md`.
 - After a change to a verified kernel or a header it includes, the Clight AST has to be
   regenerated, and only on the CompCert target it is named for (`bisect_aarch64_macos.v` is
