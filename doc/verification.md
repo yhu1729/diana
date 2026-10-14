@@ -1,4 +1,4 @@
-# What is verified, by which tool, about which build
+# Verification
 
 This file is the trust statement for diana: what the layers mean, where the trust boundaries are,
 and, in the generated [report](#report) at the end, the status of every theorem.
