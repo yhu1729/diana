@@ -1,6 +1,8 @@
 -R theory Diana
+-Q ../clight Diana.Clight
 -arg -w
 -arg -deprecated-syntactic-definition
 
 theory/Real/Bisect.v
 theory/Float/Bisect.v
+../clight/bisect_aarch64_macos.v
