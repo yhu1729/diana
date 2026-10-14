@@ -17,6 +17,7 @@ def gate(tmp_path, monkeypatch):
     spec_dir = tmp_path / "spec"
     spec_dir.mkdir()
     (tmp_path / "kernel.c").write_text("int kernel(void);\n")
+    (tmp_path / "other.c").write_text("int other(void);\n")
     monkeypatch.setattr(module, "ROOT", tmp_path)
     monkeypatch.setattr(module, "SPEC_DIR", spec_dir)
     monkeypatch.setattr(module, "FRAMA_C_EXPECTATION", tmp_path / "expectation.txt")
@@ -35,16 +36,16 @@ def gate(tmp_path, monkeypatch):
     return module
 
 
-def write_spec(gate, method, theorem_id):
+def write_spec(gate, method, theorem_id, source="kernel.c"):
     (gate.SPEC_DIR / f"{method}.md").write_text(
         f"""---
 method: {method}
-kernel: kernel.c
+kernel: {source}
 theorem:
   - id: {theorem_id}
     layer: C
     informal: kernel contract
-    acsl: kernel.c:kernel
+    acsl: {source}:{source.removesuffix(".c")}
 ---
 """
     )
@@ -55,7 +56,9 @@ def run_gate(gate, monkeypatch, *args):
     return gate.main()
 
 
-@pytest.mark.parametrize("expectation", ["bisect 1\n", "other invalid\nbisect 162\n"])
+@pytest.mark.parametrize(
+    "expectation", ["kernel.c 1\n", "other.c invalid\nkernel.c 162\n", "kernel.c 162"]
+)
 def test_strict_accepts_acsl_coverage(gate, monkeypatch, expectation):
     gate.FRAMA_C_EXPECTATION.write_text(expectation)
     assert run_gate(gate, monkeypatch, "--run", "--strict") == 0
@@ -68,13 +71,14 @@ def test_strict_accepts_acsl_coverage(gate, monkeypatch, expectation):
     [
         (None, "missing expectation"),
         ("", "missing expectation"),
-        ("other 162\n", "missing expectation"),
-        ("bisect\n", "invalid expectation"),
-        ("bisect invalid\n", "invalid expectation"),
-        ("bisect 162 extra\n", "invalid expectation"),
-        ("bisect 162\nbisect 162\n", "invalid expectation"),
-        ("bisect 0\n", "invalid expectation"),
-        ("bisect -1\n", "invalid expectation"),
+        ("other.c 162\n", "missing expectation"),
+        ("bisect 162\n", "missing expectation"),
+        ("kernel.c\n", "invalid expectation"),
+        ("kernel.c invalid\n", "invalid expectation"),
+        ("kernel.c 162 extra\n", "invalid expectation"),
+        ("kernel.c 162\nkernel.c 162\n", "invalid expectation"),
+        ("kernel.c 0\n", "invalid expectation"),
+        ("kernel.c -1\n", "invalid expectation"),
     ],
 )
 def test_strict_rejects_missing_or_invalid_acsl_coverage(
@@ -83,18 +87,26 @@ def test_strict_rejects_missing_or_invalid_acsl_coverage(
     if expectation is not None:
         gate.FRAMA_C_EXPECTATION.write_text(expectation)
     assert run_gate(gate, monkeypatch, "--run", "--strict", "--no-report") == 1
-    assert f"BIS-C1 [frama-c]: {diagnostic} for bisect" in capsys.readouterr().out
+    assert f"BIS-C1 [frama-c]: {diagnostic} for kernel.c" in capsys.readouterr().out
     gate.write_report.assert_not_called()
 
 
-def test_strict_checks_every_acsl_spec(gate, monkeypatch, capsys):
-    write_spec(gate, "other", "OTH-C1")
-    gate.FRAMA_C_EXPECTATION.write_text("bisect 162\n")
+def test_strict_checks_every_acsl_file(gate, monkeypatch, capsys):
+    write_spec(gate, "other", "OTH-C1", "other.c")
+    gate.FRAMA_C_EXPECTATION.write_text("kernel.c 162\n")
     assert run_gate(gate, monkeypatch, "--run", "--strict", "--no-report") == 1
-    assert "OTH-C1 [frama-c]: missing expectation for other" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "OTH-C1 [frama-c]: missing expectation for other.c" in out
+    assert "BIS-C1 [frama-c]" not in out
 
 
-@pytest.mark.parametrize("expectation", [None, "bisect invalid\n"])
+def test_specs_share_acsl_file_expectation(gate, monkeypatch):
+    write_spec(gate, "other", "OTH-C1")
+    gate.FRAMA_C_EXPECTATION.write_text("kernel.c 162\n")
+    assert run_gate(gate, monkeypatch, "--run", "--strict", "--no-report") == 0
+
+
+@pytest.mark.parametrize("expectation", [None, "kernel.c invalid\n"])
 def test_non_strict_preserves_acsl_behavior(gate, monkeypatch, expectation):
     if expectation is not None:
         gate.FRAMA_C_EXPECTATION.write_text(expectation)
