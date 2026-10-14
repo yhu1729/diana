@@ -154,7 +154,7 @@ def write_check_file(theorems: list[Theorem]) -> None:
         (ROCQ_DIR / "CheckSpec.v").write_text("\n".join(lines) + "\n")
 
 
-AXIOM_LINE_RE = re.compile(r"^[A-Za-z_][\w'.]*(\s+:(\s|$)|\s*$)")
+AXIOM_LINE_RE = re.compile(r"^([^\s:]+)(?:[ \t]+:.*)?[ \t]*$")
 
 LEAN_AXIOM_RE = re.compile(
     r"'([^']+)' depends on axioms: \[([^\]]*)\]|'([^']+)' does not depend on any axioms"
@@ -192,7 +192,15 @@ def run_prover(
                 t.result[prover] = "check failed"
             sys.stderr.write(out)
             continue
-        found = parse_lean_axiom(out) if prover == "lean" else parse_rocq_axiom(out, names)
+        try:
+            found = (
+                parse_lean_axiom(out) if prover == "lean" else parse_rocq_axiom(proc.stdout, names)
+            )
+        except ValueError as exc:
+            for t in by_name.values():
+                t.result[prover] = "check failed"
+            print(f"error: {prover}: invalid assumption output: {exc}", file=sys.stderr)
+            continue
         for name, t in by_name.items():
             if name not in found:
                 t.result[prover] = "missing"
@@ -212,16 +220,35 @@ def parse_lean_axiom(out: str) -> dict[str, list[str]]:
 
 
 def parse_rocq_axiom(out: str, names: list[str]) -> dict[str, list[str]]:
+    """Map each name to the axioms of its `Print Assumptions` block, matched by position.
+
+    Rocq does not echo the constant name, so a missing or extra block would shift every
+    later name onto the wrong axiom set; the count is checked instead of truncated.
+    Raise ValueError on any output this cannot account for.
+    """
     blocks = re.split(r"(?m)^(?=Closed under the global context|Axioms:)", out)
     blocks = [b for b in blocks if b.startswith(("Closed under", "Axioms:"))]
+    if len(blocks) != len(names):
+        raise ValueError(f"expected {len(names)} assumption block(s), got {len(blocks)}")
     found: dict[str, list[str]] = {}
-    for name, block in zip(names, blocks, strict=False):
-        if block.startswith("Closed under"):
+    for name, block in zip(names, blocks, strict=True):
+        line = block.splitlines()
+        if line[0].rstrip() == "Closed under the global context":
+            if any(rest.strip() for rest in line[1:]):
+                raise ValueError(f"{name}: unexpected output after a closed-context report")
             found[name] = []
-        else:
-            found[name] = [
-                line.split(" ")[0] for line in block.splitlines()[1:] if AXIOM_LINE_RE.match(line)
-            ]
+            continue
+        axiom = []
+        for rest in line[1:]:
+            if not rest.strip() or rest[0].isspace():
+                continue
+            m = AXIOM_LINE_RE.fullmatch(rest)
+            if m is None:
+                raise ValueError(f"{name}: unrecognized axiom line {rest!r}")
+            axiom.append(m.group(1))
+        if not axiom:
+            raise ValueError(f"{name}: empty axiom block")
+        found[name] = axiom
     return found
 
 
