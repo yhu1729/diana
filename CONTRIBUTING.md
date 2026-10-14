@@ -9,7 +9,7 @@ proven and what is merely assumed.
 ## Quick start
 
 ```
-git config core.hooksPath .git-hooks   # once per clone, see Commit
+ln -s ../../.git-hooks/commit-msg .git/hooks/commit-msg   # once per clone, see Commit
 script/dev.sh config
 script/dev.sh build
 script/dev.sh test
@@ -132,16 +132,16 @@ about those, so they are your responsibility before the commit lands.
 
 ## Commit
 
-The `commit-msg` hook is tracked in `.git-hooks/` and is not active in a fresh clone. Point Git at
-the directory once per clone:
+The `commit-msg` hook is tracked in `.git-hooks/` and is not active in a fresh clone. Link it into
+`.git/hooks` once per clone:
 
 ```
-git config core.hooksPath .git-hooks
+ln -s ../../.git-hooks/commit-msg .git/hooks/commit-msg
 ```
 
-This replaces `.git/hooks` wholesale, so if you keep your own hooks there, symlink just this one
-instead: `ln -s ../../.git-hooks/commit-msg .git/hooks/commit-msg`. Either way, never commit with
-`--no-verify`.
+The link is relative to `.git/hooks`, so it survives moving the checkout. `git config
+core.hooksPath .git-hooks` would work too, but it replaces `.git/hooks` wholesale and so disables
+any other hook you keep there. Never commit with `--no-verify`.
 
 Commit with `git commit -s`, which adds the `Signed-off-by` line every commit carries.
 
