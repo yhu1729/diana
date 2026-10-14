@@ -36,6 +36,9 @@ All notable changes to this project are documented here. The format follows
 - The exported CMake target uses `CMAKE_INSTALL_INCLUDEDIR`, matching the header installation
   destination when a custom include directory is selected.
 - Missing listed Lean proofs now fail CI instead of passing the non-strict spec gate.
+- `script/check_spec.py` parses Rocq's `Print Assumptions` output from stdout only and rejects
+  output it cannot account for (wrong block count, empty `Axioms:` block, unindented non-axiom
+  line) as `check failed`. Axiom names are taken as whole tokens, so a Unicode name survives.
 - `verification/rocq/Makefile` gained the `check` target that `script/check_spec.py` and the
   documentation already assumed, so `script/dev.sh verify` reaches the end of the spec gate instead
   of reporting every Rocq theorem as `check failed`. `check` compiles the generated `CheckSpec.v`
