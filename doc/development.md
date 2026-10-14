@@ -187,7 +187,7 @@ a job reads, extend the matching list.
   when the Lean check fails to run, a listed Lean theorem is missing, or a theorem depends on an
   axiom outside `script/axiom_allow.yaml`. Selecting `--prover lean` excludes Rocq-only layers
   from this gate.
-- `verify_framac`: 162/162 goals are proved locally with Frama-C 33.0 and Alt-Ergo 2.6.4; the CI
+- `verify_frama_c`: 162/162 goals are proved locally with Frama-C 33.0 and Alt-Ergo 2.6.4; the CI
   image is 32.1 until a 33 tag exists. If 32.1 behaves differently, pin the image forward rather
   than re-adding `allow_failure`.
 - `verify_lean` uses `LEAN_IMAGE`, a stock Debian image until the project image
@@ -221,8 +221,8 @@ switch of `CONTRIBUTING.md`, and a green pipeline says nothing about it. After a
 2. `cd verification/rocq && make && make check` builds layers A, B, and C-VST and prints their
    axioms. `make check` needs the generated `CheckSpec.v`, which step 4 writes; on a fresh clone
    run step 4 first, or just use `script/dev.sh verify`, which orders them.
-3. `script/run_framac.sh | tee framac/report-bisect.txt` and
-   `script/check_framac.sh framac/report-bisect.txt framac/expected/bisect.txt` (CI runs the same
+3. `script/run_frama_c.sh | tee verification/frama-c/report-bisect.txt` and
+   `script/check_frama_c.sh verification/frama-c/report-bisect.txt bisect` (CI runs the same
    with Frama-C 32.1).
 4. `uv run script/check_spec.py --run --strict` runs both provers' axiom gates and rewrites the
    report at the end of `doc/verification.md`; commit the report. `--strict` is what
