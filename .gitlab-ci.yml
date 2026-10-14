@@ -281,6 +281,7 @@ coverage_c:
       artifacts: false
   rules:
     - *rule_full
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - changes: *change_c
   script:
     - cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DDIANA_BUILD_TEST=ON -DDIANA_WERROR=ON -DDIANA_BUILD_PYTHON=OFF -DCMAKE_C_FLAGS=--coverage -DCMAKE_EXE_LINKER_FLAGS=--coverage
@@ -307,6 +308,7 @@ coverage_python:
       artifacts: false
   rules:
     - *rule_full
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - changes: *change_python
   variables:
     SKBUILD_CMAKE_DEFINE: DIANA_WERROR=ON;CMAKE_C_FLAGS=--coverage;CMAKE_MODULE_LINKER_FLAGS=--coverage

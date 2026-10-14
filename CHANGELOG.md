@@ -28,6 +28,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- C and Python coverage jobs run on every default-branch pipeline, keeping the README coverage
+  badges populated after changes outside their path filters.
 - Shared Python wheels bundle an unversioned `libdiana` runtime beside the extension and locate
   it without the build tree or loader-path overrides. Static wheels and standalone CMake library
   versioning are unchanged.
