@@ -37,6 +37,14 @@ ctest --test-dir build
 uv sync && uv run python -c "import diana; print(diana.bisect(lambda x: x*x - 2, 0.0, 2.0))"
 ```
 
+## Contribute
+
+Setup, local workflow, and commit convention are in `CONTRIBUTING.md`. Layers B and C-VST, the
+Rocq axiom gate, and the Clight AST are checked only locally, so read "Before you commit" before
+touching `src/`, `include/`, `verification/`, or `spec/`.
+
 ## License
 
-BSD-3-Clause, see `LICENSE`. Diana has no runtime dependency; the development and verification tools, with their versions and licenses, are listed in `doc/third-party.md` (CompCert and Alt-Ergo are not free for commercial use and are never shipped).
+BSD-3-Clause, see `LICENSE`. Diana has no runtime dependency; the development and verification
+tools, with their versions and licenses, are listed in `doc/third-party.md` (CompCert and Alt-Ergo
+are not free for commercial use and are never shipped).
