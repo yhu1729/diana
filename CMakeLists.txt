@@ -10,6 +10,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+option(DIANA_BUILD_TEST "Build the C test suite" OFF)
 option(DIANA_SANITIZER "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 option(DIANA_WERROR "Treat warnings as errors" OFF)
 option(BUILD_SHARED_LIBS "Build diana as a shared library" OFF)
@@ -63,4 +64,9 @@ if(NOT DEFINED SKBUILD)
         ${CMAKE_CURRENT_BINARY_DIR}/dianaConfig.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/dianaConfigVersion.cmake
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/diana)
+endif()
+
+if(DIANA_BUILD_TEST)
+    enable_testing()
+    add_subdirectory(test/c)
 endif()

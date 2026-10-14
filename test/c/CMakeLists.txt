@@ -1,0 +1,8 @@
+function(diana_add_test name)
+    add_executable(test_${name} test_${name}.c)
+    target_link_libraries(test_${name} PRIVATE diana::diana $<$<NOT:$<BOOL:${MSVC}>>:m>)
+    diana_set_strict_flag(test_${name})
+    add_test(NAME ${name} COMMAND test_${name})
+endfunction()
+
+diana_add_test(status)
