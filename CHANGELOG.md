@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- `script/dev.sh verify` runs the spec gate with `--strict`, so it fails on a theorem listed in
+  `spec/` that no prover proves (`missing`), not only on a disallowed axiom. The CI jobs stay
+  non-strict: no CI image can build layers B and C-VST.
+
 ### Fixed
 
 - `verification/rocq/Makefile` gained the `check` target that `script/check_spec.py` and the
