@@ -1,0 +1,6 @@
+---
+# The extension follows CPython naming (BisectObject, BisectType), not the
+# library's lower_case convention; see doc/development.md.
+InheritParentConfig: true
+Checks: >
+  -readability-identifier-naming
