@@ -69,4 +69,30 @@ endif()
 if(DIANA_BUILD_TEST)
     enable_testing()
     add_subdirectory(test/c)
+    if(NOT DEFINED SKBUILD)
+        set(DIANA_INSTALL_TEST_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/install-test)
+        set(DIANA_INSTALL_TEST_LINK_FLAG "${CMAKE_EXE_LINKER_FLAGS}")
+        if(DIANA_SANITIZER AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+            string(APPEND DIANA_INSTALL_TEST_LINK_FLAG " -fsanitize=address,undefined")
+        endif()
+        set(DIANA_INSTALL_TEST_OPTION
+            -DCMAKE_PREFIX_PATH=${DIANA_INSTALL_TEST_PREFIX}
+            -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+            -DCMAKE_BUILD_TYPE=$<CONFIG>
+            "-DCMAKE_EXE_LINKER_FLAGS=${DIANA_INSTALL_TEST_LINK_FLAG}")
+        add_test(NAME install
+            COMMAND ${CMAKE_COMMAND} --install ${CMAKE_CURRENT_BINARY_DIR}
+                    --prefix ${DIANA_INSTALL_TEST_PREFIX} --config $<CONFIG>)
+        set_tests_properties(install PROPERTIES FIXTURES_SETUP diana_install)
+        add_test(NAME find_package
+            COMMAND ${CMAKE_CTEST_COMMAND}
+                    --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/test/install
+                                     ${CMAKE_CURRENT_BINARY_DIR}/test/install
+                    --build-generator ${CMAKE_GENERATOR}
+                    --build-makeprogram ${CMAKE_MAKE_PROGRAM}
+                    --build-config $<CONFIG>
+                    --build-options ${DIANA_INSTALL_TEST_OPTION}
+                    --test-command consume)
+        set_tests_properties(find_package PROPERTIES FIXTURES_REQUIRED diana_install)
+    endif()
 endif()
