@@ -8,6 +8,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `script/check_wheel.py` checks static and shared installed wheels in isolated environments;
+  Python CI runs it. `test_install` checks the installed CMake consumer with a custom
+  header directory and gates releases.
 - `test/c/test_bisect.c` covers the last uncovered paths of the kernel and the wrapper, taking C
   line and branch coverage to 100%: the `diana_bisect_init` early `DIANA_OK` (bracket already
   within the tolerance, and a bracket so narrow that the midpoint rounds onto an endpoint, in both
@@ -20,11 +23,17 @@ All notable changes to this project are documented here. The format follows
 - The project name is styled `Diana` in prose; lowercase `diana` stays only where it is an
   identifier (package, CMake target, library file, URL).
 - `script/dev.sh verify` runs the spec gate with `--strict`, so it fails on a theorem listed in
-  `spec/` that no prover proves (`missing`), not only on a disallowed axiom. The CI jobs stay
-  non-strict: no CI image can build layers B and C-VST.
+  `spec/` that no prover proves (`missing`), not only on a disallowed axiom. Lean CI also uses
+  `--strict`, with `--prover lean` limiting its checks to Lean proofs.
 
 ### Fixed
 
+- Shared Python wheels bundle an unversioned `libdiana` runtime beside the extension and locate
+  it without the build tree or loader-path overrides. Static wheels and standalone CMake library
+  versioning are unchanged.
+- The exported CMake target uses `CMAKE_INSTALL_INCLUDEDIR`, matching the header installation
+  destination when a custom include directory is selected.
+- Missing listed Lean proofs now fail CI instead of passing the non-strict spec gate.
 - `verification/rocq/Makefile` gained the `check` target that `script/check_spec.py` and the
   documentation already assumed, so `script/dev.sh verify` reaches the end of the spec gate instead
   of reporting every Rocq theorem as `check failed`. `check` compiles the generated `CheckSpec.v`
