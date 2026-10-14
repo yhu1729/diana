@@ -124,7 +124,11 @@ A real / B float / C code, informal statement, and the fully qualified constant 
    `script/axiom_allow.yaml`. Lean prints `'N' depends on axioms: [...]` or `'N' does not depend on
    any axioms`. Rocq's `Print Assumptions` prints `Closed under the global context` or an `Axioms:`
    block without echoing the name, so blocks are matched to constants by position; an axiom line
-   starts at column 0 with a qualified identifier, while type continuation lines are indented;
+   starts at column 0 with the name, optionally followed by `: <type>`, while type continuation
+   lines are indented. Because the match is positional, a block count that differs from the number
+   of constants, an empty `Axioms:` block, or any unindented line that is not an axiom is an error
+   rather than a silent reinterpretation: the affected constants read `check failed`. Only Rocq's
+   stdout is parsed, since the pinned version writes warnings to stderr;
 4. rewrites the report below (unless `--no-report`). The Frama-C column reads the committed summary
    `framac/expected/<spec>.txt`, which CI compares against a fresh WP run.
 
