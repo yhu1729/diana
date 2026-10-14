@@ -17,10 +17,10 @@ endif()
 option(DIANA_BUILD_TEST "Build the C test suite" OFF)
 option(DIANA_SANITIZER "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 option(DIANA_WERROR "Treat warnings as errors" OFF)
-option(BUILD_SHARED_LIBS "Build diana as a shared library" OFF)
+option(BUILD_SHARED_LIBS "Build Diana as a shared library" OFF)
 
 if(CMAKE_C_FLAGS MATCHES "-Ofast|-ffast-math")
-    message(FATAL_ERROR "diana must not be built with -Ofast or -ffast-math: the verified semantics are strict IEEE binary64")
+    message(FATAL_ERROR "Diana must not be built with -Ofast or -ffast-math: the verified semantics are strict IEEE binary64")
 endif()
 
 include(cmake/warning.cmake)
