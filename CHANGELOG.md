@@ -39,6 +39,8 @@ All notable changes to this project are documented here. The format follows
 - Standalone Windows shared libraries export the public C functions, as wheel builds already did.
 - The full strict spec gate rejects ACSL specifications with missing, duplicate, or invalid
   Frama-C expectation entries.
+- `script/dev.sh verify` runs WP for the last `expectation.txt` row even without a trailing
+  newline.
 - Python `Bisect` objects allocated without successful initialization reject `step()` and
   `result()` instead of reporting a successful zero-valued result.
 - C and Python coverage jobs run on every default-branch pipeline, keeping the README coverage

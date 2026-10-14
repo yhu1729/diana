@@ -167,7 +167,7 @@ check_clight() {
 }
 
 check_frama_c() {
-    while read -r name goal_count; do
+    while read -r name goal_count || [ -n "$name" ]; do
         [ -n "$name" ] || continue
         report=verification/frama-c/report-$name.txt
         if ! opam_run script/run_frama_c.sh "src/$name.c" >"$report" 2>&1; then
