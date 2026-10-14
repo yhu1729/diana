@@ -20,8 +20,8 @@ Rationale that used to live in code comments. How to run each tool is in `CLAUDE
   extension, without headers, archives, import libraries, or CMake exports. Standalone CMake
   installations retain the library's `VERSION`/`SOVERSION`. The wheel extension uses an install
   RPATH of `@loader_path` on macOS and `$ORIGIN` on Linux; the macOS library has an `@rpath` install
-  name. On Windows, the wheel library exports its functions and its DLL is beside the extension,
-  where CPython's loader searches for dependencies.
+  name. On Windows, shared libraries export their functions in both standalone and wheel builds;
+  the wheel DLL is beside the extension, where CPython's loader searches for dependencies.
 - `GNUInstallDirs` is loaded before configuring the target's installed include directory, so
   `CMAKE_INSTALL_INCLUDEDIR` controls both header installation and the exported include path.
 - `DIANA_WERROR` (`-Werror`) is OFF by default, so building from the sdist with a newer compiler
@@ -29,7 +29,8 @@ Rationale that used to live in code comments. How to run each tool is in `CLAUDE
   `-DDIANA_WERROR=ON`, and `SKBUILD_CMAKE_DEFINE` for the uv jobs that build the extension), and so
   does `script/dev.sh` (`config` and the `uv sync` of `config`/`build`).
 - `DIANA_SANITIZER` uses directory-wide `add_compile_options`, which only reach targets created
-  after the call, so it comes before `add_library(diana)`.
+  after the call, so it comes before `add_library(diana)`. The required sanitizer runtime link
+  options are public usage requirements of `diana::diana`, including its installed target.
 
 ## Format
 
@@ -88,6 +89,8 @@ across every file that are artefacts rather than defects.
   module per kernel (`_bisect.py`: `diana.bisect`), and `__init__.py`, which only re-exports.
   Driver modules are private so that a module name never shadows the function of the same name.
 - The extension sources live outside the package directory so the wheel does not ship them.
+- `Bisect.__new__` allocates an uninitialized state with status `ERR_ARG`. `step` and `result`
+  reject it until `__init__` succeeds; a rejected reinitialization preserves a prior valid state.
 
 ## Local workflow (`script/dev.sh`)
 
@@ -112,8 +115,12 @@ across every file that are artefacts rather than defects.
 `test/python/` holds the pytest suite. With `DIANA_BUILD_TEST=ON` (outside scikit-build), ctest also
 installs the build into `<build>/install-test` (test `install`) and builds and runs the consumer
 project `test/install/` against it with `find_package(diana)` (test `find_package`); the consumer is
-linked with the parent's `CMAKE_EXE_LINKER_FLAGS` plus the sanitizer flags, so coverage and
-sanitizer builds of the static library link.
+linked with the parent's `CMAKE_EXE_LINKER_FLAGS` for coverage builds; sanitizer runtime options
+come from the installed target. On macOS, the consumer inherits the configured architecture
+list, SDK, and deployment target, including universal builds.
+
+The pytest suite also checks the spec gate with temporary spec and expectation files and mocked
+prover execution. The `test` dependency group includes PyYAML for those checks.
 
 `uv run script/check_wheel.py` builds static and shared wheels in separate temporary directories,
 checks their runtime-library contents and absence of development artifacts, removes their build
@@ -186,7 +193,7 @@ a job reads, extend the matching list.
   against Python 3.11 (`per-file-target-version` in `pyproject.toml`). The script exits non-zero
   when the Lean check fails to run, a listed Lean theorem is missing, or a theorem depends on an
   axiom outside `script/axiom_allow.yaml`. Selecting `--prover lean` excludes Rocq-only layers
-  from this gate.
+  and Frama-C coverage from this gate.
 - `verify_frama_c`: 162/162 goals are proved locally with Frama-C 33.0 and Alt-Ergo 2.6.4; the CI
   image is 32.1 until a 33 tag exists. If 32.1 behaves differently, pin the image forward rather
   than re-adding `allow_failure`.
@@ -227,8 +234,11 @@ switch of `CONTRIBUTING.md`, and a green pipeline says nothing about it. After a
 4. `uv run script/check_spec.py --run --strict` runs both provers' axiom gates and rewrites the
    report at the end of `doc/verification.md`; commit the report. `--strict` is what
    `script/dev.sh verify` passes, so `verify` fails on a theorem that is listed in `spec/` but not
-   proved (`missing`), not only on a disallowed axiom; as of v0.1.0 every theorem listed in `spec/`
-   is proved, so it exits 0. Note that this is a gate on the listed theorems, not a claim that
+   proved (`missing`), not only on a disallowed axiom. The full strict gate also requires exactly
+   one valid positive Frama-C expectation count for each ACSL specification, so the WP loop cannot
+   silently omit it. The fresh WP run and report check remain step 3; an expectation count alone
+   is not proof evidence. As of v0.1.0 every theorem listed in `spec/` is proved, so it exits 0.
+   Note that this is a gate on the listed theorems, not a claim that
    every C function has a VST proof: `diana_bisect_init` and `diana_bisect_step` are deliberately
    not listed yet.
 
