@@ -21,7 +21,8 @@ All notable changes to this project are documented here. The format follows
 ### Changed
 
 - Frama-C verification data lives in `verification/frama-c/`, with all expected goal counts in
-  `expectation.txt`. Script filenames and identifiers use `frama_c`; CI, the local
+  `expectation.txt`, one `<source> <goal-count>` row per verified C file; the spec gate matches
+  each ACSL theorem by its `acsl` file. Script filenames and identifiers use `frama_c`; CI, the local
   verification workflow, and the spec report read the consolidated baseline.
 - `CONTRIBUTING.md` is rewritten: a quick-start sequence, the project conventions, a "Before you
   commit" section separating what CI checks from the local-only proof layers, and a section on

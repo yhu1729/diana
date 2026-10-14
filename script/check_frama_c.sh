@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 report="$1"
-kernel="${2:-}"
+source="${2:-}"
 expectation="$(dirname "$0")/../verification/frama-c/expectation.txt"
 summary=$(grep -E '^\[wp\] Proved goals:' "$report" | tail -1)
 if ! echo "$summary" | grep -qE '^\[wp\] Proved goals: *[0-9]+ */ *[0-9]+ *$'; then
@@ -15,9 +15,9 @@ if [ "$proved" != "$total" ]; then
     echo "WP: $proved of $total goals proved" >&2
     exit 1
 fi
-if [ -n "$kernel" ]; then
-    if ! want=$(awk -v kernel="$kernel" '
-        $1 == kernel {
+if [ -n "$source" ]; then
+    if ! want=$(awk -v source="$source" '
+        $1 == source {
             count++
             if (NF != 2 || $2 !~ /^[1-9][0-9]*$/) invalid = 1
             goals = $2
@@ -27,7 +27,7 @@ if [ -n "$kernel" ]; then
             print goals
         }
     ' "$expectation"); then
-        echo "WP: missing, duplicate, or invalid entry for $kernel in $expectation" >&2
+        echo "WP: missing, duplicate, or invalid entry for $source in $expectation" >&2
         exit 1
     fi
     if [ "$total" != "$want" ]; then

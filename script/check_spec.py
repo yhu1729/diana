@@ -252,13 +252,17 @@ def parse_rocq_axiom(out: str, names: list[str]) -> dict[str, list[str]]:
     return found
 
 
-def frama_c_status(spec: str) -> str:
+def acsl_file(t: Theorem) -> str:
+    return str(t.acsl).partition(":")[0]
+
+
+def frama_c_status(source: str) -> str:
     if not FRAMA_C_EXPECTATION.is_file():
         return "planned"
     rows = []
     for line in FRAMA_C_EXPECTATION.read_text().splitlines():
         fields = line.split()
-        if fields and fields[0] == spec:
+        if fields and fields[0] == source:
             rows.append(fields)
     if not rows:
         return "planned"
@@ -284,7 +288,7 @@ def write_report(theorems: list[Theorem]) -> None:
                 cells.append("–")
             else:
                 cells.append(t.result.get(prover, "planned").replace("no project", "planned"))
-        cells.append(frama_c_status(t.spec) if t.acsl else "–")
+        cells.append(frama_c_status(acsl_file(t)) if t.acsl else "–")
         informal = t.informal.replace("|", "\\|")
         lines.append(
             f"| {t.spec} | {t.id} | {t.layer} | {cells[0]} | {cells[1]} | {cells[2]} | {informal} |"
@@ -337,11 +341,12 @@ def main() -> int:
         for t in theorems:
             if not t.acsl:
                 continue
-            status = frama_c_status(t.spec)
+            source = acsl_file(t)
+            status = frama_c_status(source)
             if status == "planned":
-                unverified.append((t.id, "frama-c", f"missing expectation for {t.spec}"))
+                unverified.append((t.id, "frama-c", f"missing expectation for {source}"))
             elif status == "unreadable":
-                unverified.append((t.id, "frama-c", f"invalid expectation for {t.spec}"))
+                unverified.append((t.id, "frama-c", f"invalid expectation for {source}"))
     print(f"{len(theorems)} theorem(s) in {len({t.spec for t in theorems})} spec file(s)")
     for tid, p, why in unverified:
         print(f"  {tid} [{p}]: {why}")

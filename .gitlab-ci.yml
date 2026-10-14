@@ -351,7 +351,7 @@ verify_frama_c:
   script:
     - frama-c -version
     - script/run_frama_c.sh src/bisect.c | tee verification/frama-c/report-bisect.txt
-    - script/check_frama_c.sh verification/frama-c/report-bisect.txt bisect
+    - script/check_frama_c.sh verification/frama-c/report-bisect.txt src/bisect.c
   artifacts:
     when: always
     paths: [verification/frama-c/report-bisect.txt, verification/frama-c/session]

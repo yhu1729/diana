@@ -167,14 +167,14 @@ check_clight() {
 }
 
 check_frama_c() {
-    while read -r name goal_count || [ -n "$name" ]; do
-        [ -n "$name" ] || continue
-        report=verification/frama-c/report-$name.txt
-        if ! opam_run script/run_frama_c.sh "src/$name.c" >"$report" 2>&1; then
+    while read -r source goal_count || [ -n "$source" ]; do
+        [ -n "$source" ] || continue
+        report=verification/frama-c/report-$(basename "$source" .c).txt
+        if ! opam_run script/run_frama_c.sh "$source" >"$report" 2>&1; then
             tail -n 20 "$report" >&2
-            fail "Frama-C WP failed on src/$name.c; full output in $report"
+            fail "Frama-C WP failed on $source; full output in $report"
         fi
-        script/check_frama_c.sh "$report" "$name"
+        script/check_frama_c.sh "$report" "$source"
     done < verification/frama-c/expectation.txt
 }
 
