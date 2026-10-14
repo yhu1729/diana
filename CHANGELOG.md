@@ -20,6 +20,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- `CONTRIBUTING.md` is rewritten: a quick-start sequence, the project conventions, a "Before you
+  commit" section separating what CI checks from the local-only proof layers, and a section on
+  proposing a change. The `commit-msg` hook is now installed with `git config core.hooksPath
+  .git-hooks`, with the symlink kept as the alternative for a clone with its own hooks. `README.md`
+  gained a "Contribute" section pointing at it.
 - The project name is styled `Diana` in prose; lowercase `diana` stays only where it is an
   identifier (package, CMake target, library file, URL).
 - `script/dev.sh verify` runs the spec gate with `--strict`, so it fails on a theorem listed in
