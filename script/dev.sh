@@ -15,7 +15,8 @@ usage: script/dev.sh config [cmake option...]
   build   build the C library and tests, rebuild the Python extension
   test    run ctest and pytest, then the ruff and clang-format checks
   verify  check the Clight ASTs, build the Lean and Rocq proofs, run Frama-C WP,
-          and run the spec gate (rewrites the report in doc/verification.md)
+          and run the spec gate in strict mode, which fails on a theorem that is
+          listed in spec/ but not proved (rewrites the report in doc/verification.md)
 
 environment:
   DIANA_BUILD_DIR      CMake build directory (default build)
@@ -183,7 +184,7 @@ dev_verify() {
     (cd verification/lean && lake exe cache get && lake build)
     opam_run make -C verification/rocq
     check_framac
-    opam_run uv run --no-sync script/check_spec.py --run
+    opam_run uv run --no-sync script/check_spec.py --run --strict
 }
 
 command=${1:-}
