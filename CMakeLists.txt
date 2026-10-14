@@ -10,6 +10,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+option(DIANA_SANITIZER "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 option(DIANA_WERROR "Treat warnings as errors" OFF)
 option(BUILD_SHARED_LIBS "Build diana as a shared library" OFF)
 
@@ -18,6 +19,15 @@ if(CMAKE_C_FLAGS MATCHES "-Ofast|-ffast-math")
 endif()
 
 include(cmake/warning.cmake)
+
+if(DIANA_SANITIZER)
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+        add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
+        add_link_options(-fsanitize=address,undefined)
+    else()
+        message(WARNING "DIANA_SANITIZER is only supported with gcc or clang")
+    endif()
+endif()
 
 add_library(diana
     src/status.c
