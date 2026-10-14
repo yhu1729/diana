@@ -18,3 +18,16 @@ if(CMAKE_C_FLAGS MATCHES "-Ofast|-ffast-math")
 endif()
 
 include(cmake/warning.cmake)
+
+add_library(diana
+    src/status.c)
+add_library(diana::diana ALIAS diana)
+target_include_directories(diana PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+set_target_properties(diana PROPERTIES
+    C_VISIBILITY_PRESET default
+    POSITION_INDEPENDENT_CODE ON
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR})
+diana_set_strict_flag(diana)
