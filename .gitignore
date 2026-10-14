@@ -30,9 +30,9 @@ verification/rocq/.Makefile.rocq.d
 .nia.cache
 .nra.cache
 .frama-c/
-framac/cache/
-framac/session/
-framac/report-*.txt
+verification/frama-c/cache/
+verification/frama-c/session/
+verification/frama-c/report-*.txt
 .DS_Store
 *.swp
 .idea/
