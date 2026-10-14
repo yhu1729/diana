@@ -134,10 +134,14 @@ A real / B float / C code, informal statement, and the fully qualified constant 
    `verification/frama-c/expectation.txt`, which CI compares against a fresh WP run.
 
 The exit status is non-zero on a structural error and, with `--strict`, also when any theorem is not
-verified (missing prover project, missing constant, disallowed axiom). `script/dev.sh verify` passes
-`--strict`, so the local gate fails on a theorem listed in `spec/` without a proof. The Lean CI
+verified (missing prover project, missing constant, disallowed axiom). The default full strict gate
+also requires exactly one valid positive Frama-C expectation count for every ACSL specification;
+this prevents the local WP loop from silently omitting a specification. Fresh WP execution and
+report checking remain the responsibility of `script/dev.sh verify`, which passes `--strict`, so
+the local gate fails on a theorem listed in `spec/` without a proof. The Lean CI
 job also passes `--strict`, with `--prover lean` limiting the gate to listed Lean theorems, so
-missing Lean proofs fail CI without requiring Rocq-only layers B and C-VST. The structural style
+missing Lean proofs fail CI without requiring Rocq-only layers B and C-VST or Frama-C coverage.
+Explicit `--prover` selections check only the named proof tools. The structural style
 check stays non-strict, and Rocq CI still compiles layer A without running its axiom gate.
 
 The allowed Rocq axioms are the classical reals of the Rocq standard library and functional
