@@ -38,7 +38,7 @@ cmake.source-dir = "."
 cmake.args = ["-DDIANA_BUILD_PYTHON=ON", "-DDIANA_BUILD_TEST=OFF"]
 wheel.packages = ["python/src/diana"]
 sdist.include = ["include/**", "src/**", "cmake/**", "python/src/**", "python/ext/**", "CMakeLists.txt"]
-sdist.exclude = ["verification/**", "framac/**", "ci/**", "build/**"]
+sdist.exclude = ["verification/**", "ci/**", "build/**"]
 build-dir = "build/{wheel_tag}"
 
 [tool.pytest.ini_options]
