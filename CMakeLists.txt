@@ -24,6 +24,7 @@ if(CMAKE_C_FLAGS MATCHES "-Ofast|-ffast-math")
 endif()
 
 include(cmake/warning.cmake)
+include(GNUInstallDirs)
 
 if(DIANA_SANITIZER)
     if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
@@ -41,16 +42,16 @@ add_library(diana
 add_library(diana::diana ALIAS diana)
 target_include_directories(diana PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 set_target_properties(diana PROPERTIES
     C_VISIBILITY_PRESET default
-    POSITION_INDEPENDENT_CODE ON
-    VERSION ${PROJECT_VERSION}
-    SOVERSION ${PROJECT_VERSION_MAJOR})
+    POSITION_INDEPENDENT_CODE ON)
 diana_set_strict_flag(diana)
 
 if(NOT DEFINED SKBUILD)
-    include(GNUInstallDirs)
+    set_target_properties(diana PROPERTIES
+        VERSION ${PROJECT_VERSION}
+        SOVERSION ${PROJECT_VERSION_MAJOR})
     install(TARGETS diana EXPORT dianaTargets
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -113,5 +114,22 @@ if(DIANA_BUILD_PYTHON)
     diana_set_strict_flag(_diana)
     if(DEFINED SKBUILD)
         install(TARGETS _diana DESTINATION diana)
+        if(BUILD_SHARED_LIBS)
+            install(TARGETS diana
+                LIBRARY DESTINATION diana
+                RUNTIME DESTINATION diana
+                ARCHIVE DESTINATION diana EXCLUDE_FROM_ALL)
+            if(APPLE)
+                set_target_properties(diana PROPERTIES
+                    MACOSX_RPATH ON
+                    INSTALL_NAME_DIR "@rpath")
+                set_target_properties(_diana PROPERTIES INSTALL_RPATH "@loader_path")
+            elseif(UNIX)
+                set_target_properties(_diana PROPERTIES INSTALL_RPATH "$ORIGIN")
+            elseif(WIN32)
+                set_target_properties(diana PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+            endif()
+            set_target_properties(_diana PROPERTIES INSTALL_RPATH_USE_LINK_PATH OFF)
+        endif()
     endif()
 endif()
