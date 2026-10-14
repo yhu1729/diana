@@ -2,8 +2,8 @@
 
 [![Release](https://gitlab.com/yhu1729/diana/-/badges/release.svg?key_text=Release&key_width=58)](https://gitlab.com/yhu1729/diana/-/releases)
 [![Pipeline](https://gitlab.com/yhu1729/diana/badges/main/pipeline.svg?key_text=Pipeline&key_width=58&ignore_skipped=true)](https://gitlab.com/yhu1729/diana/-/commits/main)
-[![Coverage: C](https://gitlab.com/yhu1729/diana/badges/main/coverage.svg?key_text=C+Coverage&key_width=78&job=coverage_c)](https://gitlab.com/yhu1729/diana/-/commits/main)
-[![Coverage: Python](https://gitlab.com/yhu1729/diana/badges/main/coverage.svg?key_text=Python+Coverage&key_width=108&job=coverage_python)](https://gitlab.com/yhu1729/diana/-/commits/main)
+[![C Coverage](https://gitlab.com/yhu1729/diana/badges/main/coverage.svg?key_text=C+Coverage&key_width=78&job=coverage_c)](https://gitlab.com/yhu1729/diana/-/commits/main)
+[![Python Coverage](https://gitlab.com/yhu1729/diana/badges/main/coverage.svg?key_text=Python+Coverage&key_width=108&job=coverage_python)](https://gitlab.com/yhu1729/diana/-/commits/main)
 
 Formally verified numerical methods in C, with a Python binding.
 
