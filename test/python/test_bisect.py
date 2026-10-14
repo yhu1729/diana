@@ -123,6 +123,62 @@ def test_step_after_finish():
         s.step(0.0)
 
 
+def test_uninitialized_state():
+    s = diana.Bisect.__new__(diana.Bisect)
+    assert s.status == diana.ERR_ARG
+    with pytest.raises(RuntimeError, match="not initialized"):
+        s.result()
+    with pytest.raises(RuntimeError, match="not initialized"):
+        s.step(0.0)
+    with pytest.raises(RuntimeError, match="not initialized"):
+        s.step(object())
+
+
+@pytest.mark.parametrize(
+    ("args", "error"),
+    [
+        ((), TypeError),
+        ((0.0, 1.0, -1.0, 1.0, 0.0, 0), ValueError),
+        ((0.0, 1.0, 1.0, 1.0), diana.BracketError),
+    ],
+)
+def test_failed_initialization(args, error):
+    s = diana.Bisect.__new__(diana.Bisect)
+    with pytest.raises(error):
+        s.__init__(*args)
+    assert s.status == diana.ERR_ARG
+    with pytest.raises(RuntimeError, match="not initialized"):
+        s.result()
+    with pytest.raises(RuntimeError, match="not initialized"):
+        s.step(0.0)
+
+    s.__init__(0.0, 1.0, -1.0, 1.0)
+    assert s.status == diana.CONTINUE
+    assert s.result() == (0.5, 1.0)
+    assert s.step(0.0) == diana.OK
+    assert s.result() == (0.5, 0.0)
+
+
+@pytest.mark.parametrize(
+    ("args", "error"),
+    [
+        ((), TypeError),
+        ((0.0, 1.0, -1.0, 1.0, 0.0, 0), ValueError),
+        ((0.0, 1.0, 1.0, 1.0), diana.BracketError),
+    ],
+)
+def test_failed_reinitialization_preserves_state(args, error):
+    s = diana.Bisect(0.0, 1.0, -0.25, 0.75)
+    assert s.step(s.x - 0.25) == diana.CONTINUE
+    before = (s.a, s.b, s.fa, s.fb, s.x, s.tol, s.iter, s.max_iter, s.status, s.result())
+    with pytest.raises(error):
+        s.__init__(*args)
+    after = (s.a, s.b, s.fa, s.fb, s.x, s.tol, s.iter, s.max_iter, s.status, s.result())
+    assert after == before
+    assert s.step(s.x - 0.25) == diana.OK
+    assert s.result() == (0.25, 0.0)
+
+
 def test_callback_exception_propagates():
     class Boom(Exception):
         pass
