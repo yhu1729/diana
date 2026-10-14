@@ -333,6 +333,15 @@ def main() -> int:
         for p in provers
         if getattr(t, p) and t.result.get(p) != "ok"
     ]
+    if args.strict and not args.prover:
+        for t in theorems:
+            if not t.acsl:
+                continue
+            status = frama_c_status(t.spec)
+            if status == "planned":
+                unverified.append((t.id, "frama-c", f"missing expectation for {t.spec}"))
+            elif status == "unreadable":
+                unverified.append((t.id, "frama-c", f"invalid expectation for {t.spec}"))
     print(f"{len(theorems)} theorem(s) in {len({t.spec for t in theorems})} spec file(s)")
     for tid, p, why in unverified:
         print(f"  {tid} [{p}]: {why}")

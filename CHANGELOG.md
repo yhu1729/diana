@@ -37,6 +37,8 @@ All notable changes to this project are documented here. The format follows
 - Sanitized CMake installations propagate sanitizer runtime link requirements to consumers.
 - Installed-consumer tests preserve macOS architecture lists, SDKs, and deployment targets.
 - Standalone Windows shared libraries export the public C functions, as wheel builds already did.
+- The full strict spec gate rejects ACSL specifications with missing, duplicate, or invalid
+  Frama-C expectation entries.
 - Python `Bisect` objects allocated without successful initialization reject `step()` and
   `result()` instead of reporting a successful zero-valued result.
 - C and Python coverage jobs run on every default-branch pipeline, keeping the README coverage

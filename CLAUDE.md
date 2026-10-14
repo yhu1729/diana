@@ -114,8 +114,10 @@ doc/                  api, development, verification (trust statement + generate
 - Frama-C: `script/run_frama_c.sh` (all goals must prove; `script/check_frama_c.sh` on the report)
 - Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/bisect_aarch64_macos.v src/bisect.c` **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
 - Spec gate: `uv run script/check_spec.py --run --strict` (runs both provers' check files, `--prover lean|rocq` to select one and rewrites the generated report at the end of `doc/verification.md`; commit it, CI does not regenerate it; `--no-report` to leave it alone)
+  The default full strict gate also requires a unique positive Frama-C expectation count for each
+  ACSL specification; fresh WP execution and report checking remain in `script/dev.sh verify`.
   Lean CI uses `--run --strict --prover lean --no-report`, so missing Lean proofs fail the gate
-  without requiring Rocq-only layers.
+  without requiring Rocq-only layers or Frama-C coverage.
 
 ## Status
 
