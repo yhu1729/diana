@@ -36,6 +36,7 @@ stages:
   - src/**/*
   - python/**/*
   - test/python/**/*
+  - script/check_wheel.py
 
 .change_style: &change_style
   - .gitlab-ci.yml
@@ -240,6 +241,18 @@ test_clang_release:
   extends: [.clang, .release_config, .test]
   needs: [build_clang_release]
 
+test_install:
+  stage: test
+  extends: .gcc
+  rules:
+    - *rule_full
+    - changes: *change_c
+  needs: []
+  script:
+    - cmake -S . -B build/install-custom -G Ninja -DCMAKE_BUILD_TYPE=Release -DDIANA_BUILD_TEST=ON -DDIANA_BUILD_PYTHON=OFF -DDIANA_WERROR=ON -DCMAKE_C_COMPILER=$CC -DCMAKE_INSTALL_INCLUDEDIR=include/custom
+    - cmake --build build/install-custom
+    - ctest --test-dir build/install-custom --output-on-failure
+
 test_python:
   stage: test
   extends: .uv
@@ -254,6 +267,7 @@ test_python:
     - uv run pytest -q
     - uv build
     - uv run --with twine twine check dist/*
+    - uv run --no-sync script/check_wheel.py
   artifacts:
     paths: [dist/]
     expire_in: 1 week
@@ -371,6 +385,7 @@ release:
     - test_clang_release
     - test_clang_debug
     - test_python
+    - test_install
     - verify_framac
     - verify_lean
     - verify_rocq
