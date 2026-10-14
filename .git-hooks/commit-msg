@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eu
+awk '
+    function fail(reason) {
+        print "Error: commit message rejected: " reason > "/dev/stderr"
+        exit 1
+    }
+    /^# -+ >8 -+$/ { cut = 1 }
+    cut || /^#/ { next }
+    { line[++n] = $0 }
+    END {
+        while (n > 0 && line[n] ~ /^[[:space:]]*$/)
+            n--
+        if (n == 0)
+            fail("empty message")
+        if (line[1] !~ /^(feat|fix|perf|refactor|build|style|test|ci|doc|chore)(\([^)]*\))?: [^ ].*$/)
+            fail("subject must be <type>[(scope)]: <summary> with a type from feat fix perf refactor build style test ci doc chore")
+    }
+' "$1"
