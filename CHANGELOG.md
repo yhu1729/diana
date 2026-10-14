@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `test/c/test_bisect.c` covers the last uncovered paths of the kernel and the wrapper, taking C
+  line and branch coverage to 100%: the `diana_bisect_init` early `DIANA_OK` (bracket already
+  within the tolerance, and a bracket so narrow that the midpoint rounds onto an endpoint, in both
+  rounding directions), the `diana_bisect_step` stagnation exits on each side of the bracket
+  update, a non-finite `fb`, and in `diana_bisect` a callback that returns a non-finite value at
+  the midpoint plus the `iter == NULL` calls.
+
 ### Changed
 
 - The project name is styled `Diana` in prose; lowercase `diana` stays only where it is an
