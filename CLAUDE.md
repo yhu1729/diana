@@ -1,4 +1,4 @@
-# diana
+# Diana
 
 Formally verified numerical method library in C11 with a hand-written CPython extension. The
 mathematical specification is proven in both Lean 4 (Mathlib) and Rocq (Stdlib reals; Coquelicot
@@ -12,6 +12,8 @@ API: `doc/api.md`. Build, test, and CI rationale: `doc/development.md`.
 - **Name:** single-form noun and base-form verb everywhere: directory (`test/`, `verification/`, `script/`,
   `doc/`, `wrapper/`), identifier (`diana_bisect_init`, `check_spec`), CI job (`build`, `test`),
   Python API (`diana.bisect`). No plural, no `-ing`/`-s` verb form.
+  - **Project name:** `Diana` in prose (heading, documentation sentence, user-facing string);
+    lowercase `diana` only where it is an identifier (package, CMake target, library file, URL).
 - **Commit:** `git commit -s` (Signed-off-by) always. Conventional Commits; the `commit-msg` hook accepts
   type `feat fix perf refactor build style test ci doc chore` (note `doc`, not `docs`). Never `--no-verify`.
   No push, tag, or merge request without an explicit request.
