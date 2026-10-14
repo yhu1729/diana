@@ -1,0 +1,6 @@
+---
+# The ctest harness reports failures with fprintf and exits; its return value
+# carries no information the test can act on.
+InheritParentConfig: true
+Checks: >
+  -cert-err33-c
