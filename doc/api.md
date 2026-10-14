@@ -103,6 +103,10 @@ for a code outside the C `int` range.
 `diana.__version__` is the version string of the linked C library, the same value `diana.version()`
 returns.
 
+A `diana.Bisect` allocated directly with `__new__` has status `ERR_ARG` until `__init__` succeeds;
+`step()` and `result()` raise `RuntimeError` before that. A failed `__init__` leaves the existing
+state and status unchanged, so a previously initialized object remains usable.
+
 `diana.bisect` raises `diana.BracketError` when `f(a)` and `f(b)` do not bracket a root, and
 `diana.MaxIterError` when `max_iter` is reached first; the latter carries the attributes
 `estimate`, `width` and `iter` (also its `args`, so it survives pickling across a process
