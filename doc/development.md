@@ -150,12 +150,14 @@ Six stages: style (format, naming, spec structure), build (per compiler and conf
 Rocq), and release (the tag release once everything is green). Jobs run as a DAG through `needs:`,
 and every job is interruptible so superseded pipelines stop.
 
-Each job runs only when a file it depends on changes (`rules: changes:` against the hidden
-`.change_*` path lists at the top of the file); a change to `.gitlab-ci.yml` runs everything, and a
-change to `doc/` or a top-level Markdown file alone starts no pipeline. Tag and scheduled pipelines
-(`.rule_full`) always run every job, so a release is gated on a full run. Because a job can now be
-absent from a pipeline, `needs:` on a job from another path set is `optional: true`. When adding a
-job or a file a job reads, extend the matching list.
+Jobs normally run only when a file they depend on changes (`rules: changes:` against the hidden
+`.change_*` path lists at the top of the file); a change to `.gitlab-ci.yml` runs everything.
+Both coverage jobs also run on every default-branch pipeline, including changes only to `doc/`
+or top-level Markdown files, so the README badges have values in the latest successful pipeline.
+Merge-request pipelines retain the path filters. Tag and scheduled pipelines (`.rule_full`)
+always run every job, so a release is gated on a full run. Because a job can be absent from a
+pipeline, `needs:` on a job from another path set is `optional: true`. When adding a job or a file
+a job reads, extend the matching list.
 
 - `style_c` checks the C sources (`include/`, `src/`, `test/c/`, `test/install/`, `python/ext/`) with the pinned
   `clang-format --dry-run --Werror`. It installs only the `lint` group (`uv sync --only-group`), so
