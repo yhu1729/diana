@@ -1,0 +1,8 @@
+---
+BasedOnStyle: LLVM
+InsertBraces: true
+CommentPragmas: '^@'
+StatementMacros: [PyObject_HEAD, PyObject_VAR_HEAD]
+Macros:
+  - 'PyVarObject_HEAD_INIT(type, size)={type, size},'
+...
