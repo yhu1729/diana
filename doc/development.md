@@ -230,7 +230,8 @@ switch of `CONTRIBUTING.md`, and a green pipeline says nothing about it. After a
    run step 4 first, or just use `script/dev.sh verify`, which orders them.
 3. `script/verify_frama_c.sh` runs `script/run_frama_c.sh` and `script/check_frama_c.sh` for
    each `<source> <goal-count>` row of `verification/frama-c/expectation.txt`, with reports in
-   `verification/frama-c/report-<stem>.txt` (CI runs the same script with Frama-C 32.1).
+   one consolidated `verification/frama-c/report.txt`, one `==> <source> <==` section per row
+   (CI runs the same script with Frama-C 32.1 and uploads that single file).
 4. `uv run script/check_spec.py --run --strict` runs both provers' axiom gates and rewrites the
    report at the end of `doc/verification.md`; commit the report. `--strict` is what
    `script/dev.sh verify` passes, so `verify` fails on a theorem that is listed in `spec/` but not
