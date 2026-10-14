@@ -1,0 +1,11 @@
+lean:
+  - propext
+  - Classical.choice
+  - Quot.sound
+rocq:
+  - ClassicalDedekindReals.sig_forall_dec
+  - ClassicalDedekindReals.sig_not_dec
+  - FunctionalExtensionality.functional_extensionality_dep
+  - Classical_Prop.classic
+  - Axioms.prop_ext
+  - Ensembles.Extensionality_Ensembles
