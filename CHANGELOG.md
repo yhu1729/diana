@@ -20,6 +20,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- Frama-C verification data lives in `verification/frama-c/`, with all expected goal counts in
+  `expectation.txt`. Script filenames and identifiers use `frama_c`; CI, the local
+  verification workflow, and the spec report read the consolidated baseline.
 - `CONTRIBUTING.md` is rewritten: a quick-start sequence, the project conventions, a "Before you
   commit" section separating what CI checks from the local-only proof layers, and a section on
   proposing a change. `README.md` gained a "Contribute" section pointing at it.
@@ -122,8 +125,8 @@ and what it assumes; its generated report gives the status of every theorem.
   constant.
 
 #### Tooling and documentation
-- `script/dev.sh config|build|test|verify` for the whole local loop, `script/run_framac.sh` and
-  `script/check_framac.sh` for WP (the latter is the gate: WP does not set a non-zero exit status
+- `script/dev.sh config|build|test|verify` for the whole local loop, `script/run_frama_c.sh` and
+  `script/check_frama_c.sh` for WP (the latter is the gate: WP does not set a non-zero exit status
   for an unproved goal). `config` syncs the uv environment before `cmake` and pins
   `-DPython_EXECUTABLE` to `.venv`, so the compile database describes the interpreter the pytest
   suite runs against; the clang-tidy step of `test` fails with a clear message when that database
