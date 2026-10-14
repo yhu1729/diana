@@ -162,8 +162,9 @@ a job reads, extend the matching list.
 - `style_c` checks the C sources (`include/`, `src/`, `test/c/`, `test/install/`, `python/ext/`) with the pinned
   `clang-format --dry-run --Werror`. It installs only the `lint` group (`uv sync --only-group`), so
   it builds nothing and skips the compiler install of `.uv`.
-- `test_install` runs the C suite and installed consumer with
-  `CMAKE_INSTALL_INCLUDEDIR=include/custom`; the release job requires it.
+- `test_install` runs the C suite and the installed consumer twice: once with
+  `CMAKE_INSTALL_INCLUDEDIR=include/custom`, once with `BUILD_SHARED_LIBS=ON`, so the exported
+  include path and the versioned shared install are both covered. The release job requires it.
 - `test_python` runs the Python suite and package metadata checks, then `script/check_wheel.py`
   to check both static and shared installed wheels.
 - `style_name` enforces single-form noun directory names by rejecting plural directories. It runs
@@ -181,10 +182,11 @@ a job reads, extend the matching list.
   so the report is regenerated locally with `--run` and committed (see
   [Local verification](#local-verification)).
 - `verify_lean` runs `script/check_spec.py --run --strict --prover lean --no-report` with the
-  image's system `python3` (3.11 on Debian bookworm), not with `uv`, so ruff checks `script/` against Python 3.11
-  (`per-file-target-version` in `pyproject.toml`). The script exits non-zero when the Lean check
-  fails to run, a listed Lean theorem is missing, or a theorem depends on an axiom outside
-  `script/axiom_allow.yaml`. Selecting `--prover lean` excludes Rocq-only layers from this gate.
+  image's system `python3` (3.11 on Debian bookworm), not with `uv`, so ruff checks `script/`
+  against Python 3.11 (`per-file-target-version` in `pyproject.toml`). The script exits non-zero
+  when the Lean check fails to run, a listed Lean theorem is missing, or a theorem depends on an
+  axiom outside `script/axiom_allow.yaml`. Selecting `--prover lean` excludes Rocq-only layers
+  from this gate.
 - `verify_framac`: 162/162 goals are proved locally with Frama-C 33.0 and Alt-Ergo 2.6.4; the CI
   image is 32.1 until a 33 tag exists. If 32.1 behaves differently, pin the image forward rather
   than re-adding `allow_failure`.
