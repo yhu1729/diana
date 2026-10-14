@@ -10,7 +10,7 @@ All notable changes to this project are documented here. The format follows
 
 - `script/check_wheel.py` checks static and shared installed wheels in isolated environments;
   Python CI runs it. `test_install` checks the installed CMake consumer with a custom
-  header directory and gates releases.
+  header directory and with a shared library, and gates releases.
 - `test/c/test_bisect.c` covers the last uncovered paths of the kernel and the wrapper, taking C
   line and branch coverage to 100%: the `diana_bisect_init` early `DIANA_OK` (bracket already
   within the tolerance, and a bracket so narrow that the midpoint rounds onto an endpoint, in both
