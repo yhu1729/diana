@@ -36,7 +36,7 @@ inside one Rocq development with no translation step.
 
 | Layer | CI | Local (`doc/development.md`, Local verification) |
 |---|---|---|
-| A, Lean | `verify_lean`: build and axiom gate | `lake build`, `check_spec.py --run --strict` |
+| A, Lean | `verify_lean`: build and strict axiom gate (`--prover lean`) | `lake build`, `check_spec.py --run --strict` |
 | A, Rocq | `verify_rocq`: compilation only | `make`, `make check`, `check_spec.py --run --strict` |
 | B (Flocq), C-VST, Clight AST | – | `clightgen`, `make`, `make check`, `check_spec.py --run --strict` |
 | C-WP | `verify_framac` (Frama-C 32.1) | `script/run_framac.sh` (Frama-C 33.0) |
@@ -130,8 +130,10 @@ A real / B float / C code, informal statement, and the fully qualified constant 
 
 The exit status is non-zero on a structural error and, with `--strict`, also when any theorem is not
 verified (missing prover project, missing constant, disallowed axiom). `script/dev.sh verify` passes
-`--strict`, so the local gate fails on a theorem listed in `spec/` without a proof; the CI jobs do
-not, because no CI image can build every layer.
+`--strict`, so the local gate fails on a theorem listed in `spec/` without a proof. The Lean CI
+job also passes `--strict`, with `--prover lean` limiting the gate to listed Lean theorems, so
+missing Lean proofs fail CI without requiring Rocq-only layers B and C-VST. The structural style
+check stays non-strict, and Rocq CI still compiles layer A without running its axiom gate.
 
 The allowed Rocq axioms are the classical reals of the Rocq standard library and functional
 extensionality, the two that VST's own foundations rely on (`Axioms.prop_ext`,
