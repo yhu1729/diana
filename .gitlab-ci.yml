@@ -347,7 +347,7 @@ verify_lean:
     - export PATH="$ELAN_HOME/bin:$PATH"
   script:
     - cd verification/lean && lake exe cache get && lake build && cd ../..
-    - python3 script/check_spec.py --run --prover lean --no-report
+    - python3 script/check_spec.py --run --strict --prover lean --no-report
   timeout: 2h
 
 verify_rocq:
