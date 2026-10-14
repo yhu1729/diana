@@ -1,0 +1,8 @@
+---
+# The ctest harness reports failures with fprintf and exits, so the return
+# value carries no information the test can act on, and test_status.c casts an
+# out-of-range value on purpose to check diana_status_str's default branch.
+InheritParentConfig: true
+Checks: >
+  -cert-err33-c,
+  -clang-analyzer-optin.core.EnumCastOutOfRange
