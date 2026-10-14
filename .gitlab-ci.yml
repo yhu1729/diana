@@ -1,0 +1,383 @@
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+
+stages:
+  - style
+  - build
+  - test
+  - report
+  - verify
+  - release
+
+.rule_full: &rule_full
+  if: $CI_COMMIT_TAG || $CI_PIPELINE_SOURCE == "schedule"
+
+.change_c: &change_c
+  - .gitlab-ci.yml
+  - CMakeLists.txt
+  - cmake/**/*
+  - include/**/*
+  - src/**/*
+  - test/c/**/*
+  - test/install/**/*
+
+.change_python: &change_python
+  - .gitlab-ci.yml
+  - .python-version
+  - pyproject.toml
+  - uv.lock
+  - CMakeLists.txt
+  - cmake/**/*
+  - include/**/*
+  - src/**/*
+  - python/**/*
+  - test/python/**/*
+
+.change_style: &change_style
+  - .gitlab-ci.yml
+  - .python-version
+  - pyproject.toml
+  - uv.lock
+  - include/**/*
+  - src/**/*
+  - python/**/*
+  - test/python/**/*
+  - script/**/*
+  - spec/**/*
+  - verification/**/*
+  - framac/expected/**/*
+
+.change_style_c: &change_style_c
+  - .gitlab-ci.yml
+  - .clang-format
+  - .clang-tidy
+  - .editorconfig
+  - pyproject.toml
+  - uv.lock
+  - include/**/*
+  - src/**/*
+  - test/c/**/*
+  - test/install/**/*
+  - python/ext/**/*
+
+.change_any: &change_any
+  - .gitlab-ci.yml
+  - .clang-tidy
+  - .editorconfig
+  - .python-version
+  - pyproject.toml
+  - uv.lock
+  - CMakeLists.txt
+  - cmake/**/*
+  - include/**/*
+  - src/**/*
+  - python/**/*
+  - test/**/*
+  - script/**/*
+  - spec/**/*
+  - verification/**/*
+  - framac/**/*
+  - ci/**/*
+
+.change_framac: &change_framac
+  - .gitlab-ci.yml
+  - include/**/*
+  - src/**/*
+  - framac/**/*
+  - script/run_framac.sh
+  - script/check_framac.sh
+
+.change_lean: &change_lean
+  - .gitlab-ci.yml
+  - verification/lean/**/*
+  - spec/**/*
+  - script/check_spec.py
+  - script/axiom_allow.yaml
+  - ci/docker/lean.Dockerfile
+
+.change_rocq: &change_rocq
+  - .gitlab-ci.yml
+  - verification/rocq/**/*
+
+default:
+  interruptible: true
+  retry:
+    max: 1
+    when: runner_system_failure
+
+variables:
+  GIT_DEPTH: "1"
+  UV_LINK_MODE: copy
+  UV_CACHE_DIR: $CI_PROJECT_DIR/.cache/uv
+  FRAMAC_IMAGE: framac/frama-c:32.1
+  ROCQ_IMAGE: rocq/rocq-prover:9.2
+  LEAN_IMAGE: debian:bookworm-slim
+
+.uv:
+  image: ghcr.io/astral-sh/uv:python3.13-bookworm-slim
+  variables:
+    SKBUILD_CMAKE_DEFINE: DIANA_WERROR=ON
+  cache:
+    key: uv-$CI_COMMIT_REF_SLUG
+    paths: [.cache/uv]
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends build-essential cmake ninja-build > /dev/null
+    - uv --version
+
+.gcc:
+  image: gcc:14
+  variables:
+    CC: gcc
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends cmake ninja-build > /dev/null
+
+.clang:
+  image: silkeh/clang:18
+  variables:
+    CC: clang
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends cmake ninja-build > /dev/null
+
+.release_config:
+  variables:
+    BUILD_TYPE: Release
+    SANITIZER: "OFF"
+
+.debug_config:
+  variables:
+    BUILD_TYPE: Debug
+    SANITIZER: "ON"
+
+.build:
+  stage: build
+  rules:
+    - *rule_full
+    - changes: *change_c
+  script:
+    - cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DDIANA_BUILD_TEST=ON -DDIANA_SANITIZER=$SANITIZER -DDIANA_WERROR=ON -DDIANA_BUILD_PYTHON=OFF -DCMAKE_C_COMPILER=$CC
+    - cmake --build build
+  artifacts:
+    paths: [build/]
+    expire_in: 1 day
+
+.test:
+  stage: test
+  rules:
+    - *rule_full
+    - changes: *change_c
+  script:
+    - ctest --test-dir build --output-on-failure
+  artifacts:
+    when: on_failure
+    paths: [build/Testing]
+    expire_in: 1 week
+
+style_python:
+  stage: style
+  extends: .uv
+  rules:
+    - *rule_full
+    - changes: *change_style
+  script:
+    - uv sync --group lint --group spec
+    - uv run ruff check python test/python script
+    - uv run ruff format --check python test/python script
+    - uv run script/check_spec.py --no-report
+
+style_c:
+  stage: style
+  extends: .uv
+  rules:
+    - *rule_full
+    - changes: *change_style_c
+  before_script:
+    - uv --version
+  script:
+    - uv sync --only-group lint
+    - uv run --no-sync clang-format --version
+    - find include src test/c test/install python/ext -name '*.[ch]' -print0 | xargs -0 uv run --no-sync clang-format --dry-run --Werror
+
+style_name:
+  stage: style
+  image: alpine:3.20
+  rules:
+    - *rule_full
+    - changes: *change_any
+  script:
+    - |
+      bad=$(find . -maxdepth 2 -type d \( -name tests -o -name docs -o -name scripts -o -name proofs -o -name wrappers -o -name tools \) -not -path "./.git/*" -not -path "./.venv/*" -not -path "./build/*")
+      if [ -n "$bad" ]; then echo "plural directory name not allowed: $bad"; exit 1; fi
+
+build_gcc_release:
+  extends: [.gcc, .release_config, .build]
+
+build_gcc_debug:
+  extends: [.gcc, .debug_config, .build]
+
+build_clang_release:
+  extends: [.clang, .release_config, .build]
+
+build_clang_debug:
+  extends: [.clang, .debug_config, .build]
+
+test_gcc_release:
+  extends: [.gcc, .release_config, .test]
+  needs: [build_gcc_release]
+
+test_gcc_debug:
+  extends: [.gcc, .debug_config, .test]
+  needs: [build_gcc_debug]
+
+test_clang_release:
+  extends: [.clang, .release_config, .test]
+  needs: [build_clang_release]
+
+test_clang_debug:
+  extends: [.clang, .debug_config, .test]
+  needs: [build_clang_debug]
+
+test_python:
+  stage: test
+  extends: .uv
+  rules:
+    - *rule_full
+    - changes: *change_python
+  needs:
+    - job: style_python
+      optional: true
+  script:
+    - uv sync --group test
+    - uv run pytest -q
+    - uv build
+    - uv run --with twine twine check dist/*
+  artifacts:
+    paths: [dist/]
+    expire_in: 1 week
+
+coverage_c:
+  stage: report
+  extends: .uv
+  needs:
+    - job: test_gcc_debug
+      optional: true
+      artifacts: false
+  rules:
+    - *rule_full
+    - changes: *change_c
+  script:
+    - cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DDIANA_BUILD_TEST=ON -DDIANA_WERROR=ON -DDIANA_BUILD_PYTHON=OFF -DCMAKE_C_FLAGS=--coverage -DCMAKE_EXE_LINKER_FLAGS=--coverage
+    - cmake --build build
+    - ctest --test-dir build --output-on-failure
+    - uv sync --only-group coverage
+    - mkdir -p coverage/c
+    - uv run --no-sync gcovr --root . --filter src/ --filter include/ --gcov-exclude-directories '.*/CMakeFiles/[0-9.]+/.*' --print-summary --cobertura coverage/c.xml --html-details coverage/c/index.html build
+  coverage: '/^lines: (\d+\.\d+)%/'
+  artifacts:
+    paths: [coverage/]
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/c.xml
+    expire_in: 1 month
+
+coverage_python:
+  stage: report
+  extends: .uv
+  needs:
+    - job: test_python
+      optional: true
+      artifacts: false
+  rules:
+    - *rule_full
+    - changes: *change_python
+  variables:
+    SKBUILD_CMAKE_DEFINE: DIANA_WERROR=ON;CMAKE_C_FLAGS=--coverage;CMAKE_MODULE_LINKER_FLAGS=--coverage
+  script:
+    - uv sync --group test --group coverage --reinstall-package diana
+    - mkdir -p coverage/python-c
+    - uv run --no-sync pytest -q --cov=diana --cov-branch --cov-report=term --cov-report=xml:coverage/python.xml --cov-report=html:coverage/python
+    - uv run --no-sync gcovr --root . --filter python/ext/ --gcov-exclude-directories '.*/CMakeFiles/[0-9.]+/.*' --print-summary --cobertura coverage/python-c.xml --html-details coverage/python-c/index.html build
+  coverage: '/^TOTAL\s.*\s(\d+(?:\.\d+)?)%$/'
+  artifacts:
+    paths: [coverage/]
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/python*.xml
+    expire_in: 1 month
+
+verify_framac:
+  stage: verify
+  image: $FRAMAC_IMAGE
+  rules:
+    - *rule_full
+    - changes: *change_framac
+  needs:
+    - job: build_gcc_release
+      optional: true
+      artifacts: false
+  script:
+    - frama-c -version
+    - script/run_framac.sh src/bisect.c | tee framac/report-bisect.txt
+    - script/check_framac.sh framac/report-bisect.txt framac/expected/bisect.txt
+  artifacts:
+    when: always
+    paths: [framac/report-bisect.txt, framac/session]
+    expire_in: 1 month
+
+verify_lean:
+  stage: verify
+  image: $LEAN_IMAGE
+  rules:
+    - *rule_full
+    - changes: *change_lean
+  needs: []
+  variables:
+    ELAN_HOME: $CI_PROJECT_DIR/.cache/elan
+  cache:
+    key: lean-$CI_COMMIT_REF_SLUG
+    paths: [.cache/elan, verification/lean/.lake/build]
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends curl git ca-certificates zstd python3 python3-yaml > /dev/null
+    - curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain "$(cat verification/lean/lean-toolchain)"
+    - export PATH="$ELAN_HOME/bin:$PATH"
+  script:
+    - cd verification/lean && lake exe cache get && lake build && cd ../..
+    - python3 script/check_spec.py --run --prover lean --no-report
+  timeout: 2h
+
+verify_rocq:
+  stage: verify
+  image: $ROCQ_IMAGE
+  rules:
+    - *rule_full
+    - changes: *change_rocq
+  needs: []
+  script:
+    - rocq --version
+    - cd verification/rocq && make real && cd ../..
+  timeout: 1h
+
+release:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  needs:
+    - test_gcc_release
+    - test_gcc_debug
+    - test_clang_release
+    - test_clang_debug
+    - test_python
+    - verify_framac
+    - verify_lean
+    - verify_rocq
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
+  script:
+    - echo "release $CI_COMMIT_TAG"
+  release:
+    tag_name: $CI_COMMIT_TAG
+    description: "See CHANGELOG.md"
