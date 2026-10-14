@@ -88,7 +88,8 @@ doc/                  api, development, verification (trust statement + generate
 ## How to run
 
 - Everything below, in one script: `script/dev.sh config|build|test|verify` (`script/dev.sh help`; build
-  directory `build`, Debug with sanitizers; `verify` needs the opam switch and rewrites the report)
+  directory `build`, Debug with sanitizers; `verify` needs the opam switch, runs the spec gate with
+  `--strict` so an unproved listed theorem fails it, and rewrites the report)
 - C: `cmake -S . -B build -DDIANA_BUILD_TEST=ON -DDIANA_WERROR=ON && cmake --build build && ctest --test-dir build`
   (`DIANA_BUILD_PYTHON` is ON by default and needs Python `Development.Module`; add
   `-DDIANA_BUILD_PYTHON=OFF` for a C-only build, as the C-only CI jobs do)

@@ -202,11 +202,13 @@ switch of `CONTRIBUTING.md`, and a green pipeline says nothing about it. After a
 3. `script/run_framac.sh | tee framac/report-bisect.txt` and
    `script/check_framac.sh framac/report-bisect.txt framac/expected/bisect.txt` (CI runs the same
    with Frama-C 32.1).
-4. `uv run script/check_spec.py --run` runs both provers' axiom gates and rewrites the report at the
-   end of `doc/verification.md`; commit the report. `--strict` also fails on theorems that are not
-   yet proved (`missing`); as of v0.1.0 every theorem listed in `spec/` is proved, so it exits 0.
-   Note that this is a gate on the listed theorems, not a claim that every C function has a VST
-   proof: `diana_bisect_init` and `diana_bisect_step` are deliberately not listed yet.
+4. `uv run script/check_spec.py --run --strict` runs both provers' axiom gates and rewrites the
+   report at the end of `doc/verification.md`; commit the report. `--strict` is what
+   `script/dev.sh verify` passes, so `verify` fails on a theorem that is listed in `spec/` but not
+   proved (`missing`), not only on a disallowed axiom; as of v0.1.0 every theorem listed in `spec/`
+   is proved, so it exits 0. Note that this is a gate on the listed theorems, not a claim that
+   every C function has a VST proof: `diana_bisect_init` and `diana_bisect_step` are deliberately
+   not listed yet.
 
 `clightgen` output depends on the target CompCert was configured for (the `Info` module records
 the architecture and ABI, and the builtin list differs between AArch64 and x86-64), so each AST is
