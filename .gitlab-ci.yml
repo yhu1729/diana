@@ -215,15 +215,27 @@ style_python:
 
 build_gcc_debug:
   extends: [.gcc, .debug_config, .build]
+  needs:
+    - job: style_c
+      optional: true
 
 build_gcc_release:
   extends: [.gcc, .release_config, .build]
+  needs:
+    - job: style_c
+      optional: true
 
 build_clang_debug:
   extends: [.clang, .debug_config, .build]
+  needs:
+    - job: style_c
+      optional: true
 
 build_clang_release:
   extends: [.clang, .release_config, .build]
+  needs:
+    - job: style_c
+      optional: true
 
 test_gcc_debug:
   extends: [.gcc, .debug_config, .test]
@@ -247,7 +259,7 @@ test_install:
   rules:
     - *rule_full
     - changes: *change_c
-  needs: []
+  needs: [build_gcc_release]
   script:
     - cmake -S . -B build/install-custom -G Ninja -DCMAKE_BUILD_TYPE=Release -DDIANA_BUILD_TEST=ON -DDIANA_BUILD_PYTHON=OFF -DDIANA_WERROR=ON -DCMAKE_C_COMPILER=$CC -DCMAKE_INSTALL_INCLUDEDIR=include/custom
     - cmake --build build/install-custom
@@ -262,9 +274,7 @@ test_python:
   rules:
     - *rule_full
     - changes: *change_python
-  needs:
-    - job: style_python
-      optional: true
+  needs: []
   script:
     - uv sync --group test
     - uv run pytest -q
@@ -336,7 +346,7 @@ verify_framac:
     - *rule_full
     - changes: *change_framac
   needs:
-    - job: build_gcc_release
+    - job: test_gcc_release
       optional: true
       artifacts: false
   script:
