@@ -15,6 +15,12 @@ API: `doc/api.md`. Build, test, and CI rationale: `doc/development.md`.
 - **Commit:** `git commit -s` (Signed-off-by) always. Conventional Commits; the `commit-msg` hook accepts
   type `feat fix perf refactor build style test ci doc chore` (note `doc`, not `docs`). Never `--no-verify`.
   No push, tag, or merge request without an explicit request.
+  - **Message:** subject line only — no body, no `Co-Authored-By` or other trailer, just the
+    `Signed-off-by` line `-s` adds. Keep the subject short (~50 characters); drop articles
+    (`add bisect header`, not `add the bisection header`) and name the thing, not the reason.
+  - **Size:** one logical step per commit, usually one file (a header, a kernel, a test, a doc), at
+    most a handful when they only make sense together (a `.c` with the `CMakeLists.txt` line that
+    builds it). Split a change that touches the library, its test and its doc into one commit each.
 - **Living document:** update `CHANGELOG.md` (`Unreleased` section, Keep a Changelog) and this file in the
   same commit as any change that affects them.
 - **Python:** `uv` manages the interpreter and environment (`uv sync` at the repo root; `.python-version`
