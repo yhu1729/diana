@@ -1,0 +1,5 @@
+-R theory Diana
+-arg -w
+-arg -deprecated-syntactic-definition
+
+theory/Real/Bisect.v
