@@ -91,10 +91,13 @@ root, the same as `SignChange` in the Lean and Rocq layer-A models. A weak sign 
 `script/run_frama_c.sh [file...]` runs WP (float model, RTE, Alt-Ergo, 30 s timeout) over the given
 kernels (default `src/bisect.c`). WP does not set a non-zero exit status for an unproved goal,
 so the report must always be checked: `script/check_frama_c.sh` is the gate.
-`verification/frama-c/expectation.txt` stores one `<kernel> <goal-count>` row per kernel, currently
-`bisect 162`. `script/check_frama_c.sh report.txt [kernel]` fails unless every goal in the
-report is proved and, when a kernel is given, the goal count matches its row: a drop means a
-contract or RTE guard silently disappeared. The count also moves with the statement structure, not
+`verification/frama-c/expectation.txt` stores one `<source> <goal-count>` row per verified C
+file, currently `src/bisect.c 162`; the source path is the one WP runs on and the one an ACSL
+theorem names in its `acsl` field. `script/check_frama_c.sh report.txt [source]` fails unless every
+goal in the report is proved and, when a source is given, the goal count matches its row: a drop
+means a contract or RTE guard silently disappeared. `script/verify_frama_c.sh` runs WP and this
+check for every row, writing `verification/frama-c/report-<stem>.txt`; `script/dev.sh verify` and
+the `verify_frama_c` CI job both call it, so CI and the local workflow check the same files. The count also moves with the statement structure, not
 only with the annotations: WP checks an `assigns` clause in one part per write path, so adding
 braces to `src/bisect.c` merged 12 `assigns_normal_part` goals (172 to 160) with every other goal
 unchanged. Before changing `verification/frama-c/expectation.txt`, compare the goal lists of the old and
@@ -135,8 +138,9 @@ A real / B float / C code, informal statement, and the fully qualified constant 
 
 The exit status is non-zero on a structural error and, with `--strict`, also when any theorem is not
 verified (missing prover project, missing constant, disallowed axiom). The default full strict gate
-also requires exactly one valid positive Frama-C expectation count for every ACSL specification;
-this prevents the local WP loop from silently omitting a specification. Fresh WP execution and
+also requires exactly one valid positive Frama-C expectation count for the `acsl` file of every
+ACSL theorem; since `script/verify_frama_c.sh` runs WP on exactly those rows, an ACSL file cannot
+be silently left out of the WP run. Fresh WP execution and
 report checking remain the responsibility of `script/dev.sh verify`, which passes `--strict`, so
 the local gate fails on a theorem listed in `spec/` without a proof. The Lean CI
 job also passes `--strict`, with `--prover lean` limiting the gate to listed Lean theorems, so

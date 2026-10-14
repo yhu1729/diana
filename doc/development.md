@@ -228,15 +228,15 @@ switch of `CONTRIBUTING.md`, and a green pipeline says nothing about it. After a
 2. `cd verification/rocq && make && make check` builds layers A, B, and C-VST and prints their
    axioms. `make check` needs the generated `CheckSpec.v`, which step 4 writes; on a fresh clone
    run step 4 first, or just use `script/dev.sh verify`, which orders them.
-3. `script/run_frama_c.sh | tee verification/frama-c/report-bisect.txt` and
-   `script/check_frama_c.sh verification/frama-c/report-bisect.txt bisect` (CI runs the same
-   with Frama-C 32.1).
+3. `script/verify_frama_c.sh` runs `script/run_frama_c.sh` and `script/check_frama_c.sh` for
+   each `<source> <goal-count>` row of `verification/frama-c/expectation.txt`, with reports in
+   `verification/frama-c/report-<stem>.txt` (CI runs the same script with Frama-C 32.1).
 4. `uv run script/check_spec.py --run --strict` runs both provers' axiom gates and rewrites the
    report at the end of `doc/verification.md`; commit the report. `--strict` is what
    `script/dev.sh verify` passes, so `verify` fails on a theorem that is listed in `spec/` but not
    proved (`missing`), not only on a disallowed axiom. The full strict gate also requires exactly
-   one valid positive Frama-C expectation count for each ACSL specification, so the WP loop cannot
-   silently omit it. The fresh WP run and report check remain step 3; an expectation count alone
+   one valid positive Frama-C expectation count for the `acsl` file of each ACSL theorem, so the
+   WP loop cannot silently omit it. The fresh WP run and report check remain step 3; an expectation count alone
    is not proof evidence. As of v0.1.0 every theorem listed in `spec/` is proved, so it exits 0.
    Note that this is a gate on the listed theorems, not a claim that
    every C function has a VST proof: `diana_bisect_init` and `diana_bisect_step` are deliberately
