@@ -1,4 +1,4 @@
-# Third-party component
+# Third-party components
 
 `diana` itself is BSD-3-Clause (`LICENSE`). It has **no runtime dependency**: the installed C
 library and the Python wheel contain only diana's own code, so nothing listed below is
