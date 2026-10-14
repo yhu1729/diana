@@ -166,16 +166,16 @@ check_clight() {
     [ "$stale" -eq 0 ] || fail "after a source change, rerun with DIANA_CLIGHT_UPDATE=1"
 }
 
-check_framac() {
-    for expected in framac/expected/*.txt; do
-        name=$(basename "$expected" .txt)
-        report=framac/report-$name.txt
-        if ! opam_run script/run_framac.sh "src/$name.c" >"$report" 2>&1; then
+check_frama_c() {
+    while read -r name goal_count; do
+        [ -n "$name" ] || continue
+        report=verification/frama-c/report-$name.txt
+        if ! opam_run script/run_frama_c.sh "src/$name.c" >"$report" 2>&1; then
             tail -n 20 "$report" >&2
             fail "Frama-C WP failed on src/$name.c; full output in $report"
         fi
-        script/check_framac.sh "$report" "$expected"
-    done
+        script/check_frama_c.sh "$report" "$name"
+    done < verification/frama-c/expectation.txt
 }
 
 dev_verify() {
@@ -183,7 +183,7 @@ dev_verify() {
     check_clight
     (cd verification/lean && lake exe cache get && lake build)
     opam_run make -C verification/rocq
-    check_framac
+    check_frama_c
     opam_run uv run --no-sync script/check_spec.py --run --strict
 }
 
