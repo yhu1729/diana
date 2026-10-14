@@ -50,7 +50,6 @@ stages:
   - script/**/*
   - spec/**/*
   - verification/**/*
-  - framac/expected/**/*
 
 .change_style_c: &change_style_c
   - .gitlab-ci.yml
@@ -81,16 +80,15 @@ stages:
   - script/**/*
   - spec/**/*
   - verification/**/*
-  - framac/**/*
   - ci/**/*
 
-.change_framac: &change_framac
+.change_frama_c: &change_frama_c
   - .gitlab-ci.yml
   - include/**/*
   - src/**/*
-  - framac/**/*
-  - script/run_framac.sh
-  - script/check_framac.sh
+  - verification/frama-c/**/*
+  - script/run_frama_c.sh
+  - script/check_frama_c.sh
 
 .change_lean: &change_lean
   - .gitlab-ci.yml
@@ -114,7 +112,7 @@ variables:
   GIT_DEPTH: "1"
   UV_LINK_MODE: copy
   UV_CACHE_DIR: $CI_PROJECT_DIR/.cache/uv
-  FRAMAC_IMAGE: framac/frama-c:32.1
+  FRAMA_C_IMAGE: framac/frama-c:32.1
   ROCQ_IMAGE: rocq/rocq-prover:9.2
   LEAN_IMAGE: debian:bookworm-slim
 
@@ -339,23 +337,23 @@ coverage_python:
         path: coverage/python*.xml
     expire_in: 1 month
 
-verify_framac:
+verify_frama_c:
   stage: verify
-  image: $FRAMAC_IMAGE
+  image: $FRAMA_C_IMAGE
   rules:
     - *rule_full
-    - changes: *change_framac
+    - changes: *change_frama_c
   needs:
     - job: test_gcc_release
       optional: true
       artifacts: false
   script:
     - frama-c -version
-    - script/run_framac.sh src/bisect.c | tee framac/report-bisect.txt
-    - script/check_framac.sh framac/report-bisect.txt framac/expected/bisect.txt
+    - script/run_frama_c.sh src/bisect.c | tee verification/frama-c/report-bisect.txt
+    - script/check_frama_c.sh verification/frama-c/report-bisect.txt bisect
   artifacts:
     when: always
-    paths: [framac/report-bisect.txt, framac/session]
+    paths: [verification/frama-c/report-bisect.txt, verification/frama-c/session]
     expire_in: 1 month
 
 verify_lean:
@@ -401,7 +399,7 @@ release:
     - test_clang_debug
     - test_python
     - test_install
-    - verify_framac
+    - verify_frama_c
     - verify_lean
     - verify_rocq
   rules:
