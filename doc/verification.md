@@ -79,7 +79,8 @@ WP (Frama-C 33.0) rejects hexadecimal float literals in lemmas and mistranslates
 
 The midpoint-in-bracket fact is beyond the SMT float model, so the kernel computes the midpoint in
 the static helper `bisect_mid`. `script/run_frama_c.sh` passes it to `-wp-skip-fct` (variable `SKIP`),
-so WP assumes its contract; Flocq proves it as BIS-B1 (`mid_in_bracket` in
+so WP assumes its contract (each `SKIP` entry is passed only for a source that names it, because
+WP rejects an unknown function); Flocq proves it as BIS-B1 (`mid_in_bracket` in
 `verification/rocq/theory/Float/Bisect.v`), and VST proves the C body against that model (BIS-C1).
 `SKIP` is the explicit trust boundary between layer C-WP and layer B: every entry needs a layer-B
 theorem.
