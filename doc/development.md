@@ -169,11 +169,11 @@ Expected values in `test/c/test_trapezoidal.c` and `test/python/test_trapezoidal
 - The Python Hypothesis test requires bitwise agreement (value and sign of zero) with the same
   sequential evaluation in Python floats, which are binary64 with separate rounded operations, and
   `ValueError` exactly when that evaluation is not finite.
-- The rounding test compares with the rule evaluated exactly in `fractions.Fraction`. The sum has
-  `n - 1` rounded additions (halving is exact without underflow) and the product one rounding, so
-  `|computed - exact| <= gamma_n |h| sum(w_i |y_i|)` with `gamma_n = n u / (1 - n u)`,
-  `u = 2^-53`, and weights `w_i` of 1/2 at the ends and 1 inside (Higham, *Accuracy and Stability
-  of Numerical Algorithms*, Lemma 3.1).
+- The rounding test checks the TRAPEZOIDAL-B2 bound against the rule evaluated exactly in
+  `fractions.Fraction`, on scaled random samples in the normal range, on `{DBL_TRUE_MIN, 0}` with
+  `h = 1` (the halving underflows: the result is 0 and the error is `eta = 2^-1075`), and on
+  samples near `2^-1000` with `h = 0.1 * 2^-60` (the product underflows). In both underflow cases
+  the error exceeds the `gamma_n |h| A` term alone, so the `eta` terms are needed.
 - The convergence test integrates `exp` on `[0, 1]` against `e - 1` from mpmath at 40 digits, for
   `m = 16, ..., 256` panels. TRAPEZOIDAL-A2 with `M2 = e` bounds the error by `e h^2 / 12`, and
   convexity makes it positive. By Euler-Maclaurin the error is
