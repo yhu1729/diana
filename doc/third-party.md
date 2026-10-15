@@ -17,9 +17,10 @@ shipped, so the conditions are met; they still have to be stated.
 | CompCert 3.18 | INRIA Non-Commercial License Agreement: free for research, teaching, personal and evaluation use only | Used only to generate and check the Clight AST in a local opam switch. No CI image and no release artifact contains CompCert, and `ccomp` is never shipped (`doc/verification.md`). |
 | Alt-Ergo 2.6.4 | dual: `LicenseRef-OCamlpro-Non-Commercial` and Apache-2.0 | Used only as the local/CI proof oracle for Frama-C WP. Not shipped. |
 
-`verification/clight/bisection_aarch64_macos.v` is committed `clightgen` output, so it is the one
-file in the tree derived from CompCert. It is excluded from the sdist
-(`sdist.exclude` in `pyproject.toml`).
+The `verification/clight/<kernel>_<target>.v` files (today `bisection_aarch64_macos.v` and
+`trapezoidal_aarch64_macos.v`) are committed `clightgen` output, so they are the only files in the
+tree derived from CompCert. They are excluded from the sdist (`verification/**` in
+`sdist.exclude` of `pyproject.toml`).
 
 ## Proof assistant and library
 

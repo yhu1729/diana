@@ -9,7 +9,7 @@ and, in the generated [report](#report) at the end, the status of every theorem.
 |---|---|---|---|
 | A | real-number model of the algorithm | Lean 4 + Mathlib **and** Rocq (Stdlib reals, Coquelicot) | convergence, invariants, error bounds over ℝ |
 | B | binary64 model of the C arithmetic | Rocq + Flocq | rounding facts the C code relies on (finiteness, bracket containment, forward error) |
-| C-VST | the C source (Clight AST) | Rocq + VST, via CompCert `clightgen` | a C function returns / updates exactly the layer-B model value (so far `bisection_mid`, `diana_bisection_result`, and the `src/fp.h` helpers) |
+| C-VST | the C source (Clight AST) | Rocq + VST, via CompCert `clightgen` | a C function returns / updates exactly the layer-B model value (so far `bisection_mid`, `diana_bisection_result`, `diana_trapezoidal`, and the `src/fp.h` helpers) |
 | C-WP | the C source | Frama-C WP, float model, RTE plugin | memory safety, absence of undefined behaviour, separation, contract invariants |
 
 The three models of a kernel are: `rspec` (ℝ), `fmodel` (Flocq, same operation order as the C),
@@ -28,8 +28,8 @@ inside one Rocq development with no translation step.
   contracts of the functions listed in `SKIP` in `script/run_frama_c.sh`; each such contract is a
   layer-B theorem (currently only `bisection_mid`, discharged by BISECTION-B1).
 - `clightgen` as the translation from C to Clight. The committed
-  `verification/clight/<kernel>_<target>.v` (today `bisection_aarch64_macos.v`, CompCert configured
-  for AArch64 macOS) is generated locally on that target and is the AST the VST proofs are about;
+  `verification/clight/<kernel>_<target>.v` (today `bisection_aarch64_macos.v` and
+  `trapezoidal_aarch64_macos.v`, CompCert configured for AArch64 macOS) is generated locally on that target and is the AST the VST proofs are about;
   CI neither regenerates nor re-proves it.
 
 ## Where each layer is checked
