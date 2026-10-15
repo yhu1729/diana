@@ -1,8 +1,8 @@
 ---
-method: trapezoid
-kernel: src/trapezoid.c
+method: trapezoidal
+kernel: src/trapezoidal.c
 model: >
-  trapezoid y h : ℝ for n ≥ 2 samples y₀, …, yₙ₋₁ with spacing h:
+  trapezoidal y h : ℝ for n ≥ 2 samples y₀, …, yₙ₋₁ with spacing h:
   T = h·((y₀ + yₙ₋₁)/2 + Σ_{i=1}^{n−2} yᵢ). The binary64 model evaluates s₀ = 0.5·(y₀ + yₙ₋₁), then
   sₖ = sₖ₋₁ + yₖ for k = 1, …, n − 2, and returns h·sₙ₋₂, each operation rounded to nearest-even.
 hypothesis:
@@ -10,50 +10,50 @@ hypothesis:
   - "H2: a ≤ b, m ≥ 1 panels, h = (b − a)/m, yᵢ = f(a + i·h) for i = 0, …, m (n = m + 1 samples)"
   - "H3 (float layers): yᵢ and h are arbitrary binary64 values supplied by the caller; n·u < 1 with u = 2⁻⁵³"
 theorem:
-  - id: TRAP-A1
+  - id: TRAPEZOIDAL-A1
     layer: A
     informal: "local error: under H1 on [x, x + h] with h ≥ 0, |∫ₓ^{x+h} f − h·(f(x) + f(x + h))/2| ≤ M₂·h³/12"
-    lean: Diana.Real.Trapezoid.local_error
-    rocq: Diana.Real.Trapezoid.local_error
-  - id: TRAP-A2
+    lean: Diana.Real.Trapezoidal.local_error
+    rocq: Diana.Real.Trapezoidal.local_error
+  - id: TRAPEZOIDAL-A2
     layer: A
     informal: "composite error: under H1 and H2, |∫ₐᵇ f − T| ≤ (b − a)·h²·M₂/12"
-    lean: Diana.Real.Trapezoid.composite_error
-    rocq: Diana.Real.Trapezoid.composite_error
-  - id: TRAP-B1
+    lean: Diana.Real.Trapezoidal.composite_error
+    rocq: Diana.Real.Trapezoidal.composite_error
+  - id: TRAPEZOIDAL-B1
     layer: B
     informal: >
       a finite result certifies the whole evaluation: if the binary64 model returns a finite value,
       then h, every yᵢ and every partial sum sₖ are finite and no operation overflowed, so each
       operation returned the rounded exact value. This is why the kernel checks only its result.
-    rocq: Diana.Float.Trapezoid.finite_result
-  - id: TRAP-B2
+    rocq: Diana.Float.Trapezoidal.finite_result
+  - id: TRAPEZOIDAL-B2
     layer: B
     informal: >
       forward error: if the binary64 model returns a finite r and n·u < 1, then
       |r − T| ≤ γₙ·|h|·A + (1 + γₙ₋₁)·|h|·η + η, with A = |y₀ + yₙ₋₁|/2 + Σ_{i=1}^{n−2} |yᵢ|,
       γₖ = k·u/(1 − k·u), u = 2⁻⁵³ and η = 2⁻¹⁰⁷⁵ (underflow in the halving and the final product).
-    rocq: Diana.Float.Trapezoid.forward_error
-  - id: TRAP-C1
+    rocq: Diana.Float.Trapezoidal.forward_error
+  - id: TRAPEZOIDAL-C1
     layer: C
     informal: >
-      ACSL contract in src/trapezoid.c, Frama-C WP float model with RTE: memory safety (only
+      ACSL contract in src/trapezoidal.c, Frama-C WP float model with RTE: memory safety (only
       y[0 .. n−1] is read, only *result is written), no UB, loop termination, DIANA_OK only for
       non-NULL y and result with n ≥ 2 and then *result finite, and *result untouched on
       DIANA_ERR_ARG. No assumed contract.
-    acsl: src/trapezoid.c
-  - id: TRAP-C2
+    acsl: src/trapezoidal.c
+  - id: TRAPEZOIDAL-C2
     layer: C
     informal: >
-      diana_trapezoid computes the binary64 model (VST, AArch64 macOS Clight AST): it returns
+      diana_trapezoidal computes the binary64 model (VST, AArch64 macOS Clight AST): it returns
       DIANA_OK and writes the model value exactly when y and result are non-NULL, n ≥ 2 and the
       model value is finite, and returns DIANA_ERR_ARG without writing otherwise.
-    rocq: Diana.VST.Trapezoid.body_diana_trapezoid
+    rocq: Diana.VST.Trapezoidal.body_diana_trapezoidal
 ---
-# trapezoid
+# trapezoidal
 
 Composite trapezoidal rule over tabulated samples. The kernel never calls `f`: the caller supplies
-`yᵢ ≈ f(a + i·h)` and the spacing `h`, and owns the sampling error. `diana_trapezoid(y, n, h,
+`yᵢ ≈ f(a + i·h)` and the spacing `h`, and owns the sampling error. `diana_trapezoidal(y, n, h,
 &result)` needs `n ≥ 2`; `h` may have either sign (a negative `h` integrates from `b` down to `a`,
 which reverses the samples and negates the result, so the layer-A theorems take `a ≤ b`).
 
@@ -79,7 +79,7 @@ which reverses the samples and negates the result, so the layer-A theorems take 
   sum and `S` the exact one, `|ŝ − S| ≤ γₙ₋₁·A + (1 + γₙ₋₂)·η`, then
   `|r − h·S| ≤ u·|h|·|S| + (1 + u)·|h|·|ŝ − S| + η` and `|S| ≤ A`; the constants collapse through
   `γₖ·(1 + u) + u ≤ γₖ₊₁`. B1 supplies the no-overflow premise of every step.
-- **C1**: the `/*@ ... */` annotations in `src/trapezoid.c`. The loop invariant is only
+- **C1**: the `/*@ ... */` annotations in `src/trapezoidal.c`. The loop invariant is only
   `1 <= i <= n - 1`; WP proves no value property beyond finiteness on `DIANA_OK`, see below.
 - **C2**: one Clight loop over a read-only `tarray tdouble n`; `size_t` is `tulong` on the target,
   so the index lives in `Int64`. Invariant: `s` is the model partial sum `sᵢ₋₁`.
@@ -88,7 +88,7 @@ which reverses the samples and negates the result, so the layer-A theorems take 
 
 For samples `ỹᵢ` of `f(a + i·h)` with `|ỹᵢ − f(a + i·h)| ≤ δᵢ`, A2, B2 and the linearity of `T`
 give `|r − ∫ₐᵇ f| ≤ (b − a)·h²·M₂/12 + γₙ·|h|·A + (1 + γₙ₋₁)·|h|·η + η + |h|·Σ′ δᵢ` (`Σ′`: the
-trapezoid weights, ½ at both ends). Only the first three terms are Diana's; `δᵢ` includes the
+trapezoidal weights, ½ at both ends). Only the first three terms are Diana's; `δᵢ` includes the
 rounding of the nodes `a + i·h`, which the caller computes.
 
 ## Why the functional contract is not in ACSL
@@ -98,7 +98,7 @@ WP's float model gives C operations their IEEE semantics, but an ACSL cast `(dou
 in `(DBL_MAX, DBL_MAX + ulp/2)` to `DBL_MAX`. A post-condition `*result == (double)(h * …)` over
 an ACSL recursive sum is therefore false at the overflow boundary; tried on this kernel, Alt-Ergo
 2.6.4 did not prove even `s == (double)((double)0.5 * (double)(y[0] + y[n - 1]))` right after the
-C assignment. The value claim is TRAP-C2 (VST), on the same Flocq model as B1 and B2.
+C assignment. The value claim is TRAPEZOIDAL-C2 (VST), on the same Flocq model as B1 and B2.
 
 ## What the theorems do not say
 
@@ -111,9 +111,9 @@ C assignment. The value claim is TRAP-C2 (VST), on the same Flocq model as B1 an
 
 | ID | Lean | Rocq | Frama-C |
 |---|---|---|---|
-| TRAP-A1 | planned | planned | – |
-| TRAP-A2 | planned | planned | – |
-| TRAP-B1 | – | planned | – |
-| TRAP-B2 | – | planned | – |
-| TRAP-C1 | – | – | 41/41 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
-| TRAP-C2 | – | planned | – |
+| TRAPEZOIDAL-A1 | planned | planned | – |
+| TRAPEZOIDAL-A2 | planned | planned | – |
+| TRAPEZOIDAL-B1 | – | planned | – |
+| TRAPEZOIDAL-B2 | – | planned | – |
+| TRAPEZOIDAL-C1 | – | – | 41/41 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
+| TRAPEZOIDAL-C2 | – | planned | – |
