@@ -98,6 +98,24 @@ little under heavy cancellation. VST proves that the C computes exactly this bin
 `DIANA_OK` exactly when it is finite, leaving `*result` unchanged otherwise (TRAPEZOIDAL-C2, for
 non-NULL `y` with `n >= 2`).
 
+## Composite Simpson rule (`diana/simpson.h`)
+
+A function over tabulated samples, like the trapezoidal rule. There is no callback wrapper and no
+Python binding yet.
+
+- `diana_simpson(y, n, h, result)` writes `(h * s) / 3` to `*result`, with
+  `s = ((y[0] + y[n-1]) + 4 * so) + 2 * se`, where `so = y[1] + y[3] + ... + y[n-2]` and
+  `se = y[2] + y[4] + ... + y[n-3]` are each summed left to right from `+0`; every operation is
+  binary64 in that order (`n - 1` panels of width `h`, an even number). Returns `DIANA_OK` when the
+  result is finite. Returns `DIANA_ERR_ARG`, without writing `*result`, for a NULL `y` or `result`,
+  for `n < 3` or an even `n`, and when the result is not finite: a NaN or infinite sample or `h`, or
+  an overflow in any operation, including `h * s` when `(h * s) / 3` alone would be finite.
+  `y[0 .. n-1]` is only read and must not overlap `*result`.
+
+Frama-C WP proves memory safety, termination, the status cases and the finiteness of `*result` on
+`DIANA_OK` (SIMPSON-C1). The error bounds and the VST proof are not done yet; `spec/simpson.md`
+lists them.
+
 ## Callback wrapper (`diana/wrapper.h`)
 
 The wrappers loop over the verified reverse-communication kernels and are not verified (neither
