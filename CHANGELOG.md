@@ -58,6 +58,12 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The reusable parts of the trapezoidal proofs are separate modules, with the theorem statements
+  unchanged: `Diana.Real.Quadrature` in Lean and Rocq (the mean-value bound against a boundary
+  function, the clamped extension used for the fundamental theorem of calculus, and the sum of
+  per-panel errors, `panel_error`) and `Diana.Float.Sum` in Rocq (`u`, `η`, `γₖ`, the rounding
+  error lemmas, and the recursive-summation bound `fold_error`). `make real` builds
+  `Real/Quadrature.v` before `Real/Trapezoidal.v`.
 - The bisection C API is named after the method (`bisect` in v0.1.0, a breaking change):
   `diana/bisection.h` declares `diana_bisection_state`, `diana_bisection_init`,
   `diana_bisection_step` and `diana_bisection_result`, the callback wrapper is `diana_bisection`
