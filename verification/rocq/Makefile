@@ -5,6 +5,7 @@ all: $(COQMAKEFILE)
 
 real:
 	rocq compile -R theory Diana theory/Real/Bisection.v
+	rocq compile -R theory Diana theory/Real/Quadrature.v
 	rocq compile -R theory Diana theory/Real/Trapezoidal.v
 
 check: all

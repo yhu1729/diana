@@ -4,6 +4,7 @@
 -arg -deprecated-syntactic-definition
 
 theory/Real/Bisection.v
+theory/Real/Quadrature.v
 theory/Real/Trapezoidal.v
 theory/Float/Bisection.v
 theory/Float/Sum.v
