@@ -7,11 +7,11 @@
 extern "C" {
 #endif
 
-typedef double (*diana_bisect_fn)(double x, void *ctx);
+typedef double (*diana_bisection_fn)(double x, void *ctx);
 
-diana_status diana_bisect(diana_bisect_fn f, void *ctx, double a, double b,
-                          double tol, unsigned max_iter, double *root,
-                          unsigned *iter);
+diana_status diana_bisection(diana_bisection_fn f, void *ctx, double a,
+                             double b, double tol, unsigned max_iter,
+                             double *root, unsigned *iter);
 
 #ifdef __cplusplus
 }

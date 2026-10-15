@@ -10,7 +10,7 @@ API: `doc/api.md`. Build, test, and CI rationale: `doc/development.md`.
 ## Convention
 
 - **Name:** single-form noun and base-form verb everywhere: directory (`test/`, `verification/`, `script/`,
-  `doc/`, `wrapper/`), identifier (`diana_bisect_init`, `check_spec`), CI job (`build`, `test`),
+  `doc/`, `wrapper/`), identifier (`diana_bisection_init`, `check_spec`), CI job (`build`, `test`),
   Python API (`diana.bisect`). No plural, no `-ing`/`-s` verb form.
   - **Project name:** `Diana` in prose (heading, documentation sentence, user-facing string);
     lowercase `diana` only where it is an identifier (package, CMake target, library file, URL).
@@ -114,7 +114,7 @@ doc/                  api, development, verification (trust statement + generate
 - Frama-C: `script/verify_frama_c.sh` (runs `script/run_frama_c.sh` and `script/check_frama_c.sh`
   for every `<source> <goal-count>` row of `verification/frama-c/expectation.txt`; all goals must
   prove and each count must match; `script/dev.sh verify` and CI both call it)
-- Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/bisect_aarch64_macos.v src/bisect.c` **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
+- Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/bisect_aarch64_macos.v src/bisection.c` **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
 - Spec gate: `uv run script/check_spec.py --run --strict` (runs both provers' check files, `--prover lean|rocq` to select one and rewrites the generated report at the end of `doc/verification.md`; commit it, CI does not regenerate it; `--no-report` to leave it alone)
   The default full strict gate also requires a unique positive Frama-C expectation count for the
   `acsl` file of each ACSL theorem; fresh WP execution and report checking remain in `script/dev.sh verify`.
@@ -123,4 +123,4 @@ doc/                  api, development, verification (trust statement + generate
 
 ## Status
 
-See `CHANGELOG.md`. v0.1.0: scaffolding and bisection end-to-end. Layers A and B are complete for the kernel, Frama-C WP proves all 162 goals, and VST covers `bisect_mid`, the `src/fp.h` helpers and `diana_bisect_result`; VST for `diana_bisect_init`/`diana_bisect_step` is deferred. M1 (trapezoid, Simpson, Euler) has started: `diana_trapezoid` (tabulated, C only) with its ACSL contract proved by WP (41 goals) and `spec/trapezoid.md`; its layer A, B and VST proofs are not written yet, so the strict spec gate (and Lean CI) fails on TRAP-A1/A2 until they are.
+See `CHANGELOG.md`. v0.1.0: scaffolding and bisection end-to-end. Layers A and B are complete for the kernel, Frama-C WP proves all 162 goals, and VST covers `bisection_mid`, the `src/fp.h` helpers and `diana_bisection_result`; VST for `diana_bisection_init`/`diana_bisection_step` is deferred. M1 (trapezoid, Simpson, Euler) has started: `diana_trapezoid` (tabulated, C only) with its ACSL contract proved by WP (41 goals) and `spec/trapezoid.md`; its layer A, B and VST proofs are not written yet, so the strict spec gate (and Lean CI) fails on TRAP-A1/A2 until they are.

@@ -4,7 +4,7 @@
 
 typedef struct {
   PyObject_HEAD
-  diana_bisect_state s;
+  diana_bisection_state s;
   int status;
 } BisectObject;
 
@@ -28,7 +28,7 @@ static int bisect_init(BisectObject *self, PyObject *args, PyObject *kwds) {
                                    &max_iter)) {
     return -1;
   }
-  st = diana_bisect_init(&self->s, a, b, fa, fb, tol, max_iter);
+  st = diana_bisection_init(&self->s, a, b, fa, fb, tol, max_iter);
   if (st != DIANA_OK && st != DIANA_CONTINUE) {
     diana_py_raise(st, NULL);
     return -1;
@@ -53,7 +53,7 @@ static PyObject *bisect_step(BisectObject *self, PyObject *arg) {
                     "step called on a finished Bisect state");
     return NULL;
   }
-  st = diana_bisect_step(&self->s, fx);
+  st = diana_bisection_step(&self->s, fx);
   if (st == DIANA_ERR_ARG) {
     diana_py_raise(st, "f(x) must be finite");
     return NULL;
@@ -69,7 +69,7 @@ static PyObject *bisect_result(BisectObject *self,
     PyErr_SetString(PyExc_RuntimeError, "Bisect state is not initialized");
     return NULL;
   }
-  if (diana_bisect_result(&self->s, &root, &width) != DIANA_OK) {
+  if (diana_bisection_result(&self->s, &root, &width) != DIANA_OK) {
     PyErr_SetString(PyExc_RuntimeError, "invalid Bisect state");
     return NULL;
   }

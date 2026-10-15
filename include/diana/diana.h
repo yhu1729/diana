@@ -6,7 +6,7 @@
 #define DIANA_VERSION_PATCH 0
 #define DIANA_VERSION_STRING "0.1.0"
 
-#include "diana/bisect.h"
+#include "diana/bisection.h"
 #include "diana/status.h"
 #include "diana/trapezoid.h"
 #include "diana/wrapper.h"

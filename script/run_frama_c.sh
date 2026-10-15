@@ -1,9 +1,9 @@
 #!/bin/sh
-SKIP=bisect_mid
+SKIP=bisection_mid
 set -eu
 cd "$(dirname "$0")/.."
 if [ "$#" -eq 0 ]; then
-    set -- src/bisect.c
+    set -- src/bisection.c
 fi
 skip=
 for name in $SKIP; do

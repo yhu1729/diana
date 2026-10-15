@@ -16,15 +16,19 @@ All notable changes to this project are documented here. The format follows
 - `script/check_wheel.py` checks static and shared installed wheels in isolated environments;
   Python CI runs it. `test_install` checks the installed CMake consumer with a custom
   header directory and with a shared library, and gates releases.
-- `test/c/test_bisect.c` covers the last uncovered paths of the kernel and the wrapper, taking C
-  line and branch coverage to 100%: the `diana_bisect_init` early `DIANA_OK` (bracket already
+- `test/c/test_bisection.c` covers the last uncovered paths of the kernel and the wrapper, taking C
+  line and branch coverage to 100%: the `diana_bisection_init` early `DIANA_OK` (bracket already
   within the tolerance, and a bracket so narrow that the midpoint rounds onto an endpoint, in both
-  rounding directions), the `diana_bisect_step` stagnation exits on each side of the bracket
-  update, a non-finite `fb`, and in `diana_bisect` a callback that returns a non-finite value at
+  rounding directions), the `diana_bisection_step` stagnation exits on each side of the bracket
+  update, a non-finite `fb`, and in `diana_bisection` a callback that returns a non-finite value at
   the midpoint plus the `iter == NULL` calls.
 
 ### Changed
 
+- The bisection C API is named after the method (`bisect` in v0.1.0, a breaking change):
+  `diana/bisection.h` declares `diana_bisection_state`, `diana_bisection_init`,
+  `diana_bisection_step` and `diana_bisection_result`, the callback wrapper is `diana_bisection`
+  with `diana_bisection_fn`, and the kernel is `src/bisection.c`.
 - `verify_rocq` runs on `mathcomp/mathcomp:2.6.0-rocq-prover-9.2` and installs Coquelicot 3.4.5,
   so layer-A Rocq proofs can use Coquelicot integrals and derivatives in CI.
 - Frama-C verification data lives in `verification/frama-c/`, with all expected goal counts in
@@ -52,7 +56,7 @@ All notable changes to this project are documented here. The format follows
 - `script/dev.sh verify` runs WP for the last `expectation.txt` row even without a trailing
   newline.
 - `verify_frama_c` runs WP for every `expectation.txt` row through `script/verify_frama_c.sh`,
-  the loop `script/dev.sh verify` uses, instead of only `src/bisect.c`, and uploads only one
+  the loop `script/dev.sh verify` uses, instead of only `src/bisection.c`, and uploads only one
   consolidated `verification/frama-c/report.txt` instead of a report per kernel and the unused
   WP session directory.
 - Python `Bisect` objects allocated without successful initialization reject `step()` and

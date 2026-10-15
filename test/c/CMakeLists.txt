@@ -6,4 +6,4 @@ function(diana_add_test name)
 endfunction()
 
 diana_add_test(status)
-diana_add_test(bisect)
+diana_add_test(bisection)
