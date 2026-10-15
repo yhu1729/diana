@@ -40,6 +40,9 @@ API: `doc/api.md`. Build, test, and CI rationale: `doc/development.md`.
   with one private driver module per kernel (`_bisection.py`) re-exported by `__init__.py`.
   `Bisection` starts with status `ERR_ARG` until initialization succeeds; `step` and `result` reject
   uninitialized objects, and a failed reinitialization preserves the previous state.
+  An array kernel reads a buffer in place (`PyBUF_RECORDS_RO`; native float64, one-dimensional,
+  C-contiguous, aligned, checked in the extension) and its driver copies any non-buffer iterable
+  into `array.array("d")`; no NumPy in the package, only in tests.
 - **ACSL:** arithmetic on doubles is exact real arithmetic, write rounded values with casts
   `(double)(...)`; no hexadecimal float literal anywhere in ACSL (WP 33.0 rejects them in lemmas and
   mistranslates them in predicates), use exact integer expressions such as `((1 << 53) - 1) << 970`;
@@ -123,4 +126,4 @@ doc/                  api, development, verification (trust statement + generate
 
 ## Status
 
-See `CHANGELOG.md`. v0.1.0: scaffolding and bisection end-to-end. Layers A and B are complete for the kernel, Frama-C WP proves all 162 goals, and VST covers `bisection_mid`, the `src/fp.h` helpers and `diana_bisection_result`; VST for `diana_bisection_init`/`diana_bisection_step` is deferred. M1 (trapezoidal, Simpson, Euler) has started: `diana_trapezoidal` (tabulated, C only) with its ACSL contract proved by WP (41 goals) and `spec/trapezoidal.md`; Lean and Rocq (Coquelicot) prove its layer A (TRAPEZOIDAL-A1/A2) and Flocq its layer B (TRAPEZOIDAL-B1/B2); the VST proof (TRAPEZOIDAL-C2) is not written yet, so the full strict spec gate fails on it while the Lean-only gate in CI passes.
+See `CHANGELOG.md`. v0.1.0: scaffolding and bisection end-to-end. Layers A and B are complete for the kernel, Frama-C WP proves all 162 goals, and VST covers `bisection_mid`, the `src/fp.h` helpers and `diana_bisection_result`; VST for `diana_bisection_init`/`diana_bisection_step` is deferred. M1 (trapezoidal, Simpson, Euler) has started: `diana_trapezoidal` (tabulated; C tests at 100% line and branch coverage; Python `diana.trapezoidal` over the buffer protocol) with its ACSL contract proved by WP (41 goals) and `spec/trapezoidal.md`; Lean and Rocq (Coquelicot) prove its layer A (TRAPEZOIDAL-A1/A2) and Flocq its layer B (TRAPEZOIDAL-B1/B2); the VST proof (TRAPEZOIDAL-C2) is not written yet, so the full strict spec gate fails on it while the Lean-only gate in CI passes.
