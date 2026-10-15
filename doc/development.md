@@ -59,7 +59,7 @@ and its suppressions are each a deliberate project convention, so a new finding 
 - `readability-math-missing-parentheses` and `clang-analyzer-security.insecureAPI.*` fire only in
   test code (`fprintf_s` is not POSIX);
 - `python/ext/.clang-tidy` drops `readability-identifier-naming`, because the extension follows
-  CPython's `BisectObject`/`BisectType` naming rather than the library's `lower_case`;
+  CPython's `BisectionObject`/`BisectionType` naming rather than the library's `lower_case`;
 - `test/c/.clang-tidy` and `test/install/.clang-tidy` drop `cert-err33-c` (the harness reports
   through `fprintf` and exits) and `clang-analyzer-optin.core.EnumCastOutOfRange`
   (`test_status.c` casts an out-of-range value on purpose).
@@ -82,14 +82,14 @@ across every file that are artefacts rather than defects.
   definition, `PyInit__diana`), `module.h` (declarations shared across files), `status.c` (status
   constants, `status_str`, `BracketError`, and `diana_py_raise`, which maps a `diana_status` to a
   Python exception), `convert.c` (argument converters for `PyArg_Parse*` `O&`), and one file per
-  kernel (`bisect.c`, the `Bisect` type). A new kernel adds `python/ext/<kernel>.c` with a
+  kernel (`bisection.c`, the `Bisection` type). A new kernel adds `python/ext/<kernel>.c` with a
   `diana_py_<kernel>_exec(PyObject *m)` that registers its types and functions, declares it in
   `module.h`, calls it from `PyInit__diana`, and lists the file in `CMakeLists.txt`.
 - `python/src/diana/` is the pure-Python package: `_error.py` (all exceptions), one private driver
-  module per kernel (`_bisect.py`: `diana.bisect`), and `__init__.py`, which only re-exports.
+  module per kernel (`_bisection.py`: `diana.bisection`), and `__init__.py`, which only re-exports.
   Driver modules are private so that a module name never shadows the function of the same name.
 - The extension sources live outside the package directory so the wheel does not ship them.
-- `Bisect.__new__` allocates an uninitialized state with status `ERR_ARG`. `step` and `result`
+- `Bisection.__new__` allocates an uninitialized state with status `ERR_ARG`. `step` and `result`
   reject it until `__init__` succeeds; a rejected reinitialization preserves a prior valid state.
 
 ## Local workflow (`script/dev.sh`)
@@ -128,7 +128,7 @@ trees, and installs each into a fresh uv virtual environment. An isolated Python
 the checkout imports Diana and checks bisection of `x*x - 2`, with loader-path overrides removed.
 This tests the installed wheel without relying on the development environment or build RPATHs.
 
-Expected values in `test/c/test_bisect.c`:
+Expected values in `test/c/test_bisection.c`:
 
 - The state-machine test checks the bracket invariant after every step. The width halves each step,
   so `(b - a) / 2^n <= tol` holds at `n = ceil(log2((b - a) / tol))`: 41 steps for `[0, 2]` and
@@ -142,12 +142,13 @@ Expected values in `test/c/test_bisect.c`:
 - The callback wrapper evaluates `f(a)`, `f(b)`, then once per step, so `n == iter + 2`; for `[0, 2]`
   and `tol = 1e-6`, `iter = ceil(log2(2 / 1e-6)) = 21`.
 - Worst case of `tol = 0`: from a width of `DBL_MAX < 2^1024` down to adjacent subnormals `2^-1074`
-  apart takes `1024 + 1074 = 2098` halvings, which the root `DBL_TRUE_MIN` in `[-DBL_MAX/2, DBL_MAX/2]`
-  attains. The Python default `max_iter = 2100` is chosen to cover it. BIS-B4 proves termination and
-  the loose bound `n <= lattice`, not this constant; `spec/bisect.md` ("What B4 does not say")
-  records why the tight bound is still only measured, so this test is what pins it.
+  apart takes `1024 + 1074 = 2098` halvings, which the root `DBL_TRUE_MIN` in
+  `[-DBL_MAX/2, DBL_MAX/2]` attains. The Python default `max_iter = 2100` is chosen to cover it.
+  BISECTION-B4 proves termination and the loose bound `n <= lattice`, not this constant;
+  `spec/bisection.md` ("What B4 does not say") records why the tight bound is still only measured,
+  so this test is what pins it.
 - A rejected `init` or `step` leaves the state unchanged (`test_error_keeps_state`); the Python
-  binding relies on it when `Bisect.__init__` is called again with bad arguments or `step` gets a
+  binding relies on it when `Bisection.__init__` is called again with bad arguments or `step` gets a
   non-finite value.
 
 ## CI (`.gitlab-ci.yml`)
@@ -241,17 +242,16 @@ switch of `CONTRIBUTING.md`, and a green pipeline says nothing about it. After a
    report at the end of `doc/verification.md`; commit the report. `--strict` is what
    `script/dev.sh verify` passes, so `verify` fails on a theorem that is listed in `spec/` but not
    proved (`missing`), not only on a disallowed axiom. The full strict gate also requires exactly
-   one valid positive Frama-C expectation count for the `acsl` file of each ACSL theorem, so the
-   WP loop cannot silently omit it. The fresh WP run and report check remain step 3; an expectation count alone
-   is not proof evidence. As of v0.1.0 every theorem listed in `spec/` is proved, so it exits 0.
-   Note that this is a gate on the listed theorems, not a claim that
-   every C function has a VST proof: `diana_bisect_init` and `diana_bisect_step` are deliberately
-   not listed yet.
+   one valid positive Frama-C expectation count for the `acsl` file of each ACSL theorem, so the WP
+   loop cannot silently omit it. The fresh WP run and report check remain step 3; an expectation
+   count alone is not proof evidence. As of v0.1.0 every theorem listed in `spec/` is proved, so it
+   exits 0. Note that this is a gate on the listed theorems, not a claim that every C function has a
+   VST proof: `diana_bisection_init` and `diana_bisection_step` are deliberately not listed yet.
 
 `clightgen` output depends on the target CompCert was configured for (the `Info` module records
 the architecture and ABI, and the builtin list differs between AArch64 and x86-64), so each AST is
 named after its target, `<arch>[_<model>]_<system>` from `compcert.config`
-(`bisect_aarch64_macos.v`; an x86-64 Linux one would be `bisect_x86_64_linux.v`), and the VST
+(`bisection_aarch64_macos.v`; an x86-64 Linux one would be `bisection_x86_64_linux.v`), and the VST
 proofs import that module by name. Regenerate an AST only on its own target, and commit it only
 together with the source change that caused it and a passing `make`. On another target the Rocq
 build is expected to compile the proofs against the committed AST (not yet checked on a non-macOS

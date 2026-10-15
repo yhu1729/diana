@@ -16,8 +16,8 @@ Formally verified numerical methods in C, with a Python binding.
 This release (v0.1.0) is the scaffolding, the proof pipeline, and bisection end-to-end. Bisection
 is the only numerical method it provides.
 
-Planned v1.0.0 scope: bisection, Newton, composite trapezoid and Simpson, explicit Euler, RK4,
-Cholesky, LU with partial pivoting. `doc/verification.md` says exactly what is proven, by which
+Planned v1.0.0 scope: bisection, Newton, composite trapezoidal and Simpson rules, explicit Euler,
+RK4, Cholesky, LU with partial pivoting. `doc/verification.md` says exactly what is proven, by which
 tool, about which build. The C and Python API is described in `doc/api.md`.
 
 ## Build

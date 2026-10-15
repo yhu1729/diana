@@ -22,8 +22,8 @@ sanitizer, opam switch, `clang-tidy` binary).
 ## Convention
 
 - **Name:** single-form noun and base-form verb, in directory, identifier, CI job, and Python API
-  alike: `test/`, `diana_bisect_init`, `diana.bisect`. No plural, no `-ing`/`-s` verb form. The
-  `style_name` CI job rejects a plural directory. In prose the project is `Diana`; lowercase
+  alike: `test/`, `diana_bisection_init`, `diana.bisection`. No plural, no `-ing`/`-s` verb form.
+  The `style_name` CI job rejects a plural directory. In prose the project is `Diana`; lowercase
   `diana` is only for identifiers (package, CMake target, library file, URL).
 - **Format:** `clang-format` (LLVM style plus the additions in `.clang-format`) for C, `ruff` for
   Python; `.editorconfig` carries the indent rules per file type. Both are checked in CI and by
@@ -124,7 +124,7 @@ about those, so they are your responsibility before the commit lands.
   specification without a valid Frama-C expectation entry. The individual steps
   are under "Local verification" in `doc/development.md`.
 - After a change to a verified kernel or a header it includes, the Clight AST has to be
-  regenerated, and only on the CompCert target it is named for (`bisect_aarch64_macos.v` is
+  regenerated, and only on the CompCert target it is named for (`bisection_aarch64_macos.v` is
   AArch64 macOS). `script/dev.sh verify` checks the AST of the current target and fails on a stale
   one; `DIANA_CLIGHT_UPDATE=1` makes it overwrite instead. Nothing in CI notices staleness.
 - Adding a method: give it a `spec/<method>.md` with its theorem IDs (`<METHOD>-<layer><n>`, such as
@@ -153,7 +153,7 @@ that form and nothing else; the rest is convention:
 
 - The subject line is the whole message. No body, and no trailer beyond the `Signed-off-by`.
 - Keep it near 50 characters and drop articles. Name the thing, not the reason:
-  `feat: add bisect header`, not `feat: add the bisection reverse-communication header`.
+  `feat: add bisection header`, not `feat: add the bisection reverse-communication header`.
   Rationale goes in `doc/` or `spec/`, never in the log.
 - One logical step per commit, usually a single file. Group files only when they are meaningless
   apart, such as a kernel and the `CMakeLists.txt` line that builds it. A change spanning the

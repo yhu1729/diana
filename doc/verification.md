@@ -9,7 +9,7 @@ and, in the generated [report](#report) at the end, the status of every theorem.
 |---|---|---|---|
 | A | real-number model of the algorithm | Lean 4 + Mathlib **and** Rocq (Stdlib reals) | convergence, invariants, error bounds over ℝ |
 | B | binary64 model of the C arithmetic | Rocq + Flocq | rounding facts the C code relies on (finiteness, bracket containment, forward error) |
-| C-VST | the C source (Clight AST) | Rocq + VST, via CompCert `clightgen` | a C function returns / updates exactly the layer-B model value (so far `bisect_mid`, `diana_bisect_result`, and the `src/fp.h` helpers) |
+| C-VST | the C source (Clight AST) | Rocq + VST, via CompCert `clightgen` | a C function returns / updates exactly the layer-B model value (so far `bisection_mid`, `diana_bisection_result`, and the `src/fp.h` helpers) |
 | C-WP | the C source | Frama-C WP, float model, RTE plugin | memory safety, absence of undefined behaviour, separation, contract invariants |
 
 The three models of a kernel are: `rspec` (ℝ), `fmodel` (Flocq, same operation order as the C),
@@ -26,9 +26,9 @@ inside one Rocq development with no translation step.
   `script/axiom_allow.yaml`.
 - Frama-C 33.0 / Why3 1.8.2 / Alt-Ergo 2.6.4 as a proof oracle for layer C-WP. WP assumes the
   contracts of the functions listed in `SKIP` in `script/run_frama_c.sh`; each such contract is a
-  layer-B theorem (currently only `bisect_mid`, discharged by BIS-B1).
+  layer-B theorem (currently only `bisection_mid`, discharged by BISECTION-B1).
 - `clightgen` as the translation from C to Clight. The committed
-  `verification/clight/<kernel>_<target>.v` (today `bisect_aarch64_macos.v`, CompCert configured
+  `verification/clight/<kernel>_<target>.v` (today `bisection_aarch64_macos.v`, CompCert configured
   for AArch64 macOS) is generated locally on that target and is the AST the VST proofs are about;
   CI neither regenerates nor re-proves it.
 
@@ -41,8 +41,8 @@ inside one Rocq development with no translation step.
 | B (Flocq), C-VST, Clight AST | – | `clightgen`, `make`, `make check`, `check_spec.py --run --strict` |
 | C-WP | `verify_frama_c` (Frama-C 32.1) | `script/run_frama_c.sh` (Frama-C 33.0) |
 
-A green pipeline therefore does not establish layers B and C-VST, and the CI Frama-C result
-assumes the contract of `bisect_mid`, which only the local Flocq build (BIS-B1) discharges. The
+A green pipeline therefore does not establish layers B and C-VST, and the CI Frama-C result assumes
+the contract of `bisection_mid`, which only the local Flocq build (BISECTION-B1) discharges. The
 statuses in the [report](#report) come from the last local `check_spec.py --run` that was committed.
 
 ## Verified artifact versus shipped binary
@@ -59,41 +59,42 @@ between the `ccomp` and gcc/clang builds will back it. CompCert is not in CI, so
 - The callback wrappers in `src/wrapper/` and the Python package: the Python loop drives the
   verified state machine, but the loop and the CPython extension are ordinary tested code.
 - The build system, the compilers, and the operating system.
-- `diana_bisect_init` and `diana_bisect_step` under VST: no theorem yet says their post-state is
-  the layer-B model. Frama-C WP does cover them (BIS-C2), so layer C is not empty for them, and
-  layer B models the step (BIS-B2/B3/B4); what is missing is the C-to-model link for those two
-  functions. See `spec/bisect.md`.
-- An explicit numeric bound on the bisection step count. BIS-B4 proves termination and the sound
-  but loose bound `n <= lattice` (the number of doubles the bracket spans); the `max_iter = 2100`
-  default is justified by the measured and ctest-pinned worst case of 2098 steps, not by a theorem
-  (`spec/bisect.md`, "What B4 does not say").
+- `diana_bisection_init` and `diana_bisection_step` under VST: no theorem yet says their post-state
+  is the layer-B model. Frama-C WP does cover them (BISECTION-C2), so layer C is not empty for them,
+  and layer B models the step (BISECTION-B2/B3/B4); what is missing is the C-to-model link for those
+  two functions. See `spec/bisection.md`.
+- An explicit numeric bound on the bisection step count. BISECTION-B4 proves termination and the
+  sound but loose bound `n <= lattice` (the number of doubles the bracket spans); the
+  `max_iter = 2100` default is justified by the measured and ctest-pinned worst case of 2098 steps,
+  not by a theorem (`spec/bisection.md`, "What B4 does not say").
 - A theorem not yet proved is listed as `missing` in the report, and one whose prover project is
   absent as `planned`.
 
 ## Frama-C and Flocq boundary
 
 ACSL arithmetic on doubles is exact real arithmetic; rounded values are written with casts. The
-bound `DBL_MAX/2 = (2^53 - 1) * 2^970` appears twice in `src/bisect.c`: `DIANA_BISECT_MAX` for C (an
-exact power-of-two scaling) and `DIANA_BISECT_MAX_ACSL` as an exact integer expression, because
-WP (Frama-C 33.0) rejects hexadecimal float literals in lemmas and mistranslates them in predicates.
+bound `DBL_MAX/2 = (2^53 - 1) * 2^970` appears twice in `src/bisection.c`: `DIANA_BISECTION_MAX` for
+C (an exact power-of-two scaling) and `DIANA_BISECTION_MAX_ACSL` as an exact integer expression,
+because WP (Frama-C 33.0) rejects hexadecimal float literals in lemmas and mistranslates them in
+predicates.
 
 The midpoint-in-bracket fact is beyond the SMT float model, so the kernel computes the midpoint in
-the static helper `bisect_mid`. `script/run_frama_c.sh` passes it to `-wp-skip-fct` (variable `SKIP`),
-so WP assumes its contract (each `SKIP` entry is passed only for a source that names it, because
-WP rejects an unknown function); Flocq proves it as BIS-B1 (`mid_in_bracket` in
-`verification/rocq/theory/Float/Bisect.v`), and VST proves the C body against that model (BIS-C1).
-`SKIP` is the explicit trust boundary between layer C-WP and layer B: every entry needs a layer-B
-theorem.
+the static helper `bisection_mid`. `script/run_frama_c.sh` passes it to `-wp-skip-fct` (variable
+`SKIP`), so WP assumes its contract (each `SKIP` entry is passed only for a source that names it,
+because WP rejects an unknown function); Flocq proves it as BISECTION-B1 (`mid_in_bracket` in
+`verification/rocq/theory/Float/Bisection.v`), and VST proves the C body against that model
+(BISECTION-C1). `SKIP` is the explicit trust boundary between layer C-WP and layer B: every entry
+needs a layer-B theorem.
 
-The ACSL predicate `bisect_bracket` is a strict sign change or a bracket collapsed onto an exact
+The ACSL predicate `bisection_bracket` is a strict sign change or a bracket collapsed onto an exact
 root, the same as `SignChange` in the Lean and Rocq layer-A models. A weak sign change
 (`fa * fb <= 0`) is not preserved by the sign test `(fx > 0) == (fa > 0)` when `fa == 0`.
 
 `script/run_frama_c.sh [file...]` runs WP (float model, RTE, Alt-Ergo, 30 s timeout) over the given
-kernels (default `src/bisect.c`). WP does not set a non-zero exit status for an unproved goal,
+kernels (default `src/bisection.c`). WP does not set a non-zero exit status for an unproved goal,
 so the report must always be checked: `script/check_frama_c.sh` is the gate.
 `verification/frama-c/expectation.txt` stores one `<source> <goal-count>` row per verified C
-file, currently `src/bisect.c 162` and `src/trapezoid.c 41`; the source path is the one WP runs
+file, currently `src/bisection.c 162` and `src/trapezoidal.c 41`; the source path is the one WP runs
 on and the one an ACSL theorem names in its `acsl` field.
 `script/check_frama_c.sh report.txt [source]` fails unless every goal in the report is proved and, when a source is given, the goal count matches its row: a drop
 means a contract or RTE guard silently disappeared. `script/verify_frama_c.sh` runs WP and this
@@ -101,7 +102,7 @@ check for every row, appending each WP output under a `==> <source> <==` header 
 `verification/frama-c/report.txt` (CI uploads that one file); `script/dev.sh verify` and the
 `verify_frama_c` CI job both call it, so CI and the local workflow check the same files. The count
 also moves with the statement structure, not only with the annotations: WP checks an `assigns` clause in one part per write path, so adding
-braces to `src/bisect.c` merged 12 `assigns_normal_part` goals (172 to 160) with every other goal
+braces to `src/bisection.c` merged 12 `assigns_normal_part` goals (172 to 160) with every other goal
 unchanged. Before changing `verification/frama-c/expectation.txt`, compare the goal lists of the old and
 new source (`-wp-report-json`) and update the count only when no property kind disappeared.
 
