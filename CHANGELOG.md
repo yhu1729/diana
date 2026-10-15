@@ -33,8 +33,9 @@ All notable changes to this project are documented here. The format follows
   and the reverse-communication state is `diana.Bisection` (`diana.bisect` and `diana.Bisect`
   in v0.1.0).
 - The bisection proofs are renamed to match: Rocq modules `Diana.Real.Bisection`,
-  `Diana.Float.Bisection` and `Diana.VST.Bisection`, and the Clight AST
-  `verification/clight/bisection_aarch64_macos.v`, regenerated from `src/bisection.c`.
+  `Diana.Float.Bisection` and `Diana.VST.Bisection`, the Clight AST
+  `verification/clight/bisection_aarch64_macos.v`, regenerated from `src/bisection.c`, and the
+  Lean namespace `Diana.Real.Bisection`.
 - `verify_rocq` runs on `mathcomp/mathcomp:2.6.0-rocq-prover-9.2` and installs Coquelicot 3.4.5,
   so layer-A Rocq proofs can use Coquelicot integrals and derivatives in CI.
 - Frama-C verification data lives in `verification/frama-c/`, with all expected goal counts in

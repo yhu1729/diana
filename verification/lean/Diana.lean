@@ -1,1 +1,1 @@
-import Diana.Real.Bisect
+import Diana.Real.Bisection

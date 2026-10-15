@@ -1,7 +1,7 @@
 import Mathlib.Topology.Order.IntermediateValue
 import Mathlib.Tactic
 
-namespace Diana.Real.Bisect
+namespace Diana.Real.Bisection
 
 open Set
 
@@ -123,4 +123,4 @@ theorem converge {f : ℝ → ℝ} {a b : ℝ} (hab : a ≤ b) (hf : ContinuousO
   rw [e, abs_le]
   constructor <;> linarith
 
-end Diana.Real.Bisect
+end Diana.Real.Bisection
