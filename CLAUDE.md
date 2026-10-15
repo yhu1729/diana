@@ -17,6 +17,10 @@ API: `doc/api.md`. Build, test, and CI rationale: `doc/development.md`.
 - **Commit:** `git commit -s` (Signed-off-by) always. Conventional Commits; the `commit-msg` hook accepts
   type `feat fix perf refactor build style test ci doc chore` (note `doc`, not `docs`). Never `--no-verify`.
   No push, tag, or merge request without an explicit request.
+  - **No amend:** never `git commit --amend`; every commit keeps its author date equal to its
+    commit date. To fix or rework commits, including ones a rebase replayed, `git reset --soft` to
+    the last good commit and make fresh commits (`git read-tree <sha>` then `git commit -s` per
+    original commit keeps each tree); a mistake in a published commit gets a new corrective commit.
   - **Message:** subject line only — no body, no `Co-Authored-By` or other trailer, just the
     `Signed-off-by` line `-s` adds. Keep the subject short (~50 characters); drop articles
     (`add bisection header`, not `add the bisection header`) and name the thing, not the reason.
