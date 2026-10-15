@@ -76,8 +76,8 @@ nothing to `*s`.
 
 ## Composite trapezoidal rule (`diana/trapezoidal.h`)
 
-A function over tabulated samples: the caller evaluates `f` at the nodes. C API only so far; no
-Python binding or callback wrapper yet.
+A function over tabulated samples: the caller evaluates `f` at the nodes. There is no callback
+wrapper; Python calls the kernel as `diana.trapezoidal` (see the Python API).
 
 - `diana_trapezoidal(y, n, h, result)` writes `h * (0.5 * (y[0] + y[n-1]) + y[1] + ... + y[n-2])` to
   `*result`, evaluated in binary64 in that order (`n - 1` panels of width `h`; a negative `h`
@@ -138,7 +138,19 @@ existing state and status unchanged, so a previously initialized object remains 
 boundary). The status constants `diana.OK`, `CONTINUE`, `ERR_ARG`, `ERR_BRACKET` and `ERR_MAXITER`
 are the Python spellings of the `DIANA_*` codes above, as returned by `diana.Bisection.step`.
 
+`diana.trapezoidal(y, h)` returns the composite trapezoidal rule of `diana_trapezoidal` as a
+`float`, with the same operation order. A `y` that supports the buffer protocol (a NumPy `float64`
+array, `array.array("d")`, a `memoryview`, a ctypes `c_double` array) is read in place, without a
+copy, and must hold native-endian float64 (format `d`, optionally prefixed by `@`, `=`, or the
+native byte-order character) in one dimension, C-contiguous and aligned for `double`. The checks run
+in this order: another element type raises `TypeError`; another dimension, fewer than two samples,
+a non-contiguous view, or a misaligned start raise `ValueError`. Any other iterable of numbers is
+first copied into an `array.array("d")`, which converts each element through `__float__` (or
+`__index__`, rounding an integer to the nearest double) and raises its own `TypeError` or
+`OverflowError`. A non-finite result (`DIANA_ERR_ARG` in C) raises
+`ValueError`.
+
 The CPython extension `diana._diana` is hand-written and has no NumPy dependency; array kernels
-will use the buffer protocol. It uses single-phase module initialisation: the multi-phase slot table
+use the buffer protocol. It uses single-phase module initialisation: the multi-phase slot table
 stores a function pointer in a `void *`, which is not strict ISO C and fails `-Wpedantic -Werror` on
 gcc.
