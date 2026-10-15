@@ -74,6 +74,8 @@ def load_spec(errors: list[str]) -> list[Theorem]:
             if tid in seen:
                 errors.append(f"{path}: duplicate theorem id '{tid}'")
             seen.add(tid)
+            if tid.split("-")[0] != name.upper():
+                errors.append(f"{path}: {tid}: id prefix must be '{name.upper()}'")
             layer = str(entry.get("layer", ""))
             if layer not in LAYER_REQUIRE:
                 errors.append(f"{path}: {tid}: layer must be A, B, or C")

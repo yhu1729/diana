@@ -32,7 +32,7 @@ def gate(tmp_path, monkeypatch):
                     theorem.result[prover] = "ok"
 
     monkeypatch.setattr(module, "run_prover", Mock(side_effect=verify))
-    write_spec(module, "bisect", "BIS-C1")
+    write_spec(module, "bisection", "BISECTION-C1")
     return module
 
 
@@ -72,7 +72,7 @@ def test_strict_accepts_acsl_coverage(gate, monkeypatch, expectation):
         (None, "missing expectation"),
         ("", "missing expectation"),
         ("other.c 162\n", "missing expectation"),
-        ("bisect 162\n", "missing expectation"),
+        ("bisection 162\n", "missing expectation"),
         ("kernel.c\n", "invalid expectation"),
         ("kernel.c invalid\n", "invalid expectation"),
         ("kernel.c 162 extra\n", "invalid expectation"),
@@ -87,21 +87,21 @@ def test_strict_rejects_missing_or_invalid_acsl_coverage(
     if expectation is not None:
         gate.FRAMA_C_EXPECTATION.write_text(expectation)
     assert run_gate(gate, monkeypatch, "--run", "--strict", "--no-report") == 1
-    assert f"BIS-C1 [frama-c]: {diagnostic} for kernel.c" in capsys.readouterr().out
+    assert f"BISECTION-C1 [frama-c]: {diagnostic} for kernel.c" in capsys.readouterr().out
     gate.write_report.assert_not_called()
 
 
 def test_strict_checks_every_acsl_file(gate, monkeypatch, capsys):
-    write_spec(gate, "other", "OTH-C1", "other.c")
+    write_spec(gate, "other", "OTHER-C1", "other.c")
     gate.FRAMA_C_EXPECTATION.write_text("kernel.c 162\n")
     assert run_gate(gate, monkeypatch, "--run", "--strict", "--no-report") == 1
     out = capsys.readouterr().out
-    assert "OTH-C1 [frama-c]: missing expectation for other.c" in out
-    assert "BIS-C1 [frama-c]" not in out
+    assert "OTHER-C1 [frama-c]: missing expectation for other.c" in out
+    assert "BISECTION-C1 [frama-c]" not in out
 
 
 def test_specs_share_acsl_file_expectation(gate, monkeypatch):
-    write_spec(gate, "other", "OTH-C1")
+    write_spec(gate, "other", "OTHER-C1")
     gate.FRAMA_C_EXPECTATION.write_text("kernel.c 162\n")
     assert run_gate(gate, monkeypatch, "--run", "--strict", "--no-report") == 0
 
@@ -116,14 +116,14 @@ def test_non_strict_preserves_acsl_behavior(gate, monkeypatch, expectation):
 
 @pytest.mark.parametrize("provers", [("lean",), ("rocq",), ("lean", "rocq")])
 def test_explicit_prover_filters_out_acsl_coverage(gate, monkeypatch, provers):
-    path = gate.SPEC_DIR / "bisect.md"
+    path = gate.SPEC_DIR / "bisection.md"
     path.write_text(
         path.read_text().removesuffix("---\n")
-        + """  - id: BIS-A1
+        + """  - id: BISECTION-A1
     layer: A
     informal: real theorem
-    lean: Diana.Real.Bisect.theorem
-    rocq: Diana.Real.Bisect.theorem
+    lean: Diana.Real.Bisection.theorem
+    rocq: Diana.Real.Bisection.theorem
 ---
 """
     )
