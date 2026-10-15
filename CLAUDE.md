@@ -19,7 +19,7 @@ API: `doc/api.md`. Build, test, and CI rationale: `doc/development.md`.
   No push, tag, or merge request without an explicit request.
   - **Message:** subject line only — no body, no `Co-Authored-By` or other trailer, just the
     `Signed-off-by` line `-s` adds. Keep the subject short (~50 characters); drop articles
-    (`add bisect header`, not `add the bisection header`) and name the thing, not the reason.
+    (`add bisection header`, not `add the bisection header`) and name the thing, not the reason.
   - **Size:** one logical step per commit, usually one file (a header, a kernel, a test, a doc), at
     most a handful when they only make sense together (a `.c` with the `CMakeLists.txt` line that
     builds it). Split a change that touches the library, its test and its doc into one commit each.
