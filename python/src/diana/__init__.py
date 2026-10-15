@@ -2,7 +2,8 @@
 
 Every iterative kernel is exposed in reverse-communication form (a small state object) and,
 for convenience, as a function taking a Python callable. The callable loop runs in Python and is
-not part of the verified code.
+not part of the verified code. Kernels over tabulated samples, such as :func:`trapezoidal`, take
+a float64 buffer or a sequence of numbers.
 """
 
 from __future__ import annotations
@@ -11,6 +12,7 @@ from diana import _diana
 from diana._bisection import bisection
 from diana._diana import CONTINUE, ERR_ARG, ERR_BRACKET, ERR_MAXITER, OK, Bisection
 from diana._error import BracketError, MaxIterError
+from diana._trapezoidal import trapezoidal
 
 __all__ = [
     "__version__",
@@ -24,6 +26,7 @@ __all__ = [
     "MaxIterError",
     "bisection",
     "status_str",
+    "trapezoidal",
     "version",
 ]
 
