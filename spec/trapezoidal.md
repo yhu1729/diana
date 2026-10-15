@@ -65,10 +65,11 @@ which reverses the samples and negates the result, so the layer-A theorems take 
   because differentiable), `E′(0) = 0`, and `E″(s) = −s·f″(x + s)/2`. Two applications of the mean
   value inequality against the boundary functions `M₂·s²/4` and `M₂·s³/12` give the bound, so f″
   needs only to exist and be bounded (Mathlib
-  `image_norm_le_of_norm_deriv_right_le_deriv_boundary`; Coquelicot `is_derive` with Stdlib `MVT`).
-  Lean differentiates the integral of the clamped extension `t ↦ f(max x (min t (x + h)))`, which
-  is continuous on ℝ, so the fundamental theorem of calculus holds at both endpoints without any
-  assumption on `f` outside `[x, x + h]`.
+  `image_norm_le_of_norm_deriv_right_le_deriv_boundary`; in Rocq, Coquelicot `MVT_gen` applied to
+  `B − E` and `B + E` for a boundary function `B`).
+  Both provers differentiate the integral of the clamped extension `t ↦ f(max x (min t (x + h)))`
+  (Coquelicot `is_derive_RInt`), which is continuous on ℝ, so the fundamental theorem of calculus
+  holds at both endpoints without any assumption on `f` outside `[x, x + h]`.
   Shared with Simpson, whose error term needs the same scheme to the fourth derivative.
 - **A2**: additivity of the integral over the `m` panels (Mathlib
   `intervalIntegral.sum_integral_adjacent_intervals`; Coquelicot `RInt_Chasles`), A1 on each, and
@@ -131,8 +132,8 @@ C assignment. The value claim is TRAPEZOIDAL-C2 (VST), on the same Flocq model a
 
 | ID | Lean | Rocq | Frama-C |
 |---|---|---|---|
-| TRAPEZOIDAL-A1 | proved | planned | – |
-| TRAPEZOIDAL-A2 | proved | planned | – |
+| TRAPEZOIDAL-A1 | proved | proved | – |
+| TRAPEZOIDAL-A2 | proved | proved | – |
 | TRAPEZOIDAL-B1 | – | proved | – |
 | TRAPEZOIDAL-B2 | – | proved | – |
 | TRAPEZOIDAL-C1 | – | – | 41/41 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |

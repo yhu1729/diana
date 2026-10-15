@@ -13,10 +13,11 @@ All notable changes to this project are documented here. The format follows
   pointers, `n < 2`, or a non-finite result. Frama-C WP proves its ACSL contract (41 goals,
   TRAPEZOIDAL-C1); `spec/trapezoidal.md` lists the layer-A error bounds, the Flocq
   finiteness and forward-error theorems, and the VST theorem.
-- Lean proves the trapezoidal error bounds TRAPEZOIDAL-A1 (`Diana.Real.Trapezoidal.local_error`,
-  one panel: `M₂·h³/12`) and TRAPEZOIDAL-A2 (`composite_error`, `m` panels: `(b − a)·h²·M₂/12`)
-  for `f` with a two-sided second derivative bounded by `M₂` on the interval; `f″` need not be
-  continuous. The Rocq layer-A proofs are still planned.
+- Lean and Rocq prove the trapezoidal error bounds TRAPEZOIDAL-A1
+  (`Diana.Real.Trapezoidal.local_error`, one panel: `M₂·h³/12`) and TRAPEZOIDAL-A2
+  (`composite_error`, `m` panels: `(b − a)·h²·M₂/12`) for `f` with a two-sided second derivative
+  bounded by `M₂` on the interval; `f″` need not be continuous. The Rocq proof is the first to use
+  Coquelicot (`RInt`, `is_derive`); `make real` and the `verify_rocq` CI job compile it.
 - Flocq proves the trapezoidal binary64 theorems in `verification/rocq/theory/Float/Trapezoidal.v`:
   TRAPEZOIDAL-B1 (`finite_result`: a finite result implies finite `h`, samples and partial
   sums, so no operation overflowed) and TRAPEZOIDAL-B2 (`forward_error`:
