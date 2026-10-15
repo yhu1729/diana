@@ -8,6 +8,15 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Composite Simpson rule over tabulated samples, `diana_simpson(y, n, h, result)` in
+  `diana/simpson.h`, for an odd `n >= 3`: the odd and even interior samples are summed separately,
+  left to right from `+0`, and the result is `(h * ((y[0] + y[n-1]) + 4 * so + 2 * se)) / 3`. It
+  returns `DIANA_ERR_ARG` without writing `*result` for NULL pointers, `n < 3`, an even `n`, or a
+  non-finite result. Frama-C WP proves its ACSL contract (58 goals, SIMPSON-C1);
+  `spec/simpson.md` fixes the operation order and lists the planned layer-A, layer-B and VST
+  theorems. `test/c/test_simpson.c` covers every path of the kernel: argument errors, exact results
+  on cubic data, the operation order, overflow in each operation, NaN and infinite samples and
+  `h`, `h = 0`, and underflow to zero.
 - `script/check_commit.sh` checks commit history against the commit convention: no merge commit,
   a `<type>[(scope)]: <summary>` subject of at most 50 characters without an article, a message
   that is the subject and one `Signed-off-by` matching the committer, and an author date equal to
