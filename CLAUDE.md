@@ -123,4 +123,4 @@ doc/                  api, development, verification (trust statement + generate
 
 ## Status
 
-See `CHANGELOG.md`. v0.1.0: scaffolding and bisection end-to-end. Layers A and B are complete for the kernel, Frama-C WP proves all 162 goals, and VST covers `bisect_mid`, the `src/fp.h` helpers and `diana_bisect_result`; VST for `diana_bisect_init`/`diana_bisect_step` is deferred. Next are trapezoid, Simpson, and Euler.
+See `CHANGELOG.md`. v0.1.0: scaffolding and bisection end-to-end. Layers A and B are complete for the kernel, Frama-C WP proves all 162 goals, and VST covers `bisect_mid`, the `src/fp.h` helpers and `diana_bisect_result`; VST for `diana_bisect_init`/`diana_bisect_step` is deferred. M1 (trapezoid, Simpson, Euler) has started: `diana_trapezoid` (tabulated, C only) with its ACSL contract proved by WP (41 goals) and `spec/trapezoid.md`; its layer A, B and VST proofs are not written yet, so the strict spec gate (and Lean CI) fails on TRAP-A1/A2 until they are.
