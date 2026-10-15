@@ -44,16 +44,16 @@ static PyObject *mod_trapezoidal(PyObject *Py_UNUSED(self), PyObject *args,
                  view.ndim);
     goto cleanup;
   }
+  if (view.shape[0] < 2) {
+    PyErr_SetString(PyExc_ValueError, "y must have at least two samples");
+    goto cleanup;
+  }
   if (!PyBuffer_IsContiguous(&view, 'C')) {
     PyErr_SetString(PyExc_ValueError, "y must be C-contiguous");
     goto cleanup;
   }
   if ((uintptr_t)view.buf % _Alignof(double) != 0u) {
     PyErr_SetString(PyExc_ValueError, "y is not aligned for float64");
-    goto cleanup;
-  }
-  if (view.shape[0] < 2) {
-    PyErr_SetString(PyExc_ValueError, "y must have at least two samples");
     goto cleanup;
   }
   st =
