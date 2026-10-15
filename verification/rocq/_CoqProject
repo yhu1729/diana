@@ -9,3 +9,5 @@ theory/Float/Bisection.v
 theory/Float/Trapezoidal.v
 ../clight/bisection_aarch64_macos.v
 theory/VST/Bisection.v
+../clight/trapezoidal_aarch64_macos.v
+theory/VST/Trapezoidal.v

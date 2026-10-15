@@ -34,6 +34,11 @@ All notable changes to this project are documented here. The format follows
   sums, so no operation overflowed) and TRAPEZOIDAL-B2 (`forward_error`:
   `|r − T| ≤ γₙ·|h|·A + (1 + γₙ₋₁)·|h|·η + η` for `n·u < 1`, with `A` the trapezoid-weighted
   absolute sum of the samples and `η = 2⁻¹⁰⁷⁵`).
+- VST proves TRAPEZOIDAL-C2 (`Diana.VST.Trapezoidal.body_diana_trapezoidal`) against the committed
+  AArch64 macOS Clight AST `verification/clight/trapezoidal_aarch64_macos.v`: for non-NULL `y` with
+  `n >= 2`, `diana_trapezoidal` returns `DIANA_OK` and writes the Flocq model value exactly when
+  it is finite, and otherwise returns `DIANA_ERR_ARG` with `*result` unchanged. Every trapezoidal
+  theorem is now proved, so the full strict spec gate passes.
 - `script/check_wheel.py` checks static and shared installed wheels in isolated environments;
   Python CI runs it. `test_install` checks the installed CMake consumer with a custom
   header directory and with a shared library, and gates releases.
