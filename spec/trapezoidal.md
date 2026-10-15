@@ -71,10 +71,14 @@ which reverses the samples and negates the result, so the layer-A theorems take 
   Both provers differentiate the integral of the clamped extension `t ↦ f(max x (min t (x + h)))`
   (Coquelicot `is_derive_RInt`), which is continuous on ℝ, so the fundamental theorem of calculus
   holds at both endpoints without any assumption on `f` outside `[x, x + h]`.
-  Shared with Simpson, whose error term needs the same scheme to the fourth derivative.
+  The mean-value step (`bound_of_deriv` in Lean, `bound_of_derive` in Rocq) and the clamped
+  extension (`clamp`, `extend_*`) live in `Diana.Real.Quadrature`
+  (`verification/lean/Diana/Real/Quadrature.lean`, `verification/rocq/theory/Real/Quadrature.v`),
+  shared with Simpson, whose error term needs the same scheme to the fourth derivative.
 - **A2**: additivity of the integral over the `m` panels (Mathlib
   `intervalIntegral.sum_integral_adjacent_intervals`; Coquelicot `RInt_Chasles`), A1 on each, and
-  `m·h = b − a`.
+  `m·h = b − a`. The panel sum is `panel_error` in `Diana.Real.Quadrature`: `m` adjacent panels of
+  width `w`, each within `c` of its rule, give an error of at most `m·c`.
 - **B1**: in round-to-nearest-even, `Bplus` and `Bmult` return a non-finite value whenever an
   operand is non-finite (`∞ − ∞` and `0·∞` are NaN) and whenever the rounded exact result exceeds
   `DBL_MAX` (`Bplus_correct`/`Bmult_correct`, overflow branch). `fadd_finite_inv` checks the
@@ -86,12 +90,15 @@ which reverses the samples and negates the result, so the layer-A theorems take 
   that lands in the subnormal range is exact (`FLT_plus_error_N_ex`). The halving is exact unless
   the halved value has the minimal exponent, where the error is at most `η` (`half_error`, via
   `ulp_FLT_small` and `error_le_half_ulp`); the final product has relative error `u` plus absolute
-  error `η` (`error_N_FLT`). `fold_error` carries the invariant
+  error `η` (`error_N_FLT`, as `round_error`). `fold_error` carries the invariant
   `|sⱼ − Xⱼ| ≤ γⱼ₊₁·Rⱼ + (1 + γⱼ)·η` with `Xⱼ`, `Rⱼ` the exact and absolute partial sums, so with
   `ŝ` the computed sum and `S` the exact one, `|ŝ − S| ≤ γₙ₋₁·A + (1 + γₙ₋₂)·η`; then
   `|r − h·S| ≤ u·|h|·|S| + (1 + u)·|h|·|ŝ − S| + η` and `|S| ≤ A`. The constants collapse
   through `γₖ·(1 + u) + u ≤ γₖ₊₁` (`gamma_step`), which also gives `(1 + u)(1 + γₖ) ≤ 1 + γₖ₊₁`.
   B1 supplies the no-overflow premise of every step. Proof: `forward_error`.
+  Everything above except `half_error` and the two theorems is in
+  `verification/rocq/theory/Float/Sum.v` (`Diana.Float.Sum`), for reuse by later kernels that
+  sum samples.
 - **C1**: the `/*@ ... */` annotations in `src/trapezoidal.c`. The loop invariant is only
   `1 <= i <= n - 1`; WP proves no value property beyond finiteness on `DIANA_OK`, see below.
 - **C2**: one Clight loop over a read-only `tarray tdouble n`; `size_t` is `tulong` on the target,
@@ -108,8 +115,8 @@ which reverses the samples and negates the result, so the layer-A theorems take 
 
 - **Layer B** (`verification/rocq/theory/Float/Trapezoidal.v`): `ftrap y0 yl m h` is
   `fmul h (fold_left fadd m (fmul half (fadd y0 yl)))`, the C's operation order for the array
-  `y = y0 :: m ++ [yl]` (`m` is `y[1 .. n−2]`, so `n = length m + 2`). `fadd` and `fmul` are
-  `Bplus` and `Bmult` in `mode_NE`, parameterised by the NaN-payload functions so that they
+  `y = y0 :: m ++ [yl]` (`m` is `y[1 .. n−2]`, so `n = length m + 2`). `fadd` and `fmul`
+  (`Diana.Float.Sum`) are `Bplus` and `Bmult` in `mode_NE`, parameterised by the NaN-payload functions so that they
   instantiate to CompCert's `Float.add`/`Float.mul`. `rsum` and `rabs_sum` are the exact and the
   absolute sum of `m`, and `T` in B2 is `h·((y0 + yl)/2 + rsum m)`.
 - **Layer C, VST** (`verification/rocq/theory/VST/Trapezoidal.v`, against the Clight AST
