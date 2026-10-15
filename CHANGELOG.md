@@ -38,6 +38,8 @@ All notable changes to this project are documented here. The format follows
   Lean namespace `Diana.Real.Bisection`.
 - The bisection spec is `spec/bisection.md`, and its theorem IDs are `BISECTION-A1` to
   `BISECTION-C5` (`spec/bisect.md` and `BIS-*` in v0.1.0).
+- The spec gate requires each theorem ID to start with its method in capitals (`BISECTION-A1` in
+  `spec/bisection.md`) and no longer caps that prefix at six letters.
 - `verify_rocq` runs on `mathcomp/mathcomp:2.6.0-rocq-prover-9.2` and installs Coquelicot 3.4.5,
   so layer-A Rocq proofs can use Coquelicot integrals and derivatives in CI.
 - Frama-C verification data lives in `verification/frama-c/`, with all expected goal counts in

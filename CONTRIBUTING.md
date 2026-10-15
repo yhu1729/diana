@@ -127,9 +127,10 @@ about those, so they are your responsibility before the commit lands.
   regenerated, and only on the CompCert target it is named for (`bisect_aarch64_macos.v` is
   AArch64 macOS). `script/dev.sh verify` checks the AST of the current target and fails on a stale
   one; `DIANA_CLIGHT_UPDATE=1` makes it overwrite instead. Nothing in CI notices staleness.
-- Adding a method: give it a `spec/<method>.md` with its theorem IDs, layer, informal statement,
-  and per-prover constant name. `script/check_spec.py` is the gate — every listed constant must
-  exist, use only an allowed axiom, and contain no `sorry` or `Admitted`.
+- Adding a method: give it a `spec/<method>.md` with its theorem IDs (`<METHOD>-<layer><n>`, such as
+  `BISECTION-A1`), layer, informal statement, and per-prover constant name. `script/check_spec.py`
+  is the gate — every listed constant must exist, use only an allowed axiom, and contain no `sorry`
+  or `Admitted`.
 
 ## Commit
 

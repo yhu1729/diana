@@ -121,7 +121,8 @@ pure IEEE arithmetic that Flocq models exactly:
 `script/check_spec.py` reads the YAML front matter of every `spec/<method>.md` (theorem id, layer
 A real / B float / C code, informal statement, and the fully qualified constant per prover) and
 
-1. validates the front matter and the referenced C targets;
+1. validates the front matter and the referenced C targets; a theorem ID is the method in
+   capitals, the layer letter, and a number (`BISECTION-A1` in `spec/bisection.md`);
 2. writes `verification/lean/CheckSpec.lean` and `verification/rocq/CheckSpec.v`, which print the
    axioms of every listed constant. A constant not declared in its module file is marked `missing`
    and left out, so one absent constant does not abort the prover run for all others; the prover
