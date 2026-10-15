@@ -182,6 +182,25 @@ Expected values in `test/c/test_trapezoidal.c` and `test/python/test_trapezoidal
   and the error of `math.exp` (about `1e-13` in all) are negligible against the smallest error,
   about `2e-6`.
 
+Expected values in `test/c/test_simpson.c`:
+
+- The rule is exact for cubic `f`. The cubic cases use samples and `h` with few significant bits,
+  so every partial sum and the product with `h` are representable and only the division by 3 can
+  round: 64 for `x^3` on `[0, 4]`; `28/3`, rounded once, for `x^3 - 2x^2 + x + 1` on `[-1, 3]` with
+  `h = 1/2` (the weighted sum is exactly 56); and 26000007000 for `(i - 400)^3 + 7`,
+  `i = 0..1000`, whose samples change sign (3250000875 with `h = 2^-3`).
+- Three cases pin the operation order. `{2^53, 1/2, 1/4, 1/2, -2^53}` gives 4.5 because the
+  endpoint pair cancels before the weighted interior is added; adding the interior to `2^53` first
+  would round to 4. In `{0, 2^53, 0, 1, 0, -2^53, 0}` the odd sum is `2^53 + 1 = 2^53` (a tie,
+  rounded to even) and then 0, so the result is 0; summing right to left would give 4. The even sum
+  is pinned the same way.
+- Overflow cases have finite samples and `h` and overflow in exactly one operation: the endpoint
+  sum, either interior sum, either scaling by 4 or 2, either of the two additions forming `s`, or
+  the product `h * s`. Two of them have a representable exact result (`h * 4 * DBL_MAX / 3` with
+  `h = 1/4`, and `DBL_MAX / 2` from `h = DBL_MAX / 4` and `s = 6`): the kernel's range is limited
+  by its intermediates, as `spec/simpson.md` states.
+- `DBL_TRUE_MIN / 3` rounds to `+0`: underflow is a finite result, not an error.
+
 ## CI (`.gitlab-ci.yml`)
 
 Six stages: style (format, naming, spec structure), build (per compiler and configuration), test
