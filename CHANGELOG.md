@@ -9,10 +9,21 @@ All notable changes to this project are documented here. The format follows
 ### Added
 
 - Composite trapezoidal rule over tabulated samples, `diana_trapezoidal(y, n, h, result)` in
-  `diana/trapezoidal.h` (C only). It returns `DIANA_ERR_ARG` without writing `*result` for NULL
+  `diana/trapezoidal.h`. It returns `DIANA_ERR_ARG` without writing `*result` for NULL
   pointers, `n < 2`, or a non-finite result. Frama-C WP proves its ACSL contract (41 goals,
   TRAPEZOIDAL-C1); `spec/trapezoidal.md` lists the layer-A error bounds, the Flocq
   finiteness and forward-error theorems, and the VST theorem.
+- Python binding `diana.trapezoidal(y, h)` (driver `diana._trapezoidal`). It reads a
+  one-dimensional, C-contiguous, aligned buffer of native float64 in place through the buffer
+  protocol, with no NumPy dependency, and copies any other iterable of numbers into an
+  `array.array("d")`. It raises `TypeError` for another element type, and `ValueError` for another
+  layout, fewer than two samples, or a non-finite result.
+- `test/c/test_trapezoidal.c` covers every path of `diana_trapezoidal`, restoring 100% C line and
+  branch coverage: NULL pointers, `n < 2`, exact results on affine data, the left-to-right
+  summation order, overflow from finite samples, NaN and infinite samples and `h`, `h = 0`, and
+  underflow to zero. `test/python/test_trapezoidal.py` checks the binding's buffer handling,
+  bitwise agreement with a sequential binary64 evaluation (Hypothesis), the forward rounding-error
+  bound against exact rational arithmetic, and second-order convergence against mpmath.
 - Lean and Rocq prove the trapezoidal error bounds TRAPEZOIDAL-A1
   (`Diana.Real.Trapezoidal.local_error`, one panel: `M₂·h³/12`) and TRAPEZOIDAL-A2
   (`composite_error`, `m` panels: `(b − a)·h²·M₂/12`) for `f` with a two-sided second derivative
