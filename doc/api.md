@@ -90,8 +90,12 @@ Python binding or callback wrapper yet.
 Frama-C WP proves memory safety, termination, the status cases and the finiteness of `*result` on
 `DIANA_OK` (TRAPEZOIDAL-C1). For exact samples of an `f` whose second derivative is bounded by `M₂`
 on `[a, b]`, the rule in exact arithmetic is within `(b − a)·h²·M₂/12` of the integral
-(TRAPEZOIDAL-A2, proved in Lean; Rocq planned). The value of `*result` against the binary64 model
-(TRAPEZOIDAL-C2) and its rounding error (TRAPEZOIDAL-B2) are planned.
+(TRAPEZOIDAL-A2, proved in Lean; Rocq planned). The binary64 evaluation order above is within
+`γₙ·|h|·A + (1 + γₙ₋₁)·|h|·η + η` of the exact rule whenever its result is finite, with
+`A = |y[0] + y[n-1]|/2 + |y[1]| + ... + |y[n-2]|`, `γₖ = k·u/(1 − k·u)`, `u = 2⁻⁵³` and
+`η = 2⁻¹⁰⁷⁵` (TRAPEZOIDAL-B2, Flocq); the bound is relative to `A`, not to the result, so it says
+little under heavy cancellation. That the C computes exactly this binary64 value (TRAPEZOIDAL-C2,
+VST) is planned.
 
 ## Callback wrapper (`diana/wrapper.h`)
 
