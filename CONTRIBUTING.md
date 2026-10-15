@@ -10,6 +10,7 @@ proven and what is merely assumed.
 
 ```
 ln -s ../../.git-hooks/commit-msg .git/hooks/commit-msg   # once per clone, see Commit
+ln -s ../../.git-hooks/pre-push .git/hooks/pre-push       # once per clone, see Commit
 script/dev.sh config
 script/dev.sh build
 script/dev.sh test
@@ -134,25 +135,39 @@ about those, so they are your responsibility before the commit lands.
 
 ## Commit
 
-The `commit-msg` hook is tracked in `.git-hooks/` and is not active in a fresh clone. Link it into
-`.git/hooks` once per clone:
+The `commit-msg` and `pre-push` hooks are tracked in `.git-hooks/` and are not active in a fresh
+clone. Link them into `.git/hooks` once per clone:
 
 ```
 ln -s ../../.git-hooks/commit-msg .git/hooks/commit-msg
+ln -s ../../.git-hooks/pre-push .git/hooks/pre-push
 ```
 
-The link is relative to `.git/hooks`, so it survives moving the checkout. `git config
+The links are relative to `.git/hooks`, so they survive moving the checkout. `git config
 core.hooksPath .git-hooks` would work too, but it replaces `.git/hooks` wholesale and so disables
 any other hook you keep there. Never commit with `--no-verify`.
 
 Commit with `git commit -s`, which adds the `Signed-off-by` line every commit carries.
 
 The subject is `<type>[(scope)]: <summary>`, with the type one of
-`feat fix perf refactor build style test ci doc chore` — note `doc`, not `docs`. The hook checks
-that form and nothing else; the rest is convention:
+`feat fix perf refactor build style test ci doc chore` — note `doc`, not `docs`. The
+`commit-msg` hook checks that form when you commit. `script/check_commit.sh` checks the history:
+the `pre-push` hook runs it on the commits the remote does not have yet, and the `style_git` CI job
+on the commits since the previous pipeline of the branch (the merge request's commits in a merge
+request pipeline, the whole history when there is no previous pipeline). It rejects:
 
-- The subject line is the whole message. No body, and no trailer beyond the `Signed-off-by`.
-- Keep it near 50 characters and drop articles. Name the thing, not the reason:
+- a merge commit: rebase onto the target instead, so history stays linear;
+- a subject not of the form above, longer than 50 characters, or containing `a`, `an` or `the`;
+- any message other than the subject, a blank line and one `Signed-off-by` line naming the
+  committer, so no body and no other trailer;
+- an author date different from the commit date, which an amended or rebased commit has. Recreate
+  such commits fresh after `git reset --soft` (`git read-tree <sha>` then `git commit -s` for each).
+
+Run `script/check_commit.sh` with no argument for the commits not yet on the upstream branch (the
+whole history without one), with `HEAD` for the whole history, or with any `git rev-list` range.
+The rest is convention:
+
+- Name the thing, not the reason:
   `feat: add bisection header`, not `feat: add the bisection reverse-communication header`.
   Rationale goes in `doc/` or `spec/`, never in the log.
 - One logical step per commit, usually a single file. Group files only when they are meaningless
