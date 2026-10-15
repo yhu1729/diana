@@ -1,2 +1,2 @@
 src/bisection.c 162
-src/trapezoid.c 41
+src/trapezoidal.c 41

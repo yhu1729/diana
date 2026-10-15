@@ -8,7 +8,7 @@
 
 #include "diana/bisection.h"
 #include "diana/status.h"
-#include "diana/trapezoid.h"
+#include "diana/trapezoidal.h"
 #include "diana/wrapper.h"
 
 #ifdef __cplusplus

@@ -8,8 +8,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
-- Composite trapezoidal rule over tabulated samples, `diana_trapezoid(y, n, h, result)` in
-  `diana/trapezoid.h` (C only). It returns `DIANA_ERR_ARG` without writing `*result` for NULL
+- Composite trapezoidal rule over tabulated samples, `diana_trapezoidal(y, n, h, result)` in
+  `diana/trapezoidal.h` (C only). It returns `DIANA_ERR_ARG` without writing `*result` for NULL
   pointers, `n < 2`, or a non-finite result. Frama-C WP proves its ACSL contract (41 goals,
   TRAP-C1); `spec/trapezoid.md` lists the planned layer-A error bounds, the Flocq finiteness and
   forward-error theorems, and the VST theorem.

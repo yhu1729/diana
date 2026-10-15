@@ -1,6 +1,6 @@
 #include <stddef.h>
 
-#include "diana/trapezoid.h"
+#include "diana/trapezoidal.h"
 #include "fp.h"
 
 /*@ requires y == \null || n < 2 || \valid_read(y + (0 .. n - 1));
@@ -14,8 +14,8 @@
   @ ensures \result == DIANA_ERR_ARG && result != \null ==>
   @         *result == \old(*result);
   @*/
-diana_status diana_trapezoid(const double *y, size_t n, double h,
-                             double *result) {
+diana_status diana_trapezoidal(const double *y, size_t n, double h,
+                               double *result) {
   double s;
   double r;
   size_t i;
