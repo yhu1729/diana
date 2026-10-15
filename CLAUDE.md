@@ -45,7 +45,7 @@ API: `doc/api.md`. Build, test, and CI rationale: `doc/development.md`.
   mistranslates them in predicates), use exact integer expressions such as `((1 << 53) - 1) << 970`;
   a float fact that WP cannot prove goes into a small static helper whose contract is listed in
   `SKIP` of `script/run_frama_c.sh` and proved in Flocq. That skip list is the trust boundary between
-  Frama-C and Rocq; every entry needs a `BIS-B*`-style theorem.
+  Frama-C and Rocq; every entry needs a `BISECTION-B*`-style theorem.
 - **Verified kernel shape:** reverse communication. A kernel is a pure state machine on a caller-owned
   struct (`init` / `step` / `result`) or a function over tabulated arrays. No function pointer in a
   verified kernel. Callback convenience wrappers live in `src/wrapper/` and are not VST-verified.
@@ -53,7 +53,7 @@ API: `doc/api.md`. Build, test, and CI rationale: `doc/development.md`.
   in `doc/` (`api.md`, `development.md`, `verification.md`) or `spec/<method>.md`. ACSL `/*@ ... */`
   annotations are code, not comments. Python docstrings and CPython `tp_doc`/`ml_doc` strings stay
   (they are runtime API).
-- **Spec:** one `spec/<method>.md` per method with YAML front matter listing theorem IDs (`BIS-A1`, …),
+- **Spec:** one `spec/<method>.md` per method with YAML front matter listing theorem IDs (`BISECTION-A1`, …),
   layer (A real, B float, C code), informal statement, and the per-prover constant name. `script/check_spec.py`
   is the gate: every listed constant must exist, with axioms within the allowed list, and no `sorry`/`Admitted`.
 
