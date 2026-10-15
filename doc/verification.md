@@ -7,7 +7,7 @@ and, in the generated [report](#report) at the end, the status of every theorem.
 
 | Layer | Object | Tool | Statement |
 |---|---|---|---|
-| A | real-number model of the algorithm | Lean 4 + Mathlib **and** Rocq (Stdlib reals) | convergence, invariants, error bounds over ℝ |
+| A | real-number model of the algorithm | Lean 4 + Mathlib **and** Rocq (Stdlib reals, Coquelicot) | convergence, invariants, error bounds over ℝ |
 | B | binary64 model of the C arithmetic | Rocq + Flocq | rounding facts the C code relies on (finiteness, bracket containment, forward error) |
 | C-VST | the C source (Clight AST) | Rocq + VST, via CompCert `clightgen` | a C function returns / updates exactly the layer-B model value (so far `bisection_mid`, `diana_bisection_result`, and the `src/fp.h` helpers) |
 | C-WP | the C source | Frama-C WP, float model, RTE plugin | memory safety, absence of undefined behaviour, separation, contract invariants |
@@ -21,7 +21,7 @@ inside one Rocq development with no translation step.
 
 - The Lean 4 kernel and Mathlib; axioms limited to `propext`, `Classical.choice`, `Quot.sound`
   (checked per theorem by `script/check_spec.py --run`).
-- The Rocq kernel, Flocq, VST, and CompCert's Clight semantics; axioms limited to
+- The Rocq kernel, Coquelicot, Flocq, VST, and CompCert's Clight semantics; axioms limited to
   classical reals and functional extensionality (checked the same way), plus any VST axiom listed in
   `script/axiom_allow.yaml`.
 - Frama-C 33.0 / Why3 1.8.2 / Alt-Ergo 2.6.4 as a proof oracle for layer C-WP. WP assumes the
