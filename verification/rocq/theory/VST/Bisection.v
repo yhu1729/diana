@@ -1,23 +1,23 @@
 From VST.floyd Require Import proofauto.
-From Diana.Clight Require Import bisect_aarch64_macos.
-From Diana.Float Require Bisect.
+From Diana.Clight Require Import bisection_aarch64_macos.
+From Diana.Float Require Bisection.
 
 #[export] Instance CompSpecs : compspecs. make_compspecs prog. Defined.
 Definition Vprog : varspecs. mk_varspecs prog. Defined.
 
 Definition c_half : float := Float.of_bits (Int64.repr 4602678819172646912).
 
-Lemma c_half_eq : c_half = Diana.Float.Bisect.half.
+Lemma c_half_eq : c_half = Diana.Float.Bisection.half.
 Proof. apply Flocq.IEEE754.Binary.B2FF_inj. vm_compute. reflexivity. Qed.
 
 Definition c_mid (a b : float) : float := Float.mul c_half (Float.add a b).
 
 Lemma c_mid_model (a b : float) :
-  c_mid a b = Diana.Float.Bisect.mid Float.binop_nan Float.binop_nan a b.
-Proof. unfold c_mid, Diana.Float.Bisect.mid. rewrite c_half_eq. reflexivity. Qed.
+  c_mid a b = Diana.Float.Bisection.mid Float.binop_nan Float.binop_nan a b.
+Proof. unfold c_mid, Diana.Float.Bisection.mid. rewrite c_half_eq. reflexivity. Qed.
 
 Definition mid_spec :=
-  DECLARE _bisect_mid
+  DECLARE _bisection_mid
   WITH a : float, b : float
   PRE [ tdouble, tdouble ]
     PROP () PARAMS (Vfloat a; Vfloat b) SEP ()
@@ -26,7 +26,7 @@ Definition mid_spec :=
 
 Definition Gprog : funspecs := [mid_spec].
 
-Lemma body_bisect_mid : semax_body Vprog Gprog f_bisect_mid mid_spec.
+Lemma body_bisection_mid : semax_body Vprog Gprog f_bisection_mid mid_spec.
 Proof.
   start_function.
   forward.
@@ -178,7 +178,7 @@ Proof.
   - forward.
 Qed.
 
-Definition t_state := Tstruct _diana_bisect_state noattr.
+Definition t_state := Tstruct _diana_bisection_state noattr.
 
 Definition state_repr (a b fa fb x tol : float) (iter max_iter : Z) : reptype t_state :=
   (Vfloat a, (Vfloat b, (Vfloat fa, (Vfloat fb,
@@ -186,7 +186,7 @@ Definition state_repr (a b fa fb x tol : float) (iter max_iter : Z) : reptype t_
 
 
 Definition result_spec :=
-  DECLARE _diana_bisect_result
+  DECLARE _diana_bisection_result
   WITH sh : share, s : val, root : val, width : val,
        a : float, b : float, fa : float, fb : float, x : float, tol : float,
        iter : Z, max_iter : Z, shr : share, shw : share
@@ -205,8 +205,8 @@ Definition result_spec :=
 Definition Gprog3 : funspecs :=
   ltac:(with_library prog [fp_finite_spec; fp_abs_spec; mid_spec; result_spec]).
 
-Lemma body_diana_bisect_result :
-  semax_body Vprog Gprog3 f_diana_bisect_result result_spec.
+Lemma body_diana_bisection_result :
+  semax_body Vprog Gprog3 f_diana_bisection_result result_spec.
 Proof.
   start_function.
   forward_if.
@@ -228,6 +228,6 @@ Proof.
       * forward.
 Qed.
 
-(* diana_bisect_init and diana_bisect_step have no VST theorem yet: their layer-C
-   guarantee is BIS-C2 (Frama-C WP) and their binary64 model is BIS-B2/B3/B4.
-   spec/bisect.md records the blocker. *)
+(* diana_bisection_init and diana_bisection_step have no VST theorem yet: their layer-C
+   guarantee is BISECTION-C2 (Frama-C WP) and their binary64 model is BISECTION-B2/B3/B4.
+   spec/bisection.md records the blocker. *)

@@ -4,7 +4,7 @@ all: $(COQMAKEFILE)
 	$(MAKE) -f $(COQMAKEFILE)
 
 real:
-	rocq compile -R theory Diana theory/Real/Bisect.v
+	rocq compile -R theory Diana theory/Real/Bisection.v
 
 check: all
 	rocq compile -R theory Diana -Q ../clight Diana.Clight \

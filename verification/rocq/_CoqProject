@@ -3,7 +3,7 @@
 -arg -w
 -arg -deprecated-syntactic-definition
 
-theory/Real/Bisect.v
-theory/Float/Bisect.v
-../clight/bisect_aarch64_macos.v
-theory/VST/Bisect.v
+theory/Real/Bisection.v
+theory/Float/Bisection.v
+../clight/bisection_aarch64_macos.v
+theory/VST/Bisection.v
