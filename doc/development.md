@@ -199,8 +199,13 @@ a job reads, extend the matching list.
   than re-adding `allow_failure`.
 - `verify_lean` uses `LEAN_IMAGE`, a stock Debian image until the project image
   (`ci/docker/lean.Dockerfile`) is in the registry.
-- `verify_rocq` compiles layer A on the stock Rocq image (Stdlib only). It does not run the Rocq
-  axiom gate: `make check` imports every layer.
+- `verify_rocq` compiles layer A on the stock MathComp image (`mathcomp/mathcomp:2.6.0-rocq-prover-9.2`,
+  Rocq 9.2 with MathComp 2.6.0) after `opam install coq-coquelicot.$COQUELICOT_VERSION`, so layer A
+  may use Coquelicot integrals and derivatives. The image already carries Coquelicot's only
+  dependency, MathComp ssreflect, so the job compiles Coquelicot alone; on the stock
+  `rocq/rocq-prover` image the same install would also build elpi, Hierarchy Builder and MathComp.
+  The image predates Coquelicot 3.4.5, hence the `opam update` of `rocq-released` first. It does not
+  run the Rocq axiom gate: `make check` imports every layer.
 - No CI job installs Flocq, CompCert, or VST, so every CI image is public and stock. Layers B and
   C-VST, the Rocq axiom gate, and the Clight AST are checked only locally.
 - `release` is the last job of a tag pipeline, gated on every test and verification job.
@@ -258,7 +263,7 @@ committed AST.
 Requires the opam switch described in `CONTRIBUTING.md`. `make` builds everything and `make check`
 prints the axioms of the listed theorems; `check` compiles the generated `CheckSpec.v`, so run
 `uv run script/check_spec.py --run --prover rocq` (or `script/dev.sh verify`) at least once first,
-because that file is generated and not committed. `make real` builds layer A only (Stdlib), which is what
-the stock `rocq/rocq-prover` image can build; it calls `rocq compile` directly because the
+because that file is generated and not committed. `make real` builds layer A only (Stdlib and Coquelicot),
+which is what the `verify_rocq` image can build; it calls `rocq compile` directly because the
 generated makefile scans the dependencies of every file in `_CoqProject` and warns that Flocq,
 CompCert, and VST are missing.
