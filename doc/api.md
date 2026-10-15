@@ -88,8 +88,10 @@ Python binding or callback wrapper yet.
   `y[0 .. n-1]` is only read and must not overlap `*result`.
 
 Frama-C WP proves memory safety, termination, the status cases and the finiteness of `*result` on
-`DIANA_OK` (TRAPEZOIDAL-C1); the value of `*result` against the binary64 model (TRAPEZOIDAL-C2) and
-its error bounds (TRAPEZOIDAL-A1/A2, B2) are planned.
+`DIANA_OK` (TRAPEZOIDAL-C1). For exact samples of an `f` whose second derivative is bounded by `M₂`
+on `[a, b]`, the rule in exact arithmetic is within `(b − a)·h²·M₂/12` of the integral
+(TRAPEZOIDAL-A2, proved in Lean; Rocq planned). The value of `*result` against the binary64 model
+(TRAPEZOIDAL-C2) and its rounding error (TRAPEZOIDAL-B2) are planned.
 
 ## Callback wrapper (`diana/wrapper.h`)
 
