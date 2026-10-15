@@ -6,6 +6,7 @@
 theory/Real/Bisection.v
 theory/Real/Trapezoidal.v
 theory/Float/Bisection.v
+theory/Float/Sum.v
 theory/Float/Trapezoidal.v
 ../clight/bisection_aarch64_macos.v
 theory/VST/Bisection.v
