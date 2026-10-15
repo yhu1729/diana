@@ -11,8 +11,12 @@ All notable changes to this project are documented here. The format follows
 - Composite trapezoidal rule over tabulated samples, `diana_trapezoidal(y, n, h, result)` in
   `diana/trapezoidal.h` (C only). It returns `DIANA_ERR_ARG` without writing `*result` for NULL
   pointers, `n < 2`, or a non-finite result. Frama-C WP proves its ACSL contract (41 goals,
-  TRAPEZOIDAL-C1); `spec/trapezoidal.md` lists the planned layer-A error bounds, the Flocq
+  TRAPEZOIDAL-C1); `spec/trapezoidal.md` lists the layer-A error bounds, the Flocq
   finiteness and forward-error theorems, and the VST theorem.
+- Lean proves the trapezoidal error bounds TRAPEZOIDAL-A1 (`Diana.Real.Trapezoidal.local_error`,
+  one panel: `M₂·h³/12`) and TRAPEZOIDAL-A2 (`composite_error`, `m` panels: `(b − a)·h²·M₂/12`)
+  for `f` with a two-sided second derivative bounded by `M₂` on the interval; `f″` need not be
+  continuous. The Rocq layer-A proofs are still planned.
 - `script/check_wheel.py` checks static and shared installed wheels in isolated environments;
   Python CI runs it. `test_install` checks the installed CMake consumer with a custom
   header directory and with a shared library, and gates releases.
