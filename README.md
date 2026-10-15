@@ -34,7 +34,7 @@ ctest --test-dir build
 ## Python
 
 ```
-uv sync && uv run python -c "import diana; print(diana.bisect(lambda x: x*x - 2, 0.0, 2.0))"
+uv sync && uv run python -c "import diana; print(diana.bisection(lambda x: x*x - 2, 0.0, 2.0))"
 ```
 
 ## Contribute

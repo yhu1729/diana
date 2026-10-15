@@ -20,7 +20,7 @@ from pathlib import Path
 import diana
 
 assert Path(diana.__file__).resolve().is_relative_to(Path(sys.prefix).resolve())
-root = diana.bisect(lambda x: x*x - 2.0, 0.0, 2.0, tol=1e-12)
+root = diana.bisection(lambda x: x*x - 2.0, 0.0, 2.0, tol=1e-12)
 assert math.isfinite(root) and abs(root - math.sqrt(2.0)) <= 1e-12
 print(f"Diana {diana.version()}: installed wheel import and bisection passed")
 """

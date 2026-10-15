@@ -11,7 +11,7 @@ API: `doc/api.md`. Build, test, and CI rationale: `doc/development.md`.
 
 - **Name:** single-form noun and base-form verb everywhere: directory (`test/`, `verification/`, `script/`,
   `doc/`, `wrapper/`), identifier (`diana_bisection_init`, `check_spec`), CI job (`build`, `test`),
-  Python API (`diana.bisect`). No plural, no `-ing`/`-s` verb form.
+  Python API (`diana.bisection`). No plural, no `-ing`/`-s` verb form.
   - **Project name:** `Diana` in prose (heading, documentation sentence, user-facing string);
     lowercase `diana` only where it is an identifier (package, CMake target, library file, URL).
 - **Commit:** `git commit -s` (Signed-off-by) always. Conventional Commits; the `commit-msg` hook accepts
@@ -37,8 +37,8 @@ API: `doc/api.md`. Build, test, and CI rationale: `doc/development.md`.
   (LLVM style, `.clang-format`; use the version pinned in the uv `lint` group, CI `style_c` checks it).
 - **Python binding:** C extension sources in `python/ext/` (`module.c` creates `diana._diana` and calls one
   `diana_py_<kernel>_exec` per file; shared helpers in `module.h`); pure-Python package in `python/src/diana/`
-  with one private driver module per kernel (`_bisect.py`) re-exported by `__init__.py`.
-  `Bisect` starts with status `ERR_ARG` until initialization succeeds; `step` and `result` reject
+  with one private driver module per kernel (`_bisection.py`) re-exported by `__init__.py`.
+  `Bisection` starts with status `ERR_ARG` until initialization succeeds; `step` and `result` reject
   uninitialized objects, and a failed reinitialization preserves the previous state.
 - **ACSL:** arithmetic on doubles is exact real arithmetic, write rounded values with casts
   `(double)(...)`; no hexadecimal float literal anywhere in ACSL (WP 33.0 rejects them in lemmas and

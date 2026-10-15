@@ -22,7 +22,7 @@ PyMODINIT_FUNC PyInit__diana(void) {
   if (m == NULL) {
     return NULL;
   }
-  if (diana_py_status_exec(m) < 0 || diana_py_bisect_exec(m) < 0) {
+  if (diana_py_status_exec(m) < 0 || diana_py_bisection_exec(m) < 0) {
     Py_DECREF(m);
     return NULL;
   }

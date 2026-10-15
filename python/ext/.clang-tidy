@@ -1,5 +1,5 @@
 ---
-# The extension follows CPython naming (BisectObject, BisectType), not the
+# The extension follows CPython naming (BisectionObject, BisectionType), not the
 # library's lower_case convention; see doc/development.md.
 InheritParentConfig: true
 Checks: >

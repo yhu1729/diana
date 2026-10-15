@@ -8,8 +8,8 @@ not part of the verified code.
 from __future__ import annotations
 
 from diana import _diana
-from diana._bisect import bisect
-from diana._diana import CONTINUE, ERR_ARG, ERR_BRACKET, ERR_MAXITER, OK, Bisect
+from diana._bisection import bisection
+from diana._diana import CONTINUE, ERR_ARG, ERR_BRACKET, ERR_MAXITER, OK, Bisection
 from diana._error import BracketError, MaxIterError
 
 __all__ = [
@@ -19,10 +19,10 @@ __all__ = [
     "ERR_ARG",
     "ERR_BRACKET",
     "ERR_MAXITER",
-    "Bisect",
+    "Bisection",
     "BracketError",
     "MaxIterError",
-    "bisect",
+    "bisection",
     "status_str",
     "version",
 ]

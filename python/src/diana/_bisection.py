@@ -1,16 +1,16 @@
-"""Bisection driver: runs the reverse-communication state :class:`diana.Bisect` on a callable."""
+"""Bisection driver: runs the reverse-communication state :class:`diana.Bisection` on a callable."""
 
 from __future__ import annotations
 
 from collections.abc import Callable
 
-from diana._diana import CONTINUE, ERR_MAXITER, Bisect
+from diana._diana import CONTINUE, ERR_MAXITER, Bisection
 from diana._error import MaxIterError
 
-__all__ = ["bisect"]
+__all__ = ["bisection"]
 
 
-def bisect(
+def bisection(
     f: Callable[[float], float],
     a: float,
     b: float,
@@ -26,7 +26,7 @@ def bisect(
     """
     a = float(a)
     b = float(b)
-    state = Bisect(a, b, float(f(a)), float(f(b)), float(tol), max_iter)
+    state = Bisection(a, b, float(f(a)), float(f(b)), float(tol), max_iter)
     status = state.status
     while status == CONTINUE:
         status = state.step(float(f(state.x)))

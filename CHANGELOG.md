@@ -29,6 +29,9 @@ All notable changes to this project are documented here. The format follows
   `diana/bisection.h` declares `diana_bisection_state`, `diana_bisection_init`,
   `diana_bisection_step` and `diana_bisection_result`, the callback wrapper is `diana_bisection`
   with `diana_bisection_fn`, and the kernel is `src/bisection.c`.
+- The Python bisection API follows: the driver is `diana.bisection` (module `diana._bisection`)
+  and the reverse-communication state is `diana.Bisection` (`diana.bisect` and `diana.Bisect`
+  in v0.1.0).
 - `verify_rocq` runs on `mathcomp/mathcomp:2.6.0-rocq-prover-9.2` and installs Coquelicot 3.4.5,
   so layer-A Rocq proofs can use Coquelicot integrals and derivatives in CI.
 - Frama-C verification data lives in `verification/frama-c/`, with all expected goal counts in
@@ -59,7 +62,7 @@ All notable changes to this project are documented here. The format follows
   the loop `script/dev.sh verify` uses, instead of only `src/bisection.c`, and uploads only one
   consolidated `verification/frama-c/report.txt` instead of a report per kernel and the unused
   WP session directory.
-- Python `Bisect` objects allocated without successful initialization reject `step()` and
+- Python `Bisection` objects allocated without successful initialization reject `step()` and
   `result()` instead of reporting a successful zero-valued result.
 - C and Python coverage jobs run on every default-branch pipeline, keeping the README coverage
   badges populated after changes outside their path filters.
