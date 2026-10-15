@@ -4,7 +4,8 @@
 #include "module.h"
 
 static int is_native_double(const char *format) {
-  if (*format == '@' || *format == (PY_LITTLE_ENDIAN ? '<' : '>')) {
+  if (*format == '@' || *format == '=' ||
+      *format == (PY_LITTLE_ENDIAN ? '<' : '>')) {
     ++format;
   }
   return format[0] == 'd' && format[1] == '\0';
