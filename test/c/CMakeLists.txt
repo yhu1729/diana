@@ -7,3 +7,4 @@ endfunction()
 
 diana_add_test(status)
 diana_add_test(bisection)
+diana_add_test(trapezoidal)
