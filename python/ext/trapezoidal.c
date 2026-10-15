@@ -4,11 +4,7 @@
 #include "module.h"
 
 static int is_native_double(const char *format) {
-  if (format == NULL) {
-    return 0;
-  }
-  if (*format == '@' || *format == '=' ||
-      *format == (PY_LITTLE_ENDIAN ? '<' : '>')) {
+  if (*format == '@' || *format == (PY_LITTLE_ENDIAN ? '<' : '>')) {
     ++format;
   }
   return format[0] == 'd' && format[1] == '\0';
@@ -22,6 +18,7 @@ static PyObject *mod_trapezoidal(PyObject *Py_UNUSED(self), PyObject *args,
   double r = 0.0;
   Py_buffer view;
   PyObject *out = NULL;
+  const char *format;
   diana_status st;
 
   if (!PyArg_ParseTupleAndKeywords(args, kwds, "Od:trapezoidal", kwlist, &y,
@@ -31,12 +28,13 @@ static PyObject *mod_trapezoidal(PyObject *Py_UNUSED(self), PyObject *args,
   if (PyObject_GetBuffer(y, &view, PyBUF_RECORDS_RO) < 0) {
     return NULL;
   }
-  if (!is_native_double(view.format) ||
+  format = view.format != NULL ? view.format : "B";
+  if (!is_native_double(format) ||
       view.itemsize != (Py_ssize_t)sizeof(double)) {
     PyErr_Format(PyExc_TypeError,
                  "y must be a buffer of native float64 (format 'd'), not "
                  "format '%s'",
-                 view.format != NULL ? view.format : "B");
+                 format);
     goto cleanup;
   }
   if (view.ndim != 1) {
