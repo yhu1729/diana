@@ -94,7 +94,8 @@ root, the same as `SignChange` in the Lean and Rocq layer-A models. A weak sign 
 kernels (default `src/bisection.c`). WP does not set a non-zero exit status for an unproved goal,
 so the report must always be checked: `script/check_frama_c.sh` is the gate.
 `verification/frama-c/expectation.txt` stores one `<source> <goal-count>` row per verified C
-file, currently `src/bisection.c 162` and `src/trapezoidal.c 41`; the source path is the one WP runs
+file, currently `src/bisection.c 162`, `src/simpson.c 58` and `src/trapezoidal.c 41`; the source
+path is the one WP runs
 on and the one an ACSL theorem names in its `acsl` field.
 `script/check_frama_c.sh report.txt [source]` fails unless every goal in the report is proved and, when a source is given, the goal count matches its row: a drop
 means a contract or RTE guard silently disappeared. `script/verify_frama_c.sh` runs WP and this
@@ -177,6 +178,7 @@ Status per theorem and prover: `ok` (constant exists, axioms within the allowed 
 | bisection | BISECTION-C3 | C | – | ok | – | diana_fp_finite implements its IEEE semantics (VST, AArch64 macOS Clight AST): it returns 1 exactly when its argument is finite. |
 | bisection | BISECTION-C4 | C | – | ok | – | diana_fp_abs returns the conditional negation the C performs (VST, AArch64 macOS Clight AST); c_abs_B2R identifies it with Rabs on finite input. |
 | bisection | BISECTION-C5 | C | – | ok | – | diana_bisection_result writes the model midpoint and the rounded width (VST, AArch64 macOS Clight AST) |
+| simpson | SIMPSON-C1 | C | – | – | ok (58/58) | ACSL contract in src/simpson.c, Frama-C WP float model with RTE: memory safety (only y[0 .. n−1] is read, only *result is written), no UB, termination of both loops, DIANA_OK only for non-NULL y and result with n ≥ 3 odd and then *result finite, and *result untouched on DIANA_ERR_ARG. No assumed contract. |
 | trapezoidal | TRAPEZOIDAL-A1 | A | ok | ok | – | local error: under H1 on [x, x + h] with h ≥ 0, \|∫ₓ^{x+h} f − h·(f(x) + f(x + h))/2\| ≤ M₂·h³/12 |
 | trapezoidal | TRAPEZOIDAL-A2 | A | ok | ok | – | composite error: under H1 and H2, \|∫ₐᵇ f − T\| ≤ (b − a)·h²·M₂/12 |
 | trapezoidal | TRAPEZOIDAL-B1 | B | – | ok | – | a finite result certifies the whole evaluation: if the binary64 model returns a finite value, then h, y₀, yₙ₋₁, every interior yᵢ and every partial sum sₖ (k = 0, …, n − 2) are finite; since a finite Bplus or Bmult of finite operands is the rounded exact value (fadd_value, fmul_value), no operation overflowed. This is why the kernel checks only its result. |
