@@ -46,9 +46,10 @@ theorem:
   - id: TRAPEZOIDAL-C2
     layer: C
     informal: >
-      diana_trapezoidal computes the binary64 model (VST, AArch64 macOS Clight AST): it returns
-      DIANA_OK and writes the model value exactly when y and result are non-NULL, n ≥ 2 and the
-      model value is finite, and returns DIANA_ERR_ARG without writing otherwise.
+      diana_trapezoidal computes the binary64 model (VST, AArch64 macOS Clight AST): for y
+      pointing to n ≥ 2 readable doubles and a writable *result separate from them, it returns
+      DIANA_OK and writes the model value when that value is finite, and returns DIANA_ERR_ARG
+      leaving *result unchanged otherwise. The NULL and n < 2 paths are TRAPEZOIDAL-C1.
     rocq: Diana.VST.Trapezoidal.body_diana_trapezoidal
 ---
 # trapezoidal
@@ -94,7 +95,14 @@ which reverses the samples and negates the result, so the layer-A theorems take 
 - **C1**: the `/*@ ... */` annotations in `src/trapezoidal.c`. The loop invariant is only
   `1 <= i <= n - 1`; WP proves no value property beyond finiteness on `DIANA_OK`, see below.
 - **C2**: one Clight loop over a read-only `tarray tdouble n`; `size_t` is `tulong` on the target,
-  so the index lives in `Int64`. Invariant: `s` is the model partial sum `sᵢ₋₁`.
+  so the index lives in `Int64`. `forward_for` with the invariant `s = c_sum ys i` at the test and
+  `c_sum ys (i + 1)` before the increment; `c_sum_step` splits off one sample, and
+  `unsigned_sub_one` turns the unsigned test `i < n - 1` into integer arithmetic. The
+  precondition holds `data_at` on the array, which makes `y` a valid pointer, so the NULL
+  comparison is decided; a NULL `y` has no `data_at`, which is why the NULL and `n < 2` paths are
+  left to WP (C1). `diana_fp_finite` is re-specified for this AST (`body_diana_fp_finite`), reusing
+  the IEEE lemmas of `verification/rocq/theory/VST/Bisection.v`. Proof: `body_diana_trapezoidal`
+  in `verification/rocq/theory/VST/Trapezoidal.v`.
 
 ## Model correspondence
 
@@ -104,6 +112,11 @@ which reverses the samples and negates the result, so the layer-A theorems take 
   `Bplus` and `Bmult` in `mode_NE`, parameterised by the NaN-payload functions so that they
   instantiate to CompCert's `Float.add`/`Float.mul`. `rsum` and `rabs_sum` are the exact and the
   absolute sum of `m`, and `T` in B2 is `h·((y0 + yl)/2 + rsum m)`.
+- **Layer C, VST** (`verification/rocq/theory/VST/Trapezoidal.v`, against the Clight AST
+  `verification/clight/trapezoidal_aarch64_macos.v`, CompCert target AArch64 macOS): `c_trap ys h`
+  is the C computation over the array `ys` with CompCert's `Float.add`/`Float.mul`, and
+  `c_trap_model` identifies it with `ftrap` at `y0 = Znth 0 ys`, `yl = Znth (n − 1) ys` and
+  `m = sublist 1 (n − 1) ys`, after `c_half_eq` shows clightgen's `0.5` literal equal to `half`.
 
 ## Composition
 
@@ -137,4 +150,4 @@ C assignment. The value claim is TRAPEZOIDAL-C2 (VST), on the same Flocq model a
 | TRAPEZOIDAL-B1 | – | proved | – |
 | TRAPEZOIDAL-B2 | – | proved | – |
 | TRAPEZOIDAL-C1 | – | – | 41/41 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
-| TRAPEZOIDAL-C2 | – | planned | – |
+| TRAPEZOIDAL-C2 | – | proved | – |
