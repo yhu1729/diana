@@ -65,7 +65,7 @@ API: `doc/api.md`. Build, test, and CI rationale: `doc/development.md`.
 | Rocq | 9.2.0 | **not 9.3**: CompCert 3.18 opam caps `coq < 9.3~`. Homebrew `rocq 9.3` is unused; use the opam switch `4.14.1` |
 | VST | 2.17 | with CompCert 3.18 (its `clightgen` reports 3.17) |
 | Flocq | 4.2.2 | |
-| Coquelicot | 3.4.5 | |
+| Coquelicot | 3.4.5 | also in CI: `verify_rocq` opam-installs it on `mathcomp/mathcomp:2.6.0-rocq-prover-9.2` |
 | Frama-C | 33.0 local (opam), 32.1 in CI (`framac/frama-c:32.1`, no 33 image yet) | WP with `-wp-rte -wp-model +float`; Alt-Ergo 2.6.4 |
 | CMake | ≥ 3.25 | |
 | Python | managed by `uv` (`.python-version`) | |

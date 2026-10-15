@@ -20,6 +20,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- `verify_rocq` runs on `mathcomp/mathcomp:2.6.0-rocq-prover-9.2` and installs Coquelicot 3.4.5,
+  so layer-A Rocq proofs can use Coquelicot integrals and derivatives in CI.
 - Frama-C verification data lives in `verification/frama-c/`, with all expected goal counts in
   `expectation.txt`, one `<source> <goal-count>` row per verified C file; the spec gate matches
   each ACSL theorem by its `acsl` file. Script filenames and identifiers use `frama_c`; CI, the local

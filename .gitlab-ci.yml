@@ -115,7 +115,8 @@ variables:
   UV_LINK_MODE: copy
   UV_CACHE_DIR: $CI_PROJECT_DIR/.cache/uv
   FRAMA_C_IMAGE: framac/frama-c:32.1
-  ROCQ_IMAGE: rocq/rocq-prover:9.2
+  ROCQ_IMAGE: mathcomp/mathcomp:2.6.0-rocq-prover-9.2
+  COQUELICOT_VERSION: 3.4.5
   LEAN_IMAGE: debian:bookworm-slim
 
 .uv:
@@ -387,6 +388,8 @@ verify_rocq:
   needs: []
   script:
     - rocq --version
+    - opam update -y rocq-released
+    - opam install -y coq-coquelicot.$COQUELICOT_VERSION
     - cd verification/rocq && make real && cd ../..
   timeout: 1h
 
