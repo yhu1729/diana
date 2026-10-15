@@ -94,8 +94,9 @@ on `[a, b]`, the rule in exact arithmetic is within `(b − a)·h²·M₂/12` of
 `γₙ·|h|·A + (1 + γₙ₋₁)·|h|·η + η` of the exact rule whenever its result is finite, with
 `A = |y[0] + y[n-1]|/2 + |y[1]| + ... + |y[n-2]|`, `γₖ = k·u/(1 − k·u)`, `u = 2⁻⁵³` and
 `η = 2⁻¹⁰⁷⁵` (TRAPEZOIDAL-B2, Flocq); the bound is relative to `A`, not to the result, so it says
-little under heavy cancellation. That the C computes exactly this binary64 value (TRAPEZOIDAL-C2,
-VST) is planned.
+little under heavy cancellation. VST proves that the C computes exactly this binary64 value and returns
+`DIANA_OK` exactly when it is finite, leaving `*result` unchanged otherwise (TRAPEZOIDAL-C2, for
+non-NULL `y` with `n >= 2`).
 
 ## Callback wrapper (`diana/wrapper.h`)
 
