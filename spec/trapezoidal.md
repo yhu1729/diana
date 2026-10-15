@@ -24,8 +24,9 @@ theorem:
     layer: B
     informal: >
       a finite result certifies the whole evaluation: if the binary64 model returns a finite value,
-      then h, every yᵢ and every partial sum sₖ are finite and no operation overflowed, so each
-      operation returned the rounded exact value. This is why the kernel checks only its result.
+      then h, y₀, yₙ₋₁, every interior yᵢ and every partial sum sₖ (k = 0, …, n − 2) are finite;
+      since a finite Bplus or Bmult of finite operands is the rounded exact value (fadd_value,
+      fmul_value), no operation overflowed. This is why the kernel checks only its result.
     rocq: Diana.Float.Trapezoidal.finite_result
   - id: TRAPEZOIDAL-B2
     layer: B
@@ -74,18 +75,34 @@ which reverses the samples and negates the result, so the layer-A theorems take 
   `m·h = b − a`.
 - **B1**: in round-to-nearest-even, `Bplus` and `Bmult` return a non-finite value whenever an
   operand is non-finite (`∞ − ∞` and `0·∞` are NaN) and whenever the rounded exact result exceeds
-  `DBL_MAX` (`Bplus_correct`/`Bmult_correct`, overflow branch). Induction on the partial sums.
+  `DBL_MAX` (`Bplus_correct`/`Bmult_correct`, overflow branch). `fadd_finite_inv` checks the
+  non-finite operand cases by computation, and `fold_finite_inv` inducts on the partial sums;
+  a prefix sum is the accumulator of the remaining fold (`fold_left_app`). Proof:
+  `finite_result` in `verification/rocq/theory/Float/Trapezoidal.v`.
 - **B2**: Higham's recursive-summation argument with Flocq's relative-error lemmas. Sums of two
   binary64 values have relative error at most `u` even below the normal range, because an addition
-  that lands in the subnormal range is exact (`FLT_plus_error_N_ex`); the halving and the final
-  product have relative error `u` plus absolute error `η` (`error_N_FLT`). With `ŝ` the computed
-  sum and `S` the exact one, `|ŝ − S| ≤ γₙ₋₁·A + (1 + γₙ₋₂)·η`, then
-  `|r − h·S| ≤ u·|h|·|S| + (1 + u)·|h|·|ŝ − S| + η` and `|S| ≤ A`; the constants collapse through
-  `γₖ·(1 + u) + u ≤ γₖ₊₁`. B1 supplies the no-overflow premise of every step.
+  that lands in the subnormal range is exact (`FLT_plus_error_N_ex`). The halving is exact unless
+  the halved value has the minimal exponent, where the error is at most `η` (`half_error`, via
+  `ulp_FLT_small` and `error_le_half_ulp`); the final product has relative error `u` plus absolute
+  error `η` (`error_N_FLT`). `fold_error` carries the invariant
+  `|sⱼ − Xⱼ| ≤ γⱼ₊₁·Rⱼ + (1 + γⱼ)·η` with `Xⱼ`, `Rⱼ` the exact and absolute partial sums, so with
+  `ŝ` the computed sum and `S` the exact one, `|ŝ − S| ≤ γₙ₋₁·A + (1 + γₙ₋₂)·η`; then
+  `|r − h·S| ≤ u·|h|·|S| + (1 + u)·|h|·|ŝ − S| + η` and `|S| ≤ A`. The constants collapse
+  through `γₖ·(1 + u) + u ≤ γₖ₊₁` (`gamma_step`), which also gives `(1 + u)(1 + γₖ) ≤ 1 + γₖ₊₁`.
+  B1 supplies the no-overflow premise of every step. Proof: `forward_error`.
 - **C1**: the `/*@ ... */` annotations in `src/trapezoidal.c`. The loop invariant is only
   `1 <= i <= n - 1`; WP proves no value property beyond finiteness on `DIANA_OK`, see below.
 - **C2**: one Clight loop over a read-only `tarray tdouble n`; `size_t` is `tulong` on the target,
   so the index lives in `Int64`. Invariant: `s` is the model partial sum `sᵢ₋₁`.
+
+## Model correspondence
+
+- **Layer B** (`verification/rocq/theory/Float/Trapezoidal.v`): `ftrap y0 yl m h` is
+  `fmul h (fold_left fadd m (fmul half (fadd y0 yl)))`, the C's operation order for the array
+  `y = y0 :: m ++ [yl]` (`m` is `y[1 .. n−2]`, so `n = length m + 2`). `fadd` and `fmul` are
+  `Bplus` and `Bmult` in `mode_NE`, parameterised by the NaN-payload functions so that they
+  instantiate to CompCert's `Float.add`/`Float.mul`. `rsum` and `rabs_sum` are the exact and the
+  absolute sum of `m`, and `T` in B2 is `h·((y0 + yl)/2 + rsum m)`.
 
 ## Composition
 
@@ -116,7 +133,7 @@ C assignment. The value claim is TRAPEZOIDAL-C2 (VST), on the same Flocq model a
 |---|---|---|---|
 | TRAPEZOIDAL-A1 | proved | planned | – |
 | TRAPEZOIDAL-A2 | proved | planned | – |
-| TRAPEZOIDAL-B1 | – | planned | – |
-| TRAPEZOIDAL-B2 | – | planned | – |
+| TRAPEZOIDAL-B1 | – | proved | – |
+| TRAPEZOIDAL-B2 | – | proved | – |
 | TRAPEZOIDAL-C1 | – | – | 41/41 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
 | TRAPEZOIDAL-C2 | – | planned | – |
