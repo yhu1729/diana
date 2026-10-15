@@ -44,6 +44,7 @@ def same(a, b):
         lambda v: np.array(v, dtype=np.dtype("=f8")),
         lambda v: memoryview(array.array("d", v)),
         lambda v: memoryview(array.array("d", v).tobytes()).cast("d"),
+        lambda v: memoryview(array.array("d", v)).cast("B").cast("@d"),
         lambda v: (ctypes.c_double * len(v))(*v),
     ],
     ids=[
@@ -57,6 +58,7 @@ def same(a, b):
         "numpy-native",
         "memoryview",
         "readonly",
+        "native-prefix",
         "ctypes",
     ],
 )
@@ -199,6 +201,12 @@ def test_bad_layout(y, match):
 def test_wrong_argument_type(y, h):
     with pytest.raises(TypeError):
         diana.trapezoidal(y, h)
+
+
+def test_extension_requires_buffer():
+    with pytest.raises(TypeError):
+        diana._diana.trapezoidal(AFFINE, 0.5)
+    assert diana._diana.trapezoidal(array.array("d", AFFINE), 0.5) == 20.0
 
 
 @settings(database=None, derandomize=True, max_examples=500)
