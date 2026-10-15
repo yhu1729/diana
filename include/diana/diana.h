@@ -7,6 +7,7 @@
 #define DIANA_VERSION_STRING "0.1.0"
 
 #include "diana/bisection.h"
+#include "diana/simpson.h"
 #include "diana/status.h"
 #include "diana/trapezoidal.h"
 #include "diana/wrapper.h"
