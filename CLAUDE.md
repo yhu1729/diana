@@ -21,6 +21,9 @@ API: `doc/api.md`. Build, test, and CI rationale: `doc/development.md`.
     commit date. To fix or rework commits, including ones a rebase replayed, `git reset --soft` to
     the last good commit and make fresh commits (`git read-tree <sha>` then `git commit -s` per
     original commit keeps each tree); a mistake in a published commit gets a new corrective commit.
+  - **Rebase, not merge:** keep history linear with no merge commits. Bring a branch up to date,
+    or combine branches, by rebasing onto the target (a branch that is already a descendant just
+    fast-forwards), then recreate the replayed commits fresh as under **No amend**.
   - **Message:** subject line only — no body, no `Co-Authored-By` or other trailer, just the
     `Signed-off-by` line `-s` adds. Keep the subject short (~50 characters); drop articles
     (`add bisection header`, not `add the bisection header`) and name the thing, not the reason.
