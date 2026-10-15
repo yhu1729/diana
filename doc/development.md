@@ -151,6 +151,37 @@ Expected values in `test/c/test_bisection.c`:
   binding relies on it when `Bisection.__init__` is called again with bad arguments or `step` gets a
   non-finite value.
 
+Expected values in `test/c/test_trapezoidal.c` and `test/python/test_trapezoidal.py`:
+
+- The rule is exact for affine `f`. The affine cases use samples and `h` with few significant bits
+  (integers or quarter-integers, `h` in `{1/2, 3/4, 2^-7}`), so every partial sum and the final
+  product are representable and the binary64 result equals the integral: 20 for `2x + 1` on
+  `[0, 4]`, 16.5 for `7 - x` on `[0, 3]`, and `1000 * 500 / 128 = 3906.25` for `3i - 1000`,
+  `i = 0..1000`, whose samples change sign.
+- `y = {2^53, 1, 1, 2^53}` pins the summation order: after the halved endpoints, `2^53 + 1` is a tie
+  that rounds to even, `2^53`, at each interior step, so the result is `2^53` rather than the exact
+  `2^53 + 2` that summing the interior first would give.
+- Overflow cases have finite samples and `h` and overflow in exactly one operation: the endpoint
+  sum (`{DBL_MAX, DBL_MAX}`, whose exact rule `DBL_MAX` is representable), an interior addition, or
+  the product with `h`. `h = 0` does not mask an overflow in the sum, since `0 * inf` is NaN.
+- `0.5 * DBL_TRUE_MIN` is a tie between 0 and the smallest subnormal and rounds to `+0`: underflow
+  is a finite result, not an error.
+- The Python Hypothesis test requires bitwise agreement (value and sign of zero) with the same
+  sequential evaluation in Python floats, which are binary64 with separate rounded operations, and
+  `ValueError` exactly when that evaluation is not finite.
+- The rounding test compares with the rule evaluated exactly in `fractions.Fraction`. The sum has
+  `n - 1` rounded additions (halving is exact without underflow) and the product one rounding, so
+  `|computed - exact| <= gamma_n |h| sum(w_i |y_i|)` with `gamma_n = n u / (1 - n u)`,
+  `u = 2^-53`, and weights `w_i` of 1/2 at the ends and 1 inside (Higham, *Accuracy and Stability
+  of Numerical Algorithms*, Lemma 3.1).
+- The convergence test integrates `exp` on `[0, 1]` against `e - 1` from mpmath at 40 digits, for
+  `m = 16, ..., 256` panels. TRAPEZOIDAL-A2 with `M2 = e` bounds the error by `e h^2 / 12`, and
+  convexity makes it positive. By Euler-Maclaurin the error is
+  `(e - 1) h^2 / 12 - (e - 1) h^4 / 720 + O(h^6)`, so each halving of `h` divides it by
+  `4 (1 - h^2 / 80) + O(h^4)`, within `2e-4` of 4 for `h <= 1/16`; the test allows `1e-3`. Rounding
+  and the error of `math.exp` (about `1e-13` in all) are negligible against the smallest error,
+  about `2e-6`.
+
 ## CI (`.gitlab-ci.yml`)
 
 Six stages: style (format, naming, spec structure), build (per compiler and configuration), test
