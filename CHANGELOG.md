@@ -37,6 +37,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- `script/run_frama_c.sh` passes a `SKIP` entry to `-wp-skip-fct` only for sources that name it,
+  so WP runs on a kernel without the bisection helper instead of rejecting the option.
 - Sanitized CMake installations propagate sanitizer runtime link requirements to consumers.
 - Installed-consumer tests preserve macOS architecture lists, SDKs, and deployment targets.
 - Standalone Windows shared libraries export the public C functions, as wheel builds already did.

@@ -5,6 +5,18 @@ cd "$(dirname "$0")/.."
 if [ "$#" -eq 0 ]; then
     set -- src/bisect.c
 fi
+skip=
+for name in $SKIP; do
+    for arg in "$@"; do
+        if [ -f "$arg" ] && grep -Eq "(^|[^A-Za-z0-9_])$name[[:space:]]*\(" "$arg"; then
+            skip="${skip:+$skip,}$name"
+            break
+        fi
+    done
+done
+if [ -n "$skip" ]; then
+    set -- -wp-skip-fct "$skip" "$@"
+fi
 exec frama-c \
     -cpp-extra-args="-Iinclude -Isrc" \
     -warn-special-float none \
@@ -14,5 +26,4 @@ exec frama-c \
     -wp-session verification/frama-c/session -wp-cache update \
     -wp-cache-dir verification/frama-c/cache \
     -wp-status \
-    -wp-skip-fct "$SKIP" \
     "$@"
