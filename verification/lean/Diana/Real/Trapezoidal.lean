@@ -1,11 +1,9 @@
 import Mathlib.Analysis.Calculus.Deriv.Pow
-import Mathlib.Analysis.Calculus.MeanValue
-import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
-import Mathlib.Tactic
+import Diana.Real.Quadrature
 
 namespace Diana.Real.Trapezoidal
 
-open Set
+open Set Diana.Real.Quadrature
 
 theorem local_error {f f' f'' : ℝ → ℝ} {x h M₂ : ℝ} (hh : 0 ≤ h)
     (hf : ∀ t ∈ Icc x (x + h), HasDerivAt f (f' t) t)
@@ -15,12 +13,8 @@ theorem local_error {f f' f'' : ℝ → ℝ} {x h M₂ : ℝ} (hh : 0 ≤ h)
   have hxh : x ≤ x + h := by linarith
   have hfc : ContinuousOn f (Icc x (x + h)) := fun t ht =>
     (hf t ht).continuousAt.continuousWithinAt
-  let g : ℝ → ℝ := fun t => f (max x (min t (x + h)))
-  have hgc : Continuous g :=
-    hfc.comp_continuous (continuous_const.max (continuous_id.min continuous_const))
-      fun t => ⟨le_max_left _ _, max_le hxh (min_le_right _ _)⟩
-  have hgf : EqOn g f (Icc x (x + h)) := fun t ht => by
-    simp only [g, min_eq_left ht.2, max_eq_right ht.1]
+  let g : ℝ → ℝ := fun t => f (clamp x (x + h) t)
+  have hgc : Continuous g := continuous_extend hxh hfc
   let D : ℝ → ℝ := fun t => (f t - f x) / 2 - (t - x) * f' t / 2
   let E : ℝ → ℝ := fun t => (∫ u in x..t, g u) - (t - x) * (f x + f t) / 2
   have hD : ∀ t ∈ Icc x (x + h), HasDerivAt D (-((t - x) * f'' t) / 2) t := by
@@ -35,16 +29,11 @@ theorem local_error {f f' f'' : ℝ → ℝ} {x h M₂ : ℝ} (hh : 0 ≤ h)
     have := (hgc.integral_hasStrictDerivAt x t).hasDerivAt.sub
       ((((hasDerivAt_id t).sub_const x).mul ((hf t ht).const_add (f x))).div_const 2)
     refine this.congr_deriv ?_
-    simp only [D, id, hgf ht]
+    simp only [D, g, id, clamp_eq ht]
     ring
-  have hDb : ∀ t ∈ Icc x (x + h), |D t| ≤ M₂ * (t - x) ^ 2 / 4 := by
-    intro t ht
-    have := image_norm_le_of_norm_deriv_right_le_deriv_boundary
-      (f' := fun t => -((t - x) * f'' t) / 2) (B := fun t => M₂ * (t - x) ^ 2 / 4)
-      (B' := fun t => M₂ * (t - x) / 2)
-      (fun t ht => (hD t ht).continuousAt.continuousWithinAt)
-      (fun t ht => (hD t (Ico_subset_Icc_self ht)).hasDerivWithinAt)
-      (by simp [D])
+  have hDb : ∀ t ∈ Icc x (x + h), |D t| ≤ M₂ * (t - x) ^ 2 / 4 :=
+    bound_of_deriv (F' := fun t => -((t - x) * f'' t) / 2)
+      (B := fun t => M₂ * (t - x) ^ 2 / 4) (B' := fun t => M₂ * (t - x) / 2) hD
       (fun t => by
         have := ((((hasDerivAt_id t).sub_const x).fun_pow 2).const_mul M₂).div_const 4
         refine this.congr_deriv ?_
@@ -53,26 +42,22 @@ theorem local_error {f f' f'' : ℝ → ℝ} {x h M₂ : ℝ} (hh : 0 ≤ h)
       (fun t ht => by
         have hx : 0 ≤ t - x := sub_nonneg.mpr ht.1
         have := mul_le_mul_of_nonneg_left (hM t (Ico_subset_Icc_self ht)) hx
-        rw [Real.norm_eq_abs, abs_div, abs_neg, abs_mul, abs_of_nonneg hx, abs_two]
+        rw [abs_div, abs_neg, abs_mul, abs_of_nonneg hx, abs_two]
         linarith)
-      ht
-    simpa only [Real.norm_eq_abs] using this
-  have hEb := image_norm_le_of_norm_deriv_right_le_deriv_boundary
-    (f' := D) (B := fun t => M₂ * (t - x) ^ 3 / 12) (B' := fun t => M₂ * (t - x) ^ 2 / 4)
-    (fun t ht => (hE t ht).continuousAt.continuousWithinAt)
-    (fun t ht => (hE t (Ico_subset_Icc_self ht)).hasDerivWithinAt)
-    (by simp [E])
+      (by simp [D])
+  have hEb := bound_of_deriv (F' := D) (B := fun t => M₂ * (t - x) ^ 3 / 12)
+    (B' := fun t => M₂ * (t - x) ^ 2 / 4) hE
     (fun t => by
       have := ((((hasDerivAt_id t).sub_const x).fun_pow 3).const_mul M₂).div_const 12
       refine this.congr_deriv ?_
       simp only [id]
       ring)
-    (fun t ht => by
-      simpa only [Real.norm_eq_abs] using hDb t (Ico_subset_Icc_self ht))
-    (right_mem_Icc.mpr hxh)
+    (fun t ht => hDb t (Ico_subset_Icc_self ht))
+    (by simp [E])
+    (x + h) (right_mem_Icc.mpr hxh)
   have hint : (∫ u in x..x + h, g u) = ∫ u in x..x + h, f u :=
-    intervalIntegral.integral_congr (by rw [uIcc_of_le hxh]; exact hgf)
-  simpa only [E, Real.norm_eq_abs, hint, add_sub_cancel_left] using hEb
+    integral_extend le_rfl hxh le_rfl
+  simpa only [E, hint, add_sub_cancel_left] using hEb
 
 theorem sum_pair (u : ℕ → ℝ) (n : ℕ) :
     ∑ k ∈ Finset.range (n + 1), (u k + u (k + 1)) / 2 =
@@ -93,9 +78,10 @@ theorem composite_error {f f' f'' : ℝ → ℝ} {a b h M₂ : ℝ} {m : ℕ} (h
   have hm0 : (0 : ℝ) < m := by exact_mod_cast hm
   have hmh : (m : ℝ) * h = b - a := by rw [hh]; field_simp
   have hh0 : 0 ≤ h := by rw [hh]; exact div_nonneg (sub_nonneg.mpr hab) hm0.le
+  have hb : a + m * h = b := by linarith
   let x : ℕ → ℝ := fun k => a + k * h
   have hx0 : x 0 = a := by simp [x]
-  have hxm : x m = b := by simp only [x]; linarith
+  have hxm : x m = b := hb
   have hxs : ∀ k, x (k + 1) = x k + h := fun k => by simp only [x]; push_cast; ring
   have hsub : ∀ k < m, Icc (x k) (x k + h) ⊆ Icc a b := by
     intro k hk t ht
@@ -105,36 +91,23 @@ theorem composite_error {f f' f'' : ℝ → ℝ} {a b h M₂ : ℝ} {m : ℕ} (h
     simp only [x] at ht
     constructor <;> nlinarith [ht.1, ht.2]
   have hfc : ContinuousOn f (Icc a b) := fun t ht => (hf t ht).continuousAt.continuousWithinAt
-  have hint : ∀ k < m, IntervalIntegrable f MeasureTheory.volume (x k) (x (k + 1)) := by
-    intro k hk
-    apply ContinuousOn.intervalIntegrable
-    rw [hxs, uIcc_of_le (by linarith)]
-    exact hfc.mono (hsub k hk)
-  have hsplit := intervalIntegral.sum_integral_adjacent_intervals hint
-  rw [hx0, hxm] at hsplit
   have hT : h * ((f a + f b) / 2 + ∑ i ∈ Finset.Ico 1 m, f (a + i * h)) =
       ∑ k ∈ Finset.range m, h * (f (x k) + f (x (k + 1))) / 2 := by
     obtain ⟨n, rfl⟩ : ∃ n, m = n + 1 := ⟨m - 1, by omega⟩
     have := sum_pair (fun i => f (x i)) n
     simp only [mul_div_assoc, ← Finset.mul_sum, this, hx0, hxm]
     rfl
-  have hloc : ∀ k ∈ Finset.range m,
+  have hloc : ∀ k < m,
       |(∫ t in x k..x (k + 1), f t) - h * (f (x k) + f (x (k + 1))) / 2| ≤ M₂ * h ^ 3 / 12 := by
     intro k hk
-    have hk' := Finset.mem_range.mp hk
     rw [hxs]
-    exact local_error hh0 (fun t ht => hf t (hsub k hk' ht)) (fun t ht => hf' t (hsub k hk' ht))
-      (fun t ht => hM t (hsub k hk' ht))
-  calc |(∫ t in a..b, f t) - h * ((f a + f b) / 2 + ∑ i ∈ Finset.Ico 1 m, f (a + i * h))|
-      = |∑ k ∈ Finset.range m,
-          ((∫ t in x k..x (k + 1), f t) - h * (f (x k) + f (x (k + 1))) / 2)| := by
-        rw [Finset.sum_sub_distrib, hsplit, hT]
-    _ ≤ ∑ k ∈ Finset.range m,
-          |(∫ t in x k..x (k + 1), f t) - h * (f (x k) + f (x (k + 1))) / 2| :=
-        Finset.abs_sum_le_sum_abs _ _
-    _ ≤ ∑ _k ∈ Finset.range m, M₂ * h ^ 3 / 12 := Finset.sum_le_sum hloc
-    _ = (b - a) * h ^ 2 * M₂ / 12 := by
-        rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul, ← hmh]
-        ring
+    exact local_error hh0 (fun t ht => hf t (hsub k hk ht)) (fun t ht => hf' t (hsub k hk ht))
+      (fun t ht => hM t (hsub k hk ht))
+  have hp := panel_error (Q := fun k => h * (f (x k) + f (x (k + 1))) / 2) hh0
+    (by rw [hb]; exact hfc) hloc
+  rw [hb] at hp
+  rw [hT]
+  calc _ ≤ m * (M₂ * h ^ 3 / 12) := hp
+    _ = (b - a) * h ^ 2 * M₂ / 12 := by rw [← hmh]; ring
 
 end Diana.Real.Trapezoidal
