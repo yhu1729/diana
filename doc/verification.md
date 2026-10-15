@@ -93,9 +93,9 @@ root, the same as `SignChange` in the Lean and Rocq layer-A models. A weak sign 
 kernels (default `src/bisect.c`). WP does not set a non-zero exit status for an unproved goal,
 so the report must always be checked: `script/check_frama_c.sh` is the gate.
 `verification/frama-c/expectation.txt` stores one `<source> <goal-count>` row per verified C
-file, currently `src/bisect.c 162`; the source path is the one WP runs on and the one an ACSL
-theorem names in its `acsl` field. `script/check_frama_c.sh report.txt [source]` fails unless every
-goal in the report is proved and, when a source is given, the goal count matches its row: a drop
+file, currently `src/bisect.c 162` and `src/trapezoid.c 41`; the source path is the one WP runs
+on and the one an ACSL theorem names in its `acsl` field.
+`script/check_frama_c.sh report.txt [source]` fails unless every goal in the report is proved and, when a source is given, the goal count matches its row: a drop
 means a contract or RTE guard silently disappeared. `script/verify_frama_c.sh` runs WP and this
 check for every row, appending each WP output under a `==> <source> <==` header to the single
 `verification/frama-c/report.txt` (CI uploads that one file); `script/dev.sh verify` and the

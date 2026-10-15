@@ -73,6 +73,23 @@ A rejected call leaves the state unchanged (also BIS-C2): `init` returning `DIAN
   `width = b - a`. Either output may be NULL; a non-NULL output must not alias the state or the
   other output.
 
+## Composite trapezoid (`diana/trapezoid.h`)
+
+A function over tabulated samples: the caller evaluates `f` at the nodes. C API only so far; no
+Python binding or callback wrapper yet.
+
+- `diana_trapezoid(y, n, h, result)` writes
+  `h * (0.5 * (y[0] + y[n-1]) + y[1] + ... + y[n-2])` to `*result`, evaluated in binary64 in that
+  order (`n - 1` panels of width `h`; a negative `h` integrates in the opposite direction). Returns
+  `DIANA_OK` when the result is finite. Returns `DIANA_ERR_ARG`, without writing `*result`, for a
+  NULL `y` or `result`, for `n < 2`, and when the result is not finite: a NaN or infinite sample or
+  `h`, or an overflow anywhere in the sum. A finite result implies that no intermediate overflowed
+  (TRAP-B1 in `spec/trapezoid.md`). `y[0 .. n-1]` is only read and must not overlap `*result`.
+
+Frama-C WP proves memory safety, termination, the status cases and the finiteness of `*result` on
+`DIANA_OK` (TRAP-C1); the value of `*result` against the binary64 model (TRAP-C2) and its error
+bounds (TRAP-A1/A2, B2) are planned.
+
 ## Callback wrapper (`diana/wrapper.h`)
 
 The wrappers loop over the verified reverse-communication kernels and are not verified (neither
