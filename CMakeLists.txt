@@ -37,6 +37,7 @@ endif()
 add_library(diana
     src/status.c
     src/bisect.c
+    src/trapezoid.c
     src/wrapper/bisect.c)
 add_library(diana::diana ALIAS diana)
 target_include_directories(diana PUBLIC
