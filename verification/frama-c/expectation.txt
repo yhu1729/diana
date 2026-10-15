@@ -1,2 +1,3 @@
 src/bisection.c 162
+src/simpson.c 58
 src/trapezoidal.c 41
