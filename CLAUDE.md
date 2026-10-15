@@ -25,11 +25,14 @@ API: `doc/api.md`. Build, test, and CI rationale: `doc/development.md`.
     or combine branches, by rebasing onto the target (a branch that is already a descendant just
     fast-forwards), then recreate the replayed commits fresh as under **No amend**.
   - **Message:** subject line only — no body, no `Co-Authored-By` or other trailer, just the
-    `Signed-off-by` line `-s` adds. Keep the subject short (~50 characters); drop articles
+    `Signed-off-by` line `-s` adds. Keep the subject at most 50 characters; drop articles
     (`add bisection header`, not `add the bisection header`) and name the thing, not the reason.
   - **Size:** one logical step per commit, usually one file (a header, a kernel, a test, a doc), at
     most a handful when they only make sense together (a `.c` with the `CMakeLists.txt` line that
     builds it). Split a change that touches the library, its test and its doc into one commit each.
+  - **Check:** `script/check_commit.sh` enforces every rule above except size and wording beyond
+    articles; the `pre-push` hook runs it on unpushed commits and the `style_git` CI job on the
+    commits since the branch's previous pipeline. Link both hooks once per clone (`CONTRIBUTING.md`).
 - **Living document:** update `CHANGELOG.md` (`Unreleased` section, Keep a Changelog) and this file in the
   same commit as any change that affects them.
 - **Python:** `uv` manages the interpreter and environment (`uv sync` at the repo root; `.python-version`

@@ -8,6 +8,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `script/check_commit.sh` checks commit history against the commit convention: no merge commit,
+  a `<type>[(scope)]: <summary>` subject of at most 50 characters without an article, a message
+  that is the subject and one `Signed-off-by` matching the committer, and an author date equal to
+  the commit date. The new `pre-push` hook in `.git-hooks/` runs it on the commits the remote does
+  not have, and the `style_git` CI job on the commits since the branch's previous pipeline (the
+  merge request's commits in a merge request pipeline, otherwise the whole history when there is
+  no previous pipeline).
 - Composite trapezoidal rule over tabulated samples, `diana_trapezoidal(y, n, h, result)` in
   `diana/trapezoidal.h`. It returns `DIANA_ERR_ARG` without writing `*result` for NULL
   pointers, `n < 2`, or a non-finite result. Frama-C WP proves its ACSL contract (41 goals,

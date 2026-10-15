@@ -189,6 +189,17 @@ style_name:
       bad=$(find . -maxdepth 2 -type d \( -name tests -o -name docs -o -name scripts -o -name proofs -o -name wrappers -o -name tools \) -not -path "./.git/*" -not -path "./.venv/*" -not -path "./build/*")
       if [ -n "$bad" ]; then echo "plural directory name not allowed: $bad"; exit 1; fi
 
+style_git:
+  stage: style
+  image: alpine:3.20
+  variables:
+    GIT_DEPTH: "0"
+  before_script:
+    - apk add --no-cache git > /dev/null
+    - git config --global --add safe.directory "$CI_PROJECT_DIR"
+  script:
+    - script/check_commit.sh
+
 style_c:
   stage: style
   extends: .uv
