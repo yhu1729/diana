@@ -90,7 +90,7 @@ wrapper; Python calls the kernel as `diana.trapezoidal` (see the Python API).
 Frama-C WP proves memory safety, termination, the status cases and the finiteness of `*result` on
 `DIANA_OK` (TRAPEZOIDAL-C1). For exact samples of an `f` whose second derivative is bounded by `M₂`
 on `[a, b]`, the rule in exact arithmetic is within `(b − a)·h²·M₂/12` of the integral
-(TRAPEZOIDAL-A2, proved in Lean; Rocq planned). The binary64 evaluation order above is within
+(TRAPEZOIDAL-A2, proved in Lean and Rocq). The binary64 evaluation order above is within
 `γₙ·|h|·A + (1 + γₙ₋₁)·|h|·η + η` of the exact rule whenever its result is finite, with
 `A = |y[0] + y[n-1]|/2 + |y[1]| + ... + |y[n-2]|`, `γₖ = k·u/(1 − k·u)`, `u = 2⁻⁵³` and
 `η = 2⁻¹⁰⁷⁵` (TRAPEZOIDAL-B2, Flocq); the bound is relative to `A`, not to the result, so it says
