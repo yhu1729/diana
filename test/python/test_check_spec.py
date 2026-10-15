@@ -132,3 +132,9 @@ def test_explicit_prover_filters_out_acsl_coverage(gate, monkeypatch, provers):
         args.extend(["--prover", prover])
     assert run_gate(gate, monkeypatch, *args) == 0
     assert gate.run_prover.call_args.args[2] == provers
+
+
+def test_id_prefix_must_match_method(gate, monkeypatch, capsys):
+    write_spec(gate, "other", "BISECTION-C2", "other.c")
+    assert run_gate(gate, monkeypatch, "--no-report") == 1
+    assert "BISECTION-C2: id prefix must be 'OTHER'" in capsys.readouterr().err
