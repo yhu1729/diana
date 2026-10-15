@@ -221,20 +221,33 @@ def test_matches_sequential_binary64(y, h):
                 diana.trapezoidal(samples, h)
 
 
-def test_rounding_error_bound():
-    # n - 1 roundings in the sum (halving is exact without underflow) and one in the product:
-    # |computed - exact| <= gamma_n |h| sum(w_i |y_i|), gamma_n = n u / (1 - n u), u = 2^-53.
-    rng = random.Random(1729)
-    y = [rng.uniform(-1.0, 1.0) * 2.0 ** rng.randint(-20, 20) for _ in range(1000)]
-    h = 0.1
+def scaled(seed, n, low, high):
+    rng = random.Random(seed)
+    return [rng.uniform(-1.0, 1.0) * 2.0 ** rng.randint(low, high) for _ in range(n)]
+
+
+@pytest.mark.parametrize(
+    ("y", "h"),
+    [
+        (scaled(1729, 1000, -20, 20), 0.1),
+        ([math.ulp(0.0), 0.0], 1.0),
+        (scaled(1730, 100, -1000, -990), 0.1 * 2.0**-60),
+    ],
+    ids=["normal", "halving-underflow", "product-underflow"],
+)
+def test_rounding_error_bound(y, h):
+    # TRAPEZOIDAL-B2: |r - T| <= gamma_n |h| A + (1 + gamma_(n-1)) |h| eta + eta.
     n = len(y)
-    w = [Fraction(1, 2)] + [Fraction(1)] * (n - 2) + [Fraction(1, 2)]
-    exact = Fraction(h) * sum(wi * Fraction(v) for wi, v in zip(w, y, strict=True))
     u = Fraction(1, 2**53)
-    gamma = n * u / (1 - n * u)
-    bound = (
-        gamma * abs(Fraction(h)) * sum(wi * abs(Fraction(v)) for wi, v in zip(w, y, strict=True))
-    )
+    eta = Fraction(1, 2**1075)
+
+    def gamma(k):
+        return k * u / (1 - k * u)
+
+    ends = Fraction(y[0]) + Fraction(y[-1])
+    exact = Fraction(h) * (ends / 2 + sum(Fraction(v) for v in y[1:-1]))
+    a = abs(ends) / 2 + sum(abs(Fraction(v)) for v in y[1:-1])
+    bound = gamma(n) * abs(Fraction(h)) * a + (1 + gamma(n - 1)) * abs(Fraction(h)) * eta + eta
     assert abs(Fraction(diana.trapezoidal(y, h)) - exact) <= bound
 
 
