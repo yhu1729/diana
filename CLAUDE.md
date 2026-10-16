@@ -4,8 +4,9 @@ Formally verified numerical method library in C11 with a hand-written CPython ex
 mathematical specification is proven in both Lean 4 (Mathlib) and Rocq (Stdlib reals; Coquelicot
 where integrals and derivatives are needed); floating-point bounds in Rocq (Flocq); C-code
 correctness in Rocq (VST via CompCert `clightgen`) and Frama-C (WP).
-Trust statement and generated theorem report: `doc/verification.md`.
-API: `doc/api.md`. Build, test, and CI rationale: `doc/development.md`.
+Documentation index: `doc/README.md`. Trust statement: `doc/verification/trust.md`; generated
+theorem report: `doc/verification/report.md`. API: `doc/api/`. Build and CI rationale:
+`doc/development/`; test values: `doc/test/`.
 
 ## Convention
 
@@ -63,9 +64,10 @@ API: `doc/api.md`. Build, test, and CI rationale: `doc/development.md`.
   struct (`init` / `step` / `result`) or a function over tabulated arrays. No function pointer in a
   verified kernel. Callback convenience wrappers live in `src/wrapper/` and are not VST-verified.
 - **Comment:** keep in-code comments to a minimum. Rationale, API description, and proof notes go
-  in `doc/` (`api.md`, `development.md`, `verification.md`) or `spec/<method>.md`. ACSL `/*@ ... */`
-  annotations are code, not comments. Python docstrings and CPython `tp_doc`/`ml_doc` strings stay
-  (they are runtime API).
+  in `doc/` (`api/`, `development/`, `test/`, `verification/`, indexed by `doc/README.md`) or
+  `spec/<method>.md`. A method has its own `doc/api/<method>.md` and `doc/test/<method>.md`.
+  ACSL `/*@ ... */` annotations are code, not comments. Python docstrings and CPython
+  `tp_doc`/`ml_doc` strings stay (they are runtime API).
 - **Spec:** one `spec/<method>.md` per method with YAML front matter listing theorem IDs prefixed with the method in capitals (`BISECTION-A1`, …),
   layer (A real, B float, C code), informal statement, and the per-prover constant name. `script/check_spec.py`
   is the gate: every listed constant must exist, with axioms within the allowed list, and no `sorry`/`Admitted`.
@@ -99,7 +101,7 @@ verification/lean/    Lake project              verification/rocq/  Real/ Float/
 verification/clight/  committed clightgen out
 verification/frama-c/ WP goal count/session/cache
 script/               check_spec, dev, frama_c   ci/docker/          prover image
-doc/                  api, development, verification (trust statement + generated report)
+doc/                  README index; api/, development/, test/, verification/ (trust, report)
 ```
 
 ## How to run
@@ -121,7 +123,7 @@ doc/                  api, development, verification (trust statement + generate
 - Lean: `cd verification/lean && lake exe cache get && lake build` (Mathlib pinned by `lake-manifest.json`)
 - Rocq: `cd verification/rocq && make && make check` (inside the opam switch, see `CONTRIBUTING.md`).
   Layers B and C-VST, the Rocq axiom gate, and the Clight AST are checked **only locally**; run the
-  steps in `doc/development.md` (Local verification) before committing a change to `src/`,
+  steps in `doc/verification/local.md` before committing a change to `src/`,
   `include/`, `verification/`, or `spec/`
 - Frama-C: `script/verify_frama_c.sh` (runs `script/run_frama_c.sh` and `script/check_frama_c.sh`
   for every `<source> <goal-count>` row of `verification/frama-c/expectation.txt`; all goals must
@@ -133,7 +135,7 @@ doc/                  api, development, verification (trust statement + generate
   printed bit patterns; `script/dev.sh verify` runs it and skips it without `ccomp`; local only.
   Keep the driver's arrays static: CompCert 3.17 on AArch64 macOS misaligns `sp` in a `main`
   frame over about 500 bytes (`SIGBUS`), and inlining moves callee locals into `main`
-- Spec gate: `uv run script/check_spec.py --run --strict` (runs both provers' check files, `--prover lean|rocq` to select one and rewrites the generated report at the end of `doc/verification.md`; commit it, CI does not regenerate it; `--no-report` to leave it alone)
+- Spec gate: `uv run script/check_spec.py --run --strict` (runs both provers' check files, `--prover lean|rocq` to select one and rewrites the generated report `doc/verification/report.md`; commit it, CI does not regenerate it; `--no-report` to leave it alone)
   The default full strict gate also requires a unique positive Frama-C expectation count for the
   `acsl` file of each ACSL theorem; fresh WP execution and report checking remain in `script/dev.sh verify`.
   Lean CI uses `--run --strict --prover lean --no-report`, so missing Lean proofs fail the gate
