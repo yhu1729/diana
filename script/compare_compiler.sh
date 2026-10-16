@@ -13,6 +13,11 @@ fail() {
     exit 1
 }
 
+if [ "$(uname -s)" = Darwin ] && [ -z "${MACOSX_DEPLOYMENT_TARGET:-}" ]; then
+    MACOSX_DEPLOYMENT_TARGET=$(sw_vers -productVersion)
+    export MACOSX_DEPLOYMENT_TARGET
+fi
+
 list_candidate() (
     echo clang
     echo gcc
