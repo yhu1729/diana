@@ -28,9 +28,63 @@ is relative to `A`, not to the result. VST proves that the C computes exactly th
 and returns `DIANA_OK` exactly when it is finite, leaving `*result` unchanged otherwise
 (SIMPSON-C2, for non-NULL `y` with an odd `n >= 3`).
 
+Integrating `x³` on `[0, 1]` from 101 samples, an odd count. The rule is exact for a cubic
+(`M₄ = 0` in SIMPSON-A2), so only rounding error remains, here none; an even count is rejected:
+
+```c
+#include <stdio.h>
+
+#include <diana/simpson.h>
+
+#define N 101
+
+int main(void) {
+  const double a = 0.0, b = 1.0, h = (b - a) / (N - 1);
+  double y[N], area;
+  for (size_t i = 0; i < N; ++i) {
+    double x = a + (double)i * h;
+    y[i] = x * x * x;
+  }
+  diana_status st = diana_simpson(y, N, h, &area);
+  if (st != DIANA_OK) {
+    fprintf(stderr, "simpson: %s\n", diana_status_str(st));
+    return 1;
+  }
+  printf("%.15f (error %.2e)\n", area, area - 0.25);
+  st = diana_simpson(y, N - 1, h, &area);
+  printf("even n: %s\n", diana_status_str(st));
+  return 0;
+}
+```
+
+```text
+0.250000000000000 (error 0.00e+00)
+even n: invalid argument
+```
+
 ## Python
 
 `diana.simpson(y, h)` returns the composite Simpson rule of `diana_simpson` as a `float`, with the
 same operation order. `y` is an [array argument](overview.md#array-argument) of at least three
 samples; after the array checks, an even number of samples raises `ValueError`. A non-finite result
 raises `ValueError`.
+
+The same samples as the [trapezoidal examples](trapezoidal.md#python), with errors of `1.1e-8` and
+`9.5e-11` instead of `1.6e-4` and `1.4e-5`:
+
+```python
+>>> import math
+>>> import diana
+>>> n = 101
+>>> h = math.pi / (n - 1)
+>>> diana.simpson([math.sin(i * h) for i in range(n)], h)  # exact: 2
+2.000000010824504
+>>> import numpy as np
+>>> x = np.linspace(0.0, 1.0, 101)
+>>> diana.simpson(np.exp(x), 0.01)  # exact: e - 1 = 1.718281828459045
+1.7182818285545045
+>>> diana.simpson([0.0, 1.0, 4.0, 9.0], 1.0)
+Traceback (most recent call last):
+  ...
+ValueError: y must have an odd number of samples
+```
