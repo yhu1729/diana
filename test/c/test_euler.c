@@ -152,6 +152,137 @@ static void test_failure_keeps_output(void) {
   check_arg(g, e, 3u, 1.0);
 }
 
+/* Callback wrapper. Each right-hand side below keeps every iterate exactly
+   representable, so the expected states are exact. */
+
+struct record {
+  unsigned calls;
+  double t[8];
+  unsigned fail_at;
+  void *self;
+};
+
+static void decay(double t, const double *y, double *dy, size_t d, void *ctx) {
+  size_t i;
+
+  (void)t;
+  (void)ctx;
+  for (i = 0; i < d; ++i) {
+    dy[i] = -y[i];
+  }
+}
+
+static void rotation(double t, const double *y, double *dy, size_t d,
+                     void *ctx) {
+  (void)t;
+  (void)d;
+  (void)ctx;
+  dy[0] = y[1];
+  dy[1] = -y[0];
+}
+
+/* y' = t, recording each time and the context pointer; the derivative is
+   infinite from call fail_at on. */
+static void ramp(double t, const double *y, double *dy, size_t d, void *ctx) {
+  struct record *rec = (struct record *)ctx;
+
+  (void)y;
+  (void)d;
+  rec->self = ctx;
+  if (rec->calls < 8u) {
+    rec->t[rec->calls] = t;
+  }
+  dy[0] = rec->calls >= rec->fail_at ? HUGE_VAL : t;
+  rec->calls++;
+}
+
+static void test_wrapper_integrate(void) {
+  double y[2] = {1.0, 3.0};
+  double w[4];
+  double r[2] = {1.0, 0.0};
+  double z[1] = {0.0};
+  struct record rec = {0u, {0.0}, 100u, (void *)0};
+  unsigned done = 99u;
+
+  /* y_{k+1} = y_k - y_k / 2 = y_k / 2 */
+  CHECK_EQ_STATUS(diana_euler(decay, (void *)0, 0.0, 0.5, 3u, y, 2u, w, &done),
+                  DIANA_OK);
+  CHECK(done == 3u);
+  CHECK(y[0] == 0.125 && y[1] == 0.375);
+
+  /* (y1, y2) <- (y1 + y2, y2 - y1): (1, 0), (1, -1), (0, -2), (-2, -2) */
+  CHECK_EQ_STATUS(
+      diana_euler(rotation, (void *)0, 0.0, 1.0, 3u, r, 2u, w, (unsigned *)0),
+      DIANA_OK);
+  CHECK(r[0] == -2.0 && r[1] == -2.0);
+
+  /* y' = t from t0 = 1 with h = 1/4: times 1, 1.25, 1.5, 1.75 and
+     y = (1 + 1.25 + 1.5 + 1.75) / 4 */
+  CHECK_EQ_STATUS(diana_euler(ramp, &rec, 1.0, 0.25, 4u, z, 1u, w, &done),
+                  DIANA_OK);
+  CHECK(done == 4u && rec.calls == 4u && rec.self == (void *)&rec);
+  CHECK(rec.t[0] == 1.0 && rec.t[1] == 1.25 && rec.t[2] == 1.5 &&
+        rec.t[3] == 1.75);
+  CHECK(z[0] == 1.375);
+}
+
+static void test_wrapper_no_step(void) {
+  double y[1] = {2.0};
+  double w[2];
+  struct record rec = {0u, {0.0}, 100u, (void *)0};
+  unsigned done = 99u;
+
+  CHECK_EQ_STATUS(diana_euler(ramp, &rec, 0.0, 1.0, 0u, y, 1u, w, &done),
+                  DIANA_OK);
+  CHECK(done == 0u && rec.calls == 0u && y[0] == 2.0);
+}
+
+static void test_wrapper_argument(void) {
+  double y[1] = {2.0};
+  double w[2];
+  struct record rec = {0u, {0.0}, 100u, (void *)0};
+  unsigned done = 99u;
+
+  CHECK_EQ_STATUS(
+      diana_euler((diana_ode_fn)0, &rec, 0.0, 1.0, 1u, y, 1u, w, &done),
+      DIANA_ERR_ARG);
+  CHECK(done == 0u);
+  CHECK_EQ_STATUS(
+      diana_euler(ramp, &rec, 0.0, 1.0, 1u, (double *)0, 1u, w, &done),
+      DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(
+      diana_euler(ramp, &rec, 0.0, 1.0, 1u, y, 1u, (double *)0, &done),
+      DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(diana_euler(ramp, &rec, 0.0, 1.0, 1u, y, 0u, w, &done),
+                  DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(
+      diana_euler((diana_ode_fn)0, &rec, 0.0, 1.0, 1u, y, 1u, w, (unsigned *)0),
+      DIANA_ERR_ARG);
+  CHECK(rec.calls == 0u && y[0] == 2.0);
+}
+
+/* A failing step leaves y at the last good state and done at the number of
+   completed steps. */
+static void test_wrapper_failure(void) {
+  double z[1] = {0.0};
+  double w[2];
+  double big[1] = {DBL_MAX / 2.0};
+  struct record rec = {0u, {0.0}, 2u, (void *)0};
+  unsigned done = 99u;
+
+  /* y' = t from t0 = 0, h = 1: steps at t = 0 and t = 1 succeed, the third
+     derivative is infinite */
+  CHECK_EQ_STATUS(diana_euler(ramp, &rec, 0.0, 1.0, 5u, z, 1u, w, &done),
+                  DIANA_ERR_ARG);
+  CHECK(done == 2u && rec.calls == 3u && z[0] == 1.0);
+
+  /* y' = -y with h = -2 overflows on the first step: y + 2y */
+  CHECK_EQ_STATUS(
+      diana_euler(decay, (void *)0, 0.0, -2.0, 3u, big, 1u, w, &done),
+      DIANA_ERR_ARG);
+  CHECK(done == 0u && big[0] == DBL_MAX / 2.0);
+}
+
 int main(void) {
   test_argument();
   test_exact();
@@ -161,5 +292,9 @@ int main(void) {
   test_overflow();
   test_nonfinite();
   test_failure_keeps_output();
+  test_wrapper_integrate();
+  test_wrapper_no_step();
+  test_wrapper_argument();
+  test_wrapper_failure();
   return check_report("euler");
 }
