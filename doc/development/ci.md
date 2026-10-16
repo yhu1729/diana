@@ -5,6 +5,23 @@ configuration), test (ctest and pytest against the build artifacts), report (cod
 (Frama-C, Lean, Rocq), and release (the tag release once everything is green). Jobs run as a DAG
 through `needs:`, and every job is interruptible so superseded pipelines stop.
 
+## Platform
+
+Every job runs in a Linux container image and none sets `tags:`, so on GitLab.com the jobs run on
+the shared x86-64 Linux runners. CI never takes the branches written for other systems:
+
+- macOS: the `@rpath` install name of the shared library and the `@loader_path` RPATH of the wheel
+  extension (`APPLE` in `CMakeLists.txt`), the `CMAKE_OSX_*` options passed on to the
+  installed-consumer test, and the `libdiana.dylib` case of `script/check_wheel.py`;
+- Windows: `WINDOWS_EXPORT_ALL_SYMBOLS` for a shared build, the MSVC flags of `cmake/warning.cmake`
+  (`/W4 /fp:strict`, `/WX`), the ctest link without libm, and the `diana.dll`, `Scripts/python.exe`
+  and `PATH` cases of `script/check_wheel.py`.
+
+Only local runs on those systems check them. The local-only steps have so far run only on AArch64
+macOS (the Clight AST is named for it, and no x86-64 build has been compared with `ccomp`), so the
+platform CI builds and tests on is not the one the VST proofs and the
+[compiler comparison](../verification/compiler.md) cover.
+
 ## Path filter
 
 Jobs normally run only when a file they depend on changes (`rules: changes:` against the hidden
