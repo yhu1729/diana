@@ -65,7 +65,9 @@ theorem report: `doc/verification/report.md`. API: `doc/api/`. Build and CI rati
   verified kernel. Callback convenience wrappers live in `src/wrapper/` and are not VST-verified.
 - **Comment:** keep in-code comments to a minimum. Rationale, API description, and proof notes go
   in `doc/` (`api/`, `development/`, `test/`, `verification/`, indexed by `doc/README.md`) or
-  `spec/<method>.md`. A method has its own `doc/api/<method>.md` and `doc/test/<method>.md`.
+  `spec/<method>.md`. A method has its own `doc/api/<method>.md` and `doc/test/<method>.md`;
+  `test/doc/` runs the `doc/api/` examples: a `c` block is a clang-format clean program followed
+  by a `text` block of its output, a `python` block is a doctest session.
   ACSL `/*@ ... */` annotations are code, not comments. Python docstrings and CPython
   `tp_doc`/`ml_doc` strings stay (they are runtime API).
 - **Spec:** one `spec/<method>.md` per method with YAML front matter listing theorem IDs prefixed with the method in capitals (`BISECTION-A1`, …),
@@ -94,7 +96,7 @@ only in local opam switches; no CI job or container image contains it.
 ```
 include/diana/        public header             src/                verified kernel
 src/wrapper/          callback wrapper          python/src/         Python package (pyproject.toml at root)
-python/ext/           CPython extension
+python/ext/           CPython extension         test/doc/           doc/api example
 test/c/               ctest                     test/python/        pytest
 test/install/         find_package consumer     spec/               theorem list per method
 verification/lean/    Lake project              verification/rocq/  Real/ Float/ VST/
