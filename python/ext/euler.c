@@ -38,8 +38,12 @@ static PyObject *mod_euler_step(PyObject *Py_UNUSED(self), PyObject *args,
                            "out must have at least one sample") < 0) {
     goto release_f;
   }
-  if (vf.shape[0] != vy.shape[0] || vo.shape[0] != vy.shape[0]) {
-    PyErr_SetString(PyExc_ValueError, "y, f and out must have the same length");
+  if (vf.shape[0] != vy.shape[0]) {
+    PyErr_SetString(PyExc_ValueError, "y and f must have the same length");
+    goto cleanup;
+  }
+  if (vo.shape[0] != vy.shape[0]) {
+    PyErr_SetString(PyExc_ValueError, "out must have the same length as y");
     goto cleanup;
   }
   if (overlap(&vo, &vy) || overlap(&vo, &vf)) {
