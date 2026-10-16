@@ -292,116 +292,123 @@ Definition f_diana_newton_step := {|
           (Sreturn (Some (Econst_int (Int.repr 0) tint)))))
       Sskip)
     (Ssequence
-      (Sset _dx
-        (Ebinop Odiv (Etempvar _fx tdouble) (Etempvar _dfx tdouble) tdouble))
+      (Sifthenelse (Ebinop Oeq (Etempvar _dfx tdouble)
+                     (Econst_float (Float.of_bits (Int64.repr 0)) tdouble)
+                     tint)
+        (Sreturn (Some (Econst_int (Int.repr (-4)) tint)))
+        Sskip)
       (Ssequence
-        (Ssequence
-          (Scall (Some _t'5)
-            (Evar _diana_fp_finite (Tfunction (tdouble :: nil) tint
-                                     cc_default))
-            ((Etempvar _dx tdouble) :: nil))
-          (Sifthenelse (Eunop Onotbool (Etempvar _t'5 tint) tint)
-            (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
-            Sskip))
+        (Sset _dx
+          (Ebinop Odiv (Etempvar _fx tdouble) (Etempvar _dfx tdouble)
+            tdouble))
         (Ssequence
           (Ssequence
-            (Sset _t'14
-              (Efield
-                (Ederef
-                  (Etempvar _s (tptr (Tstruct _diana_newton_state noattr)))
-                  (Tstruct _diana_newton_state noattr)) _x tdouble))
-            (Sset _x
-              (Ebinop Osub (Etempvar _t'14 tdouble) (Etempvar _dx tdouble)
-                tdouble)))
+            (Scall (Some _t'5)
+              (Evar _diana_fp_finite (Tfunction (tdouble :: nil) tint
+                                       cc_default))
+              ((Etempvar _dx tdouble) :: nil))
+            (Sifthenelse (Eunop Onotbool (Etempvar _t'5 tint) tint)
+              (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
+              Sskip))
           (Ssequence
             (Ssequence
-              (Scall (Some _t'6)
-                (Evar _diana_fp_finite (Tfunction (tdouble :: nil) tint
-                                         cc_default))
-                ((Etempvar _x tdouble) :: nil))
-              (Sifthenelse (Eunop Onotbool (Etempvar _t'6 tint) tint)
-                (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
-                Sskip))
+              (Sset _t'14
+                (Efield
+                  (Ederef
+                    (Etempvar _s (tptr (Tstruct _diana_newton_state noattr)))
+                    (Tstruct _diana_newton_state noattr)) _x tdouble))
+              (Sset _x
+                (Ebinop Osub (Etempvar _t'14 tdouble) (Etempvar _dx tdouble)
+                  tdouble)))
             (Ssequence
               (Ssequence
+                (Scall (Some _t'6)
+                  (Evar _diana_fp_finite (Tfunction (tdouble :: nil) tint
+                                           cc_default))
+                  ((Etempvar _x tdouble) :: nil))
+                (Sifthenelse (Eunop Onotbool (Etempvar _t'6 tint) tint)
+                  (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
+                  Sskip))
+              (Ssequence
                 (Ssequence
-                  (Sset _t'12
-                    (Efield
-                      (Ederef
-                        (Etempvar _s (tptr (Tstruct _diana_newton_state noattr)))
-                        (Tstruct _diana_newton_state noattr)) _x tdouble))
-                  (Sifthenelse (Ebinop Oeq (Etempvar _x tdouble)
-                                 (Etempvar _t'12 tdouble) tint)
-                    (Sset _t'7 (Econst_int (Int.repr 1) tint))
-                    (Ssequence
-                      (Scall (Some _t'8)
-                        (Evar _diana_fp_abs (Tfunction (tdouble :: nil)
-                                              tdouble cc_default))
-                        ((Etempvar _dx tdouble) :: nil))
+                  (Ssequence
+                    (Sset _t'12
+                      (Efield
+                        (Ederef
+                          (Etempvar _s (tptr (Tstruct _diana_newton_state noattr)))
+                          (Tstruct _diana_newton_state noattr)) _x tdouble))
+                    (Sifthenelse (Ebinop Oeq (Etempvar _x tdouble)
+                                   (Etempvar _t'12 tdouble) tint)
+                      (Sset _t'7 (Econst_int (Int.repr 1) tint))
                       (Ssequence
-                        (Sset _t'13
-                          (Efield
-                            (Ederef
-                              (Etempvar _s (tptr (Tstruct _diana_newton_state noattr)))
-                              (Tstruct _diana_newton_state noattr)) _tol
-                            tdouble))
-                        (Sset _t'7
-                          (Ecast
-                            (Ebinop Ole (Etempvar _t'8 tdouble)
-                              (Etempvar _t'13 tdouble) tint) tbool))))))
-                (Sset _converged (Etempvar _t'7 tint)))
-              (Ssequence
+                        (Scall (Some _t'8)
+                          (Evar _diana_fp_abs (Tfunction (tdouble :: nil)
+                                                tdouble cc_default))
+                          ((Etempvar _dx tdouble) :: nil))
+                        (Ssequence
+                          (Sset _t'13
+                            (Efield
+                              (Ederef
+                                (Etempvar _s (tptr (Tstruct _diana_newton_state noattr)))
+                                (Tstruct _diana_newton_state noattr)) _tol
+                              tdouble))
+                          (Sset _t'7
+                            (Ecast
+                              (Ebinop Ole (Etempvar _t'8 tdouble)
+                                (Etempvar _t'13 tdouble) tint) tbool))))))
+                  (Sset _converged (Etempvar _t'7 tint)))
                 (Ssequence
-                  (Sset _t'11
-                    (Efield
-                      (Ederef
-                        (Etempvar _s (tptr (Tstruct _diana_newton_state noattr)))
-                        (Tstruct _diana_newton_state noattr)) _iter tuint))
-                  (Sassign
-                    (Efield
-                      (Ederef
-                        (Etempvar _s (tptr (Tstruct _diana_newton_state noattr)))
-                        (Tstruct _diana_newton_state noattr)) _iter tuint)
-                    (Ebinop Oadd (Etempvar _t'11 tuint)
-                      (Econst_int (Int.repr 1) tuint) tuint)))
-                (Ssequence
-                  (Sassign
-                    (Efield
-                      (Ederef
-                        (Etempvar _s (tptr (Tstruct _diana_newton_state noattr)))
-                        (Tstruct _diana_newton_state noattr)) _dx tdouble)
-                    (Etempvar _dx tdouble))
+                  (Ssequence
+                    (Sset _t'11
+                      (Efield
+                        (Ederef
+                          (Etempvar _s (tptr (Tstruct _diana_newton_state noattr)))
+                          (Tstruct _diana_newton_state noattr)) _iter tuint))
+                    (Sassign
+                      (Efield
+                        (Ederef
+                          (Etempvar _s (tptr (Tstruct _diana_newton_state noattr)))
+                          (Tstruct _diana_newton_state noattr)) _iter tuint)
+                      (Ebinop Oadd (Etempvar _t'11 tuint)
+                        (Econst_int (Int.repr 1) tuint) tuint)))
                   (Ssequence
                     (Sassign
                       (Efield
                         (Ederef
                           (Etempvar _s (tptr (Tstruct _diana_newton_state noattr)))
-                          (Tstruct _diana_newton_state noattr)) _x tdouble)
-                      (Etempvar _x tdouble))
+                          (Tstruct _diana_newton_state noattr)) _dx tdouble)
+                      (Etempvar _dx tdouble))
                     (Ssequence
-                      (Sifthenelse (Etempvar _converged tint)
-                        (Sreturn (Some (Econst_int (Int.repr 0) tint)))
-                        Sskip)
+                      (Sassign
+                        (Efield
+                          (Ederef
+                            (Etempvar _s (tptr (Tstruct _diana_newton_state noattr)))
+                            (Tstruct _diana_newton_state noattr)) _x tdouble)
+                        (Etempvar _x tdouble))
                       (Ssequence
+                        (Sifthenelse (Etempvar _converged tint)
+                          (Sreturn (Some (Econst_int (Int.repr 0) tint)))
+                          Sskip)
                         (Ssequence
-                          (Sset _t'9
-                            (Efield
-                              (Ederef
-                                (Etempvar _s (tptr (Tstruct _diana_newton_state noattr)))
-                                (Tstruct _diana_newton_state noattr)) _iter
-                              tuint))
                           (Ssequence
-                            (Sset _t'10
+                            (Sset _t'9
                               (Efield
                                 (Ederef
                                   (Etempvar _s (tptr (Tstruct _diana_newton_state noattr)))
-                                  (Tstruct _diana_newton_state noattr))
-                                _max_iter tuint))
-                            (Sifthenelse (Ebinop Oge (Etempvar _t'9 tuint)
-                                           (Etempvar _t'10 tuint) tint)
-                              (Sreturn (Some (Econst_int (Int.repr (-3)) tint)))
-                              Sskip)))
-                        (Sreturn (Some (Econst_int (Int.repr 1) tint)))))))))))))))
+                                  (Tstruct _diana_newton_state noattr)) _iter
+                                tuint))
+                            (Ssequence
+                              (Sset _t'10
+                                (Efield
+                                  (Ederef
+                                    (Etempvar _s (tptr (Tstruct _diana_newton_state noattr)))
+                                    (Tstruct _diana_newton_state noattr))
+                                  _max_iter tuint))
+                              (Sifthenelse (Ebinop Oge (Etempvar _t'9 tuint)
+                                             (Etempvar _t'10 tuint) tint)
+                                (Sreturn (Some (Econst_int (Int.repr (-3)) tint)))
+                                Sskip)))
+                          (Sreturn (Some (Econst_int (Int.repr 1) tint))))))))))))))))
 |}.
 
 Definition f_diana_newton_result := {|
