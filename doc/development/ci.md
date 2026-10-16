@@ -12,14 +12,11 @@ the shared x86-64 Linux runners. CI never takes the branches written for other s
 
 - macOS: the `@rpath` install name of the shared library and the `@loader_path` RPATH of the wheel
   extension (`APPLE` in `CMakeLists.txt`), the `CMAKE_OSX_*` options passed on to the
-  installed-consumer test, and the `libdiana.dylib` case of `script/check_wheel.py`;
-- Windows: `WINDOWS_EXPORT_ALL_SYMBOLS` for a shared build, the MSVC flags of `cmake/warning.cmake`
-  (`/W4 /fp:strict`, `/WX`), the ctest link without libm, and the `diana.dll`, `Scripts/python.exe`
-  and `PATH` cases of `script/check_wheel.py`.
+  installed-consumer test, and the `libdiana.dylib` case of `script/check_wheel.py`.
 
-Only local runs on those systems check them. The local-only steps have so far run only on AArch64
-macOS (the Clight AST is named for it, and no x86-64 build has been compared with `ccomp`), so the
-platform CI builds and tests on is not the one the VST proofs and the
+Only local runs on macOS check them; Windows is not supported. The local-only steps have so far
+run only on AArch64 macOS (the Clight AST is named for it, and no x86-64 build has been compared
+with `ccomp`), so the platform CI builds and tests on is not the one the VST proofs and the
 [compiler comparison](../verification/compiler.md) cover.
 
 ## Path filter
@@ -57,7 +54,7 @@ a job reads, extend the matching list.
 ## Test
 
 - `test_install` runs the C suite and the installed consumer twice: once with
-  `CMAKE_INSTALL_INCLUDEDIR=include/custom`, once with `BUILD_SHARED_LIBS=ON`, so the exported
+  `CMAKE_INSTALL_INCLUDEDIR=include/custom`, once with `DIANA_BUILD_SHARED_LIB=ON`, so the exported
   include path and the versioned shared install are both covered. The release job requires it.
 - `test_python` runs the Python suite, the `doc/api/` example check in `test/doc/` (it also syncs
   the `lint` group for the pinned clang-format, and its path list includes `doc/api/` and
