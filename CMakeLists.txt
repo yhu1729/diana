@@ -19,8 +19,18 @@ option(DIANA_SANITIZER "Enable AddressSanitizer and UndefinedBehaviorSanitizer" 
 option(DIANA_WERROR "Treat warnings as errors" OFF)
 option(BUILD_SHARED_LIBS "Build Diana as a shared library" OFF)
 
-if(CMAKE_C_FLAGS MATCHES "-Ofast|-ffast-math")
-    message(FATAL_ERROR "Diana must not be built with -Ofast or -ffast-math: the verified semantics are strict IEEE binary64")
+string(TOUPPER "${CMAKE_BUILD_TYPE}" diana_config)
+foreach(flag_var CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
+        CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_${diana_config})
+    if("${${flag_var}}" MATCHES "-Ofast|-ffast-math|-funsafe-math-optimizations")
+        message(FATAL_ERROR "Diana must not be built with -Ofast, -ffast-math or -funsafe-math-optimizations (${flag_var}): the verified semantics are strict IEEE binary64")
+    endif()
+endforeach()
+
+file(STRINGS include/diana/diana.h diana_header_version REGEX "^#define DIANA_VERSION_STRING ")
+string(REGEX REPLACE ".*\"([0-9.]+)\".*" "\\1" diana_header_version "${diana_header_version}")
+if(NOT diana_header_version STREQUAL PROJECT_VERSION)
+    message(FATAL_ERROR "include/diana/diana.h declares version ${diana_header_version}, CMakeLists.txt ${PROJECT_VERSION}")
 endif()
 
 include(cmake/warning.cmake)
