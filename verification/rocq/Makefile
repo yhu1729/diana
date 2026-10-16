@@ -9,6 +9,7 @@ real:
 	rocq compile -R theory Diana theory/Real/Vector.v
 	rocq compile -R theory Diana theory/Real/OneStep.v
 	rocq compile -R theory Diana theory/Real/Euler.v
+	rocq compile -R theory Diana theory/Real/Newton.v
 	rocq compile -R theory Diana theory/Real/Simpson.v
 	rocq compile -R theory Diana theory/Real/Trapezoidal.v
 
