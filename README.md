@@ -20,8 +20,9 @@ the binary64 model for every kernel function (the proofs for `diana_bisection_in
 `diana_bisection_step` are unreleased, see `CHANGELOG.md`).
 
 Planned v1.0.0 scope: bisection, Newton, composite trapezoidal and Simpson rules, explicit Euler,
-RK4, Cholesky, LU with partial pivoting. `doc/verification.md` says exactly what is proven, by which
-tool, about which build. The C and Python API is described in `doc/api.md`.
+RK4, Cholesky, LU with partial pivoting. `doc/verification/trust.md` says exactly what is proven, by
+which tool, about which build. The C and Python API is described in `doc/api/`, and `doc/README.md`
+indexes the documentation.
 
 ## Build
 
