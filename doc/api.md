@@ -52,12 +52,14 @@ if (st == DIANA_OK)
 Invariant kept by every call (Frama-C WP, BISECTION-C2 in `spec/bisection.md`): `a <= b`,
 `|a|, |b| <= DBL_MAX/2`, `fa` and `fb` finite, `tol >= 0`, and either `fa` and `fb` of strictly
 opposite sign or `a == b` with `fa == fb == 0`; whenever the last status was `DIANA_CONTINUE`,
-`a < x < b`. The kernel sets `x` to the binary64 midpoint `0.5 * (a + b)`; that this matches the
-Flocq model is proved for the helper that computes it (BISECTION-C1) and for
-`diana_bisection_result` (BISECTION-C5), not yet for `init`/`step`, whose verified guarantees are
-the WP contracts (BISECTION-C2). A rejected call leaves the state unchanged (also BISECTION-C2):
-`init` returning `DIANA_ERR_ARG` or `DIANA_ERR_BRACKET`, and `step` returning `DIANA_ERR_ARG`, write
-nothing to `*s`.
+`a < x < b`. The kernel sets `x` to the binary64 midpoint `0.5 * (a + b)`. VST proves that every
+function computes its Flocq model: the midpoint helper (BISECTION-C1), `init` and `step` with
+every status and every field of the state (BISECTION-C6/C7; the bracket `step` writes is the
+layer-B `fstep`, BISECTION-C8), and `diana_bisection_result` (BISECTION-C5); the state `init`
+accepts and every state reached through `DIANA_CONTINUE` satisfy the layer-B invariant
+(BISECTION-C9/C10). A rejected call leaves the state unchanged (BISECTION-C2, and BISECTION-C6/C7
+for a non-NULL `s`): `init` returning `DIANA_ERR_ARG` or `DIANA_ERR_BRACKET`, and `step` returning
+`DIANA_ERR_ARG`, write nothing to `*s`.
 
 - `diana_bisection_init(s, a, b, fa, fb, tol, max_iter)` initialises the state from the bracket
   `[a, b]` and `fa = f(a)`, `fb = f(b)`. Returns `DIANA_CONTINUE` with `s->x` set to the first
