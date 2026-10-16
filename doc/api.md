@@ -119,8 +119,9 @@ proved in Lean and Rocq). The binary64 evaluation order above is within
 `γₚ₊₅·|h|·A/3 + (1 + u)·η/3 + η` of the exact rule whenever its result is finite, with `p = (n − 1)/2`,
 `A = |y[0] + y[n-1]| + 4·(|y[1]| + |y[3]| + ...) + 2·(|y[2]| + |y[4]| + ...)`,
 `γₖ = k·u/(1 − k·u)`, `u = 2⁻⁵³` and `η = 2⁻¹⁰⁷⁵` (SIMPSON-B2, Flocq); like the trapezoidal bound it
-is relative to `A`, not to the result. The VST proof that the C computes this binary64 value is not
-done yet.
+is relative to `A`, not to the result. VST proves that the C computes exactly this binary64 value
+and returns `DIANA_OK` exactly when it is finite, leaving `*result` unchanged otherwise
+(SIMPSON-C2, for non-NULL `y` with an odd `n >= 3`).
 
 ## Callback wrapper (`diana/wrapper.h`)
 
