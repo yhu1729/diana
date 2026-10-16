@@ -123,6 +123,23 @@ is relative to `A`, not to the result. VST proves that the C computes exactly th
 and returns `DIANA_OK` exactly when it is finite, leaving `*result` unchanged otherwise
 (SIMPSON-C2, for non-NULL `y` with an odd `n >= 3`).
 
+## Explicit Euler step (`diana/euler.h`)
+
+One step of the explicit Euler method on a vector of dimension `d`; the caller evaluates
+`f = F(t, y)` and loops over the steps. There is no callback wrapper or Python binding yet.
+
+- `diana_euler_step(y, f, d, h, y_out)` writes `y_out[i] = y[i] + h * f[i]` for
+  `i = 0, ..., d-1`, the product rounded before the sum (no fused multiply-add). `y_out[0 .. d-1]`
+  must not overlap `y[0 .. d-1]` or `f[0 .. d-1]`, which are only read. Returns `DIANA_OK` when
+  every component is finite. Returns `DIANA_ERR_ARG`, without writing `y_out`, for a NULL `y`,
+  `f` or `y_out`, for `d == 0`, and when any component is not finite: a NaN or infinite `y[i]`,
+  `f[i]` or `h`, or an overflow in either operation. The kernel checks every component before it
+  writes any, so a failure in the last one leaves `y_out` as it was.
+
+Frama-C WP proves memory safety, termination, the status cases and that `y_out` is untouched on
+`DIANA_ERR_ARG` (EULER-C1). Finiteness on `DIANA_OK`, the error bounds and the VST proof are not done
+yet; `spec/euler.md` describes them.
+
 ## Callback wrapper (`diana/wrapper.h`)
 
 The wrappers loop over the verified reverse-communication kernels and are not verified (neither
