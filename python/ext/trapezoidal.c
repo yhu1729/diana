@@ -1,15 +1,6 @@
 #include <stddef.h>
-#include <stdint.h>
 
 #include "module.h"
-
-static int is_native_double(const char *format) {
-  if (*format == '@' || *format == '=' ||
-      *format == (PY_LITTLE_ENDIAN ? '<' : '>')) {
-    ++format;
-  }
-  return format[0] == 'd' && format[1] == '\0';
-}
 
 static PyObject *mod_trapezoidal(PyObject *Py_UNUSED(self), PyObject *args,
                                  PyObject *kwds) {
@@ -19,41 +10,15 @@ static PyObject *mod_trapezoidal(PyObject *Py_UNUSED(self), PyObject *args,
   double r = 0.0;
   Py_buffer view;
   PyObject *out = NULL;
-  const char *format;
   diana_status st;
 
   if (!PyArg_ParseTupleAndKeywords(args, kwds, "Od:trapezoidal", kwlist, &y,
                                    &h)) {
     return NULL;
   }
-  if (PyObject_GetBuffer(y, &view, PyBUF_RECORDS_RO) < 0) {
+  if (diana_py_get_samples(y, &view, 2, "y must have at least two samples") <
+      0) {
     return NULL;
-  }
-  format = view.format != NULL ? view.format : "B";
-  if (!is_native_double(format) ||
-      view.itemsize != (Py_ssize_t)sizeof(double)) {
-    PyErr_Format(PyExc_TypeError,
-                 "y must be a buffer of native float64 (format 'd'), not "
-                 "format '%s'",
-                 format);
-    goto cleanup;
-  }
-  if (view.ndim != 1) {
-    PyErr_Format(PyExc_ValueError, "y must be one-dimensional, not %d-D",
-                 view.ndim);
-    goto cleanup;
-  }
-  if (view.shape[0] < 2) {
-    PyErr_SetString(PyExc_ValueError, "y must have at least two samples");
-    goto cleanup;
-  }
-  if (!PyBuffer_IsContiguous(&view, 'C')) {
-    PyErr_SetString(PyExc_ValueError, "y must be C-contiguous");
-    goto cleanup;
-  }
-  if ((uintptr_t)view.buf % _Alignof(double) != 0u) {
-    PyErr_SetString(PyExc_ValueError, "y is not aligned for float64");
-    goto cleanup;
   }
   st =
       diana_trapezoidal((const double *)view.buf, (size_t)view.shape[0], h, &r);

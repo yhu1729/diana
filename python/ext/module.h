@@ -11,6 +11,8 @@ extern PyObject *diana_py_bracket_error;
 void diana_py_raise(diana_status st, const char *msg);
 
 int diana_py_convert_uint(PyObject *obj, void *out);
+int diana_py_get_samples(PyObject *obj, Py_buffer *view, Py_ssize_t min_count,
+                         const char *count_message);
 
 int diana_py_status_exec(PyObject *m);
 int diana_py_bisection_exec(PyObject *m);
