@@ -55,6 +55,14 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- `script/check_spec.py` rewrites `doc/verification/report.md` only when both provers ran
+  (`--run` without `--prover`), so a structural or one-prover run no longer overwrites the
+  committed statuses with `planned`; theorem IDs may contain digits and underscores after the
+  first letter (`RK4-A1`); theorems that share a prover constant each receive its result.
+- The CMake guard against fast math also inspects the per-configuration flags
+  (`CMAKE_C_FLAGS_<CONFIG>`) and rejects `-funsafe-math-optimizations`, and configuration fails
+  when `DIANA_VERSION_STRING` in `include/diana/diana.h` differs from the CMake project version.
+- `test_python` also runs on a change to `README.md` or `LICENSE`, which it packages and checks.
 - `diana.euler` accepts an object with `__index__` for `t0` and `h`, as `diana.euler_step` and
   the other kernels already did through the C `d` converter; a string is still rejected.
 - `README.md` is a brief overview: what Diana is, the methods, a quick start, and where the
