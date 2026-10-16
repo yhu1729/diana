@@ -18,7 +18,9 @@ A real / B float / C code, informal statement, and the fully qualified constant 
    of constants, an empty `Axioms:` block, or any unindented line that is not an axiom is an error
    rather than a silent reinterpretation: the affected constants read `check failed`. Only Rocq's
    stdout is parsed, since the pinned version writes warnings to stderr;
-4. rewrites the [report](report.md) (unless `--no-report`). The Frama-C column reads the committed
+4. rewrites the [report](report.md) when both provers ran (`--run` without `--prover`, unless
+   `--no-report`); a structural check or a one-prover run leaves the committed report alone, since
+   it would show a prover that did not run as `planned`. The Frama-C column reads the committed
    goal count `verification/frama-c/expectation.txt`, which CI compares against a fresh WP run.
 
 The exit status is non-zero on a structural error and, with `--strict`, also when any theorem is not
