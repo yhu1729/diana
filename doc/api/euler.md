@@ -144,7 +144,7 @@ array('d', [1.0, -0.5])
 >>> diana.euler_step([1.0], [1.0, 2.0], 0.1)
 Traceback (most recent call last):
   ...
-ValueError: y, f and out must have the same length
+ValueError: y and f must have the same length
 ```
 
 `f` receives the time of each step: for `y′ = t` from `t0 = 1` with `h = 1/4`, the four steps
