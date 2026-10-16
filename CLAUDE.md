@@ -138,7 +138,7 @@ doc/                  README index; api/, development/, test/, verification/ (tr
   On macOS it sets an unset `MACOSX_DEPLOYMENT_TARGET` from `sw_vers` (GCC 13 cannot build without it).
   Keep the driver's arrays static: CompCert 3.17 on AArch64 macOS misaligns `sp` in a `main`
   frame over about 500 bytes (`SIGBUS`), and inlining moves callee locals into `main`
-- Spec gate: `uv run script/check_spec.py --run --strict` (runs both provers' check files, `--prover lean|rocq` to select one and rewrites the generated report `doc/verification/report.md`; commit it, CI does not regenerate it; `--no-report` to leave it alone)
+- Spec gate: `uv run script/check_spec.py --run --strict` (runs both provers' check files, `--prover lean|rocq` to select one; a run of both provers rewrites the generated report `doc/verification/report.md`, a partial or structural run leaves it alone; commit it, CI does not regenerate it; `--no-report` to leave it alone on a full run)
   The default full strict gate also requires a unique positive Frama-C expectation count for the
   `acsl` file of each ACSL theorem; fresh WP execution and report checking remain in `script/dev.sh verify`.
   Lean CI uses `--run --strict --prover lean --no-report`, so missing Lean proofs fail the gate
