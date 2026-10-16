@@ -39,6 +39,10 @@ All notable changes to this project are documented here. The format follows
   is checked against the pinned clang-format; the Python sessions run as doctests; and the version
   the CMake consumer requests must match the project's. `test_python` runs it on a change to
   `doc/api/`.
+- `ci/docker/lean.Dockerfile` stays root and carries `python3` and `python3-yaml`, and
+  `verify_lean` installs apt packages and elan only when `elan` is not on `PATH`, and seeds
+  `verification/lean/.lake/packages` from the image's `DIANA_LEAN_CACHE`, so the job runs
+  unchanged on the stock Debian image and on the project image.
 
 #### Python
 
