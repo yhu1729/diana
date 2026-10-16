@@ -9,7 +9,7 @@ and, in the generated [report](#report) at the end, the status of every theorem.
 |---|---|---|---|
 | A | real-number model of the algorithm | Lean 4 + Mathlib **and** Rocq (Stdlib reals, Coquelicot) | convergence, invariants, error bounds over ℝ |
 | B | binary64 model of the C arithmetic | Rocq + Flocq | rounding facts the C code relies on (finiteness, bracket containment, forward error) |
-| C-VST | the C source (Clight AST) | Rocq + VST, via CompCert `clightgen` | a C function returns / updates exactly the layer-B model value (so far `bisection_mid`, `diana_bisection_result`, `diana_trapezoidal`, `diana_simpson`, `diana_euler_step`, and the `src/fp.h` helpers) |
+| C-VST | the C source (Clight AST) | Rocq + VST, via CompCert `clightgen` | a C function returns / updates exactly the layer-B model value (every function of the verified kernels: `bisection_mid`, `diana_bisection_init`, `diana_bisection_step`, `diana_bisection_result`, `diana_trapezoidal`, `diana_simpson`, `diana_euler_step`, and the `src/fp.h` helpers) |
 | C-WP | the C source | Frama-C WP, float model, RTE plugin | memory safety, absence of undefined behaviour, separation, contract invariants |
 
 The three models of a kernel are: `rspec` (ℝ), `fmodel` (Flocq, same operation order as the C),
@@ -59,10 +59,9 @@ between the `ccomp` and gcc/clang builds will back it. CompCert is not in CI, so
 - The callback wrappers in `src/wrapper/` and the Python package: the Python loop drives the
   verified state machine, but the loop and the CPython extension are ordinary tested code.
 - The build system, the compilers, and the operating system.
-- `diana_bisection_init` and `diana_bisection_step` under VST: no theorem yet says their post-state
-  is the layer-B model. Frama-C WP does cover them (BISECTION-C2), so layer C is not empty for them,
-  and layer B models the step (BISECTION-B2/B3/B4); what is missing is the C-to-model link for those
-  two functions. See `spec/bisection.md`.
+- Under VST, the argument-error paths a funspec excludes by its precondition: a NULL pointer in
+  every kernel, and `d = 0`, `n < 2`, `n < 3` or an even `n` in the array kernels. The Frama-C
+  contracts cover them (BISECTION-C2, EULER-C1, SIMPSON-C1, TRAPEZOIDAL-C1).
 - An explicit numeric bound on the bisection step count. BISECTION-B4 proves termination and the
   sound but loose bound `n <= lattice` (the number of doubles the bracket spans); the
   `max_iter = 2100` default is justified by the measured and ctest-pinned worst case of 2098 steps,
@@ -179,6 +178,11 @@ Status per theorem and prover: `ok` (constant exists, axioms within the allowed 
 | bisection | BISECTION-C3 | C | – | ok | – | diana_fp_finite implements its IEEE semantics (VST, AArch64 macOS Clight AST): it returns 1 exactly when its argument is finite. |
 | bisection | BISECTION-C4 | C | – | ok | – | diana_fp_abs returns the conditional negation the C performs (VST, AArch64 macOS Clight AST); c_abs_B2R identifies it with Rabs on finite input. |
 | bisection | BISECTION-C5 | C | – | ok | – | diana_bisection_result writes the model midpoint and the rounded width (VST, AArch64 macOS Clight AST) |
+| bisection | BISECTION-C6 | C | – | ok | – | diana_bisection_init computes c_init, the model of every exit in the C's evaluation order (VST, AArch64 macOS Clight AST): for s pointing to a writable state with any contents, it returns the c_init status (DIANA_ERR_ARG, DIANA_ERR_BRACKET, DIANA_OK or DIANA_CONTINUE), writes the c_init state (iter = 0; x the model midpoint, or the endpoint a zero f-value collapses onto) on DIANA_OK and DIANA_CONTINUE, and leaves *s unchanged on an error. The NULL path is BISECTION-C2. |
+| bisection | BISECTION-C7 | C | – | ok | – | diana_bisection_step computes c_step (VST, AArch64 macOS Clight AST): for s pointing to a writable state, it returns the c_step status (DIANA_ERR_ARG for a non-finite fx, DIANA_OK for a zero fx, the tolerance and the stagnation exits, DIANA_ERR_MAXITER, DIANA_CONTINUE) and writes the c_step state, which is *s unchanged on DIANA_ERR_ARG and otherwise has iter incremented as unsigned C arithmetic. The NULL path is BISECTION-C2. |
+| bisection | BISECTION-C8 | C | – | ok | – | c_step agrees with the binary64 model: for finite fx and fa, the state it writes is fstep of the old state (BISECTION-B2) with iter + 1 and max_iter unchanged, so by BISECTION-C7 the bracket after diana_bisection_step is the layer-B fstep. |
+| bisection | BISECTION-C9 | C | – | ok | – | c_init establishes the layer-B invariant: whenever it writes a state, the status is DIANA_OK or DIANA_CONTINUE, the state satisfies Bracket (the hypothesis of BISECTION-B2), and Next as well on DIANA_CONTINUE; iter = 0 and max_iter is the nonzero argument. |
+| bisection | BISECTION-C10 | C | – | ok | – | a continuing step keeps the layer-B invariant: from a state satisfying Bracket and Next, a c_step that returns DIANA_CONTINUE writes a state satisfying Bracket and Next with iter < max_iter, so BISECTION-B2 applies again to the next step. |
 | euler | EULER-A1 | A | ok | ok | – | local truncation: under H1 on [t, t + h] with h ≥ 0, ‖Y(t + h) − Y(t) − h·F(t, Y(t))‖ ≤ M₂·h²/2 |
 | euler | EULER-A2 | A | ok | ok | – | global error: under H1 and H2 on [t₀, t₀ + N·h] with h > 0, the iterates y₀ = Y(t₀), yₖ₊₁ = yₖ + h·F(t₀ + k·h, yₖ) satisfy ‖yₖ − Y(t₀ + k·h)‖ ≤ (M₂·h/(2L))·(e^{L·k·h} − 1) for every k ≤ N |
 | euler | EULER-B1 | B | – | ok | – | a finite component certifies its evaluation: if the binary64 model fl(y_i + fl(h·f_i)) is finite, then y_i, f_i, h and the product fl(h·f_i) are finite; since a finite Bplus or Bmult of finite operands is the rounded exact value (fadd_value, fmul_value), neither operation overflowed. This is why the kernel checks only each computed component. |
