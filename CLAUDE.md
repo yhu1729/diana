@@ -94,8 +94,7 @@ include/diana/        public header             src/                verified ker
 src/wrapper/          callback wrapper          python/src/         Python package (pyproject.toml at root)
 python/ext/           CPython extension
 test/c/               ctest                     test/python/        pytest
-test/install/         find_package consumer
-test/reference/       mpmath data (planned)     spec/               theorem list per method
+test/install/         find_package consumer     spec/               theorem list per method
 verification/lean/    Lake project              verification/rocq/  Real/ Float/ VST/
 verification/clight/  committed clightgen out
 verification/frama-c/ WP goal count/session/cache
