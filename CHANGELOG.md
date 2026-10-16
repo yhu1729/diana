@@ -8,6 +8,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- VST proves SIMPSON-C2 (`Diana.VST.Simpson.body_diana_simpson`) against the committed AArch64
+  macOS Clight AST `verification/clight/simpson_aarch64_macos.v`: for non-NULL `y` with an odd
+  `n >= 3`, `diana_simpson` returns `DIANA_OK` and writes the Flocq model value exactly when it is
+  finite, and otherwise returns `DIANA_ERR_ARG` with `*result` unchanged. Every Simpson theorem is
+  now proved, so the full strict spec gate passes with both quadrature rules.
 - Flocq proves the Simpson binary64 theorems in `verification/rocq/theory/Float/Simpson.v`:
   SIMPSON-B1 (`finite_result`: a finite result implies finite `h`, samples and partial sums) and
   SIMPSON-B2 (`forward_error`: `|r − h·S′/3| ≤ γₚ₊₅·|h|·A/3 + (1 + u)·η/3 + η` for `(p + 5)·u < 1`,
