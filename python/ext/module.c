@@ -23,7 +23,7 @@ PyMODINIT_FUNC PyInit__diana(void) {
     return NULL;
   }
   if (diana_py_status_exec(m) < 0 || diana_py_bisection_exec(m) < 0 ||
-      diana_py_trapezoidal_exec(m) < 0) {
+      diana_py_simpson_exec(m) < 0 || diana_py_trapezoidal_exec(m) < 0) {
     Py_DECREF(m);
     return NULL;
   }

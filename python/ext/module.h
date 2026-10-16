@@ -16,6 +16,7 @@ int diana_py_get_samples(PyObject *obj, Py_buffer *view, Py_ssize_t min_count,
 
 int diana_py_status_exec(PyObject *m);
 int diana_py_bisection_exec(PyObject *m);
+int diana_py_simpson_exec(PyObject *m);
 int diana_py_trapezoidal_exec(PyObject *m);
 
 PyMODINIT_FUNC PyInit__diana(void);
