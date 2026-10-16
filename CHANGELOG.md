@@ -21,6 +21,17 @@ All notable changes to this project are documented here. The format follows
   `Bracket` and `Next` (BISECTION-C10, `c_step_next`), so BISECTION-B2 to B4 apply to every state
   an `init`/`step` run reaches.
 
+#### Tests and tooling
+
+- Local bitwise differential test between the CompCert build of the kernels, which the VST proofs
+  cover, and the gcc/clang builds that ship: `script/compare_compiler.sh` builds `src/*.c` with
+  the corpus driver `test/c/test_compiler.c` (976 cases: every argument error, NaN and ±∞ inputs,
+  `h = ±0`, subnormals, overflow in each operation, the 2098-step bisection worst case, seeded
+  random inputs) with `ccomp` and with each available gcc and clang at `-O0`, `-O2` and `-O3`, and
+  fails on any difference in the printed bit patterns. `script/dev.sh verify` runs it and skips it
+  without `ccomp`. On AArch64 macOS, Apple clang 21, GCC 16.2 and LLVM clang 23.1 match CompCert
+  3.17 bitwise. ctest runs the driver as the `compiler` test, without the comparison.
+
 ## [0.2.0] - 2026-10-15
 
 Milestone M1: the composite trapezoidal and Simpson rules over tabulated samples and the explicit
