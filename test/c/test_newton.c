@@ -203,11 +203,13 @@ static void test_error(void) {
   CHECK_EQ_STATUS(diana_newton_step(&s, 1.0, (double)NAN), DIANA_ERR_ARG);
   CHECK_EQ_STATUS(diana_newton_step(&s, HUGE_VAL, 1.0), DIANA_ERR_ARG);
   CHECK_EQ_STATUS(diana_newton_step(&s, 1.0, -HUGE_VAL), DIANA_ERR_ARG);
-  /* zero derivative: the correction is infinite */
-  CHECK_EQ_STATUS(diana_newton_step(&s, 1.0, 0.0), DIANA_ERR_ARG);
-  CHECK_EQ_STATUS(diana_newton_step(&s, -1.0, -0.0), DIANA_ERR_ARG);
-  /* the correction overflows */
+  /* zero derivative, either sign of zero */
+  CHECK_EQ_STATUS(diana_newton_step(&s, 1.0, 0.0), DIANA_ERR_SINGULAR);
+  CHECK_EQ_STATUS(diana_newton_step(&s, -1.0, -0.0), DIANA_ERR_SINGULAR);
+  CHECK(same_state(&s, &before));
+  /* the correction overflows against a subnormal derivative */
   CHECK_EQ_STATUS(diana_newton_step(&s, DBL_MAX, 0.5), DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(diana_newton_step(&s, 1.0, DBL_TRUE_MIN), DIANA_ERR_ARG);
   CHECK(same_state(&s, &before));
   /* the new iterate overflows though the correction is finite */
   CHECK_EQ_STATUS(diana_newton_init(&s, -DBL_MAX, 0.0, 10u), DIANA_CONTINUE);
@@ -293,10 +295,10 @@ static void test_wrapper_error(void) {
   /* a zero derivative, and a callback that never writes it */
   iter = 99u;
   CHECK_EQ_STATUS(diana_newton(flat, 0, 2.0, 1e-12, 10u, &root, &iter),
-                  DIANA_ERR_ARG);
+                  DIANA_ERR_SINGULAR);
   CHECK(iter == 0u && root == -1.0);
   CHECK_EQ_STATUS(diana_newton(no_derivative, 0, 2.0, 1e-12, 10u, &root, &iter),
-                  DIANA_ERR_ARG);
+                  DIANA_ERR_SINGULAR);
   CHECK(iter == 0u && root == -1.0);
 
   /* a non-finite value on the second call: one step completed, root untouched
