@@ -29,9 +29,10 @@ theorem:
   - id: BISECTION-B2
     layer: B
     informal: >
-      the float bracket invariant of A1 holds for every step of the binary64 model: one step of
-      fstep preserves finiteness, a <= b, |a|,|b| <= DBL_MAX/2 and the strict-sign-change-or-
-      collapsed-root condition, and nests the bracket.
+      the float bracket invariant of A1 holds for every step of the binary64 model: from a state
+      satisfying Bracket and Next (x finite and strictly inside the bracket), one step of fstep
+      with a finite fx preserves finiteness, a <= b, |a|,|b| <= DBL_MAX/2 and the
+      strict-sign-change-or-collapsed-root condition, and nests the bracket.
     rocq: Diana.Float.Bisection.step_in_bracket
   - id: BISECTION-B3
     layer: B
@@ -42,9 +43,10 @@ theorem:
   - id: BISECTION-B4
     layer: B
     informal: >
-      termination: the bracket width is non-increasing, and the number of doubles it spans
-      (lattice) strictly decreases on every continuing step, so a run of n consecutive
-      DIANA_CONTINUE steps satisfies n <= lattice of the initial state.
+      termination: a run of n consecutive DIANA_CONTINUE steps from a state satisfying Bracket
+      satisfies n <= lattice of the initial state, the number of doubles the bracket spans (by
+      step_width_le, the width is non-increasing, and step_lattice_lt, lattice strictly decreases
+      on every continuing step).
     rocq: Diana.Float.Bisection.step_count_bound
   - id: BISECTION-C1
     layer: C
@@ -56,8 +58,9 @@ theorem:
       ACSL contracts in src/bisection.c, Frama-C WP float model with RTE: memory safety, no UB,
       separation of outputs from the state, bracket predicate (strict sign change or collapsed
       root) preserved by init/step, iter increments, width is the rounded difference, and the state
-      is unchanged when init or step reports an error. The only assumed contract is bisection_mid
-      (-wp-skip-fct), discharged by BISECTION-B1.
+      is unchanged when init reports an error or step reports DIANA_ERR_ARG (a step that reports
+      DIANA_ERR_MAXITER has halved the bracket and incremented iter). The only assumed contract is
+      bisection_mid (-wp-skip-fct), discharged by BISECTION-B1.
     acsl: src/bisection.c
   - id: BISECTION-C3
     layer: C
@@ -68,12 +71,14 @@ theorem:
   - id: BISECTION-C4
     layer: C
     informal: >
-      diana_fp_abs returns the conditional negation the C performs (VST, AArch64 macOS Clight AST);
-      c_abs_B2R identifies it with Rabs on finite input.
+      diana_fp_abs returns, for finite input, the conditional negation the C performs (VST, AArch64
+      macOS Clight AST); c_abs_B2R identifies it with Rabs.
     rocq: Diana.VST.Bisection.body_diana_fp_abs
   - id: BISECTION-C5
     layer: C
-    informal: "diana_bisection_result writes the model midpoint and the rounded width (VST, AArch64 macOS Clight AST)"
+    informal: >
+      diana_bisection_result writes the model midpoint and the rounded width to non-NULL root and
+      width (VST, AArch64 macOS Clight AST). The NULL output paths are BISECTION-C2.
     rocq: Diana.VST.Bisection.body_diana_bisection_result
   - id: BISECTION-C6
     layer: C
@@ -105,8 +110,8 @@ theorem:
     layer: C
     informal: >
       c_init establishes the layer-B invariant: whenever it writes a state, the status is DIANA_OK
-      or DIANA_CONTINUE, the state satisfies Bracket (the hypothesis of BISECTION-B2), and Next as
-      well on DIANA_CONTINUE; iter = 0 and max_iter is the nonzero argument.
+      or DIANA_CONTINUE, the state satisfies Bracket, and Next as well on DIANA_CONTINUE (the
+      hypotheses of BISECTION-B2); iter = 0 and max_iter is the nonzero argument.
     rocq: Diana.VST.Bisection.c_init_bracket
   - id: BISECTION-C10
     layer: C

@@ -104,6 +104,11 @@ All notable changes to this project are documented here. The format follows
 - `diana.euler` copies a `bytes` or `bytearray` `y0` element by element, like every other
   iterable, instead of decoding it as raw float64 data (`bytes(16)` gave two zeros, any other
   length a `ValueError` about the item size).
+- `spec/bisection.md` no longer claims that a `diana_bisection_step` reporting
+  `DIANA_ERR_MAXITER` leaves the state unchanged: BISECTION-C2 guarantees that for
+  `DIANA_ERR_ARG` only, and such a step has halved the bracket. BISECTION-B2 states its `Next`
+  hypothesis, BISECTION-B4 the bound its listed constant proves, and BISECTION-C4/C5 the funspec
+  preconditions (finite input; non-NULL outputs); SIMPSON-B2 states the list-length hypothesis.
 
 ## [0.2.0] - 2026-10-15
 
