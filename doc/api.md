@@ -6,7 +6,7 @@ is the umbrella header.
 After `cmake --install build --prefix <prefix>`, a CMake project links the library with
 
 ```cmake
-find_package(diana 0.1 CONFIG REQUIRED)
+find_package(diana 0.2 CONFIG REQUIRED)
 target_link_libraries(app PRIVATE diana::diana)
 ```
 
