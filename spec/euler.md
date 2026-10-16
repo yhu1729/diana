@@ -6,7 +6,7 @@ model: >
   F(t, y)_i. The binary64 model evaluates each component as fl(y_i + fl(h·f_i)), the product and
   the sum each rounded to nearest-even (no fused multiply-add).
 hypothesis:
-  - "H1: Y′(t) = F(t, Y(t)) on [t₀, T] with componentwise two-sided derivatives, and Y″ exists there with ‖Y″‖ ≤ M₂ in the max norm; continuity of Y″ is not required"
+  - "H1: Y′(t) = F(t, Y(t)) on [t₀, T] with componentwise two-sided derivatives, and Y″ exists there with ‖Y″‖ ≤ M₂ in the max norm; continuity of Y″ is not required (Rocq also takes 0 ≤ M₂, which the bound implies for d ≥ 1)"
   - "H2: F is L-Lipschitz in y in the max norm for t ∈ [t₀, T], with L > 0 (an L-Lipschitz F is L′-Lipschitz for every L′ > L, so this loses nothing)"
   - "H3 (float layers): y_i, f_i and h are arbitrary binary64 values supplied by the caller"
 theorem:
