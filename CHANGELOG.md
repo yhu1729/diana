@@ -8,6 +8,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Lean and Rocq prove the Simpson error bounds SIMPSON-A1 (`Diana.Real.Simpson.local_error`, one
+  double panel: `M₄·h⁵/90`) and SIMPSON-A2 (`composite_error`, `2p` panels:
+  `(b − a)·h⁴·M₄/180`) for `f` with a two-sided fourth derivative bounded by `M₄` on the interval;
+  `f⁗` need not be continuous. Both reuse `Diana.Real.Quadrature`, and `make real` builds the Rocq
+  proof.
 - Composite Simpson rule over tabulated samples, `diana_simpson(y, n, h, result)` in
   `diana/simpson.h`, for an odd `n >= 3`: the odd and even interior samples are summed separately,
   left to right from `+0`, and the result is `(h * ((y[0] + y[n-1]) + 4 * so + 2 * se)) / 3`. It
