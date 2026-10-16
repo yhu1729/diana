@@ -8,6 +8,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Python binding `diana.euler_step(y, f, h)` (a new `array.array("d")`) and the driver
+  `diana.euler(f, t0, y0, h, nstep)` looping in Python (module `diana._euler`). The extension
+  function `diana._diana.euler_step(y, f, h, out)` reads `y` and `f` in place and checks that the
+  writable `out` has their length and overlaps neither. `test/python/test_euler.py` checks the
+  buffer handling, bitwise agreement with `y + h*f` in Python floats (Hypothesis), the EULER-B2
+  bound against exact rational arithmetic, and first-order convergence with the EULER-A2 bound on
+  a rotation.
 - Callback wrapper `diana_euler(fn, ctx, t0, h, nstep, y, d, work, done)` in `diana/wrapper.h`
   (`diana_ode_fn` callback, `work` of `2 * d` doubles, no allocation): `nstep` Euler steps in
   place, the time of step `k` computed as `t0 + k * h`, and on a failing step `y` left at the last
@@ -119,6 +126,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- `diana_py_get_samples` takes the argument's name for its messages and can request a writable
+  buffer; the messages for `y` are unchanged.
 - The buffer checks of the array kernels' Python bindings are one helper,
   `diana_py_get_samples` in `python/ext/convert.c`, with the same checks, order and messages that
   `diana.trapezoidal` had.
