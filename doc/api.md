@@ -100,8 +100,8 @@ non-NULL `y` with `n >= 2`).
 
 ## Composite Simpson rule (`diana/simpson.h`)
 
-A function over tabulated samples, like the trapezoidal rule. There is no callback wrapper and no
-Python binding yet.
+A function over tabulated samples, like the trapezoidal rule. There is no callback wrapper; Python
+calls the kernel as `diana.simpson` (see the Python API).
 
 - `diana_simpson(y, n, h, result)` writes `(h * s) / 3` to `*result`, with
   `s = ((y[0] + y[n-1]) + 4 * so) + 2 * se`, where `so = y[1] + y[3] + ... + y[n-2]` and
@@ -175,6 +175,11 @@ first copied into an `array.array("d")`, which converts each element through `__
 `__index__`, rounding an integer to the nearest double) and raises its own `TypeError` or
 `OverflowError`. A non-finite result (`DIANA_ERR_ARG` in C) raises
 `ValueError`.
+
+`diana.simpson(y, h)` returns the composite Simpson rule of `diana_simpson` as a `float`, with the
+same operation order, and takes `y` exactly as `diana.trapezoidal` does, with the same checks in the
+same order, except that it needs at least three samples; after them, an even number of samples
+raises `ValueError`. A non-finite result raises `ValueError`.
 
 The CPython extension `diana._diana` is hand-written and has no NumPy dependency; array kernels
 use the buffer protocol. It uses single-phase module initialisation: the multi-phase slot table
