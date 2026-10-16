@@ -5,8 +5,8 @@
 [![C Coverage](https://gitlab.com/yhu1729/diana/badges/main/coverage.svg?key_text=C+Coverage&key_width=78&job=coverage_c)](https://gitlab.com/yhu1729/diana/-/commits/main)
 [![Python Coverage](https://gitlab.com/yhu1729/diana/badges/main/coverage.svg?key_text=Python+Coverage&key_width=108&job=coverage_python)](https://gitlab.com/yhu1729/diana/-/commits/main)
 
-Diana is a small library of numerical methods in C, with a Python binding, whose correctness is
-machine-checked from the mathematics down to the C code.
+Diana is a library of numerical methods in C, with a Python binding.
+Implementation correctness is machine-checked from the mathematics down to the C code.
 
 Every method comes with a proof that the algorithm converges or meets its error bound over the
 real numbers, a proof of what rounding does to it in binary64 arithmetic, and a proof that the
