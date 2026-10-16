@@ -6,15 +6,35 @@ Status codes, linking, and the Python conventions shared by every kernel are in 
 ## C (`diana/bisection.h`)
 
 Reverse-communication form: the kernel uses no function pointer, and the caller evaluates `f` at
-`s.x` between calls.
+`s.x` between calls. Finding `√2` as the root of `x² − 2` in `[0, 2]`:
 
 ```c
-diana_bisection_state s;
-diana_status st = diana_bisection_init(&s, a, b, f(a), f(b), tol, max_iter);
-while (st == DIANA_CONTINUE)
+#include <stdio.h>
+
+#include <diana/bisection.h>
+
+static double f(double x) { return x * x - 2.0; }
+
+int main(void) {
+  diana_bisection_state s;
+  double root, width;
+  diana_status st =
+      diana_bisection_init(&s, 0.0, 2.0, f(0.0), f(2.0), 1e-12, 100u);
+  while (st == DIANA_CONTINUE) {
     st = diana_bisection_step(&s, f(s.x));
-if (st == DIANA_OK)
-    diana_bisection_result(&s, &root, &width);
+  }
+  if (st != DIANA_OK) {
+    fprintf(stderr, "bisection: %s\n", diana_status_str(st));
+    return 1;
+  }
+  diana_bisection_result(&s, &root, &width);
+  printf("root %.17g, width %.3g, %u steps\n", root, width, s.iter);
+  return 0;
+}
+```
+
+```text
+root 1.4142135623728791, width 9.09e-13, 41 steps
 ```
 
 | Field | Meaning |
@@ -53,6 +73,38 @@ for a non-NULL `s`): `init` returning `DIANA_ERR_ARG` or `DIANA_ERR_BRACKET`, an
   `width = b - a`. Either output may be NULL; a non-NULL output must not alias the state or the
   other output.
 
+The caller sees every point before `f` is evaluated there, so it can log, evaluate `f` elsewhere,
+or stop early. A step that returns `DIANA_ERR_MAXITER` still keeps the bracket (BISECTION-C2), so
+`diana_bisection_result` reports the estimate reached so far:
+
+```c
+#include <stdio.h>
+
+#include <diana/bisection.h>
+
+int main(void) {
+  diana_bisection_state s;
+  double root, width;
+  diana_status st = diana_bisection_init(&s, 0.0, 2.0, -2.0, 2.0, 0.0, 4u);
+  while (st == DIANA_CONTINUE) {
+    printf("step %u: [%g, %g], evaluate at %g\n", s.iter, s.a, s.b, s.x);
+    st = diana_bisection_step(&s, s.x * s.x - 2.0);
+  }
+  diana_bisection_result(&s, &root, &width);
+  printf("%s after %u steps: root %g, width %g\n", diana_status_str(st), s.iter,
+         root, width);
+  return st == DIANA_OK ? 0 : 1;
+}
+```
+
+```text
+step 0: [0, 2], evaluate at 1
+step 1: [1, 2], evaluate at 1.5
+step 2: [1, 1.5], evaluate at 1.25
+step 3: [1.25, 1.5], evaluate at 1.375
+iteration limit reached after 4 steps: root 1.4375, width 0.125
+```
+
 ## Callback wrapper
 
 `diana/wrapper.h`; not verified, see [callback wrapper](overview.md#callback-wrapper).
@@ -63,6 +115,43 @@ for a non-NULL `s`): `init` returning `DIANA_ERR_ARG` or `DIANA_ERR_BRACKET`, an
   `0.5 * (a + b)`; on any other status it is not written. `*iter` (optional) receives the number of
   steps on every return (0 when the arguments or the bracket are rejected). The callback result
   must be finite.
+
+`ctx` passes parameters to the callback without globals. The cube root of 10 as the root of
+`x³ − c` with `c` in `ctx`:
+
+```c
+#include <stdio.h>
+
+#include <diana/wrapper.h>
+
+struct cubic {
+  double c;
+};
+
+static double cube_minus_c(double x, void *ctx) {
+  const struct cubic *p = ctx;
+  return x * x * x - p->c;
+}
+
+int main(void) {
+  struct cubic p = {10.0};
+  double root;
+  unsigned iter;
+  diana_status st =
+      diana_bisection(cube_minus_c, &p, 0.0, 10.0, 1e-12, 100u, &root, &iter);
+  if (st != DIANA_OK) {
+    fprintf(stderr, "bisection: %s after %u steps\n", diana_status_str(st),
+            iter);
+    return 1;
+  }
+  printf("cube root of %g: %.15g (%u steps)\n", p.c, root, iter);
+  return 0;
+}
+```
+
+```text
+cube root of 10: 2.15443469003191 (44 steps)
+```
 
 ## Python
 
@@ -77,11 +166,51 @@ test — BISECTION-B4 proves termination but not this constant), so with default
 `MaxIterError` is not expected. `max_iter` must be an integer that fits a C `unsigned int`
 (`OverflowError` otherwise, `ValueError` for 0).
 
+The default `tol = 0` stops at adjacent doubles, so the result is within one ulp of the root:
+
+```python
+>>> import math
+>>> import diana
+>>> diana.bisection(lambda x: x * x - 2, 0, 2)
+1.414213562373095
+>>> diana.bisection(lambda x: x * x - 2, 0, 2, tol=1e-6)
+1.4142136573791504
+>>> diana.bisection(math.cos, 0, 2)
+1.5707963267948966
+```
+
 A `diana.Bisection` allocated directly with `__new__` has status `ERR_ARG` until `__init__`
 succeeds; `step()` and `result()` raise `RuntimeError` before that. A failed `__init__` leaves the
 existing state and status unchanged, so a previously initialized object remains usable.
+
+The state object runs the same loop with the caller in control, as in C; `step` returns the new
+status, and the fields of the C state are read-only attributes:
+
+```python
+>>> def f(x):
+...     return x * x - 2
+>>> s = diana.Bisection(0.0, 2.0, f(0.0), f(2.0), tol=1e-3)
+>>> while s.status == diana.CONTINUE:
+...     _ = s.step(f(s.x))
+>>> s.status == diana.OK, s.iter, s.a, s.b
+(True, 11, 1.4140625, 1.4150390625)
+>>> s.result()
+(1.41455078125, 0.0009765625)
+```
 
 `diana.bisection` raises `diana.BracketError` when `f(a)` and `f(b)` do not bracket a root, and
 `diana.MaxIterError` when `max_iter` is reached first; the latter carries the attributes
 `estimate`, `width` and `iter` (also its `args`, so it survives pickling across a process
 boundary).
+
+```python
+>>> diana.bisection(lambda x: x * x + 1, -1, 1)
+Traceback (most recent call last):
+  ...
+diana._diana.BracketError: no sign change in bracket
+>>> try:
+...     diana.bisection(lambda x: x * x - 2, 0, 2, max_iter=10)
+... except diana.MaxIterError as e:
+...     print(e.estimate, e.width, e.iter)
+1.4150390625 0.001953125 10
+```
