@@ -49,6 +49,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- `README.md` is a brief overview: what Diana is, the methods, a quick start, and where the
+  documentation is; the technical detail moves to `doc/`.
 - The documentation is split by topic and indexed by `doc/README.md`: `doc/api/` (an overview and
   one page per method, each with its C functions, callback wrapper and Python functions),
   `doc/development/` (build, format and lint, Python binding, local workflow, CI), `doc/test/` (the
