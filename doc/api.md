@@ -126,8 +126,8 @@ and returns `DIANA_OK` exactly when it is finite, leaving `*result` unchanged ot
 ## Explicit Euler step (`diana/euler.h`)
 
 One step of the explicit Euler method on a vector of dimension `d`; the caller evaluates
-`f = F(t, y)` and loops over the steps, or lets `diana_euler` (below) do it. There is no Python
-binding yet.
+`f = F(t, y)` and loops over the steps, or lets `diana_euler` (below) do it; Python calls the
+kernel as `diana.euler_step` and loops as `diana.euler` (see the Python API).
 
 - `diana_euler_step(y, f, d, h, y_out)` writes `y_out[i] = y[i] + h * f[i]` for
   `i = 0, ..., d-1`, the product rounded before the sum (no fused multiply-add). `y_out[0 .. d-1]`
@@ -212,6 +212,17 @@ first copied into an `array.array("d")`, which converts each element through `__
 same operation order, and takes `y` exactly as `diana.trapezoidal` does, with the same checks in the
 same order, except that it needs at least three samples; after them, an even number of samples
 raises `ValueError`. A non-finite result raises `ValueError`.
+
+`diana.euler_step(y, f, h)` returns one step of `diana_euler_step` as a new `array.array("d")`,
+with the same operation order. `y` and `f` are taken as `diana.trapezoidal` takes `y`, each with
+its own name in the messages and at least one sample; a length mismatch, then a non-finite
+component, raise `ValueError`. The output is a fresh array, so it never overlaps the inputs, and
+the inputs are never modified. `diana.euler(f, t0, y0, h, nstep)` copies `y0` into an
+`array.array("d")` and takes `nstep` steps, calling `f(t0 + k*h, y)` for the derivative of step
+`k`; the loop runs in Python, like `diana.bisection`, and `f` must not modify `y`. It raises
+`ValueError` for an empty `y0` or a negative `nstep`, `TypeError` for a non-integer `nstep` or a
+`t0` or `h` that is not a real number (a string is not converted), and lets the errors of
+`euler_step` through.
 
 The CPython extension `diana._diana` is hand-written and has no NumPy dependency; array kernels
 use the buffer protocol. It uses single-phase module initialisation: the multi-phase slot table
