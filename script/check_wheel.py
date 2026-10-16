@@ -41,7 +41,7 @@ def check_wheel(work: Path, shared: bool) -> None:
             "-C",
             f"build-dir={build}",
             "-C",
-            f"cmake.define.BUILD_SHARED_LIBS={'ON' if shared else 'OFF'}",
+            f"cmake.define.DIANA_BUILD_SHARED_LIB={'ON' if shared else 'OFF'}",
             "-C",
             "cmake.define.DIANA_WERROR=ON",
             "-C",
@@ -54,25 +54,20 @@ def check_wheel(work: Path, shared: bool) -> None:
     if len(wheels) != 1:
         raise RuntimeError(f"expected one wheel in {wheel_dir}, found {len(wheels)}")
     wheel = wheels[0]
-    if sys.platform == "win32":
-        runtime = "diana.dll"
-    elif sys.platform == "darwin":
-        runtime = "libdiana.dylib"
-    else:
-        runtime = "libdiana.so"
+    runtime = "libdiana.dylib" if sys.platform == "darwin" else "libdiana.so"
     with ZipFile(wheel) as archive:
         names = archive.namelist()
-    libraries = {name for name in names if Path(name).name.startswith(("libdiana.", "diana.dll"))}
+    libraries = {name for name in names if Path(name).name.startswith("libdiana.")}
     expected = {f"diana/{runtime}"} if shared else set()
     if libraries != expected:
         raise RuntimeError(f"unexpected runtime libraries in {wheel.name}: {libraries}")
-    if any(name.endswith((".h", ".a", ".lib", ".cmake")) for name in names):
+    if any(name.endswith((".h", ".a", ".cmake")) for name in names):
         raise RuntimeError(f"development artifacts packaged in {wheel.name}")
     shutil.rmtree(build)
 
     venv = work / "venv"
     subprocess.run(["uv", "venv", "--python", sys.executable, str(venv)], check=True)
-    python = venv / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+    python = venv / "bin/python"
     subprocess.run(
         ["uv", "pip", "install", "--python", str(python), "--no-deps", "--no-index", str(wheel)],
         check=True,
@@ -90,8 +85,6 @@ def check_wheel(work: Path, shared: bool) -> None:
         "DYLD_INSERT_LIBRARIES",
     ):
         env.pop(key, None)
-    if sys.platform == "win32":
-        env["PATH"] = str(python.parent)
     subprocess.run([str(python), "-I", "-c", SMOKE], cwd=work, env=env, check=True)
     print(f"{'Shared' if shared else 'Static'} wheel passed", flush=True)
 
