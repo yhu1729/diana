@@ -140,8 +140,9 @@ Frama-C WP proves memory safety, termination, the status cases and that `y_out` 
 `DIANA_ERR_ARG` (EULER-C1). For `y′ = F(t, y)` with `F` L-Lipschitz in `y` and `‖y″‖ ≤ M₂` in the max
 norm, `k` exact Euler steps of size `h` from `y(t₀)` are within `(M₂·h/(2L))·(e^{L·k·h} − 1)` of
 `y(t₀ + k·h)` (EULER-A2, proved in Lean and Rocq; one step is within `M₂·h²/2`, EULER-A1).
-Finiteness on `DIANA_OK`, the rounding-error bound and the VST proof are not done yet;
-`spec/euler.md` describes them.
+Each computed component is within `u·|y[i] + h·f[i]| + (1 + u)·(u·|h·f[i]| + η)` of the exact
+`y[i] + h·f[i]` whenever it is finite, with `u = 2⁻⁵³` and `η = 2⁻¹⁰⁷⁵` (EULER-B2, Flocq).
+Finiteness on `DIANA_OK` and the VST proof are not done yet; `spec/euler.md` describes them.
 
 ## Callback wrapper (`diana/wrapper.h`)
 
