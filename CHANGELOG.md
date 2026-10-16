@@ -8,6 +8,14 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Explicit Euler step `diana_euler_step(y, f, d, h, y_out)` in `diana/euler.h`: `y_out[i] =
+  y[i] + h * f[i]` with the product rounded before the sum, `y_out` separate from `y` and `f`. It
+  returns `DIANA_ERR_ARG` without writing `y_out` for NULL pointers, `d == 0`, or any non-finite
+  component; a first pass checks every component before a second pass writes. Frama-C WP proves
+  its ACSL contract (49 goals, EULER-C1), and `spec/euler.md` fixes the operation order and lists
+  the planned layer-A, layer-B and VST theorems. `test/c/test_euler.c` covers every path: argument
+  errors, exact steps, the absence of contraction, `h = 0`, underflow, overflow in either
+  operation, NaN and infinite inputs, and failures that leave `y_out` untouched.
 - Python binding `diana.simpson(y, h)` (driver `diana._simpson`), with the buffer handling of
   `diana.trapezoidal`: it raises `TypeError` for another element type, and `ValueError` for another
   layout, fewer than three samples, an even number of samples, or a non-finite result.
