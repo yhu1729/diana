@@ -54,11 +54,13 @@ static PyObject *newton_step(NewtonObject *self, PyObject *args) {
     return NULL;
   }
   st = diana_newton_step(&self->s, fx, dfx);
+  if (st == DIANA_ERR_SINGULAR) {
+    diana_py_raise(st, "f'(x) is zero");
+    return NULL;
+  }
   if (st == DIANA_ERR_ARG) {
     if (!isfinite(fx) || !isfinite(dfx)) {
       msg = "f(x) and f'(x) must be finite";
-    } else if (dfx == 0.0) {
-      msg = "f'(x) is zero";
     } else {
       msg = "Newton step is not finite";
     }
