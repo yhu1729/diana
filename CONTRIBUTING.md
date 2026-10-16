@@ -2,9 +2,9 @@
 
 Diana is a C11 library whose specification is machine-checked, so a change rarely stands alone: a
 kernel comes with its test, its ACSL contract, and the proof layers that still have to hold.
-This file is the setup and workflow guide. `doc/development.md` explains why each tool is
-configured the way it is, `doc/api.md` describes the API, and `doc/verification.md` states what is
-proven and what is merely assumed.
+This file is the setup and workflow guide. `doc/README.md` indexes the rest: `doc/development/`
+explains why each tool is configured the way it is, `doc/api/` describes the API, and
+`doc/verification/trust.md` states what is proven and what is merely assumed.
 
 ## Quick start
 
@@ -31,7 +31,7 @@ sanitizer, opam switch, `clang-tidy` binary).
   `script/dev.sh test`, with the `clang-format` version pinned in the uv `lint` group so local runs
   and CI agree.
 - **Comment:** keep in-code comments to a minimum. Rationale belongs in `doc/`, API description in
-  `doc/api.md`, proof notes in `spec/<method>.md`. ACSL `/*@ ... */` annotations are code, not
+  `doc/api/`, proof notes in `spec/<method>.md`. ACSL `/*@ ... */` annotations are code, not
   comments, and so are Python docstrings and CPython `tp_doc` strings, which are part of the
   runtime API.
 - **Living document:** update `CHANGELOG.md` (`Unreleased`, Keep a Changelog) and, when a change
@@ -120,12 +120,11 @@ about those, so they are your responsibility before the commit lands.
 - Always: `script/dev.sh test` (ctest including the installed-consumer tests, pytest, ruff,
   `clang-format`, `clang-tidy`).
 - After a change to `src/`, `include/`, `verification/`, or `spec/`: `script/dev.sh verify`, and
-  commit the report it rewrites at the end of `doc/verification.md`. It runs the spec gate with
+  commit the report it rewrites, `doc/verification/report.md`. It runs the spec gate with
   `--strict`, so a theorem listed in `spec/` that no prover proves fails it, as does an ACSL
   specification without a valid Frama-C expectation entry. It also checks that the `ccomp` build
   of the kernels prints the same bits as gcc/clang builds on a fixed corpus
-  (`script/compare_compiler.sh`). The individual steps are under "Local verification" in
-  `doc/development.md`.
+  (`script/compare_compiler.sh`). The individual steps are in `doc/verification/local.md`.
 - After a change to a verified kernel or a header it includes, the Clight AST has to be
   regenerated, and only on the CompCert target it is named for (`bisection_aarch64_macos.v` is
   AArch64 macOS). `script/dev.sh verify` checks the AST of the current target and fails on a stale
