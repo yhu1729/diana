@@ -40,6 +40,12 @@ All notable changes to this project are documented here. The format follows
   the CMake consumer requests must match the project's. `test_python` runs it on a change to
   `doc/api/`.
 
+#### Python
+
+- `python/src/diana/_diana.pyi`, a type stub for the extension module, so the `py.typed` package
+  is typed throughout (`Bisection` and its attributes, the status constants, `BracketError`,
+  `version`, `status_str` and the array functions).
+
 #### Documentation
 
 - Examples in `doc/api/`: a complete CMake consumer project, a C program with its output for every
@@ -49,6 +55,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- `diana.euler` accepts an object with `__index__` for `t0` and `h`, as `diana.euler_step` and
+  the other kernels already did through the C `d` converter; a string is still rejected.
 - `README.md` is a brief overview: what Diana is, the methods, a quick start, and where the
   documentation is; the technical detail moves to `doc/`.
 - The documentation is split by topic and indexed by `doc/README.md`: `doc/api/` (an overview and
@@ -58,6 +66,12 @@ All notable changes to this project are documented here. The format follows
   gate, Frama-C and Flocq boundary, libm-free helpers, local verification, compiler comparison).
   The generated theorem report moves from the end of `doc/verification.md` to
   `doc/verification/report.md`, which `script/check_spec.py` now rewrites.
+
+### Fixed
+
+- `diana.euler_step` reports `y` and `f` of different lengths as "y and f must have the same
+  length"; the message no longer names the `out` buffer, which only the extension function takes
+  and which is now checked separately.
 
 ## [0.2.0] - 2026-10-15
 
