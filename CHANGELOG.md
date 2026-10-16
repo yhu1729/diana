@@ -8,6 +8,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Lean and Rocq prove the Euler error bounds EULER-A1 (`Diana.Real.Euler.local_error`, one step:
+  `M₂·h²/2`) and EULER-A2 (`global_error`: `(M₂·h/(2L))·(e^{L·k·h} − 1)` after `k` steps) for
+  `y′ = F(t, y)` with `F` L-Lipschitz in `y` and `‖y″‖ ≤ M₂`; `y″` need not be continuous. Lean
+  states them for any real normed space, Rocq for vectors `nat → R` with the max norm
+  (`Diana.Real.Vector`). The global bound comes from a discrete Grönwall lemma for any one-step
+  method, `Diana.Real.OneStep.one_step_error` in both provers, which RK4 will reuse. `make real`
+  builds the new Rocq modules.
 - Explicit Euler step `diana_euler_step(y, f, d, h, y_out)` in `diana/euler.h`: `y_out[i] =
   y[i] + h * f[i]` with the product rounded before the sum, `y_out` separate from `y` and `f`. It
   returns `DIANA_ERR_ARG` without writing `y_out` for NULL pointers, `d == 0`, or any non-finite
