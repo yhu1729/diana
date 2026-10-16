@@ -9,7 +9,7 @@ and, in the generated [report](#report) at the end, the status of every theorem.
 |---|---|---|---|
 | A | real-number model of the algorithm | Lean 4 + Mathlib **and** Rocq (Stdlib reals, Coquelicot) | convergence, invariants, error bounds over ℝ |
 | B | binary64 model of the C arithmetic | Rocq + Flocq | rounding facts the C code relies on (finiteness, bracket containment, forward error) |
-| C-VST | the C source (Clight AST) | Rocq + VST, via CompCert `clightgen` | a C function returns / updates exactly the layer-B model value (so far `bisection_mid`, `diana_bisection_result`, `diana_trapezoidal`, and the `src/fp.h` helpers) |
+| C-VST | the C source (Clight AST) | Rocq + VST, via CompCert `clightgen` | a C function returns / updates exactly the layer-B model value (so far `bisection_mid`, `diana_bisection_result`, `diana_trapezoidal`, `diana_simpson`, and the `src/fp.h` helpers) |
 | C-WP | the C source | Frama-C WP, float model, RTE plugin | memory safety, absence of undefined behaviour, separation, contract invariants |
 
 The three models of a kernel are: `rspec` (ℝ), `fmodel` (Flocq, same operation order as the C),
@@ -28,8 +28,8 @@ inside one Rocq development with no translation step.
   contracts of the functions listed in `SKIP` in `script/run_frama_c.sh`; each such contract is a
   layer-B theorem (currently only `bisection_mid`, discharged by BISECTION-B1).
 - `clightgen` as the translation from C to Clight. The committed
-  `verification/clight/<kernel>_<target>.v` (today `bisection_aarch64_macos.v` and
-  `trapezoidal_aarch64_macos.v`, CompCert configured for AArch64 macOS) is generated locally on that target and is the AST the VST proofs are about;
+  `verification/clight/<kernel>_<target>.v` (today `bisection_aarch64_macos.v`,
+  `simpson_aarch64_macos.v` and `trapezoidal_aarch64_macos.v`, CompCert configured for AArch64 macOS) is generated locally on that target and is the AST the VST proofs are about;
   CI neither regenerates nor re-proves it.
 
 ## Where each layer is checked
@@ -183,6 +183,7 @@ Status per theorem and prover: `ok` (constant exists, axioms within the allowed 
 | simpson | SIMPSON-B1 | B | – | ok | – | a finite result certifies the whole evaluation: if the binary64 model returns a finite value, then h, y₀, yₙ₋₁, every odd and every even interior yᵢ, and every partial sum of sₒ and sₑ are finite; since a finite Bplus, Bmult or Bdiv of finite operands is the rounded exact value (fadd_value, fmul_value, fdiv_value), no operation overflowed. This is why the kernel checks only its result. |
 | simpson | SIMPSON-B2 | B | – | ok | – | forward error: if the binary64 model returns a finite r and (p + 5)·u < 1, then \|r − h·S′/3\| ≤ γₚ₊₅·\|h\|·A/3 + (1 + u)·η/3 + η, with S′ = y₀ + yₙ₋₁ + 4·Σ y₂ₖ₊₁ + 2·Σ y₂ₖ the exact weighted sum, A = \|y₀ + yₙ₋₁\| + 4·Σ\|y₂ₖ₊₁\| + 2·Σ\|y₂ₖ\|, γₖ = k·u/(1 − k·u), u = 2⁻⁵³ and η = 2⁻¹⁰⁷⁵ (underflow in the product with h and in the division by 3). |
 | simpson | SIMPSON-C1 | C | – | – | ok (58/58) | ACSL contract in src/simpson.c, Frama-C WP float model with RTE: memory safety (only y[0 .. n−1] is read, only *result is written), no UB, termination of both loops, DIANA_OK only for non-NULL y and result with n ≥ 3 odd and then *result finite, and *result untouched on DIANA_ERR_ARG. No assumed contract. |
+| simpson | SIMPSON-C2 | C | – | ok | – | diana_simpson computes the binary64 model (VST, AArch64 macOS Clight AST): for y pointing to an odd number n ≥ 3 of readable doubles and a writable *result separate from them, it returns DIANA_OK and writes the model value when that value is finite, and returns DIANA_ERR_ARG leaving *result unchanged otherwise. The NULL, n < 3 and even-n paths are SIMPSON-C1. |
 | trapezoidal | TRAPEZOIDAL-A1 | A | ok | ok | – | local error: under H1 on [x, x + h] with h ≥ 0, \|∫ₓ^{x+h} f − h·(f(x) + f(x + h))/2\| ≤ M₂·h³/12 |
 | trapezoidal | TRAPEZOIDAL-A2 | A | ok | ok | – | composite error: under H1 and H2, \|∫ₐᵇ f − T\| ≤ (b − a)·h²·M₂/12 |
 | trapezoidal | TRAPEZOIDAL-B1 | B | – | ok | – | a finite result certifies the whole evaluation: if the binary64 model returns a finite value, then h, y₀, yₙ₋₁, every interior yᵢ and every partial sum sₖ (k = 0, …, n − 2) are finite; since a finite Bplus or Bmult of finite operands is the rounded exact value (fadd_value, fmul_value), no operation overflowed. This is why the kernel checks only its result. |
