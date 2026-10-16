@@ -1,0 +1,54 @@
+# Explicit Euler step
+
+Status codes, linking, and the Python conventions shared by every kernel are in the
+[API overview](overview.md); the theorems cited below are listed in `spec/euler.md`.
+
+## C (`diana/euler.h`)
+
+One step of the explicit Euler method on a vector of dimension `d`; the caller evaluates
+`f = F(t, y)` and loops over the steps, or lets `diana_euler` ([below](#callback-wrapper)) do it;
+Python calls the kernel as `diana.euler_step` and loops as `diana.euler` (see [Python](#python)).
+
+- `diana_euler_step(y, f, d, h, y_out)` writes `y_out[i] = y[i] + h * f[i]` for
+  `i = 0, ..., d-1`, the product rounded before the sum (no fused multiply-add). `y_out[0 .. d-1]`
+  must not overlap `y[0 .. d-1]` or `f[0 .. d-1]`, which are only read. Returns `DIANA_OK` when
+  every component is finite. Returns `DIANA_ERR_ARG`, without writing `y_out`, for a NULL `y`,
+  `f` or `y_out`, for `d == 0`, and when any component is not finite: a NaN or infinite `y[i]`,
+  `f[i]` or `h`, or an overflow in either operation. The kernel checks every component before it
+  writes any, so a failure in the last one leaves `y_out` as it was.
+
+Frama-C WP proves memory safety, termination, the status cases and that `y_out` is untouched on
+`DIANA_ERR_ARG` (EULER-C1). For `y′ = F(t, y)` with `F` L-Lipschitz in `y` and `‖y″‖ ≤ M₂` in the max
+norm, `k` exact Euler steps of size `h` from `y(t₀)` are within `(M₂·h/(2L))·(e^{L·k·h} − 1)` of
+`y(t₀ + k·h)` (EULER-A2, proved in Lean and Rocq; one step is within `M₂·h²/2`, EULER-A1).
+Each computed component is within `u·|y[i] + h·f[i]| + (1 + u)·(u·|h·f[i]| + η)` of the exact
+`y[i] + h·f[i]` whenever it is finite, with `u = 2⁻⁵³` and `η = 2⁻¹⁰⁷⁵` (EULER-B2, Flocq).
+VST proves that the C writes exactly these binary64 values and returns `DIANA_OK` exactly when all
+of them are finite, leaving `y_out` unchanged otherwise (EULER-C2, for non-NULL, disjoint `y`, `f`
+and `y_out` with `d >= 1`).
+
+## Callback wrapper
+
+`diana/wrapper.h`; not verified, see [callback wrapper](overview.md#callback-wrapper).
+
+- `diana_euler(fn, ctx, t0, h, nstep, y, d, work, done)` takes `nstep` explicit Euler steps of size
+  `h` from `y(t0) = y[0 .. d-1]`, in place, with `fn` of type `diana_ode_fn`: `fn(t, y, dy, d, ctx)`
+  must write `F(t, y)` to `dy[0 .. d-1]`. Step `k` evaluates `fn` at `t0 + k * h`, computed from `k`
+  rather than accumulated, then calls `diana_euler_step`. `work` holds `2 * d` doubles and must not
+  overlap `y`. It returns `DIANA_ERR_ARG` for a NULL `fn`, `y` or `work`, for `d == 0`, and when a
+  step fails (a non-finite derivative or result); `y` then holds the state after the last
+  successful step. `*done` (optional) receives the number of completed steps on every return
+  (0 when the arguments are rejected). `nstep == 0` leaves `y` unchanged and returns `DIANA_OK`.
+
+## Python
+
+`diana.euler_step(y, f, h)` returns one step of `diana_euler_step` as a new `array.array("d")`,
+with the same operation order. `y` and `f` are [array arguments](overview.md#array-argument), each
+with its own name in the messages and at least one sample; a length mismatch, then a non-finite
+component, raise `ValueError`. The output is a fresh array, so it never overlaps the inputs, and
+the inputs are never modified. `diana.euler(f, t0, y0, h, nstep)` copies `y0` into an
+`array.array("d")` and takes `nstep` steps, calling `f(t0 + k*h, y)` for the derivative of step
+`k`; the loop runs in Python, like `diana.bisection`, and `f` must not modify `y`. It raises
+`ValueError` for an empty `y0` or a negative `nstep`, `TypeError` for a non-integer `nstep` or a
+`t0` or `h` that is not a real number (a string is not converted), and lets the errors of
+`euler_step` through.
