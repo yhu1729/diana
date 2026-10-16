@@ -15,6 +15,11 @@ diana_status diana_bisection(diana_bisection_fn f, void *ctx, double a,
                              double b, double tol, unsigned max_iter,
                              double *root, unsigned *iter);
 
+typedef double (*diana_newton_fn)(double x, double *dfx, void *ctx);
+
+diana_status diana_newton(diana_newton_fn f, void *ctx, double x0, double tol,
+                          unsigned max_iter, double *root, unsigned *iter);
+
 typedef void (*diana_ode_fn)(double t, const double *y, double *dy, size_t d,
                              void *ctx);
 
