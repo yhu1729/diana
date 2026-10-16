@@ -159,7 +159,9 @@ cube root of 10: 2.15443469003191 (44 steps)
 taking a Python callable.
 
 `diana.bisection` converts `a` and `b` to `float` before evaluating `f`, so `f(a)` and `f(b)` are
-the values at the binary64 endpoints the kernel brackets. The default `max_iter` of
+the values at the binary64 endpoints the kernel brackets. `a`, `b`, `tol` and every value `f`
+returns must be real numbers (an object with `__float__` or `__index__`; a string is not
+converted), `TypeError` otherwise. The default `max_iter` of
 `diana.bisection` and `diana.Bisection` is 2100, which covers the worst case of `tol = 0` (2098
 steps, for a root at the smallest subnormal in `[-DBL_MAX/2, DBL_MAX/2]`; measured and pinned by a
 test — BISECTION-B4 proves termination but not this constant), so with default arguments
