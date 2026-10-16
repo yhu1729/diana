@@ -13,17 +13,20 @@ All notable changes to this project are documented here. The format follows
 - Newton's method in reverse-communication form, `diana_newton_init`, `diana_newton_step` and
   `diana_newton_result` over a caller-owned `diana_newton_state` (`x`, `dx`, `tol`, `iter`,
   `max_iter`) in `diana/newton.h`. `step` consumes `f(x)` and `f'(x)`: an exact zero `f(x)`
-  converges at once whatever `f'(x)`; otherwise the correction `fl(f/f')` and the iterate
-  `fl(x - dx)` are each checked, and a non-finite one (a zero `f'` against a non-zero `f`, an
-  overflow) is `DIANA_ERR_ARG` with the state unchanged, like a NaN or infinite input; a finite
-  step stores `dx` and the new `x`, increments `iter`, and returns `DIANA_OK` when `|dx| <= tol`
-  or the iterate did not change, `DIANA_ERR_MAXITER` at the step limit, else `DIANA_CONTINUE`.
-  `init` takes `x0`, `tol >= 0` and `max_iter > 0` and always returns `DIANA_CONTINUE`. A zero
-  derivative has no dedicated status: that is an open design question, so it is reported as the
-  non-finite correction it produces. Frama-C WP proves the ACSL contracts (101 goals, NEWTON-C1):
-  the state invariant, `iter` increments, the meaning of each status, and the state unchanged on
-  `DIANA_ERR_ARG`. `test/c/test_newton.c` covers every path of the kernel and the wrapper at
-  100% line and branch coverage.
+  converges at once whatever `f'(x)`; a zero `f'(x)` (either sign of zero) against a non-zero
+  `f(x)` is the new status `DIANA_ERR_SINGULAR` with the state unchanged; otherwise the
+  correction `fl(f/f')` and the iterate `fl(x - dx)` are each checked, and a non-finite one (a
+  subnormal `f'` against a large `f`, an overflow) is `DIANA_ERR_ARG` with the state unchanged,
+  like a NaN or infinite input; a finite step stores `dx` and the new `x`, increments `iter`, and
+  returns `DIANA_OK` when `|dx| <= tol` or the iterate did not change, `DIANA_ERR_MAXITER` at the
+  step limit, else `DIANA_CONTINUE`. `init` takes `x0`, `tol >= 0` and `max_iter > 0` and always
+  returns `DIANA_CONTINUE`. Frama-C WP proves the ACSL contracts (103 goals, NEWTON-C1): the
+  state invariant, `iter` increments, the meaning of each status, and the state unchanged on
+  `DIANA_ERR_ARG` and `DIANA_ERR_SINGULAR`. `test/c/test_newton.c` covers every path of the
+  kernel and the wrapper at 100% line and branch coverage.
+- `DIANA_ERR_SINGULAR` (-4, "zero derivative or pivot") in `diana/status.h`: the step of a
+  method is undefined because a derivative (Newton) or, in the planned linear-algebra kernels, a
+  pivot is zero. The call writes nothing.
 - Callback wrapper `diana_newton(f, ctx, x0, tol, max_iter, root, iter)` in `diana/wrapper.h`,
   with `diana_newton_fn f(x, &dfx, ctx)` returning `f(x)` and writing `f'(x)`; `*dfx` is reset to
   0 before each call so a callback that never writes it fails cleanly. Unverified, like
@@ -36,9 +39,11 @@ All notable changes to this project are documented here. The format follows
   max_iter=100)` for a callable returning `(f(x), f'(x))` (module `diana._newton`). `tol` is
   required because Newton's method has no parameter-free stopping rule: with `tol = 0` the
   iteration near a simple root commonly ends in a two-cycle of adjacent doubles until
-  `max_iter`. A non-finite `f(x)` or `f'(x)`, a zero `f'(x)`, and an overflowing correction or
-  iterate raise `ValueError` with a message naming which; `MaxIterError` carries the iterate as
-  `estimate` and `|dx|` as `width`. `test/python/test_newton.py` covers the binding.
+  `max_iter`. A zero `f'(x)` raises the new `diana.SingularError` (a `ValueError`, from
+  `DIANA_ERR_SINGULAR`; also `diana.ERR_SINGULAR`); a non-finite `f(x)` or `f'(x)` and an
+  overflowing correction or iterate raise `ValueError` with a message naming which;
+  `MaxIterError` carries the iterate as `estimate` and `|dx|` as `width`.
+  `test/python/test_newton.py` covers the binding.
 
 #### Verification
 
