@@ -42,8 +42,10 @@ a job reads, extend the matching list.
 - `test_install` runs the C suite and the installed consumer twice: once with
   `CMAKE_INSTALL_INCLUDEDIR=include/custom`, once with `BUILD_SHARED_LIBS=ON`, so the exported
   include path and the versioned shared install are both covered. The release job requires it.
-- `test_python` runs the Python suite and package metadata checks, then `script/check_wheel.py`
-  to check both static and shared installed wheels.
+- `test_python` runs the Python suite, the `doc/api/` example check in `test/doc/` (it also syncs
+  the `lint` group for the pinned clang-format, and its path list includes `doc/api/` and
+  `.clang-format`), and package metadata checks, then `script/check_wheel.py` to check both static
+  and shared installed wheels.
 
 ## Report
 
