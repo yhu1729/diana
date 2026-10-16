@@ -32,6 +32,16 @@ All notable changes to this project are documented here. The format follows
   without `ccomp`. On AArch64 macOS, Apple clang 21, GCC 16.2 and LLVM clang 23.1 match CompCert
   3.17 bitwise. ctest runs the driver as the `compiler` test, without the comparison.
 
+### Changed
+
+- The documentation is split by topic and indexed by `doc/README.md`: `doc/api/` (an overview and
+  one page per method, each with its C functions, callback wrapper and Python functions),
+  `doc/development/` (build, format and lint, Python binding, local workflow, CI), `doc/test/` (the
+  test suite and the expected values per method), and `doc/verification/` (trust statement, spec
+  gate, Frama-C and Flocq boundary, libm-free helpers, local verification, compiler comparison).
+  The generated theorem report moves from the end of `doc/verification.md` to
+  `doc/verification/report.md`, which `script/check_spec.py` now rewrites.
+
 ## [0.2.0] - 2026-10-15
 
 Milestone M1: the composite trapezoidal and Simpson rules over tabulated samples and the explicit
