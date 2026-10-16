@@ -236,6 +236,16 @@ def test_euler_times_and_copy():
     assert list(y0) == [0.0]
 
 
+def test_euler_bytes_initial_state():
+    # bytes is a sequence of integers: copied element by element, not decoded as raw float64
+    def zero(t, y):
+        return [0.0] * len(y)
+
+    assert list(diana.euler(zero, 0.0, bytes([1, 2]), 1.0, 0)) == [1.0, 2.0]
+    assert list(diana.euler(zero, 0.0, bytearray(16), 1.0, 1)) == [0.0] * 16
+    assert list(diana.euler(zero, 0.0, array.array("f", [1.0, 2.0]), 1.0, 0)) == [1.0, 2.0]
+
+
 def test_euler_no_step():
     r = diana.euler(lambda t, y: pytest.fail("f called"), 0.0, [2.0, 3.0], 1.0, 0)
     assert type(r) is array.array
