@@ -13,5 +13,6 @@ theory/Float/Simpson.v
 theory/Float/Trapezoidal.v
 ../clight/bisection_aarch64_macos.v
 theory/VST/Bisection.v
+../clight/simpson_aarch64_macos.v
 ../clight/trapezoidal_aarch64_macos.v
 theory/VST/Trapezoidal.v
