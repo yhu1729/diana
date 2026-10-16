@@ -357,8 +357,9 @@ switch of `CONTRIBUTING.md`, and a green pipeline says nothing about it. After a
    one valid positive Frama-C expectation count for the `acsl` file of each ACSL theorem, so the WP
    loop cannot silently omit it. The fresh WP run and report check remain step 3; an expectation
    count alone is not proof evidence. As of v0.2.0 every theorem listed in `spec/` is proved, so it
-   exits 0. Note that this is a gate on the listed theorems, not a claim that every C function has a
-   VST proof: `diana_bisection_init` and `diana_bisection_step` are deliberately not listed yet.
+   exits 0. Note that this is a gate on the listed theorems, not a claim beyond them: the callback
+   wrappers in `src/wrapper/` have no proof, and the VST funspecs leave the NULL and other
+   argument-error paths to Frama-C.
 
 `clightgen` output depends on the target CompCert was configured for (the `Info` module records
 the architecture and ABI, and the builtin list differs between AArch64 and x86-64), so each AST is
