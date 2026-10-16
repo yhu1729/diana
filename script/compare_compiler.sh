@@ -45,7 +45,12 @@ describe() {
         name=$(printf '%s\n' "$1" | sed 's/^[^(]*(\(.*\)) [^ ]*$/\1/')
         case "$name" in
         *[Gg][Cc][Cc]*) ;;
-        *) name="GCC $name" ;;
+        *" "*) name=$(printf '%s\n' "$name" | sed 's/ / GCC /') ;;
+        *) name="$name GCC" ;;
+        esac
+        case "$name" in
+        *[0-9]*) ;;
+        *) name="$name ${1##* }" ;;
         esac
         ;;
     *)
