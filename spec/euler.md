@@ -10,6 +10,16 @@ hypothesis:
   - "H2: F is L-Lipschitz in y in the max norm for t ∈ [t₀, T], with L > 0 (an L-Lipschitz F is L′-Lipschitz for every L′ > L, so this loses nothing)"
   - "H3 (float layers): y_i, f_i and h are arbitrary binary64 values supplied by the caller"
 theorem:
+  - id: EULER-A1
+    layer: A
+    informal: "local truncation: under H1 on [t, t + h] with h ≥ 0, ‖Y(t + h) − Y(t) − h·F(t, Y(t))‖ ≤ M₂·h²/2"
+    lean: Diana.Real.Euler.local_error
+    rocq: Diana.Real.Euler.local_error
+  - id: EULER-A2
+    layer: A
+    informal: "global error: under H1 and H2 on [t₀, t₀ + N·h] with h > 0, the iterates y₀ = Y(t₀), yₖ₊₁ = yₖ + h·F(t₀ + k·h, yₖ) satisfy ‖yₖ − Y(t₀ + k·h)‖ ≤ (M₂·h/(2L))·(e^{L·k·h} − 1) for every k ≤ N"
+    lean: Diana.Real.Euler.global_error
+    rocq: Diana.Real.Euler.global_error
   - id: EULER-C1
     layer: C
     informal: >
@@ -39,6 +49,18 @@ buffer, as the other kernels leave their outputs untouched. A NaN or infinite `y
 
 ## Proof sketch
 
+- **A1**: with `D(s) = F(s, Y(s)) − F(t, Y(t))` and `G(s) = Y(s) − Y(t) − (s − t)·F(t, Y(t))`,
+  `G′ = D` and `D′ = Y″`, both zero at `t`. The mean-value bound against `M₂·(s − t)` gives
+  `‖D(s)‖ ≤ M₂·(s − t)`, and against `M₂·(s − t)²/2` gives the result at `s = t + h`. Lean applies
+  Mathlib's `image_norm_le_of_norm_deriv_right_le_deriv_boundary` in any normed space; Rocq works
+  per component (`taylor_first`, two applications of `bound_of_derive` from
+  `Diana.Real.Quadrature`) and lifts with `vnorm_le`.
+- **A2**: the one-step lemma `one_step_error` of `Diana.Real.OneStep`: the error `eₖ = yₖ − Y(tₖ)`
+  satisfies `eₖ₊₁ = eₖ + h·(F(tₖ, yₖ) − F(tₖ, Y(tₖ))) − τₖ` with `τₖ` the local truncation, so
+  `‖eₖ₊₁‖ ≤ (1 + hL)·‖eₖ‖ + τ` (`step_bound`), and `gronwall_pow` with `e₀ = 0` gives
+  `‖eₖ‖ ≤ τ·((1 + hL)ᵏ − 1)/(hL) ≤ (τ/(hL))·(e^{khL} − 1)` (`pow_le_exp`, from `1 + x ≤ eˣ`).
+  A1 supplies `τ = M₂·h²/2` on every subinterval `[tₖ, tₖ + h]`, so `τ/(hL) = M₂·h/(2L)`. The
+  lemma takes any increment function, so RK4 reuses it.
 - **C1**: the `/*@ ... */` annotations in `src/euler.c`. Every early return happens before the
   second loop, and the only write is `y_out[i]` in that loop, so `assigns y_out[0 .. d − 1]` and
   the error post-condition follow from the control flow; the loop invariants are only the index
@@ -56,16 +78,22 @@ in ACSL" in `spec/trapezoidal.md`). Asserting it would need an assumed helper co
 `bisection_mid` has. Instead the VST theorem C2, which relates the C to the Flocq model, gives
 finiteness and the exact values together.
 
+## Model correspondence
+
+- **Layer A** (`verification/lean/Diana/Real/Euler.lean`, `verification/rocq/theory/Real/Euler.v`):
+  the iterate is `iterate F t₀ h y₀ k` of `Diana.Real.OneStep` (`euler` in Rocq), the kernel's
+  `y_out = y + h·f` with `f = F(t₀ + k·h, y)` evaluated exactly. Lean states both theorems for
+  any real normed space `E`, which includes `Fin d → ℝ` with its sup norm; Rocq represents a
+  vector as `nat → R` over the indices `i < d` with `vnorm d x = maxᵢ |x i|`
+  (`Diana.Real.Vector`), the same norm. The derivatives are componentwise in Rocq and Fréchet in
+  Lean, which agree on `Fin d → ℝ`. Rocq takes `0 ≤ M₂` as a hypothesis, since for `d = 0` the
+  bound on `Y″` says nothing; Lean derives it from the bound at `t₀`.
+
 ## Planned theorems
 
 A theorem is listed in the front matter together with its proof, because the strict spec gate fails
 on a listed theorem that is not proved:
 
-- **A1** (Lean, Rocq): local truncation, `‖Y(t + h) − Y(t) − h·F(t, Y(t))‖ ≤ M₂·h²/2` under H1.
-- **A2** (Lean, Rocq): global error of `yₖ₊₁ = yₖ + h·F(tₖ, yₖ)`, `y₀ = Y(t₀)`, `tₖ = t₀ + kh ≤ T`:
-  `‖yₖ − Y(tₖ)‖ ≤ (M₂·h/(2L))·(e^{L(tₖ−t₀)} − 1)` under H1 and H2, from a discrete Grönwall
-  lemma for one-step methods shared with RK4. Rocq vectors are `nat → R` with the max norm; Lean
-  states the theorems for any normed space.
 - **B1** (Flocq): a finite component certifies that `y_i`, `f_i` and `h` are finite and that no
   operation overflowed.
 - **B2** (Flocq): per component, `|r_i − (y_i + h·f_i)| ≤ u·|y_i + h·f_i| + (1 + u)·(u·|h·f_i| + η)`.
@@ -76,4 +104,6 @@ on a listed theorem that is not proved:
 
 | ID | Lean | Rocq | Frama-C |
 |---|---|---|---|
+| EULER-A1 | proved | proved | – |
+| EULER-A2 | proved | proved | – |
 | EULER-C1 | – | – | 49/49 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
