@@ -33,7 +33,8 @@ theorem:
   - id: SIMPSON-B2
     layer: B
     informal: >
-      forward error: if the binary64 model returns a finite r and (p + 5)·u < 1, then
+      forward error: if the binary64 model returns a finite r, the even list is no longer than the
+      odd one (as the kernel's are) and (p + 5)·u < 1, then
       |r − h·S′/3| ≤ γₚ₊₅·|h|·A/3 + (1 + u)·η/3 + η, with S′ = y₀ + yₙ₋₁ + 4·Σ y₂ₖ₊₁ + 2·Σ y₂ₖ the
       exact weighted sum, A = |y₀ + yₙ₋₁| + 4·Σ|y₂ₖ₊₁| + 2·Σ|y₂ₖ|, γₖ = k·u/(1 − k·u), u = 2⁻⁵³ and
       η = 2⁻¹⁰⁷⁵ (underflow in the product with h and in the division by 3).
