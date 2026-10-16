@@ -8,6 +8,12 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Python binding `diana.simpson(y, h)` (driver `diana._simpson`), with the buffer handling of
+  `diana.trapezoidal`: it raises `TypeError` for another element type, and `ValueError` for another
+  layout, fewer than three samples, an even number of samples, or a non-finite result.
+  `test/python/test_simpson.py` checks the buffer handling, bitwise agreement with a sequential
+  binary64 evaluation (Hypothesis), the SIMPSON-B2 rounding bound against exact rational
+  arithmetic, and fourth-order convergence against mpmath.
 - VST proves SIMPSON-C2 (`Diana.VST.Simpson.body_diana_simpson`) against the committed AArch64
   macOS Clight AST `verification/clight/simpson_aarch64_macos.v`: for non-NULL `y` with an odd
   `n >= 3`, `diana_simpson` returns `DIANA_OK` and writes the Flocq model value exactly when it is
@@ -84,6 +90,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The buffer checks of the array kernels' Python bindings are one helper,
+  `diana_py_get_samples` in `python/ext/convert.c`, with the same checks, order and messages that
+  `diana.trapezoidal` had.
 - The reusable parts of the trapezoidal proofs are separate modules, with the theorem statements
   unchanged: `Diana.Real.Quadrature` in Lean and Rocq (the mean-value bound against a boundary
   function, the clamped extension used for the fundamental theorem of calculus, and the sum of
