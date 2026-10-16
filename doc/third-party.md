@@ -14,7 +14,7 @@ shipped, so the conditions are met; they still have to be stated.
 
 | Tool | Condition | How Diana complies |
 |---|---|---|
-| CompCert 3.18 | INRIA Non-Commercial License Agreement: free for research, teaching, personal and evaluation use only | Used only to generate and check the Clight AST in a local opam switch. No CI image and no release artifact contains CompCert, and `ccomp` is never shipped (`doc/verification.md`). |
+| CompCert 3.18 | INRIA Non-Commercial License Agreement: free for research, teaching, personal and evaluation use only | Used only to generate and check the Clight AST in a local opam switch. No CI image and no release artifact contains CompCert, and `ccomp` is never shipped ([trust statement](verification/trust.md)). |
 | Alt-Ergo 2.6.4 | dual: `LicenseRef-OCamlpro-Non-Commercial` and Apache-2.0 | Used only as the local/CI proof oracle for Frama-C WP. Not shipped. |
 
 The `verification/clight/<kernel>_<target>.v` files (today `bisection_aarch64_macos.v`,
@@ -57,7 +57,7 @@ Mathlib's pinned transitive dependencies, all Apache-2.0 except `Cli` (MIT):
 | uv | — | Apache-2.0 or MIT |
 | CMake | ≥ 3.25 | BSD-3-Clause |
 | clang-format | 23.1.3 (uv `lint` group) | Apache-2.0 with LLVM exception |
-| clang-tidy | LLVM, optional (`doc/development.md`) | Apache-2.0 with LLVM exception |
+| clang-tidy | LLVM, optional ([format and lint](development/style.md)) | Apache-2.0 with LLVM exception |
 | ruff | `pyproject.toml` | MIT |
 | pytest | test group only | MIT |
 | NumPy | test group only | BSD-3-Clause (with 0BSD, MIT, Zlib and other terms for bundled code) |
