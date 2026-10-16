@@ -356,7 +356,7 @@ switch of `CONTRIBUTING.md`, and a green pipeline says nothing about it. After a
    proved (`missing`), not only on a disallowed axiom. The full strict gate also requires exactly
    one valid positive Frama-C expectation count for the `acsl` file of each ACSL theorem, so the WP
    loop cannot silently omit it. The fresh WP run and report check remain step 3; an expectation
-   count alone is not proof evidence. As of v0.1.0 every theorem listed in `spec/` is proved, so it
+   count alone is not proof evidence. As of v0.2.0 every theorem listed in `spec/` is proved, so it
    exits 0. Note that this is a gate on the listed theorems, not a claim that every C function has a
    VST proof: `diana_bisection_init` and `diana_bisection_step` are deliberately not listed yet.
 
