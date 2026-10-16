@@ -103,15 +103,26 @@ def test_tol_required():
     [
         (lambda x: (math.nan, 1.0), 0.0, "must be finite"),
         (lambda x: (1.0, math.inf), 0.0, "must be finite"),
-        (lambda x: (1.0, 0.0), 0.0, "is zero"),
-        (lambda x: (-1.0, -0.0), 0.0, "is zero"),
         (lambda x: (sys.float_info.max, 0.5), 0.0, "step is not finite"),
+        (lambda x: (1.0, sys.float_info.min * sys.float_info.epsilon), 0.0, "step is not finite"),
         (lambda x: (sys.float_info.max, 1.0), -sys.float_info.max, "step is not finite"),
     ],
 )
 def test_step_error(f, x0, match):
     with pytest.raises(ValueError, match=match):
         diana.newton(f, x0, 0.0)
+
+
+@pytest.mark.parametrize("dfx", [0.0, -0.0])
+def test_zero_derivative(dfx):
+    with pytest.raises(diana.SingularError, match="f'\\(x\\) is zero") as info:
+        diana.newton(lambda x: (1.0, dfx), 0.0, 0.0)
+    assert isinstance(info.value, ValueError)
+    s = diana.Newton(1.0, 0.0)
+    with pytest.raises(diana.SingularError):
+        s.step(2.0, dfx)
+    assert (s.x, s.dx, s.iter, s.status) == (1.0, 0.0, 0, diana.CONTINUE)
+    assert s.step(0.0, dfx) == diana.OK
 
 
 def test_init_error():

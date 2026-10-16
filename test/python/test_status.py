@@ -35,8 +35,11 @@ def test_status_str():
 def test_status_value():
     assert (diana.OK, diana.CONTINUE) == (0, 1)
     assert (diana.ERR_ARG, diana.ERR_BRACKET, diana.ERR_MAXITER) == (-1, -2, -3)
+    assert diana.ERR_SINGULAR == -4
+    assert diana.status_str(diana.ERR_SINGULAR) == "zero derivative or pivot"
 
 
 def test_exception_hierarchy():
     assert issubclass(diana.BracketError, ValueError)
     assert issubclass(diana.MaxIterError, RuntimeError)
+    assert issubclass(diana.SingularError, ValueError)
