@@ -126,7 +126,8 @@ and returns `DIANA_OK` exactly when it is finite, leaving `*result` unchanged ot
 ## Explicit Euler step (`diana/euler.h`)
 
 One step of the explicit Euler method on a vector of dimension `d`; the caller evaluates
-`f = F(t, y)` and loops over the steps. There is no callback wrapper or Python binding yet.
+`f = F(t, y)` and loops over the steps, or lets `diana_euler` (below) do it. There is no Python
+binding yet.
 
 - `diana_euler_step(y, f, d, h, y_out)` writes `y_out[i] = y[i] + h * f[i]` for
   `i = 0, ..., d-1`, the product rounded before the sum (no fused multiply-add). `y_out[0 .. d-1]`
@@ -157,6 +158,14 @@ VST nor Frama-C); the callback is a trust boundary.
   `0.5 * (a + b)`; on any other status it is not written. `*iter` (optional) receives the number of
   steps on every return (0 when the arguments or the bracket are rejected). The callback result
   must be finite.
+- `diana_euler(fn, ctx, t0, h, nstep, y, d, work, done)` takes `nstep` explicit Euler steps of size
+  `h` from `y(t0) = y[0 .. d-1]`, in place, with `fn` of type `diana_ode_fn`: `fn(t, y, dy, d, ctx)`
+  must write `F(t, y)` to `dy[0 .. d-1]`. Step `k` evaluates `fn` at `t0 + k * h`, computed from `k`
+  rather than accumulated, then calls `diana_euler_step`. `work` holds `2 * d` doubles and must not
+  overlap `y`. It returns `DIANA_ERR_ARG` for a NULL `fn`, `y` or `work`, for `d == 0`, and when a
+  step fails (a non-finite derivative or result); `y` then holds the state after the last
+  successful step. `*done` (optional) receives the number of completed steps on every return
+  (0 when the arguments are rejected). `nstep == 0` leaves `y` unchanged and returns `DIANA_OK`.
 
 # Python API
 
