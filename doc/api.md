@@ -142,7 +142,9 @@ norm, `k` exact Euler steps of size `h` from `y(t₀)` are within `(M₂·h/(2L)
 `y(t₀ + k·h)` (EULER-A2, proved in Lean and Rocq; one step is within `M₂·h²/2`, EULER-A1).
 Each computed component is within `u·|y[i] + h·f[i]| + (1 + u)·(u·|h·f[i]| + η)` of the exact
 `y[i] + h·f[i]` whenever it is finite, with `u = 2⁻⁵³` and `η = 2⁻¹⁰⁷⁵` (EULER-B2, Flocq).
-Finiteness on `DIANA_OK` and the VST proof are not done yet; `spec/euler.md` describes them.
+VST proves that the C writes exactly these binary64 values and returns `DIANA_OK` exactly when all
+of them are finite, leaving `y_out` unchanged otherwise (EULER-C2, for non-NULL, disjoint `y`, `f`
+and `y_out` with `d >= 1`).
 
 ## Callback wrapper (`diana/wrapper.h`)
 
