@@ -7,6 +7,7 @@ endfunction()
 
 diana_add_test(status)
 diana_add_test(bisection)
+diana_add_test(compiler)
 diana_add_test(euler)
 diana_add_test(simpson)
 diana_add_test(trapezoidal)
