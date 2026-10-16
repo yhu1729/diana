@@ -18,7 +18,7 @@ usage: script/dev.sh config [cmake option...]
           gcc/clang builds bitwise, build the Lean and Rocq proofs, run Frama-C
           WP, and run the spec gate in strict mode, which fails on a theorem that
           is listed in spec/ but not proved (rewrites the report in
-          doc/verification.md)
+          doc/verification/report.md)
 
 environment:
   DIANA_BUILD_DIR      CMake build directory (default build)
@@ -108,7 +108,7 @@ tidy_bin() {
 run_tidy() {
     tidy=$(tidy_bin) || {
         echo "clang-tidy: not found; check skipped" \
-            "(set DIANA_CLANG_TIDY or install LLVM, see doc/development.md)"
+            "(set DIANA_CLANG_TIDY or install LLVM, see doc/development/style.md)"
         return 0
     }
     [ -f "$build_dir/compile_commands.json" ] ||
