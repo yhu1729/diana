@@ -15,8 +15,8 @@ static PyObject *mod_simpson(PyObject *Py_UNUSED(self), PyObject *args,
   if (!PyArg_ParseTupleAndKeywords(args, kwds, "Od:simpson", kwlist, &y, &h)) {
     return NULL;
   }
-  if (diana_py_get_samples(y, &view, 3, "y must have at least three samples") <
-      0) {
+  if (diana_py_get_samples(y, &view, "y", 0, 3,
+                           "y must have at least three samples") < 0) {
     return NULL;
   }
   if (view.shape[0] % 2 == 0) {

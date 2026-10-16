@@ -32,24 +32,26 @@ static int is_native_double(const char *format) {
   return format[0] == 'd' && format[1] == '\0';
 }
 
-int diana_py_get_samples(PyObject *obj, Py_buffer *view, Py_ssize_t min_count,
+int diana_py_get_samples(PyObject *obj, Py_buffer *view, const char *name,
+                         int writable, Py_ssize_t min_count,
                          const char *count_message) {
   const char *format;
 
-  if (PyObject_GetBuffer(obj, view, PyBUF_RECORDS_RO) < 0) {
+  if (PyObject_GetBuffer(obj, view,
+                         writable ? PyBUF_RECORDS : PyBUF_RECORDS_RO) < 0) {
     return -1;
   }
   format = view->format != NULL ? view->format : "B";
   if (!is_native_double(format) ||
       view->itemsize != (Py_ssize_t)sizeof(double)) {
     PyErr_Format(PyExc_TypeError,
-                 "y must be a buffer of native float64 (format 'd'), not "
+                 "%s must be a buffer of native float64 (format 'd'), not "
                  "format '%s'",
-                 format);
+                 name, format);
     goto fail;
   }
   if (view->ndim != 1) {
-    PyErr_Format(PyExc_ValueError, "y must be one-dimensional, not %d-D",
+    PyErr_Format(PyExc_ValueError, "%s must be one-dimensional, not %d-D", name,
                  view->ndim);
     goto fail;
   }
@@ -58,11 +60,11 @@ int diana_py_get_samples(PyObject *obj, Py_buffer *view, Py_ssize_t min_count,
     goto fail;
   }
   if (!PyBuffer_IsContiguous(view, 'C')) {
-    PyErr_SetString(PyExc_ValueError, "y must be C-contiguous");
+    PyErr_Format(PyExc_ValueError, "%s must be C-contiguous", name);
     goto fail;
   }
   if ((uintptr_t)view->buf % _Alignof(double) != 0u) {
-    PyErr_SetString(PyExc_ValueError, "y is not aligned for float64");
+    PyErr_Format(PyExc_ValueError, "%s is not aligned for float64", name);
     goto fail;
   }
   return 0;
