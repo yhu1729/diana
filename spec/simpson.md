@@ -11,6 +11,16 @@ hypothesis:
   - "H2: a ≤ b, m = 2p panels with p ≥ 1, h = (b − a)/m, yᵢ = f(a + i·h) for i = 0, …, m (n = m + 1 samples)"
   - "H3 (float layers): yᵢ and h are arbitrary binary64 values supplied by the caller; n·u < 1 with u = 2⁻⁵³"
 theorem:
+  - id: SIMPSON-A1
+    layer: A
+    informal: "local error: under H1 on [x, x + 2h] with h ≥ 0, |∫ₓ^{x+2h} f − (h/3)·(f(x) + 4·f(x + h) + f(x + 2h))| ≤ M₄·h⁵/90"
+    lean: Diana.Real.Simpson.local_error
+    rocq: Diana.Real.Simpson.local_error
+  - id: SIMPSON-A2
+    layer: A
+    informal: "composite error: under H1 and H2, |∫ₐᵇ f − S| ≤ (b − a)·h⁴·M₄/180"
+    lean: Diana.Real.Simpson.composite_error
+    rocq: Diana.Real.Simpson.composite_error
   - id: SIMPSON-C1
     layer: C
     informal: >
@@ -42,6 +52,21 @@ range limit follows from the order: `h·s` can overflow when `h·S/3` would not 
 
 ## Proof sketch
 
+- **A1**: about the midpoint `c = x + h`, let
+  `E(s) = ∫_{c−s}^{c+s} f − (s/3)·(f(c − s) + 4·f(c) + f(c + s))` for `0 ≤ s ≤ h`. Then
+  `E′(s) = (2/3)(f(c+s) + f(c−s)) − (4/3)f(c) − (s/3)(f′(c+s) − f′(c−s))`,
+  `E″(s) = (1/3)(f′(c+s) − f′(c−s)) − (s/3)(f″(c+s) + f″(c−s))` and
+  `E‴(s) = −(s/3)(f‴(c+s) − f‴(c−s))`, all four zero at `s = 0`. The mean-value bound
+  (`bound_of_deriv` in Lean, `bound_of_derive` in Rocq, both in `Diana.Real.Quadrature`) gives
+  `|f‴(c+s) − f‴(c−s)| ≤ 2M₄s`, so `|E‴| ≤ (2/3)M₄s²`, and three more applications against the
+  boundary functions `(2/9)M₄s³`, `M₄s⁴/18` and `M₄s⁵/90` give the bound at `s = h`. As for the
+  trapezoidal rule, the integral is taken of the clamped extension of `f` to ℝ, so f⁗ needs only to
+  exist and be bounded on `[x, x + 2h]` (`symmetric_error` is the statement about the midpoint;
+  `local_error` substitutes `c = x + h`). For `f = x⁴` the error is `24h⁵/90`, so the constant is
+  sharp.
+- **A2**: `panel_error` of `Diana.Real.Quadrature` with `p` double panels of width `2h`, A1 on each,
+  and `sum_triple`, which regroups the panel rules into the weights `1, 4, 2, …, 2, 4, 1`; then
+  `p·M₄h⁵/90 = (b − a)·h⁴·M₄/180` because `2p·h = b − a`.
 - **C1**: the `/*@ ... */` annotations in `src/simpson.c`. With `p = n / 2`, the assertion
   `n == 2 * p + 1` (from `n` odd) gives the bounds `2k + 1 ≤ n − 2` and `2k ≤ n − 3` for the two
   loops, whose invariants are only `0 <= k <= p` and `1 <= k <= p`. As for the trapezoidal rule, the
@@ -53,12 +78,6 @@ range limit follows from the order: `h·s` can overflow when `h·S/3` would not 
 A theorem is listed in the front matter together with its proof, because the strict spec gate fails
 on a listed theorem that is not proved:
 
-- **A1** (Lean, Rocq): on `[x, x + 2h]` with `h ≥ 0`,
-  `|∫ₓ^{x+2h} f − (h/3)·(f(x) + 4·f(x + h) + f(x + 2h))| ≤ M₄·h⁵/90`, by four applications of the
-  mean-value bound of `Diana.Real.Quadrature` to the error about the midpoint and its first three
-  derivatives, all zero at the midpoint.
-- **A2** (Lean, Rocq): under H1 and H2, `|∫ₐᵇ f − S| ≤ (b − a)·h⁴·M₄/180`, by `panel_error` with
-  `p` double panels of width `2h`.
 - **B1** (Flocq): a finite result certifies that every sample, `h` and every intermediate is finite.
 - **B2** (Flocq): forward error relative to `A = |y₀ + yₙ₋₁| + 4·Σ|y₂ₖ₊₁| + 2·Σ|y₂ₖ|`, from the
   shared summation bound of `Diana.Float.Sum`.
@@ -69,4 +88,6 @@ on a listed theorem that is not proved:
 
 | ID | Lean | Rocq | Frama-C |
 |---|---|---|---|
+| SIMPSON-A1 | proved | proved | – |
+| SIMPSON-A2 | proved | proved | – |
 | SIMPSON-C1 | – | – | 58/58 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
