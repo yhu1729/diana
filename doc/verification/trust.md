@@ -61,8 +61,8 @@ driver prints every status and every double as its bit pattern, so the sign of z
 976 cases: every argument error, NaN and ±∞ inputs, `h = ±0`, subnormals, overflow in each
 operation, the operation-order cases of the ctest suites, the 2098-step bisection worst case step
 by step, and seeded random inputs ([compiler comparison](compiler.md)). On AArch64 macOS,
-Apple clang 21, Homebrew GCC 13.4 and 16.2, and Homebrew LLVM clang 23.1 match CompCert 3.17 on
-all of it.
+Apple clang 21, Homebrew GCC 13.4, 14.4, 15.3 and 16.2, and Homebrew LLVM clang 20.1, 21.1, 22.1
+and 23.1 match CompCert 3.17 on all of it.
 This is evidence on a finite corpus, not a proof, and it only covers the platform it runs on: no
 x86-64 build has been compared yet. CompCert is not in CI, so the test runs locally, as a step of
 `script/dev.sh verify`.
