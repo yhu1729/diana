@@ -50,8 +50,8 @@ a job reads, extend the matching list.
   on any selected path and scans the whole tree, so a plural directory added in a doc-only push is
   caught by the next pipeline that runs it.
 - `style_python` runs the structural spec gate (`--no-report`). It does not regenerate the report:
-  without `--run` every prover status would read `planned`, and no CI job runs both Lean and Rocq,
-  so the report is regenerated locally with `--run` and committed (see
+  the gate rewrites it only when both provers run, and no CI job runs both Lean and Rocq, so the
+  report is regenerated locally with `--run` and committed (see
   [local verification](../verification/local.md)).
 
 ## Test
@@ -75,7 +75,8 @@ a job reads, extend the matching list.
 
 ## Verify
 
-- `verify_frama_c`: 162/162 goals are proved locally with Frama-C 33.0 and Alt-Ergo 2.6.4; the CI
+- `verify_frama_c`: every goal of every row of `verification/frama-c/expectation.txt` (310 across
+  the four kernels) is proved locally with Frama-C 33.0 and Alt-Ergo 2.6.4; the CI
   image is 32.1 until a 33 tag exists. If 32.1 behaves differently, pin the image forward rather
   than re-adding `allow_failure`.
 - `verify_lean` runs `script/check_spec.py --run --strict --prover lean --no-report` with the
