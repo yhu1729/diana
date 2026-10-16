@@ -16,7 +16,7 @@ def _samples(v: Buffer | Iterable[float]) -> Buffer:
 
 
 def _real(x: object, name: str) -> float:
-    if not hasattr(type(x), "__float__"):
+    if not (hasattr(type(x), "__float__") or hasattr(type(x), "__index__")):
         raise TypeError(f"{name} must be a real number, not {type(x).__name__}")
     return float(x)
 
