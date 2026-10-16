@@ -48,7 +48,9 @@ theorem report: `doc/verification/report.md`. API: `doc/api/`. Build and CI rati
   (LLVM style, `.clang-format`; use the version pinned in the uv `lint` group, CI `style_c` checks it).
 - **Python binding:** C extension sources in `python/ext/` (`module.c` creates `diana._diana` and calls one
   `diana_py_<kernel>_exec` per file; shared helpers in `module.h`); pure-Python package in `python/src/diana/`
-  with one private driver module per kernel (`_bisection.py`) re-exported by `__init__.py`.
+  with one private driver module per kernel (`_bisection.py`) re-exported by `__init__.py`, and
+  `_convert.py` (`real`, the scalar check the drivers share: a string is rejected as the C `d`
+  converter rejects it).
   `Bisection` starts with status `ERR_ARG` until initialization succeeds; `step` and `result` reject
   uninitialized objects, and a failed reinitialization preserves the previous state.
   An array kernel reads a buffer in place (`PyBUF_RECORDS_RO`; native float64, one-dimensional,

@@ -7,18 +7,13 @@ from array import array
 from collections.abc import Buffer, Callable, Iterable
 
 from diana import _diana
+from diana._convert import real
 
 __all__ = ["euler", "euler_step"]
 
 
 def _samples(v: Buffer | Iterable[float]) -> Buffer:
     return v if isinstance(v, Buffer) else array("d", v)
-
-
-def _real(x: object, name: str) -> float:
-    if not (hasattr(type(x), "__float__") or hasattr(type(x), "__index__")):
-        raise TypeError(f"{name} must be a real number, not {type(x).__name__}")
-    return float(x)
 
 
 def euler_step(y: Buffer | Iterable[float], f: Buffer | Iterable[float], h: float) -> array:
@@ -63,8 +58,8 @@ def euler(
     nstep = operator.index(nstep)
     if nstep < 0:
         raise ValueError("nstep must be non-negative")
-    t0 = _real(t0, "t0")
-    h = _real(h, "h")
+    t0 = real(t0, "t0")
+    h = real(h, "h")
     y = array("d", y0)
     if len(y) == 0:
         raise ValueError("y0 must have at least one sample")
