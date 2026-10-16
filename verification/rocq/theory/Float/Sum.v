@@ -152,15 +152,16 @@ Proof.
 Qed.
 
 Lemma fold_error (m : list b64) :
-  forall (s : b64) (X Rb : R) (j : nat),
+  forall (s : b64) (X Rb e0 : R) (j : nat),
   fin (fold_left fadd m s) ->
-  Rabs (r s - X) <= gamma (S j) * Rb + (1 + gamma j) * eta ->
+  0 <= e0 ->
+  Rabs (r s - X) <= gamma (S j) * Rb + (1 + gamma j) * e0 ->
   Rabs X <= Rb ->
   INR (S j + length m) * u < 1 ->
   Rabs (r (fold_left fadd m s) - (X + rsum m))
-    <= gamma (S j + length m) * (Rb + rabs_sum m) + (1 + gamma (j + length m)) * eta.
+    <= gamma (S j + length m) * (Rb + rabs_sum m) + (1 + gamma (j + length m)) * e0.
 Proof.
-  induction m as [|a m IH]; intros s X Rb j Hfin He HX Hn; simpl in Hfin |- *.
+  induction m as [|a m IH]; intros s X Rb e0 j Hfin He0 He HX Hn; simpl in Hfin |- *.
   - rewrite !Nat.add_0_r, !Rplus_0_r. exact He.
   - assert (Hsa : fin (fadd s a)) by exact (proj1 (fold_finite_inv _ _ Hfin)).
     destruct (fadd_finite_inv _ _ Hsa) as [Hs Ha].
@@ -172,7 +173,7 @@ Proof.
     replace (S j + S (length m))%nat with (S (S j) + length m)%nat by lia.
     replace (j + S (length m))%nat with (S j + length m)%nat by lia.
     replace (S j + length (a :: m))%nat with (S (S j) + length m)%nat in Hn by (simpl; lia).
-    apply IH; [exact Hfin | | | exact Hn].
+    apply IH; [exact Hfin | exact He0 | | | exact Hn].
     + rewrite Hv, Hrd.
       assert (Hn1 : INR (S (S j)) * u < 1).
       { eapply Rle_lt_trans; [| exact Hn]. apply Rmult_le_compat_r; [left; apply u_pos |].
@@ -182,10 +183,10 @@ Proof.
         apply le_INR. lia. }
       pose proof (gamma_step _ Hn1) as Hg1. pose proof (gamma_step _ Hn0) as Hg0.
       pose proof (gamma_nonneg _ Hn0) as Hg1p.
-      pose proof u_pos as Hu. pose proof eta_pos as Heta.
+      pose proof u_pos as Hu.
       pose proof (Rabs_pos (r a)) as Hap.
       set (e := r s - X) in *.
-      set (E := gamma (S j) * Rb + (1 + gamma j) * eta) in *.
+      set (E := gamma (S j) * Rb + (1 + gamma j) * e0) in *.
       assert (HRb : 0 <= Rb) by (eapply Rle_trans; [apply Rabs_pos | exact HX]).
       replace ((r s + r a) * (1 + d) - (X + r a)) with (e + d * (e + X + r a)) by (unfold e; ring).
       assert (Hdterm : Rabs (d * (e + X + r a)) <= u * (E + Rb + Rabs (r a))).
@@ -196,7 +197,7 @@ Proof.
       assert (H1 : (gamma (S j) * (1 + u) + u) * (Rb + Rabs (r a))
                    <= gamma (S (S j)) * (Rb + Rabs (r a)))
         by (apply Rmult_le_compat_r; lra).
-      assert (H2 : (gamma j * (1 + u) + u) * eta <= gamma (S j) * eta)
+      assert (H2 : (gamma j * (1 + u) + u) * e0 <= gamma (S j) * e0)
         by (apply Rmult_le_compat_r; lra).
       assert (H3 : 0 <= gamma (S j) * (1 + u) * Rabs (r a))
         by (apply Rmult_le_pos; [apply Rmult_le_pos; lra | exact Hap]).
@@ -210,4 +211,4 @@ Arguments fadd_finite_inv {plus_nan} x y _.
 Arguments fadd_value {plus_nan} x y _.
 Arguments fmul_value {mult_nan} x y _.
 Arguments fold_finite_inv {plus_nan} m s _.
-Arguments fold_error {plus_nan} m s X Rb j _ _ _ _.
+Arguments fold_error {plus_nan} m s X Rb e0 j _ _ _ _ _.

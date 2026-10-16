@@ -104,7 +104,8 @@ Proof.
     { apply Rmult_le_compat; [apply Rabs_pos | apply Rabs_pos | lra | exact HX0]. }
     lra. }
   assert (HnS : INR (S 0 + L) * u < 1) by (apply HnL; lia).
-  pose proof (fold_error m (start y0 yl) X0 R0 0 Hs Hbase HX0 HnS) as Hsum.
+  pose proof (fold_error m (start y0 yl) X0 R0 eta 0 Hs (Rlt_le _ _ eta_pos) Hbase HX0 HnS)
+    as Hsum.
   fold L in Hsum. simpl (S 0 + L)%nat in Hsum. simpl (0 + L)%nat in Hsum.
   set (sh := fold_left fadd m (start y0 yl)) in *.
   set (St := X0 + rsum m) in *.
