@@ -6,8 +6,10 @@ CONTINUE: Final[int]
 ERR_ARG: Final[int]
 ERR_BRACKET: Final[int]
 ERR_MAXITER: Final[int]
+ERR_SINGULAR: Final[int]
 
 class BracketError(ValueError): ...
+class SingularError(ValueError): ...
 
 class Bisection:
     a: float

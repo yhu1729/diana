@@ -12,8 +12,17 @@ from __future__ import annotations
 
 from diana import _diana
 from diana._bisection import bisection
-from diana._diana import CONTINUE, ERR_ARG, ERR_BRACKET, ERR_MAXITER, OK, Bisection, Newton
-from diana._error import BracketError, MaxIterError
+from diana._diana import (
+    CONTINUE,
+    ERR_ARG,
+    ERR_BRACKET,
+    ERR_MAXITER,
+    ERR_SINGULAR,
+    OK,
+    Bisection,
+    Newton,
+)
+from diana._error import BracketError, MaxIterError, SingularError
 from diana._euler import euler, euler_step
 from diana._newton import newton
 from diana._simpson import simpson
@@ -26,10 +35,12 @@ __all__ = [
     "ERR_ARG",
     "ERR_BRACKET",
     "ERR_MAXITER",
+    "ERR_SINGULAR",
     "Bisection",
     "BracketError",
     "MaxIterError",
     "Newton",
+    "SingularError",
     "bisection",
     "euler",
     "euler_step",

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from diana._diana import BracketError
+from diana._diana import BracketError, SingularError
 
-__all__ = ["BracketError", "MaxIterError"]
+__all__ = ["BracketError", "MaxIterError", "SingularError"]
 
 
 class MaxIterError(RuntimeError):
