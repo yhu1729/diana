@@ -178,6 +178,8 @@ Status per theorem and prover: `ok` (constant exists, axioms within the allowed 
 | bisection | BISECTION-C3 | C | – | ok | – | diana_fp_finite implements its IEEE semantics (VST, AArch64 macOS Clight AST): it returns 1 exactly when its argument is finite. |
 | bisection | BISECTION-C4 | C | – | ok | – | diana_fp_abs returns the conditional negation the C performs (VST, AArch64 macOS Clight AST); c_abs_B2R identifies it with Rabs on finite input. |
 | bisection | BISECTION-C5 | C | – | ok | – | diana_bisection_result writes the model midpoint and the rounded width (VST, AArch64 macOS Clight AST) |
+| simpson | SIMPSON-A1 | A | ok | ok | – | local error: under H1 on [x, x + 2h] with h ≥ 0, \|∫ₓ^{x+2h} f − (h/3)·(f(x) + 4·f(x + h) + f(x + 2h))\| ≤ M₄·h⁵/90 |
+| simpson | SIMPSON-A2 | A | ok | ok | – | composite error: under H1 and H2, \|∫ₐᵇ f − S\| ≤ (b − a)·h⁴·M₄/180 |
 | simpson | SIMPSON-C1 | C | – | – | ok (58/58) | ACSL contract in src/simpson.c, Frama-C WP float model with RTE: memory safety (only y[0 .. n−1] is read, only *result is written), no UB, termination of both loops, DIANA_OK only for non-NULL y and result with n ≥ 3 odd and then *result finite, and *result untouched on DIANA_ERR_ARG. No assumed contract. |
 | trapezoidal | TRAPEZOIDAL-A1 | A | ok | ok | – | local error: under H1 on [x, x + h] with h ≥ 0, \|∫ₓ^{x+h} f − h·(f(x) + f(x + h))/2\| ≤ M₂·h³/12 |
 | trapezoidal | TRAPEZOIDAL-A2 | A | ok | ok | – | composite error: under H1 and H2, \|∫ₐᵇ f − T\| ≤ (b − a)·h²·M₂/12 |
