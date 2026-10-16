@@ -3,7 +3,8 @@
 Every iterative kernel is exposed in reverse-communication form (a small state object) and,
 for convenience, as a function taking a Python callable. The callable loop runs in Python and is
 not part of the verified code. Kernels over tabulated samples, :func:`trapezoidal` and
-:func:`simpson`, take a float64 buffer or a sequence of numbers.
+:func:`simpson`, take a float64 buffer or a sequence of numbers. :func:`euler_step` takes one
+explicit Euler step and :func:`euler` loops over it with a callable.
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ from diana import _diana
 from diana._bisection import bisection
 from diana._diana import CONTINUE, ERR_ARG, ERR_BRACKET, ERR_MAXITER, OK, Bisection
 from diana._error import BracketError, MaxIterError
+from diana._euler import euler, euler_step
 from diana._simpson import simpson
 from diana._trapezoidal import trapezoidal
 
@@ -26,6 +28,8 @@ __all__ = [
     "BracketError",
     "MaxIterError",
     "bisection",
+    "euler",
+    "euler_step",
     "simpson",
     "status_str",
     "trapezoidal",
