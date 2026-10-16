@@ -214,6 +214,12 @@ Expected values in `test/c/test_euler.c`:
 - Overflow cases have finite inputs and overflow in exactly one operation, the product or the sum.
 - Two failing cases, one in the last component and one in the first, check that `y_out` keeps its
   sentinel values: the first pass rejects before the second pass writes.
+- The wrapper cases keep every iterate exact: `y' = -y` with `h = 1/2` halves the state each step,
+  the rotation `y' = (y2, -y1)` with `h = 1` stays on integers (`(1, 0)` to `(-2, -2)` in three
+  steps), and `y' = t` from `t0 = 1` with `h = 1/4` records the times `1, 1.25, 1.5, 1.75` and ends
+  at `(1 + 1.25 + 1.5 + 1.75) / 4 = 1.375`. A derivative that turns infinite on the third call
+  stops after two steps with `y` at the second state, and `y' = -y` with `h = -2` from `DBL_MAX/2`
+  overflows on the first step and leaves `y` unchanged.
 
 Expected values in `test/python/test_simpson.py`, beyond the cases it shares with the C test:
 
