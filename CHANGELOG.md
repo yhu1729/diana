@@ -6,6 +6,21 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+#### Verification
+
+- VST proves `diana_bisection_init` (BISECTION-C6, `Diana.VST.Bisection.body_diana_bisection_init`)
+  and `diana_bisection_step` (BISECTION-C7, `body_diana_bisection_step`) against the committed
+  AArch64 macOS Clight AST `verification/clight/bisection_aarch64_macos.v`, closing the last VST
+  gap in the shipped kernels. For a non-NULL state, each returns the status and writes the state of
+  a model in the C's evaluation order (`c_init`, `c_step`: every exit, `iter`, `max_iter`, the
+  tolerance and stagnation stops), and an error leaves `*s` unchanged. `c_step` writes the Flocq
+  `fstep` bracket (BISECTION-C8, `c_step_fstep`), the state `c_init` accepts satisfies the layer-B
+  invariant `Bracket` (BISECTION-C9, `c_init_bracket`), and a `DIANA_CONTINUE` step keeps
+  `Bracket` and `Next` (BISECTION-C10, `c_step_next`), so BISECTION-B2 to B4 apply to every state
+  an `init`/`step` run reaches.
+
 ## [0.2.0] - 2026-10-15
 
 Milestone M1: the composite trapezoidal and Simpson rules over tabulated samples and the explicit
