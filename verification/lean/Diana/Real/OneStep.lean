@@ -1,6 +1,11 @@
-import Mathlib.Analysis.SpecialFunctions.Exp
-import Mathlib.Analysis.Normed.Module.Basic
+module
+
+public import Mathlib.Analysis.SpecialFunctions.Exp
+public import Mathlib.Analysis.Normed.Module.Basic
+
 import Mathlib.Tactic
+
+@[expose] public section
 
 namespace Diana.Real.OneStep
 
