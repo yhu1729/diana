@@ -11,12 +11,14 @@
   is installed only under scikit-build; `cmake --install` of the C library never carries it.
 - scikit-build-core builds the CPython extension in-tree and sets `SKBUILD`, which forces
   `DIANA_BUILD_PYTHON=ON`. Static wheels carry only the extension module and the Python package.
-  With `BUILD_SHARED_LIBS=ON`, the wheel also carries an unversioned `libdiana` runtime beside the
-  extension, without headers, archives, import libraries, or CMake exports. Standalone CMake
+  With `DIANA_BUILD_SHARED_LIB=ON`, the wheel also carries an unversioned `libdiana` runtime
+  beside the extension, without headers, archives, or CMake exports. Standalone CMake
   installations retain the library's `VERSION`/`SOVERSION`. The wheel extension uses an install
   RPATH of `@loader_path` on macOS and `$ORIGIN` on Linux; the macOS library has an `@rpath` install
-  name. On Windows, shared libraries export their functions in both standalone and wheel builds;
-  the wheel DLL is beside the extension, where CPython's loader searches for dependencies.
+  name.
+- `DIANA_BUILD_SHARED_LIB` selects the library type explicitly (`add_library(diana SHARED|STATIC)`),
+  so the generic `BUILD_SHARED_LIBS` of an enclosing project does not change it. Linux and macOS
+  are the supported platforms; there is no Windows or MSVC branch.
 - `GNUInstallDirs` is loaded before configuring the target's installed include directory, so
   `CMAKE_INSTALL_INCLUDEDIR` controls both header installation and the exported include path.
 - `DIANA_WERROR` (`-Werror`) is OFF by default, so building from the sdist with a newer compiler
