@@ -135,6 +135,7 @@ doc/                  README index; api/, development/, test/, verification/ (tr
   driver `test/c/test_compiler.c` once with `ccomp` and with each gcc/clang found
   (`DIANA_COMPARE_CC` to choose) at `-O0`/`-O2`/`-O3`, and fails on any byte of difference in the
   printed bit patterns; `script/dev.sh verify` runs it and skips it without `ccomp`; local only.
+  On macOS it sets an unset `MACOSX_DEPLOYMENT_TARGET` from `sw_vers` (GCC 13 cannot build without it).
   Keep the driver's arrays static: CompCert 3.17 on AArch64 macOS misaligns `sp` in a `main`
   frame over about 500 bytes (`SIGBUS`), and inlining moves callee locals into `main`
 - Spec gate: `uv run script/check_spec.py --run --strict` (runs both provers' check files, `--prover lean|rocq` to select one and rewrites the generated report `doc/verification/report.md`; commit it, CI does not regenerate it; `--no-report` to leave it alone)
