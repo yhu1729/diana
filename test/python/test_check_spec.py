@@ -6,13 +6,18 @@ from unittest.mock import Mock
 import pytest
 
 
-@pytest.fixture
-def gate(tmp_path, monkeypatch):
+def load_module(monkeypatch, name="diana_test_check_spec"):
     path = Path(__file__).resolve().parents[2] / "script" / "check_spec.py"
-    spec = importlib.util.spec_from_file_location("diana_test_check_spec", path)
+    spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
     monkeypatch.setitem(sys.modules, spec.name, module)
     spec.loader.exec_module(module)
+    return module
+
+
+@pytest.fixture
+def gate(tmp_path, monkeypatch):
+    module = load_module(monkeypatch)
 
     spec_dir = tmp_path / "spec"
     spec_dir.mkdir()
@@ -64,6 +69,46 @@ def test_strict_accepts_acsl_coverage(gate, monkeypatch, expectation):
     assert run_gate(gate, monkeypatch, "--run", "--strict") == 0
     gate.run_prover.assert_called_once()
     gate.write_report.assert_called_once()
+
+
+@pytest.mark.parametrize("args", [(), ("--prover", "rocq"), ("--run", "--prover", "lean")])
+def test_partial_run_keeps_report(gate, monkeypatch, args):
+    gate.FRAMA_C_EXPECTATION.write_text("kernel.c 1\n")
+    assert run_gate(gate, monkeypatch, *args) == 0
+    gate.write_report.assert_not_called()
+
+
+def test_shared_constant_gets_every_result(gate, monkeypatch):
+    gate.FRAMA_C_EXPECTATION.write_text("kernel.c 1\n")
+    (gate.SPEC_DIR / "bisection.md").write_text(
+        """---
+method: bisection
+kernel: kernel.c
+theorem:
+  - id: BISECTION-A1
+    layer: A
+    informal: first
+    lean: Diana.Real.first
+    rocq: Diana.Real.first
+  - id: BISECTION-A2
+    layer: A
+    informal: second, same constant
+    lean: Diana.Real.first
+    rocq: Diana.Real.first
+---
+"""
+    )
+    fresh = load_module(monkeypatch, "diana_test_check_spec_fresh")
+    monkeypatch.setattr(fresh, "ROOT", gate.ROOT)
+    monkeypatch.setattr(fresh, "SPEC_DIR", gate.SPEC_DIR)
+    monkeypatch.setattr(fresh, "LEAN_DIR", gate.ROOT / "lean")
+    fresh.LEAN_DIR.mkdir()
+    monkeypatch.setattr(fresh.subprocess, "run", Mock(side_effect=FileNotFoundError(2, "no lake")))
+    errors = []
+    theorems = fresh.load_spec(errors)
+    assert not errors
+    fresh.run_prover(theorems, {}, ("lean",))
+    assert [t.result["lean"] for t in theorems] == ["check failed", "check failed"]
 
 
 @pytest.mark.parametrize(
