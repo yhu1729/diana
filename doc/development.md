@@ -201,6 +201,20 @@ Expected values in `test/c/test_simpson.c`:
   by its intermediates, as `spec/simpson.md` states.
 - `DBL_TRUE_MIN / 3` rounds to `+0`: underflow is a finite result, not an error.
 
+Expected values in `test/c/test_euler.c`:
+
+- Exact steps use values with few significant bits, so the product and the sum are exact; the
+  100-component case checks `y_out[i] = i/2 - 48.5`.
+- `y = -1`, `h = 1 + 2^-52`, `f = 1 - 2^-52` pins the separately rounded product:
+  `h * f = 1 - 2^-104` rounds to 1 and the result is `+0`, where a fused multiply-add would give
+  `-2^-104`.
+- `h = 0` keeps each `y[i]`, including its sign of zero (`+0 + -0 = +0`, `-0 + -0 = -0`).
+- `0.5 * DBL_TRUE_MIN` is a tie that rounds to `+0`: underflow is not an error. `DBL_MAX + 1`
+  rounds back to `DBL_MAX`, a finite result.
+- Overflow cases have finite inputs and overflow in exactly one operation, the product or the sum.
+- Two failing cases, one in the last component and one in the first, check that `y_out` keeps its
+  sentinel values: the first pass rejects before the second pass writes.
+
 Expected values in `test/python/test_simpson.py`, beyond the cases it shares with the C test:
 
 - The Hypothesis test draws odd-length lists (3 to 41 samples) and requires bitwise agreement
