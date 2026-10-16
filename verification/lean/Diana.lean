@@ -1,6 +1,8 @@
-import Diana.Real.Bisection
-import Diana.Real.Euler
-import Diana.Real.OneStep
-import Diana.Real.Quadrature
-import Diana.Real.Simpson
-import Diana.Real.Trapezoidal
+module
+
+public import Diana.Real.Bisection
+public import Diana.Real.Euler
+public import Diana.Real.OneStep
+public import Diana.Real.Quadrature
+public import Diana.Real.Simpson
+public import Diana.Real.Trapezoidal
