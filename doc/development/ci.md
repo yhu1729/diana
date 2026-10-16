@@ -85,7 +85,14 @@ a job reads, extend the matching list.
   when the Lean check fails to run, a listed Lean theorem is missing, or a theorem depends on an
   axiom outside `script/axiom_allow.yaml`. Selecting `--prover lean` excludes Rocq-only layers
   and Frama-C coverage from this gate. The job uses `LEAN_IMAGE`, a stock Debian image until the
-  project image (`ci/docker/lean.Dockerfile`) is in the registry.
+  project image (`ci/docker/lean.Dockerfile`) is in the registry, and its `before_script` works
+  unchanged on both: when `elan` is not on `PATH` (stock image) it installs the apt packages,
+  installs elan into `$CI_PROJECT_DIR/.cache/elan` (kept in the job cache) and extends `PATH`;
+  when `elan` is already on `PATH` (project image) it skips all three and uses the image's
+  toolchain and Mathlib download cache. When the image sets `DIANA_LEAN_CACHE` and the checkout
+  has no `verification/lean/.lake/packages`, it copies the image's pre-fetched packages there, so
+  `lake exe cache get` neither clones Mathlib nor downloads its oleans. The job cache keeps
+  `verification/lean/.lake/build` on both images.
 - `verify_rocq` compiles layer A on the stock MathComp image (`mathcomp/mathcomp:2.6.0-rocq-prover-9.2`,
   Rocq 9.2 with MathComp 2.6.0) after `opam install coq-coquelicot.$COQUELICOT_VERSION`, so layer A
   may use Coquelicot integrals and derivatives. The image already carries Coquelicot's only
@@ -104,4 +111,8 @@ a job reads, extend the matching list.
 
 - `ci/docker/lean.Dockerfile`: the pinned Lean toolchain with the Mathlib cache pre-fetched, so CI
   jobs do not download several GB per run. Rebuild when `verification/lean/lean-toolchain` or
-  `lake-manifest.json` changes.
+  `lake-manifest.json` changes. The image stays root, like the stock images, so a job's apt step
+  still works on it; it carries `python3` and `python3-yaml` for `script/check_spec.py`, elan in
+  `/root/.elan` (on `PATH`; `verify_lean` sets `ELAN_HOME` only when it installs elan itself),
+  the Mathlib `.ltar` downloads in `/root/.cache/mathlib`, and the resolved packages with their
+  unpacked oleans in `/opt/diana-lean/.lake/packages`, named by `DIANA_LEAN_CACHE`.
