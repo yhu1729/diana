@@ -13,8 +13,11 @@ Formally verified numerical methods in C, with a Python binding.
 - C implementation verified with **VST** (CompCert `clightgen`) and **Frama-C/WP**.
 - Hand-written **CPython extension**; NumPy optional.
 
-This release (v0.1.0) is the scaffolding, the proof pipeline, and bisection end-to-end. Bisection
-is the only numerical method it provides.
+This release (v0.2.0) provides bisection, the composite trapezoidal and Simpson rules over
+tabulated samples, and the explicit Euler step. Each method has error bounds over the reals in Lean
+and Rocq, binary64 bounds in Flocq, and a C contract proved by Frama-C WP; VST proves the C against
+the binary64 model for the trapezoidal, Simpson and Euler kernels and for part of bisection
+(`diana_bisection_init` and `diana_bisection_step` are not covered yet).
 
 Planned v1.0.0 scope: bisection, Newton, composite trapezoidal and Simpson rules, explicit Euler,
 RK4, Cholesky, LU with partial pivoting. `doc/verification.md` says exactly what is proven, by which
