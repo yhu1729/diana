@@ -8,6 +8,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Callback wrapper `diana_euler(fn, ctx, t0, h, nstep, y, d, work, done)` in `diana/wrapper.h`
+  (`diana_ode_fn` callback, `work` of `2 * d` doubles, no allocation): `nstep` Euler steps in
+  place, the time of step `k` computed as `t0 + k * h`, and on a failing step `y` left at the last
+  good state with `*done` the number of completed steps. Unverified, like `diana_bisection`;
+  `test/c/test_euler.c` covers every path at 100% line and branch coverage.
 - VST proves EULER-C2 (`Diana.VST.Euler.body_diana_euler_step`) against the committed AArch64
   macOS Clight AST `verification/clight/euler_aarch64_macos.v`: for non-NULL, disjoint `y`, `f`
   and `y_out` with `d >= 1`, `diana_euler_step` writes the Flocq model values and returns
