@@ -1,6 +1,8 @@
 import math
 import pickle
 import sys
+from decimal import Decimal
+from fractions import Fraction
 
 import pytest
 
@@ -75,6 +77,33 @@ def test_max_iter_range():
     with pytest.raises(OverflowError):
         diana.bisection(lambda x: x - 0.3, 0.0, 1.0, max_iter=-1)
     assert diana.Bisection(0.0, 1.0, -1.0, 1.0, 0.0, max_iter=7).max_iter == 7
+
+
+def test_real_number_argument():
+    def f(x):
+        return Fraction(x) - Fraction(1, 2)
+
+    assert diana.bisection(f, Fraction(0), Decimal(1), tol=Fraction(0)) == 0.5
+
+
+@pytest.mark.parametrize(
+    ("args", "kwargs", "match"),
+    [
+        (("0", 1.0), {}, "a must be a real number, not str"),
+        ((0.0, "1"), {}, "b must be a real number, not str"),
+        ((0.0, 1.0), {"tol": "0"}, "tol must be a real number, not str"),
+    ],
+)
+def test_string_argument(args, kwargs, match):
+    with pytest.raises(TypeError, match=match):
+        diana.bisection(lambda x: x - 0.5, *args, **kwargs)
+
+
+def test_string_callback_value():
+    with pytest.raises(TypeError, match=r"f\(a\) must be a real number, not str"):
+        diana.bisection(lambda x: str(x - 0.5), 0.0, 1.0)
+    with pytest.raises(TypeError, match=r"f\(x\) must be a real number, not str"):
+        diana.bisection(lambda x: str(x) if x == 0.5 else x - 0.3, 0.0, 1.0)
 
 
 def test_callback_sees_kernel_endpoint():
