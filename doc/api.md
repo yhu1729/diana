@@ -113,8 +113,10 @@ Python binding yet.
   `y[0 .. n-1]` is only read and must not overlap `*result`.
 
 Frama-C WP proves memory safety, termination, the status cases and the finiteness of `*result` on
-`DIANA_OK` (SIMPSON-C1). The error bounds and the VST proof are not done yet; `spec/simpson.md`
-lists them.
+`DIANA_OK` (SIMPSON-C1). For exact samples of an `f` whose fourth derivative is bounded by `M₄` on
+`[a, b]`, the rule in exact arithmetic is within `(b − a)·h⁴·M₄/180` of the integral (SIMPSON-A2,
+proved in Lean and Rocq). The rounding-error bound and the VST proof are not done yet;
+`spec/simpson.md` describes them.
 
 ## Callback wrapper (`diana/wrapper.h`)
 
