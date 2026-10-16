@@ -8,6 +8,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Flocq proves the Simpson binary64 theorems in `verification/rocq/theory/Float/Simpson.v`:
+  SIMPSON-B1 (`finite_result`: a finite result implies finite `h`, samples and partial sums) and
+  SIMPSON-B2 (`forward_error`: `|r − h·S′/3| ≤ γₚ₊₅·|h|·A/3 + (1 + u)·η/3 + η` for `(p + 5)·u < 1`,
+  with `A` the Simpson-weighted absolute sum of the samples). `Diana.Float.Sum` gains `fdiv` with
+  its value and finiteness lemmas, exact scaling by a power of two (`fmul_exact`), `gamma_mono`,
+  and the addition step `add_step`; `fold_error` takes its absolute error term as a parameter, so
+  a sum started from an exact `+0` carries none.
 - Lean and Rocq prove the Simpson error bounds SIMPSON-A1 (`Diana.Real.Simpson.local_error`, one
   double panel: `M₄·h⁵/90`) and SIMPSON-A2 (`composite_error`, `2p` panels:
   `(b − a)·h⁴·M₄/180`) for `f` with a two-sided fourth derivative bounded by `M₄` on the interval;
