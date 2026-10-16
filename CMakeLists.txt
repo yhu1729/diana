@@ -37,6 +37,7 @@ endif()
 add_library(diana
     src/status.c
     src/bisection.c
+    src/euler.c
     src/simpson.c
     src/trapezoidal.c
     src/wrapper/bisection.c)
