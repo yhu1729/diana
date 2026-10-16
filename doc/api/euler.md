@@ -127,8 +127,9 @@ y(0.5) = (0.364170, 0.728339, 1.456679)
 with the same operation order. `y` and `f` are [array arguments](overview.md#array-argument), each
 with its own name in the messages and at least one sample; a length mismatch, then a non-finite
 component, raise `ValueError`. The output is a fresh array, so it never overlaps the inputs, and
-the inputs are never modified. `diana.euler(f, t0, y0, h, nstep)` copies `y0` into an
-`array.array("d")` and takes `nstep` steps, calling `f(t0 + k*h, y)` for the derivative of step
+the inputs are never modified. `diana.euler(f, t0, y0, h, nstep)` copies `y0` element by element
+into an `array.array("d")` (a `bytes` object is a sequence of integers, not raw float64 data) and
+takes `nstep` steps, calling `f(t0 + k*h, y)` for the derivative of step
 `k`; the loop runs in Python, like `diana.bisection`, and `f` must not modify `y`. It raises
 `ValueError` for an empty `y0` or a negative `nstep`, `TypeError` for a non-integer `nstep` or a
 `t0` or `h` that is not a real number (a string is not converted), and lets the errors of
