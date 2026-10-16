@@ -9,7 +9,7 @@ checked. The status of every theorem is in the generated [report](report.md).
 |---|---|---|---|
 | A | real-number model of the algorithm | Lean 4 + Mathlib **and** Rocq (Stdlib reals, Coquelicot) | convergence, invariants, error bounds over ℝ |
 | B | binary64 model of the C arithmetic | Rocq + Flocq | rounding facts the C code relies on (finiteness, bracket containment, forward error) |
-| C-VST | the C source (Clight AST) | Rocq + VST, via CompCert `clightgen` | a C function returns / updates exactly the layer-B model value (every function of the verified kernels: `bisection_mid`, `diana_bisection_init`, `diana_bisection_step`, `diana_bisection_result`, `diana_trapezoidal`, `diana_simpson`, `diana_euler_step`, and the `src/fp.h` helpers) |
+| C-VST | the C source (Clight AST) | Rocq + VST, via CompCert `clightgen` | a C function returns / updates exactly the layer-B model value (every function of the verified kernels: `bisection_mid`, `diana_bisection_init`, `diana_bisection_step`, `diana_bisection_result`, `diana_trapezoidal`, `diana_simpson`, `diana_euler_step`, `diana_newton_init`, `diana_newton_step`, `diana_newton_result`, and the `src/fp.h` helpers) |
 | C-WP | the C source | Frama-C WP, float model, RTE plugin | memory safety, absence of undefined behaviour, separation, contract invariants |
 
 The three models of a kernel are: `rspec` (ℝ), `fmodel` (Flocq, same operation order as the C),
@@ -30,7 +30,7 @@ inside one Rocq development with no translation step.
   [Frama-C and Flocq boundary](frama-c.md)).
 - `clightgen` as the translation from C to Clight. The committed
   `verification/clight/<kernel>_<target>.v` (today `bisection_aarch64_macos.v`,
-  `euler_aarch64_macos.v`, `simpson_aarch64_macos.v` and `trapezoidal_aarch64_macos.v`, CompCert configured for AArch64 macOS) is generated locally on that target and is the AST the VST proofs are about;
+  `euler_aarch64_macos.v`, `newton_aarch64_macos.v`, `simpson_aarch64_macos.v` and `trapezoidal_aarch64_macos.v`, CompCert configured for AArch64 macOS) is generated locally on that target and is the AST the VST proofs are about;
   CI neither regenerates nor re-proves it.
 
 ## Where each layer is checked
@@ -58,9 +58,10 @@ describes. This equivalence is an argument, not a theorem. A bitwise differentia
 once with `ccomp` and with each available gcc and clang at `-O0`, `-O2` and `-O3` under the flags
 above, and fails unless every host build prints exactly the bytes the `ccomp` build prints. The
 driver prints every status and every double as its bit pattern, so the sign of zero counts, for
-976 cases: every argument error, NaN and ±∞ inputs, `h = ±0`, subnormals, overflow in each
+1128 cases: every argument error, NaN and ±∞ inputs, `h = ±0`, subnormals, overflow in each
 operation, the operation-order cases of the ctest suites, the 2098-step bisection worst case step
-by step, and seeded random inputs ([compiler comparison](compiler.md)). On AArch64 macOS,
+by step, the Newton two-cycle, and seeded random inputs ([compiler comparison](compiler.md)). On
+AArch64 macOS,
 Apple clang 21, Homebrew GCC 13.4, 14.4, 15.3 and 16.2, and Homebrew LLVM clang 20.1, 21.1, 22.1
 and 23.1 match CompCert 3.17 on all of it.
 This is evidence on a finite corpus, not a proof, and it only covers the platform it runs on: no
@@ -74,7 +75,10 @@ x86-64 build has been compared yet. CompCert is not in CI, so the test runs loca
 - The build system, the compilers, and the operating system.
 - Under VST, the argument-error paths a funspec excludes by its precondition: a NULL pointer in
   every kernel, and `d = 0`, `n < 2`, `n < 3` or an even `n` in the array kernels. The Frama-C
-  contracts cover them (BISECTION-C2, EULER-C1, SIMPSON-C1, TRAPEZOIDAL-C1).
+  contracts cover them (BISECTION-C2, EULER-C1, NEWTON-C1, SIMPSON-C1, TRAPEZOIDAL-C1).
+- Termination of Newton's method: `max_iter` bounds the step count, and no theorem says the
+  iteration converges from a given `x0` in binary64 (NEWTON-A2 is about exact arithmetic and a
+  start within the basin it describes).
 - An explicit numeric bound on the bisection step count. BISECTION-B4 proves termination and the
   sound but loose bound `n <= lattice` (the number of doubles the bracket spans); the
   `max_iter = 2100` default is justified by the measured and ctest-pinned worst case of 2098 steps,

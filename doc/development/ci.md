@@ -72,8 +72,8 @@ a job reads, extend the matching list.
 
 ## Verify
 
-- `verify_frama_c`: every goal of every row of `verification/frama-c/expectation.txt` (310 across
-  the four kernels) is proved locally with Frama-C 33.0 and Alt-Ergo 2.6.4; the CI
+- `verify_frama_c`: every goal of every row of `verification/frama-c/expectation.txt` (411 across
+  the five kernels) is proved locally with Frama-C 33.0 and Alt-Ergo 2.6.4; the CI
   image is 32.1 until a 33 tag exists. If 32.1 behaves differently, pin the image forward rather
   than re-adding `allow_failure`.
 - `verify_lean` runs `script/check_spec.py --run --strict --prover lean --no-report` with the
