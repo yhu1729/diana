@@ -40,6 +40,7 @@ inside one Rocq development with no translation step.
 | A, Rocq | `verify_rocq`: compilation only | `make`, `make check`, `check_spec.py --run --strict` |
 | B (Flocq), C-VST, Clight AST | – | `clightgen`, `make`, `make check`, `check_spec.py --run --strict` |
 | C-WP | `verify_frama_c` (Frama-C 32.1) | `script/run_frama_c.sh` (Frama-C 33.0) |
+| `ccomp` build versus gcc/clang build | – (ctest `compiler` only runs the driver) | `script/compare_compiler.sh` |
 
 A green pipeline therefore does not establish layers B and C-VST, and the CI Frama-C result assumes
 the contract of `bisection_mid`, which only the local Flocq build (BISECTION-B1) discharges. The
@@ -51,8 +52,18 @@ The VST proof is about CompCert's Clight semantics, so it carries to a `ccomp`-c
 shipped library is built with gcc or clang with `-std=c11 -ffp-contract=off -fno-fast-math` (and
 `-fexcess-precision=standard` on gcc) on x86-64 SSE2 or AArch64: no x87 excess precision, no FMA
 contraction, so the arithmetic is the same IEEE binary64 round-to-nearest sequence the model
-describes. This equivalence is an argument, not a theorem; planned bitwise differential tests
-between the `ccomp` and gcc/clang builds will back it. CompCert is not in CI, so they run locally.
+describes. This equivalence is an argument, not a theorem. A bitwise differential test backs it:
+`script/compare_compiler.sh` builds the kernels with the corpus driver `test/c/test_compiler.c`
+once with `ccomp` and with each available gcc and clang at `-O0`, `-O2` and `-O3` under the flags
+above, and fails unless every host build prints exactly the bytes the `ccomp` build prints. The
+driver prints every status and every double as its bit pattern, so the sign of zero counts, for
+976 cases: every argument error, NaN and ±∞ inputs, `h = ±0`, subnormals, overflow in each
+operation, the operation-order cases of the ctest suites, the 2098-step bisection worst case step
+by step, and seeded random inputs (`doc/development.md`, "Compiler comparison"). On AArch64 macOS,
+Apple clang 21, Homebrew GCC 16.2 and Homebrew LLVM clang 23.1 match CompCert 3.17 on all of it.
+This is evidence on a finite corpus, not a proof, and it only covers the platform it runs on: no
+x86-64 build has been compared yet. CompCert is not in CI, so the test runs locally, as a step of
+`script/dev.sh verify`.
 
 ## Not verified
 
