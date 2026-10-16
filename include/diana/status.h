@@ -10,7 +10,8 @@ typedef enum diana_status {
   DIANA_CONTINUE = 1,
   DIANA_ERR_ARG = -1,
   DIANA_ERR_BRACKET = -2,
-  DIANA_ERR_MAXITER = -3
+  DIANA_ERR_MAXITER = -3,
+  DIANA_ERR_SINGULAR = -4
 } diana_status;
 
 const char *diana_status_str(diana_status s);
