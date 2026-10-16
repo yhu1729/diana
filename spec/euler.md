@@ -44,6 +44,14 @@ theorem:
       and y_out untouched on DIANA_ERR_ARG. No assumed contract; that y_out is finite on DIANA_OK
       is left to VST.
     acsl: src/euler.c
+  - id: EULER-C2
+    layer: C
+    informal: >
+      diana_euler_step computes the binary64 model (VST, AArch64 macOS Clight AST): for y and f
+      pointing to d ≥ 1 readable doubles and y_out to d writable doubles, the three disjoint, it
+      returns DIANA_OK and writes the model values when every component is finite, and returns
+      DIANA_ERR_ARG leaving y_out unchanged otherwise. The NULL and d = 0 paths are EULER-C1.
+    rocq: Diana.VST.Euler.body_diana_euler_step
 ---
 # euler
 
@@ -87,6 +95,14 @@ buffer, as the other kernels leave their outputs untouched. A NaN or infinite `y
   second loop, and the only write is `y_out[i]` in that loop, so `assigns y_out[0 .. d − 1]` and
   the error post-condition follow from the control flow; the loop invariants are only the index
   bounds.
+- **C2**: the first loop carries `forallb is_finite (sublist 0 i L)` for `L = c_euler h ys fs`
+  and calls `diana_fp_finite` on each component (`forward_call`); a non-finite component
+  returns at once, and `forallb_false` shows the whole list fails the check, so the
+  post-condition leaves `y_out` as it was. The second loop writes: its invariant holds
+  `y_out = map Vfloat (sublist 0 i L) ++ sublist i d os`, and each store is an `upd_Znth`
+  that `list_solve` folds into the next prefix (`Znth_c_euler` names the stored value). The
+  first VST proof in Diana that writes an array and calls a function inside a loop.
+  Proof: `body_diana_euler_step` in `verification/rocq/theory/VST/Euler.v`.
 
 ## Why finiteness on success is not in ACSL
 
@@ -117,14 +133,12 @@ finiteness and the exact values together.
   functions so that they instantiate to CompCert's `Float.add`/`Float.mul`. B1 and B2 are per
   component, because the kernel's components are independent; a max-norm form follows by taking
   the maximum over `i`.
-
-## Planned theorems
-
-A theorem is listed in the front matter together with its proof, because the strict spec gate fails
-on a listed theorem that is not proved:
-
-- **C2** (VST): `diana_euler_step` writes the Flocq model values and returns `DIANA_OK` exactly
-  when all of them are finite, leaving `y_out` unchanged otherwise.
+- **Layer C, VST** (`verification/rocq/theory/VST/Euler.v`, against the Clight AST
+  `verification/clight/euler_aarch64_macos.v`, CompCert target AArch64 macOS): `c_euler h ys fs`
+  is the C computation with CompCert's `Float.add`/`Float.mul`, componentwise over the two
+  arrays, and `c_euler_model` identifies it with `feuler`. The funspec holds three separate
+  `data_at`, so overlapping `y` and `f`, which the C allows because both are only read, is
+  outside the theorem; WP (C1) covers it for memory safety.
 
 ## Status
 
@@ -135,3 +149,4 @@ on a listed theorem that is not proved:
 | EULER-B1 | – | proved | – |
 | EULER-B2 | – | proved | – |
 | EULER-C1 | – | – | 49/49 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
+| EULER-C2 | – | proved | – |
