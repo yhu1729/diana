@@ -42,12 +42,12 @@ sdist.exclude = ["verification/**", "ci/**", "build/**"]
 build-dir = "build/{wheel_tag}"
 
 [tool.pytest.ini_options]
-testpaths = ["test/python"]
+testpaths = ["test/python", "test/doc"]
 
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-src = ["python/src", "test/python", "script"]
+src = ["python/src", "test/python", "test/doc", "script"]
 
 [tool.ruff.per-file-target-version]
 "script/**" = "py311"
