@@ -49,17 +49,19 @@ every status and every field of the state (NEWTON-C3/C4), and `diana_newton_resu
 the correction and the iterate `step` writes are the Flocq `fstep` (NEWTON-C5), so the layer-B
 bounds apply to them. A rejected call leaves the state unchanged (NEWTON-C1, and C3/C4 for a
 non-NULL `s`): `init` returning `DIANA_ERR_ARG`, and `step` returning `DIANA_ERR_ARG`, write
-nothing to `*s`.
+nothing to `*s`; so does `step` returning `DIANA_ERR_SINGULAR`.
 
 - `diana_newton_init(s, x0, tol, max_iter)` initialises the state at `x0` and returns
   `DIANA_CONTINUE`; `DIANA_ERR_ARG` on NULL, NaN or infinite `x0` or `tol`, `tol < 0`, or
   `max_iter == 0`. Unlike bisection, `init` sees no function value, so it never reports
   convergence itself.
 - `diana_newton_step(s, fx, dfx)` consumes `fx = f(s->x)` and `dfx = f′(s->x)`. When `fx == 0`
-  it returns `DIANA_OK` with `dx = 0` and `x` unchanged, whatever `dfx`. Otherwise it computes the
-  correction `dx = fx / dfx` and the iterate `x − dx`, each rounded to binary64; if either is not
-  finite (a zero or subnormal `dfx` against a large `fx`, an overflow), it returns `DIANA_ERR_ARG`
-  and writes nothing. Otherwise it stores `dx` and the new `x`, increments `iter`, and returns
+  it returns `DIANA_OK` with `dx = 0` and `x` unchanged, whatever `dfx`. When `dfx == 0` (either
+  sign of zero) the step is undefined: `DIANA_ERR_SINGULAR`, nothing written. Otherwise it
+  computes the correction `dx = fx / dfx` and the iterate `x − dx`, each rounded to binary64; if
+  either is not finite (a subnormal `dfx` against a large `fx`, an overflow), it returns
+  `DIANA_ERR_ARG` and writes nothing. Otherwise it stores `dx` and the new `x`, increments
+  `iter`, and returns
   `DIANA_OK` when `|dx| <= tol` or when the new iterate equals the old one (the correction is
   below half an ulp of `x`: no closer double exists, NEWTON-B3), `DIANA_ERR_MAXITER` when `iter`
   has reached `max_iter`, and `DIANA_CONTINUE` otherwise. A NaN or infinite `fx` or `dfx` is
@@ -116,7 +118,7 @@ iteration limit reached after 8 steps: root 1.4142135623730949, dx 1.57e-16
   It evaluates `f` once per step. On `DIANA_OK` or `DIANA_ERR_MAXITER`, `*root` holds the current
   iterate; on any other status it is not written. `*iter` (optional) receives the number of
   completed steps on every return (0 when the arguments are rejected). `*dfx` is set to `0` before
-  each call, so a callback that never writes it fails with `DIANA_ERR_ARG` on the first step
+  each call, so a callback that never writes it fails with `DIANA_ERR_SINGULAR` on the first step
   instead of reading an indeterminate value.
 
 The cube root of 10 as the root of `x³ − c` with `c` in `ctx`:
@@ -193,8 +195,9 @@ A `diana.Newton` allocated directly with `__new__` has status `ERR_ARG` until `_
 `step()` and `result()` raise `RuntimeError` before that. A failed `__init__` leaves the existing
 state and status unchanged, so a previously initialized object remains usable.
 
-A non-finite `f(x)` or `f′(x)`, a zero `f′(x)`, and a correction or iterate that overflows raise
-`ValueError` and leave the state at the last iterate (`DIANA_ERR_ARG` in C); `diana.newton` raises
+A zero `f′(x)` raises `diana.SingularError` (a `ValueError`; `DIANA_ERR_SINGULAR` in C), and a
+non-finite `f(x)` or `f′(x)` or a correction or iterate that overflows raises `ValueError`
+(`DIANA_ERR_ARG`); either leaves the state at the last iterate. `diana.newton` raises
 `diana.MaxIterError` when `max_iter` is reached first, with the attributes `estimate` (the current
 iterate), `width` (the last `|dx|`) and `iter`:
 
@@ -202,7 +205,7 @@ iterate), `width` (the last `|dx|`) and `iter`:
 >>> diana.newton(lambda x: (x * x + 1, 2 * x), 0.0, 1e-12)
 Traceback (most recent call last):
   ...
-ValueError: f'(x) is zero
+diana._diana.SingularError: f'(x) is zero
 >>> try:
 ...     diana.newton(lambda x: (x * x - 2, 2 * x), 2.0, 1e-12, max_iter=2)
 ... except diana.MaxIterError as e:

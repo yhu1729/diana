@@ -28,12 +28,14 @@ Expected values in `test/c/test_newton.c` and `test/python/test_newton.py`:
 - The cube root of 10 from `x₀ = 2` takes five steps to the correctly rounded `2.154434690031884`;
   `cos x − x` from 1 reaches `0.7390851332151607` in five steps, where `cos x == x` holds exactly
   in binary64, so the last step sees `f = 0`.
-- Argument errors: a NaN or infinite `fx` or `dfx`, a zero or negative-zero `dfx` with a non-zero
-  `fx` (the correction is infinite), `fx = DBL_MAX` with `dfx = 1/2` (the correction overflows),
-  and `x = −DBL_MAX` with `dx = DBL_MAX` (the iterate overflows) are each `DIANA_ERR_ARG` with the
-  state unchanged, as are the rejected `init` arguments; a rejected reinitialization keeps the
-  state. `−DBL_MAX + DBL_MAX/2` is finite, so that step continues.
+- A zero or negative-zero `dfx` with a non-zero `fx` is `DIANA_ERR_SINGULAR` with the state
+  unchanged (`SingularError` in Python). Argument errors: a NaN or infinite `fx` or `dfx`,
+  `fx = DBL_MAX` with `dfx = 1/2` and `fx = 1` with `dfx = DBL_TRUE_MIN` (the correction
+  overflows), and `x = −DBL_MAX` with `dx = DBL_MAX` (the iterate overflows) are each
+  `DIANA_ERR_ARG` with the state unchanged, as are the rejected `init` arguments; a rejected
+  reinitialization keeps the state. `−DBL_MAX + DBL_MAX/2` is finite, so that step continues.
 - The callback wrapper evaluates `f` once per step (`n == iter`), reports the estimate on
   `DIANA_ERR_MAXITER`, and leaves `*root` untouched when `init` rejects the arguments, when the
-  derivative is zero or never written by the callback (`*dfx` is reset to 0 before each call), or
-  when the callback returns a non-finite value, in which case `*iter` counts the completed steps.
+  derivative is zero or never written by the callback (`*dfx` is reset to 0 before each call,
+  `DIANA_ERR_SINGULAR`), or when the callback returns a non-finite value (`DIANA_ERR_ARG`), in
+  which case `*iter` counts the completed steps.

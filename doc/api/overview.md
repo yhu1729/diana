@@ -70,6 +70,7 @@ area 5.5
 | `DIANA_ERR_ARG` | -1 | invalid argument: NULL, NaN, infinite, out of range |
 | `DIANA_ERR_BRACKET` | -2 | `f(a)` and `f(b)` have the same strict sign |
 | `DIANA_ERR_MAXITER` | -3 | iteration limit reached before the tolerance was met |
+| `DIANA_ERR_SINGULAR` | -4 | the derivative (Newton) is zero, so the step is undefined; the state is unchanged |
 
 `diana_status_str(s)` returns a static, human-readable name for a status code and never returns
 NULL. `diana_version()` returns `DIANA_VERSION_STRING` of the linked library.
@@ -107,9 +108,10 @@ Docstrings are available through `help()`.
 `diana.__version__` is the version string of the linked C library, the same value `diana.version()`
 returns.
 
-The status constants `diana.OK`, `CONTINUE`, `ERR_ARG`, `ERR_BRACKET` and `ERR_MAXITER` are the
-Python spellings of the `DIANA_*` codes above, as returned by `diana.Bisection.step`; `status_str`
-raises `OverflowError` for a code outside the C `int` range.
+The status constants `diana.OK`, `CONTINUE`, `ERR_ARG`, `ERR_BRACKET`, `ERR_MAXITER` and
+`ERR_SINGULAR` are the Python spellings of the `DIANA_*` codes above, as returned by
+`diana.Bisection.step` and `diana.Newton.step`; `status_str` raises `OverflowError` for a code
+outside the C `int` range.
 
 ```python
 >>> import diana
@@ -120,8 +122,9 @@ raises `OverflowError` for a code outside the C `int` range.
 ```
 
 A C error status becomes an exception: `DIANA_ERR_ARG` raises `ValueError`, `DIANA_ERR_BRACKET`
-raises `diana.BracketError` (a `ValueError`), and `DIANA_ERR_MAXITER` in `diana.bisection` and
-`diana.newton` raises `diana.MaxIterError` (a `RuntimeError`).
+raises `diana.BracketError` (a `ValueError`), `DIANA_ERR_SINGULAR` raises `diana.SingularError`
+(a `ValueError`), and `DIANA_ERR_MAXITER` in `diana.bisection` and `diana.newton` raises
+`diana.MaxIterError` (a `RuntimeError`).
 
 ```python
 >>> try:
