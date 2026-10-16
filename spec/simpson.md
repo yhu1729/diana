@@ -46,6 +46,14 @@ theorem:
       only for non-NULL y and result with n ≥ 3 odd and then *result finite, and *result
       untouched on DIANA_ERR_ARG. No assumed contract.
     acsl: src/simpson.c
+  - id: SIMPSON-C2
+    layer: C
+    informal: >
+      diana_simpson computes the binary64 model (VST, AArch64 macOS Clight AST): for y pointing to
+      an odd number n ≥ 3 of readable doubles and a writable *result separate from them, it returns
+      DIANA_OK and writes the model value when that value is finite, and returns DIANA_ERR_ARG
+      leaving *result unchanged otherwise. The NULL, n < 3 and even-n paths are SIMPSON-C1.
+    rocq: Diana.VST.Simpson.body_diana_simpson
 ---
 # simpson
 
@@ -101,7 +109,18 @@ range limit follows from the order: `h·s` can overflow when `h·S/3` would not 
   `n == 2 * p + 1` (from `n` odd) gives the bounds `2k + 1 ≤ n − 2` and `2k ≤ n − 3` for the two
   loops, whose invariants are only `0 <= k <= p` and `1 <= k <= p`. As for the trapezoidal rule, the
   value of `*result` is not an ACSL post-condition (see "Why the functional contract is not in
-  ACSL" in `spec/trapezoidal.md`); it will be a VST theorem on the Flocq model.
+  ACSL" in `spec/trapezoidal.md`); it is the VST theorem C2.
+- **C2**: two Clight loops over a read-only `tarray tdouble n` with a pair index `k` in `Int64`.
+  `forward_for` carries `sₒ = c_odd ys k` (the fold over the first `k` odd samples) and
+  `sₑ = c_even ys k` (the first `k − 1` even interior samples); `pick_succ` appends one sample
+  per iteration, and VST reduces the index expressions `2k + 1` and `2k` and the loop tests
+  itself. `p = n / 2` comes from `Int64.divu`, and `n = 2p + 1` from `Z.odd n` (`Zmod_odd`) proves
+  that the even-`n` test fails. After the loops, `Znth_map` turns the two endpoint reads into
+  floats, so the value passed to `diana_fp_finite` is `c_simpson ys h` by computation. As for the
+  trapezoidal rule, `data_at` on the array makes `y` a valid pointer, which is why the NULL,
+  `n < 3` and even-`n` paths are left to WP (C1). `diana_fp_finite` is re-specified for this AST
+  (`body_diana_fp_finite`). Proof: `body_diana_simpson` in
+  `verification/rocq/theory/VST/Simpson.v`.
 
 ## Model correspondence
 
@@ -113,14 +132,12 @@ range limit follows from the order: `h·s` can overflow when `h·S/3` would not 
   (`Diana.Float.Sum`) are `Bplus`, `Bmult` and `Bdiv` in `mode_NE`, parameterised by the
   NaN-payload functions so that they instantiate to CompCert's `Float.add`/`Float.mul`/`Float.div`.
   B2 takes `length even ≤ length odd`, which the kernel's lists satisfy.
-
-## Planned theorems
-
-A theorem is listed in the front matter together with its proof, because the strict spec gate fails
-on a listed theorem that is not proved:
-
-- **C2** (VST): `diana_simpson` computes the Flocq model value, against
-  `verification/clight/simpson_aarch64_macos.v`.
+- **Layer C, VST** (`verification/rocq/theory/VST/Simpson.v`, against the Clight AST
+  `verification/clight/simpson_aarch64_macos.v`, CompCert target AArch64 macOS): `c_simpson ys h`
+  is the C computation over the array `ys` with CompCert's `Float.add`/`Float.mul`/`Float.div`,
+  and `c_simpson_model` identifies it with `fsimpson` at `y0 = Znth 0 ys`, `yl = Znth (n − 1) ys`,
+  `odd = pick ys (2j + 1) p` and `even = pick ys (2j + 2) (p − 1)`, after `c_zero_eq`, `c_two_eq`,
+  `c_three_eq` and `c_four_eq` show clightgen's literals equal to the model constants.
 
 ## Status
 
@@ -131,3 +148,4 @@ on a listed theorem that is not proved:
 | SIMPSON-B1 | – | proved | – |
 | SIMPSON-B2 | – | proved | – |
 | SIMPSON-C1 | – | – | 58/58 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
+| SIMPSON-C2 | – | proved | – |
