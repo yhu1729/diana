@@ -1,5 +1,11 @@
-import Mathlib.Topology.Order.IntermediateValue
+module
+
+public import Mathlib.Topology.MetricSpace.Pseudo.Defs
+public import Mathlib.Topology.Order.IntermediateValue
+
 import Mathlib.Tactic
+
+@[expose] public section
 
 namespace Diana.Real.Bisection
 
