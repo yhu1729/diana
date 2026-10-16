@@ -5,26 +5,29 @@
 [![C Coverage](https://gitlab.com/yhu1729/diana/badges/main/coverage.svg?key_text=C+Coverage&key_width=78&job=coverage_c)](https://gitlab.com/yhu1729/diana/-/commits/main)
 [![Python Coverage](https://gitlab.com/yhu1729/diana/badges/main/coverage.svg?key_text=Python+Coverage&key_width=108&job=coverage_python)](https://gitlab.com/yhu1729/diana/-/commits/main)
 
-Formally verified numerical methods in C, with a Python binding.
+Diana is a small library of numerical methods in C, with a Python binding, whose correctness is
+machine-checked from the mathematics down to the C code.
 
-- Mathematical specification proven in **Lean 4** (Mathlib) and **Rocq** (Stdlib reals; Coquelicot where
-  integrals and derivatives are needed).
-- Floating-point error bounds in **Rocq/Flocq**.
-- C implementation verified with **VST** (CompCert `clightgen`) and **Frama-C/WP**.
-- Hand-written **CPython extension**; NumPy optional.
+Every method comes with a proof that the algorithm converges or meets its error bound over the
+real numbers, a proof of what rounding does to it in binary64 arithmetic, and a proof that the
+C function computes exactly that rounded result without undefined behaviour. The proofs are
+written in Lean 4 and Rocq, with Frama-C checking the C contracts; `doc/verification/trust.md`
+states precisely what is proven, by which tool, and what is only tested.
 
-This release (v0.2.0) provides bisection, the composite trapezoidal and Simpson rules over
-tabulated samples, and the explicit Euler step. Each method has error bounds over the reals in Lean
-and Rocq, binary64 bounds in Flocq, and a C contract proved by Frama-C WP; VST proves the C against
-the binary64 model for every kernel function (the proofs for `diana_bisection_init` and
-`diana_bisection_step` are unreleased, see `CHANGELOG.md`).
+## Methods
 
-Planned v1.0.0 scope: bisection, Newton, composite trapezoidal and Simpson rules, explicit Euler,
-RK4, Cholesky, LU with partial pivoting. `doc/verification/trust.md` says exactly what is proven, by
-which tool, about which build. The C and Python API is described in `doc/api/`, and `doc/README.md`
-indexes the documentation.
+- Bisection, as a state machine the caller drives, and as a function taking a callback.
+- Composite trapezoidal and Simpson rules over tabulated samples.
+- Explicit Euler step, with a loop over a callback.
 
-## Build
+Each is available from C (`include/diana/`) and from Python (`import diana`). The C kernels
+allocate nothing, call no libm function, and use no function pointer; the convenience wrappers
+and the Python package drive those kernels and are tested rather than proven. Newton, RK4,
+Cholesky and LU with partial pivoting are planned for 1.0.
+
+## Quick start
+
+C library and test suite:
 
 ```
 cmake -S . -B build -DDIANA_BUILD_TEST=ON
@@ -32,23 +35,25 @@ cmake --build build
 ctest --test-dir build
 ```
 
-`DIANA_BUILD_PYTHON` is ON by default and needs the Python development headers; pass
-`-DDIANA_BUILD_PYTHON=OFF` for a C-only build.
-
-## Python
+Python package, built in place by `uv`:
 
 ```
-uv sync && uv run python -c "import diana; print(diana.bisection(lambda x: x*x - 2, 0.0, 2.0))"
+uv sync
+uv run python -c "import diana; print(diana.bisection(lambda x: x*x - 2, 0.0, 2.0))"
 ```
 
-## Contribute
+## Documentation
 
-Setup, local workflow, and commit convention are in `CONTRIBUTING.md`. Layers B and C-VST, the
-Rocq axiom gate, and the Clight AST are checked only locally, so read "Before you commit" before
-touching `src/`, `include/`, `verification/`, or `spec/`.
+- `doc/README.md` indexes everything below.
+- `doc/api/`: the C and Python API, one page per method with runnable examples.
+- `doc/verification/`: the trust statement, the generated theorem report, and how each proof
+  layer is checked.
+- `doc/development/`: build options, style, the Python binding, local workflow and CI.
+- `CONTRIBUTING.md`: setup, toolchain versions and the commit convention. Changes to the kernels
+  or proofs need the local verification steps it describes.
+- `CHANGELOG.md`: what each release contains.
 
 ## License
 
-BSD-3-Clause, see `LICENSE`. Diana has no runtime dependency; the development and verification
-tools, with their versions and licenses, are listed in `doc/third-party.md` (CompCert and Alt-Ergo
-are not free for commercial use and are never shipped).
+BSD-3-Clause, see `LICENSE`. Diana has no runtime dependency. The development and verification
+tools, with their versions and licenses, are listed in `doc/third-party.md`.
