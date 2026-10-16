@@ -1,5 +1,9 @@
-import Mathlib.Analysis.Calculus.Deriv.Pow
-import Diana.Real.Quadrature
+module
+
+public import Mathlib.Analysis.Calculus.Deriv.Pow
+public import Diana.Real.Quadrature
+
+public section
 
 namespace Diana.Real.Simpson
 
