@@ -2,8 +2,8 @@
 
 What every kernel shares. Each method has its own page, with its C functions, its callback wrapper
 if any, and its Python functions: [bisection](bisection.md),
-[composite trapezoidal rule](trapezoidal.md), [composite Simpson rule](simpson.md), and
-[explicit Euler step](euler.md).
+[composite trapezoidal rule](trapezoidal.md), [composite Simpson rule](simpson.md),
+[explicit Euler step](euler.md), and [Newton's method](newton.md).
 
 ## C
 
@@ -94,13 +94,14 @@ invalid argument
 The wrappers in `diana/wrapper.h` loop over the verified reverse-communication kernels and are not
 verified (neither VST nor Frama-C); the callback is a trust boundary. Each is described with its
 kernel: `diana_bisection` under [bisection](bisection.md), `diana_euler` under
-[explicit Euler step](euler.md).
+[explicit Euler step](euler.md), `diana_newton` under [Newton's method](newton.md).
 
 ## Python
 
-The package `diana` exposes each iterative kernel as a reverse-communication state object (for
-example `diana.Bisection`) and, for convenience, as a function taking a Python callable (for example
-`diana.bisection`). The callable loop runs in Python and is not part of the verified code.
+The package `diana` exposes each iterative kernel as a reverse-communication state object
+(`diana.Bisection`, `diana.Newton`) and, for convenience, as a function taking a Python callable
+(`diana.bisection`, `diana.newton`). The callable loop runs in Python and is not part of the
+verified code.
 Docstrings are available through `help()`.
 
 `diana.__version__` is the version string of the linked C library, the same value `diana.version()`
@@ -119,8 +120,8 @@ raises `OverflowError` for a code outside the C `int` range.
 ```
 
 A C error status becomes an exception: `DIANA_ERR_ARG` raises `ValueError`, `DIANA_ERR_BRACKET`
-raises `diana.BracketError` (a `ValueError`), and `DIANA_ERR_MAXITER` in `diana.bisection` raises
-`diana.MaxIterError` (a `RuntimeError`).
+raises `diana.BracketError` (a `ValueError`), and `DIANA_ERR_MAXITER` in `diana.bisection` and
+`diana.newton` raises `diana.MaxIterError` (a `RuntimeError`).
 
 ```python
 >>> try:
