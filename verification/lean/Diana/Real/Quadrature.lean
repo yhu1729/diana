@@ -1,6 +1,11 @@
-import Mathlib.Analysis.Calculus.MeanValue
-import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
+module
+
+public import Mathlib.Analysis.Calculus.MeanValue
+public import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
+
 import Mathlib.Tactic
+
+@[expose] public section
 
 namespace Diana.Real.Quadrature
 
