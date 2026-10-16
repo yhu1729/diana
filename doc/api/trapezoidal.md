@@ -27,8 +27,63 @@ little under heavy cancellation. VST proves that the C computes exactly this bin
 `DIANA_OK` exactly when it is finite, leaving `*result` unchanged otherwise (TRAPEZOIDAL-C2, for
 non-NULL `y` with `n >= 2`).
 
+Integrating `x²` on `[0, 1]` from 101 samples. `f″ = 2` is constant, so the error of the rule in
+exact arithmetic is the TRAPEZOIDAL-A2 bound `(b − a)·h²·M₂/12 = 1.67e-5` itself:
+
+```c
+#include <stdio.h>
+
+#include <diana/trapezoidal.h>
+
+#define N 101
+
+int main(void) {
+  const double a = 0.0, b = 1.0, h = (b - a) / (N - 1);
+  double y[N], area;
+  for (size_t i = 0; i < N; ++i) {
+    double x = a + (double)i * h;
+    y[i] = x * x;
+  }
+  diana_status st = diana_trapezoidal(y, N, h, &area);
+  if (st != DIANA_OK) {
+    fprintf(stderr, "trapezoidal: %s\n", diana_status_str(st));
+    return 1;
+  }
+  printf("%.15f (error %.2e)\n", area, area - 1.0 / 3.0);
+  return 0;
+}
+```
+
+```text
+0.333350000000000 (error 1.67e-05)
+```
+
 ## Python
 
 `diana.trapezoidal(y, h)` returns the composite trapezoidal rule of `diana_trapezoidal` as a
 `float`, with the same operation order. `y` is an [array argument](overview.md#array-argument) of
 at least two samples. A non-finite result (`DIANA_ERR_ARG` in C) raises `ValueError`.
+
+```python
+>>> import math
+>>> import diana
+>>> n = 101
+>>> h = math.pi / (n - 1)
+>>> diana.trapezoidal([math.sin(i * h) for i in range(n)], h)  # exact: 2
+1.9998355038874436
+>>> diana.trapezoidal([0.0, 1.0, 4.0], -1.0)  # negative h: opposite direction
+-3.0
+>>> diana.trapezoidal([1.0, float("nan")], 0.5)
+Traceback (most recent call last):
+  ...
+ValueError: trapezoidal result is not finite
+```
+
+A NumPy `float64` array is read in place:
+
+```python
+>>> import numpy as np
+>>> x = np.linspace(0.0, 1.0, 101)
+>>> diana.trapezoidal(np.exp(x), 0.01)  # exact: e - 1 = 1.718281828459045
+1.718296147450417
+```
