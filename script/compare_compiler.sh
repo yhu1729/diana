@@ -39,6 +39,22 @@ list_candidate() (
     done
 )
 
+describe() {
+    case "$1" in
+    *" ("*") "*)
+        name=$(printf '%s\n' "$1" | sed 's/^[^(]*(\(.*\)) [^ ]*$/\1/')
+        case "$name" in
+        *[Gg][Cc][Cc]*) ;;
+        *) name="GCC $name" ;;
+        esac
+        ;;
+    *)
+        name=$(printf '%s\n' "$1" | sed -e 's/ version / /' -e 's/ ([^)]*)$//')
+        ;;
+    esac
+    printf '%s\n' "$name"
+}
+
 if ! command -v ccomp >/dev/null 2>&1; then
     echo "compiler: ccomp not found; differential test skipped" \
         "(install CompCert in the opam switch, see CONTRIBUTING.md)"
@@ -72,8 +88,9 @@ for cc in $candidate; do
         continue
     fi
     echo "$version" >>"$seen"
+    name=$(describe "$version")
     if ! "$cc" -o "$tmp/probe" "$tmp/probe.c" >"$tmp/probe.log" 2>&1; then
-        echo "compiler: $cc ($version) cannot build a program here; skipped:" \
+        echo "compiler: $cc ($name) cannot build a program here; skipped:" \
             "$(head -n 1 "$tmp/probe.log")"
         continue
     fi
@@ -89,10 +106,10 @@ for cc in $candidate; do
         "$cc" $strict $warning $extra $opt -Iinclude -o "$binary" src/*.c "$driver"
         "$binary" >"$binary.out" || fail "the $cc $opt build of $driver failed"
         if cmp -s "$tmp/ccomp.out" "$binary.out"; then
-            echo "compiler: $cc $opt ($version) matches ccomp"
+            echo "compiler: $cc $opt ($name) matches ccomp"
         else
             diff "$tmp/ccomp.out" "$binary.out" | head -n 20 >&2
-            echo "error: $cc $opt ($version) differs from ccomp" >&2
+            echo "error: $cc $opt ($name) differs from ccomp" >&2
             differ=1
         fi
     done
