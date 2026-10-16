@@ -12,6 +12,7 @@ theory/Real/Simpson.v
 theory/Real/Trapezoidal.v
 theory/Float/Bisection.v
 theory/Float/Sum.v
+theory/Float/Euler.v
 theory/Float/Simpson.v
 theory/Float/Trapezoidal.v
 ../clight/bisection_aarch64_macos.v
