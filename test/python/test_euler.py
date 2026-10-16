@@ -107,8 +107,8 @@ def test_step_failure_leaves_out():
         ([], [], "y must have at least one sample"),
         (np.array([]), [1.0], "y must have at least one sample"),
         ([1.0], [], "f must have at least one sample"),
-        ([1.0, 2.0], [1.0], "same length"),
-        ([1.0], [1.0, 2.0], "same length"),
+        ([1.0, 2.0], [1.0], "y and f must have the same length"),
+        ([1.0], [1.0, 2.0], "y and f must have the same length"),
         (np.ones((2, 2)), [1.0], "y must be one-dimensional"),
         ([1.0, 2.0], np.ones((2, 1)), "f must be one-dimensional"),
         (np.arange(4.0)[::2], [1.0, 1.0], "y must be C-contiguous"),
@@ -161,7 +161,7 @@ def test_extension_checks_out():
         diana._diana.euler_step(y, f, 1.0, bytes(32))
     with pytest.raises(ValueError, match="out must have at least one sample"):
         diana._diana.euler_step(y, f, 1.0, array.array("d"))
-    with pytest.raises(ValueError, match="same length"):
+    with pytest.raises(ValueError, match="out must have the same length as y"):
         diana._diana.euler_step(y, f, 1.0, array.array("d", [0.0, 0.0]))
     with pytest.raises(ValueError, match="overlap"):
         diana._diana.euler_step(y, f, 1.0, y)
@@ -255,6 +255,15 @@ def test_euler_no_step():
 def test_euler_arguments(args, error, match):
     with pytest.raises(error, match=match):
         diana.euler(lambda t, y: list(y), *args)
+
+
+def test_euler_index_argument():
+    class Index:
+        def __index__(self):
+            return 2
+
+    assert list(diana.euler_step([1.0], [1.0], Index())) == [3.0]
+    assert list(diana.euler(lambda t, y: [t], Index(), [0.0], Index(), 1)) == [4.0]
 
 
 def test_euler_callback_errors():
