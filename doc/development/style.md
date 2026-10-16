@@ -34,7 +34,9 @@ and its suppressions are each a deliberate project convention, so a new finding 
   CPython's `BisectionObject`/`BisectionType` naming rather than the library's `lower_case`;
 - `test/c/.clang-tidy` and `test/install/.clang-tidy` drop `cert-err33-c` (the harness reports
   through `fprintf` and exits) and `clang-analyzer-optin.core.EnumCastOutOfRange`
-  (`test_status.c` casts an out-of-range value on purpose).
+  (`test_status.c` casts an out-of-range value on purpose); `test/c/.clang-tidy` also drops
+  `readability-non-const-parameter`, because a callback under test may leave an output parameter
+  unwritten on purpose (`test_newton.c`) while keeping the signature of the callback type.
 
 `script/dev.sh test` runs it over every C source with `--warnings-as-errors='*'`, using the
 `compile_commands.json` that `CMAKE_EXPORT_COMPILE_COMMANDS` writes into the build directory. It
