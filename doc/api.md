@@ -115,8 +115,12 @@ Python binding yet.
 Frama-C WP proves memory safety, termination, the status cases and the finiteness of `*result` on
 `DIANA_OK` (SIMPSON-C1). For exact samples of an `f` whose fourth derivative is bounded by `M₄` on
 `[a, b]`, the rule in exact arithmetic is within `(b − a)·h⁴·M₄/180` of the integral (SIMPSON-A2,
-proved in Lean and Rocq). The rounding-error bound and the VST proof are not done yet;
-`spec/simpson.md` describes them.
+proved in Lean and Rocq). The binary64 evaluation order above is within
+`γₚ₊₅·|h|·A/3 + (1 + u)·η/3 + η` of the exact rule whenever its result is finite, with `p = (n − 1)/2`,
+`A = |y[0] + y[n-1]| + 4·(|y[1]| + |y[3]| + ...) + 2·(|y[2]| + |y[4]| + ...)`,
+`γₖ = k·u/(1 − k·u)`, `u = 2⁻⁵³` and `η = 2⁻¹⁰⁷⁵` (SIMPSON-B2, Flocq); like the trapezoidal bound it
+is relative to `A`, not to the result. The VST proof that the C computes this binary64 value is not
+done yet.
 
 ## Callback wrapper (`diana/wrapper.h`)
 
