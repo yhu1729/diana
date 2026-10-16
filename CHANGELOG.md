@@ -29,8 +29,10 @@ All notable changes to this project are documented here. The format follows
   `h = ±0`, subnormals, overflow in each operation, the 2098-step bisection worst case, seeded
   random inputs) with `ccomp` and with each available gcc and clang at `-O0`, `-O2` and `-O3`, and
   fails on any difference in the printed bit patterns. `script/dev.sh verify` runs it and skips it
-  without `ccomp`. On AArch64 macOS, Apple clang 21, GCC 16.2 and LLVM clang 23.1 match CompCert
-  3.17 bitwise. ctest runs the driver as the `compiler` test, without the comparison.
+  without `ccomp`. On macOS it sets an unset `MACOSX_DEPLOYMENT_TARGET` to the running version, so
+  Homebrew GCC 13 can build there. On AArch64 macOS, Apple clang 21, GCC 13.4 and 16.2, and LLVM
+  clang 23.1 match CompCert 3.17 bitwise. ctest runs the driver as the `compiler` test, without
+  the comparison.
 - `test/doc/test_example.py` checks the examples in `doc/api/`: every C program is compiled with
   the strict warning set and `-Werror`, run, and its output compared with the page; every C block
   is checked against the pinned clang-format; the Python sessions run as doctests; and the version
