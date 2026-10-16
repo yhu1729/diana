@@ -14,8 +14,10 @@ carries CompCert.
   `-fexcess-precision=standard` for gcc. It fails unless each host output is byte-identical to
   the `ccomp` output, prints the first 20 lines of `diff`, and keeps the outputs.
 - The host compilers are `DIANA_COMPARE_CC` when set, else `clang`, `gcc`, `cc`, every `gcc-N`
-  and `clang-N` on `PATH`, and the Homebrew LLVM `clang`; candidates with the same first line of
-  `--version` are one compiler (on macOS `gcc` and `cc` are Apple clang). A candidate that cannot
+  and `clang-N` on `PATH`, and the `clang` of every Homebrew LLVM keg (`llvm` and each
+  `llvm@N` under `/opt/homebrew/opt` or `/usr/local/opt`); candidates with the same first line of
+  `--version` are one compiler (on macOS `gcc` and `cc` are Apple clang, and `llvm` is the
+  newest `llvm@N`). A candidate that cannot
   link a trivial program is skipped with its first error line. A driver that does not build fails.
 - On macOS, when `MACOSX_DEPLOYMENT_TARGET` is unset or empty, the script sets it to the running
   version (`sw_vers -productVersion`) for every build, `ccomp` included. Without it Homebrew GCC 13
