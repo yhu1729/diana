@@ -1,7 +1,7 @@
 ---
 # Checks consistent with cmake/warning.cmake. The verified kernels must stay
 # C11, allocation-free and libm-free, so the selected checks target the
-# properties the strict warning set cannot express; see doc/development.md.
+# properties the strict warning set cannot express; see doc/development/style.md.
 Checks: >
   -*,
   bugprone-*,
