@@ -1,7 +1,8 @@
 """Diana: formally verified numerical methods in C, with a Python binding.
 
-Every iterative kernel is exposed in reverse-communication form (a small state object) and,
-for convenience, as a function taking a Python callable. The callable loop runs in Python and is
+Every iterative kernel, :class:`Bisection` and :class:`Newton`, is exposed in
+reverse-communication form (a small state object) and, for convenience, as a function taking a
+Python callable (:func:`bisection`, :func:`newton`). The callable loop runs in Python and is
 not part of the verified code. Kernels over tabulated samples, :func:`trapezoidal` and
 :func:`simpson`, take a float64 buffer or a sequence of numbers. :func:`euler_step` takes one
 explicit Euler step and :func:`euler` loops over it with a callable.
@@ -11,9 +12,10 @@ from __future__ import annotations
 
 from diana import _diana
 from diana._bisection import bisection
-from diana._diana import CONTINUE, ERR_ARG, ERR_BRACKET, ERR_MAXITER, OK, Bisection
+from diana._diana import CONTINUE, ERR_ARG, ERR_BRACKET, ERR_MAXITER, OK, Bisection, Newton
 from diana._error import BracketError, MaxIterError
 from diana._euler import euler, euler_step
+from diana._newton import newton
 from diana._simpson import simpson
 from diana._trapezoidal import trapezoidal
 
@@ -27,9 +29,11 @@ __all__ = [
     "Bisection",
     "BracketError",
     "MaxIterError",
+    "Newton",
     "bisection",
     "euler",
     "euler_step",
+    "newton",
     "simpson",
     "status_str",
     "trapezoidal",
