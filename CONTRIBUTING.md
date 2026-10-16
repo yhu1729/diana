@@ -70,7 +70,8 @@ uv sync --group test
 uv run pytest
 ```
 
-The pytest suite is in `test/python/`, beside the C suite in `test/c/`.
+The pytest suite is in `test/python/`, beside the C suite in `test/c/`; `test/doc/` checks the
+examples in `doc/api/` (add `--group lint` to the sync for the clang-format check of their C code).
 
 ### Lean
 
