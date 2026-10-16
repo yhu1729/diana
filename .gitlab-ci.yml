@@ -41,6 +41,8 @@ stages:
   - doc/api/**/*
   - script/check_spec.py
   - script/check_wheel.py
+  - README.md
+  - LICENSE
 
 .change_style: &change_style
   - .gitlab-ci.yml
