@@ -18,6 +18,7 @@ theory/Float/Trapezoidal.v
 ../clight/bisection_aarch64_macos.v
 theory/VST/Bisection.v
 ../clight/euler_aarch64_macos.v
+theory/VST/Euler.v
 ../clight/simpson_aarch64_macos.v
 theory/VST/Simpson.v
 ../clight/trapezoidal_aarch64_macos.v
