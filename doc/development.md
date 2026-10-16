@@ -201,6 +201,24 @@ Expected values in `test/c/test_simpson.c`:
   by its intermediates, as `spec/simpson.md` states.
 - `DBL_TRUE_MIN / 3` rounds to `+0`: underflow is a finite result, not an error.
 
+Expected values in `test/python/test_simpson.py`, beyond the cases it shares with the C test:
+
+- The Hypothesis test draws odd-length lists (3 to 41 samples) and requires bitwise agreement
+  (value and sign of zero) with the same two left-to-right sums from `+0`, the regrouping
+  `((y0 + yl) + 4 so) + 2 se` and `(h s) / 3` in Python floats, and `ValueError` exactly when that
+  evaluation is not finite.
+- The rounding test checks the SIMPSON-B2 bound against the rule evaluated exactly in
+  `fractions.Fraction`, on scaled random samples in the normal range (1001 samples, `h = 0.1`), on
+  samples near `2^-1000` with `h = 0.1 * 2^-60` (the product with `h` underflows), and on
+  `{DBL_TRUE_MIN, 0, 0}` with `h = 1` (the division by 3 underflows to 0).
+- The convergence test integrates `exp` on `[0, 1]` against `e - 1` from mpmath at 40 digits, for
+  `m = 8, ..., 128` panels. SIMPSON-A2 with `M4 = e` bounds the error by `e h^4 / 180`, and
+  `exp'''' > 0` makes it positive. By Euler-Maclaurin the error is
+  `(e - 1) h^4 / 180 - (e - 1) h^6 / 1512 + O(h^8)`, so each halving of `h` divides it by
+  `16 (1 - (3/4)(180/1512) h^2) + O(h^4)`, about `0.022` below 16 at `h = 1/8` (measured
+  `15.978`); SIMPSON-B2 bounds the rounding by about `1.3e-14` against the smallest error, about
+  `3.6e-11`, so it moves a ratio by at most about `0.006`. The test allows `0.05`.
+
 ## CI (`.gitlab-ci.yml`)
 
 Six stages: style (format, naming, spec structure), build (per compiler and configuration), test
