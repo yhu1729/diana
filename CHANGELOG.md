@@ -6,8 +6,62 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-15
+
+Milestone M1: the composite trapezoidal and Simpson rules over tabulated samples and the explicit
+Euler step, each through every verification layer — error bounds over the reals in Lean and Rocq
+(layer A), binary64 bounds in Flocq (layer B), and Frama-C WP plus a VST proof that the C computes
+the Flocq model (layer C) — with a Python binding for each and a C callback wrapper for Euler. The
+bisection API is renamed after the method, a breaking change (see Changed).
+
+As in 0.1.0, layers B and C-VST, the Rocq axiom gate and the Clight ASTs are checked **locally
+only**; CI covers layer A and Frama-C. `doc/verification.md` is the trust statement, and its
+generated report lists all 29 theorems as proved.
+
 ### Added
 
+#### C library
+
+- Composite trapezoidal rule over tabulated samples, `diana_trapezoidal(y, n, h, result)` in
+  `diana/trapezoidal.h`. It returns `DIANA_ERR_ARG` without writing `*result` for NULL
+  pointers, `n < 2`, or a non-finite result. Frama-C WP proves its ACSL contract (41 goals,
+  TRAPEZOIDAL-C1); `spec/trapezoidal.md` lists the layer-A error bounds, the Flocq
+  finiteness and forward-error theorems, and the VST theorem.
+- Composite Simpson rule over tabulated samples, `diana_simpson(y, n, h, result)` in
+  `diana/simpson.h`, for an odd `n >= 3`: the odd and even interior samples are summed separately,
+  left to right from `+0`, and the result is `(h * ((y[0] + y[n-1]) + 4 * so + 2 * se)) / 3`. It
+  returns `DIANA_ERR_ARG` without writing `*result` for NULL pointers, `n < 3`, an even `n`, or a
+  non-finite result. Frama-C WP proves its ACSL contract (58 goals, SIMPSON-C1); `spec/simpson.md`
+  fixes the operation order and lists every Simpson theorem. `test/c/test_simpson.c` covers every
+  path of the kernel: argument errors, exact results on cubic data, the operation order, overflow
+  in each operation, NaN and infinite samples and `h`, `h = 0`, and underflow to zero.
+- Explicit Euler step `diana_euler_step(y, f, d, h, y_out)` in `diana/euler.h`: `y_out[i] =
+  y[i] + h * f[i]` with the product rounded before the sum, `y_out` separate from `y` and `f`. It
+  returns `DIANA_ERR_ARG` without writing `y_out` for NULL pointers, `d == 0`, or any non-finite
+  component; a first pass checks every component before a second pass writes. Frama-C WP proves
+  its ACSL contract (49 goals, EULER-C1), and `spec/euler.md` fixes the operation order and lists
+  every Euler theorem. `test/c/test_euler.c` covers every path: argument
+  errors, exact steps, the absence of contraction, `h = 0`, underflow, overflow in either
+  operation, NaN and infinite inputs, and failures that leave `y_out` untouched.
+- Callback wrapper `diana_euler(fn, ctx, t0, h, nstep, y, d, work, done)` in `diana/wrapper.h`
+  (`diana_ode_fn` callback, `work` of `2 * d` doubles, no allocation): `nstep` Euler steps in
+  place, the time of step `k` computed as `t0 + k * h`, and on a failing step `y` left at the last
+  good state with `*done` the number of completed steps. Unverified, like `diana_bisection`;
+  `test/c/test_euler.c` covers every path at 100% line and branch coverage.
+
+#### Python binding
+
+- Python binding `diana.trapezoidal(y, h)` (driver `diana._trapezoidal`). It reads a
+  one-dimensional, C-contiguous, aligned buffer of native float64 in place through the buffer
+  protocol, with no NumPy dependency, and copies any other iterable of numbers into an
+  `array.array("d")`. It raises `TypeError` for another element type, and `ValueError` for another
+  layout, fewer than two samples, or a non-finite result.
+- Python binding `diana.simpson(y, h)` (driver `diana._simpson`), with the buffer handling of
+  `diana.trapezoidal`: it raises `TypeError` for another element type, and `ValueError` for another
+  layout, fewer than three samples, an even number of samples, or a non-finite result.
+  `test/python/test_simpson.py` checks the buffer handling, bitwise agreement with a sequential
+  binary64 evaluation (Hypothesis), the SIMPSON-B2 rounding bound against exact rational
+  arithmetic, and fourth-order convergence against mpmath.
 - Python binding `diana.euler_step(y, f, h)` (a new `array.array("d")`) and the driver
   `diana.euler(f, t0, y0, h, nstep)` looping in Python (module `diana._euler`). The extension
   function `diana._diana.euler_step(y, f, h, out)` reads `y` and `f` in place and checks that the
@@ -15,90 +69,9 @@ All notable changes to this project are documented here. The format follows
   buffer handling, bitwise agreement with `y + h*f` in Python floats (Hypothesis), the EULER-B2
   bound against exact rational arithmetic, and first-order convergence with the EULER-A2 bound on
   a rotation.
-- Callback wrapper `diana_euler(fn, ctx, t0, h, nstep, y, d, work, done)` in `diana/wrapper.h`
-  (`diana_ode_fn` callback, `work` of `2 * d` doubles, no allocation): `nstep` Euler steps in
-  place, the time of step `k` computed as `t0 + k * h`, and on a failing step `y` left at the last
-  good state with `*done` the number of completed steps. Unverified, like `diana_bisection`;
-  `test/c/test_euler.c` covers every path at 100% line and branch coverage.
-- VST proves EULER-C2 (`Diana.VST.Euler.body_diana_euler_step`) against the committed AArch64
-  macOS Clight AST `verification/clight/euler_aarch64_macos.v`: for non-NULL, disjoint `y`, `f`
-  and `y_out` with `d >= 1`, `diana_euler_step` writes the Flocq model values and returns
-  `DIANA_OK` exactly when all of them are finite, and otherwise returns `DIANA_ERR_ARG` with
-  `y_out` unchanged. Every Euler theorem listed in `spec/euler.md` is now proved.
-- Flocq proves the Euler binary64 theorems in `verification/rocq/theory/Float/Euler.v`: EULER-B1
-  (`finite_result`: a finite component implies finite `y_i`, `f_i`, `h` and product, so neither
-  operation overflowed) and EULER-B2 (`forward_error`: `|r_i − (y_i + h·f_i)| ≤
-  u·|y_i + h·f_i| + (1 + u)·(u·|h·f_i| + η)` per component).
-- Lean and Rocq prove the Euler error bounds EULER-A1 (`Diana.Real.Euler.local_error`, one step:
-  `M₂·h²/2`) and EULER-A2 (`global_error`: `(M₂·h/(2L))·(e^{L·k·h} − 1)` after `k` steps) for
-  `y′ = F(t, y)` with `F` L-Lipschitz in `y` and `‖y″‖ ≤ M₂`; `y″` need not be continuous. Lean
-  states them for any real normed space, Rocq for vectors `nat → R` with the max norm
-  (`Diana.Real.Vector`). The global bound comes from a discrete Grönwall lemma for any one-step
-  method, `Diana.Real.OneStep.one_step_error` in both provers, which RK4 will reuse. `make real`
-  builds the new Rocq modules.
-- Explicit Euler step `diana_euler_step(y, f, d, h, y_out)` in `diana/euler.h`: `y_out[i] =
-  y[i] + h * f[i]` with the product rounded before the sum, `y_out` separate from `y` and `f`. It
-  returns `DIANA_ERR_ARG` without writing `y_out` for NULL pointers, `d == 0`, or any non-finite
-  component; a first pass checks every component before a second pass writes. Frama-C WP proves
-  its ACSL contract (49 goals, EULER-C1), and `spec/euler.md` fixes the operation order and lists
-  the planned layer-A, layer-B and VST theorems. `test/c/test_euler.c` covers every path: argument
-  errors, exact steps, the absence of contraction, `h = 0`, underflow, overflow in either
-  operation, NaN and infinite inputs, and failures that leave `y_out` untouched.
-- Python binding `diana.simpson(y, h)` (driver `diana._simpson`), with the buffer handling of
-  `diana.trapezoidal`: it raises `TypeError` for another element type, and `ValueError` for another
-  layout, fewer than three samples, an even number of samples, or a non-finite result.
-  `test/python/test_simpson.py` checks the buffer handling, bitwise agreement with a sequential
-  binary64 evaluation (Hypothesis), the SIMPSON-B2 rounding bound against exact rational
-  arithmetic, and fourth-order convergence against mpmath.
-- VST proves SIMPSON-C2 (`Diana.VST.Simpson.body_diana_simpson`) against the committed AArch64
-  macOS Clight AST `verification/clight/simpson_aarch64_macos.v`: for non-NULL `y` with an odd
-  `n >= 3`, `diana_simpson` returns `DIANA_OK` and writes the Flocq model value exactly when it is
-  finite, and otherwise returns `DIANA_ERR_ARG` with `*result` unchanged. Every Simpson theorem is
-  now proved, so the full strict spec gate passes with both quadrature rules.
-- Flocq proves the Simpson binary64 theorems in `verification/rocq/theory/Float/Simpson.v`:
-  SIMPSON-B1 (`finite_result`: a finite result implies finite `h`, samples and partial sums) and
-  SIMPSON-B2 (`forward_error`: `|r − h·S′/3| ≤ γₚ₊₅·|h|·A/3 + (1 + u)·η/3 + η` for `(p + 5)·u < 1`,
-  with `A` the Simpson-weighted absolute sum of the samples). `Diana.Float.Sum` gains `fdiv` with
-  its value and finiteness lemmas, exact scaling by a power of two (`fmul_exact`), `gamma_mono`,
-  and the addition step `add_step`; `fold_error` takes its absolute error term as a parameter, so
-  a sum started from an exact `+0` carries none.
-- Lean and Rocq prove the Simpson error bounds SIMPSON-A1 (`Diana.Real.Simpson.local_error`, one
-  double panel: `M₄·h⁵/90`) and SIMPSON-A2 (`composite_error`, `2p` panels:
-  `(b − a)·h⁴·M₄/180`) for `f` with a two-sided fourth derivative bounded by `M₄` on the interval;
-  `f⁗` need not be continuous. Both reuse `Diana.Real.Quadrature`, and `make real` builds the Rocq
-  proof.
-- Composite Simpson rule over tabulated samples, `diana_simpson(y, n, h, result)` in
-  `diana/simpson.h`, for an odd `n >= 3`: the odd and even interior samples are summed separately,
-  left to right from `+0`, and the result is `(h * ((y[0] + y[n-1]) + 4 * so + 2 * se)) / 3`. It
-  returns `DIANA_ERR_ARG` without writing `*result` for NULL pointers, `n < 3`, an even `n`, or a
-  non-finite result. Frama-C WP proves its ACSL contract (58 goals, SIMPSON-C1);
-  `spec/simpson.md` fixes the operation order and lists the planned layer-A, layer-B and VST
-  theorems. `test/c/test_simpson.c` covers every path of the kernel: argument errors, exact results
-  on cubic data, the operation order, overflow in each operation, NaN and infinite samples and
-  `h`, `h = 0`, and underflow to zero.
-- `script/check_commit.sh` checks commit history against the commit convention: no merge commit,
-  a `<type>[(scope)]: <summary>` subject of at most 50 characters without an article, a message
-  that is the subject and one `Signed-off-by` matching the committer, and an author date equal to
-  the commit date. The new `pre-push` hook in `.git-hooks/` runs it on the commits the remote does
-  not have, and the `style_git` CI job on the commits since the branch's previous pipeline (the
-  merge request's commits in a merge request pipeline, otherwise the whole history when there is
-  no previous pipeline).
-- Composite trapezoidal rule over tabulated samples, `diana_trapezoidal(y, n, h, result)` in
-  `diana/trapezoidal.h`. It returns `DIANA_ERR_ARG` without writing `*result` for NULL
-  pointers, `n < 2`, or a non-finite result. Frama-C WP proves its ACSL contract (41 goals,
-  TRAPEZOIDAL-C1); `spec/trapezoidal.md` lists the layer-A error bounds, the Flocq
-  finiteness and forward-error theorems, and the VST theorem.
-- Python binding `diana.trapezoidal(y, h)` (driver `diana._trapezoidal`). It reads a
-  one-dimensional, C-contiguous, aligned buffer of native float64 in place through the buffer
-  protocol, with no NumPy dependency, and copies any other iterable of numbers into an
-  `array.array("d")`. It raises `TypeError` for another element type, and `ValueError` for another
-  layout, fewer than two samples, or a non-finite result.
-- `test/c/test_trapezoidal.c` covers every path of `diana_trapezoidal`, restoring 100% C line and
-  branch coverage: NULL pointers, `n < 2`, exact results on affine data, the left-to-right
-  summation order, overflow from finite samples, NaN and infinite samples and `h`, `h = 0`, and
-  underflow to zero. `test/python/test_trapezoidal.py` checks the binding's buffer handling,
-  bitwise agreement with a sequential binary64 evaluation (Hypothesis), the forward rounding-error
-  bound against exact rational arithmetic, and second-order convergence against mpmath.
+
+#### Verification
+
 - Lean and Rocq prove the trapezoidal error bounds TRAPEZOIDAL-A1
   (`Diana.Real.Trapezoidal.local_error`, one panel: `M₂·h³/12`) and TRAPEZOIDAL-A2
   (`composite_error`, `m` panels: `(b − a)·h²·M₂/12`) for `f` with a two-sided second derivative
@@ -114,29 +87,67 @@ All notable changes to this project are documented here. The format follows
   `n >= 2`, `diana_trapezoidal` returns `DIANA_OK` and writes the Flocq model value exactly when
   it is finite, and otherwise returns `DIANA_ERR_ARG` with `*result` unchanged. Every trapezoidal
   theorem is now proved, so the full strict spec gate passes.
-- `script/check_wheel.py` checks static and shared installed wheels in isolated environments;
-  Python CI runs it. `test_install` checks the installed CMake consumer with a custom
-  header directory and with a shared library, and gates releases.
+- Lean and Rocq prove the Simpson error bounds SIMPSON-A1 (`Diana.Real.Simpson.local_error`, one
+  double panel: `M₄·h⁵/90`) and SIMPSON-A2 (`composite_error`, `2p` panels:
+  `(b − a)·h⁴·M₄/180`) for `f` with a two-sided fourth derivative bounded by `M₄` on the interval;
+  `f⁗` need not be continuous. Both reuse `Diana.Real.Quadrature`, and `make real` builds the Rocq
+  proof.
+- Flocq proves the Simpson binary64 theorems in `verification/rocq/theory/Float/Simpson.v`:
+  SIMPSON-B1 (`finite_result`: a finite result implies finite `h`, samples and partial sums) and
+  SIMPSON-B2 (`forward_error`: `|r − h·S′/3| ≤ γₚ₊₅·|h|·A/3 + (1 + u)·η/3 + η` for `(p + 5)·u < 1`,
+  with `A` the Simpson-weighted absolute sum of the samples). `Diana.Float.Sum` gains `fdiv` with
+  its value and finiteness lemmas, exact scaling by a power of two (`fmul_exact`), `gamma_mono`,
+  and the addition step `add_step`; `fold_error` takes its absolute error term as a parameter, so
+  a sum started from an exact `+0` carries none.
+- VST proves SIMPSON-C2 (`Diana.VST.Simpson.body_diana_simpson`) against the committed AArch64
+  macOS Clight AST `verification/clight/simpson_aarch64_macos.v`: for non-NULL `y` with an odd
+  `n >= 3`, `diana_simpson` returns `DIANA_OK` and writes the Flocq model value exactly when it is
+  finite, and otherwise returns `DIANA_ERR_ARG` with `*result` unchanged. Every Simpson theorem is
+  now proved, so the full strict spec gate passes with both quadrature rules.
+- Lean and Rocq prove the Euler error bounds EULER-A1 (`Diana.Real.Euler.local_error`, one step:
+  `M₂·h²/2`) and EULER-A2 (`global_error`: `(M₂·h/(2L))·(e^{L·k·h} − 1)` after `k` steps) for
+  `y′ = F(t, y)` with `F` L-Lipschitz in `y` and `‖y″‖ ≤ M₂`; `y″` need not be continuous. Lean
+  states them for any real normed space, Rocq for vectors `nat → R` with the max norm
+  (`Diana.Real.Vector`). The global bound comes from a discrete Grönwall lemma for any one-step
+  method, `Diana.Real.OneStep.one_step_error` in both provers, which RK4 will reuse. `make real`
+  builds the new Rocq modules.
+- Flocq proves the Euler binary64 theorems in `verification/rocq/theory/Float/Euler.v`: EULER-B1
+  (`finite_result`: a finite component implies finite `y_i`, `f_i`, `h` and product, so neither
+  operation overflowed) and EULER-B2 (`forward_error`: `|r_i − (y_i + h·f_i)| ≤
+  u·|y_i + h·f_i| + (1 + u)·(u·|h·f_i| + η)` per component).
+- VST proves EULER-C2 (`Diana.VST.Euler.body_diana_euler_step`) against the committed AArch64
+  macOS Clight AST `verification/clight/euler_aarch64_macos.v`: for non-NULL, disjoint `y`, `f`
+  and `y_out` with `d >= 1`, `diana_euler_step` writes the Flocq model values and returns
+  `DIANA_OK` exactly when all of them are finite, and otherwise returns `DIANA_ERR_ARG` with
+  `y_out` unchanged. Every Euler theorem listed in `spec/euler.md` is now proved.
+
+#### Tests and tooling
+
+- `test/c/test_trapezoidal.c` covers every path of `diana_trapezoidal`, restoring 100% C line and
+  branch coverage: NULL pointers, `n < 2`, exact results on affine data, the left-to-right
+  summation order, overflow from finite samples, NaN and infinite samples and `h`, `h = 0`, and
+  underflow to zero. `test/python/test_trapezoidal.py` checks the binding's buffer handling,
+  bitwise agreement with a sequential binary64 evaluation (Hypothesis), the forward rounding-error
+  bound against exact rational arithmetic, and second-order convergence against mpmath.
 - `test/c/test_bisection.c` covers the last uncovered paths of the kernel and the wrapper, taking C
   line and branch coverage to 100%: the `diana_bisection_init` early `DIANA_OK` (bracket already
   within the tolerance, and a bracket so narrow that the midpoint rounds onto an endpoint, in both
   rounding directions), the `diana_bisection_step` stagnation exits on each side of the bracket
   update, a non-finite `fb`, and in `diana_bisection` a callback that returns a non-finite value at
   the midpoint plus the `iter == NULL` calls.
+- `script/check_wheel.py` checks static and shared installed wheels in isolated environments;
+  Python CI runs it. `test_install` checks the installed CMake consumer with a custom
+  header directory and with a shared library, and gates releases.
+- `script/check_commit.sh` checks commit history against the commit convention: no merge commit,
+  a `<type>[(scope)]: <summary>` subject of at most 50 characters without an article, a message
+  that is the subject and one `Signed-off-by` matching the committer, and an author date equal to
+  the commit date. The new `pre-push` hook in `.git-hooks/` runs it on the commits the remote does
+  not have, and the `style_git` CI job on the commits since the branch's previous pipeline (the
+  merge request's commits in a merge request pipeline, otherwise the whole history when there is
+  no previous pipeline).
 
 ### Changed
 
-- `diana_py_get_samples` takes the argument's name for its messages and can request a writable
-  buffer; the messages for `y` are unchanged.
-- The buffer checks of the array kernels' Python bindings are one helper,
-  `diana_py_get_samples` in `python/ext/convert.c`, with the same checks, order and messages that
-  `diana.trapezoidal` had.
-- The reusable parts of the trapezoidal proofs are separate modules, with the theorem statements
-  unchanged: `Diana.Real.Quadrature` in Lean and Rocq (the mean-value bound against a boundary
-  function, the clamped extension used for the fundamental theorem of calculus, and the sum of
-  per-panel errors, `panel_error`) and `Diana.Float.Sum` in Rocq (`u`, `η`, `γₖ`, the rounding
-  error lemmas, and the recursive-summation bound `fold_error`). `make real` builds
-  `Real/Quadrature.v` before `Real/Trapezoidal.v`.
 - The bisection C API is named after the method (`bisect` in v0.1.0, a breaking change):
   `diana/bisection.h` declares `diana_bisection_state`, `diana_bisection_init`,
   `diana_bisection_step` and `diana_bisection_result`, the callback wrapper is `diana_bisection`
@@ -152,6 +163,16 @@ All notable changes to this project are documented here. The format follows
   `BISECTION-C5` (`spec/bisect.md` and `BIS-*` in v0.1.0).
 - The spec gate requires each theorem ID to start with its method in capitals (`BISECTION-A1` in
   `spec/bisection.md`) and no longer caps that prefix at six letters.
+- The reusable parts of the trapezoidal proofs are separate modules, with the theorem statements
+  unchanged: `Diana.Real.Quadrature` in Lean and Rocq (the mean-value bound against a boundary
+  function, the clamped extension used for the fundamental theorem of calculus, and the sum of
+  per-panel errors, `panel_error`) and `Diana.Float.Sum` in Rocq (`u`, `η`, `γₖ`, the rounding
+  error lemmas, and the recursive-summation bound `fold_error`). `make real` builds
+  `Real/Quadrature.v` before `Real/Trapezoidal.v`.
+- The buffer checks of the array kernels' Python bindings are one helper,
+  `diana_py_get_samples` in `python/ext/convert.c`, which names the argument in its messages and
+  can request a writable buffer; `diana.trapezoidal` keeps its checks, their order and its
+  messages.
 - `verify_rocq` runs on `mathcomp/mathcomp:2.6.0-rocq-prover-9.2` and installs Coquelicot 3.4.5,
   so layer-A Rocq proofs can use Coquelicot integrals and derivatives in CI.
 - Frama-C verification data lives in `verification/frama-c/`, with all expected goal counts in
@@ -297,5 +318,6 @@ and what it assumes; its generated report gives the status of every theorem.
   and is never shipped, and Alt-Ergo is only a proof oracle. Diana itself has no runtime
   dependency.
 
-[Unreleased]: https://gitlab.com/yhu1729/diana/-/compare/v0.1.0...main
+[Unreleased]: https://gitlab.com/yhu1729/diana/-/compare/v0.2.0...main
+[0.2.0]: https://gitlab.com/yhu1729/diana/-/compare/v0.1.0...v0.2.0
 [0.1.0]: https://gitlab.com/yhu1729/diana/-/tags/v0.1.0
