@@ -16,8 +16,12 @@ carries CompCert.
 - The host compilers are `DIANA_COMPARE_CC` when set, else `clang`, `gcc`, `cc`, every `gcc-N`
   and `clang-N` on `PATH`, and the Homebrew LLVM `clang`; candidates with the same first line of
   `--version` are one compiler (on macOS `gcc` and `cc` are Apple clang). A candidate that cannot
-  link a trivial program is skipped with its first error line: Homebrew GCC 13 on macOS 27 passes
-  `-mmacosx-version-min=18.0`, which the linker rejects. A driver that does not build fails.
+  link a trivial program is skipped with its first error line. A driver that does not build fails.
+- On macOS, when `MACOSX_DEPLOYMENT_TARGET` is unset or empty, the script sets it to the running
+  version (`sw_vers -productVersion`) for every build, `ccomp` included. Without it Homebrew GCC 13
+  derives `-mmacosx-version-min=18.0` from Darwin 27, which the clang it runs as assembler and
+  linker rejects, so it could not build even the trivial program. A value set by the caller is
+  kept.
 - Without `ccomp` on `PATH` it prints that the comparison is skipped and exits 0, so
   `script/dev.sh verify` (which runs it through `opam exec`) skips it as the Clight check skips a
   foreign target.
