@@ -116,11 +116,12 @@ doc/                  README index; api/, development/, test/, verification/ (tr
   `-DDIANA_BUILD_PYTHON=OFF` for a C-only build, as the C-only CI jobs do)
 - C format: `uv sync --group lint && git ls-files '*.c' '*.h' | xargs uv run clang-format -i` (`--dry-run --Werror` to check)
 - Python: `uv sync --group test --group lint && uv run pytest && uv run ruff check python` (the `pyproject.toml` is at the repo root so the sdist can carry the C sources; package code lives in `python/src/diana`)
-- Wheel: `uv run script/check_wheel.py` builds and checks static and shared installed wheels;
-  shared wheels bundle an unversioned runtime beside the extension. Standalone CMake builds
-  retain library versioning and respect `CMAKE_INSTALL_INCLUDEDIR` in the exported target.
-  Shared Windows builds export the C API in both modes. Sanitized installations export their
-  runtime link options; macOS install tests inherit the architecture list, SDK, and deployment target.
+- Wheel: `uv run script/check_wheel.py` builds and checks static and shared installed wheels
+  (`DIANA_BUILD_SHARED_LIB`, not the generic `BUILD_SHARED_LIBS`); shared wheels bundle an
+  unversioned runtime beside the extension. Standalone CMake builds retain library versioning and
+  respect `CMAKE_INSTALL_INCLUDEDIR` in the exported target. Linux and macOS only, no Windows
+  branch anywhere. Sanitized installations export their runtime link options; macOS install tests
+  inherit the architecture list, SDK, and deployment target.
 - Coverage: `uv sync --group test --group coverage && uv run pytest --cov=diana`; C and extension coverage via gcovr as in the `coverage_c`/`coverage_python` CI jobs
 - Lean: `cd verification/lean && lake exe cache get && lake build` (Mathlib pinned by `lake-manifest.json`)
 - Rocq: `cd verification/rocq && make && make check` (inside the opam switch, see `CONTRIBUTING.md`).
