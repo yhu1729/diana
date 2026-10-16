@@ -75,6 +75,46 @@ theorem:
     layer: C
     informal: "diana_bisection_result writes the model midpoint and the rounded width (VST, AArch64 macOS Clight AST)"
     rocq: Diana.VST.Bisection.body_diana_bisection_result
+  - id: BISECTION-C6
+    layer: C
+    informal: >
+      diana_bisection_init computes c_init, the model of every exit in the C's evaluation order
+      (VST, AArch64 macOS Clight AST): for s pointing to a writable state with any contents, it
+      returns the c_init status (DIANA_ERR_ARG, DIANA_ERR_BRACKET, DIANA_OK or DIANA_CONTINUE),
+      writes the c_init state (iter = 0; x the model midpoint, or the endpoint a zero f-value
+      collapses onto) on DIANA_OK and DIANA_CONTINUE, and leaves *s unchanged on an error. The NULL
+      path is BISECTION-C2.
+    rocq: Diana.VST.Bisection.body_diana_bisection_init
+  - id: BISECTION-C7
+    layer: C
+    informal: >
+      diana_bisection_step computes c_step (VST, AArch64 macOS Clight AST): for s pointing to a
+      writable state, it returns the c_step status (DIANA_ERR_ARG for a non-finite fx, DIANA_OK for
+      a zero fx, the tolerance and the stagnation exits, DIANA_ERR_MAXITER, DIANA_CONTINUE) and
+      writes the c_step state, which is *s unchanged on DIANA_ERR_ARG and otherwise has iter
+      incremented as unsigned C arithmetic. The NULL path is BISECTION-C2.
+    rocq: Diana.VST.Bisection.body_diana_bisection_step
+  - id: BISECTION-C8
+    layer: C
+    informal: >
+      c_step agrees with the binary64 model: for finite fx and fa, the state it writes is fstep of
+      the old state (BISECTION-B2) with iter + 1 and max_iter unchanged, so by BISECTION-C7 the
+      bracket after diana_bisection_step is the layer-B fstep.
+    rocq: Diana.VST.Bisection.c_step_fstep
+  - id: BISECTION-C9
+    layer: C
+    informal: >
+      c_init establishes the layer-B invariant: whenever it writes a state, the status is DIANA_OK
+      or DIANA_CONTINUE, the state satisfies Bracket (the hypothesis of BISECTION-B2), and Next as
+      well on DIANA_CONTINUE; iter = 0 and max_iter is the nonzero argument.
+    rocq: Diana.VST.Bisection.c_init_bracket
+  - id: BISECTION-C10
+    layer: C
+    informal: >
+      a continuing step keeps the layer-B invariant: from a state satisfying Bracket and Next, a
+      c_step that returns DIANA_CONTINUE writes a state satisfying Bracket and Next with
+      iter < max_iter, so BISECTION-B2 applies again to the next step.
+    rocq: Diana.VST.Bisection.c_step_next
 ---
 # bisection
 
@@ -132,12 +172,28 @@ replaces the midpoint by `0.5 * (a + b)` in binary64 round-to-nearest-even.
 - **C5**: `diana_bisection_result` over `data_at` on the state, with the two output pointers and the
   separation the ACSL `\separated` preconditions require. The kernel is loop-free (no `Sloop` in
   the Clight AST), so the proof is `forward`/`forward_if`/`forward_call` with no loop invariant.
-- **`diana_bisection_init` and `diana_bisection_step` are not yet proved under VST.** Frama-C WP
-  covers them (BISECTION-C2: memory safety, no UB, and the bracket invariant), so layer C is not
-  empty for them, but no VST theorem yet says their post-state is the layer-B model. `init` has 21
-  Clight temporaries from the short-circuit `||` chains and `step` nine branches; both need a
-  funspec shape that keeps `data_at` field reads from unfolding into nested `let` projections, which
-  is what blocked the first attempt.
+- **C6/C7**: `c_init` and `c_step` are total models over `cstate` (the Flocq `state` plus `iter`
+  and `max_iter` as CompCert `int`), written as the C evaluates: CompCert `Float.cmp` for every
+  comparison, the short-circuit `||`/`&&` chains in source order, unsigned `iter + 1u`, and
+  `iter >= max_iter` as `negb (Int.ltu iter max_iter)`. The funspecs take the state as
+  `data_at` of a concrete field tuple (`cstate_repr`, destructed at the start of the proof), so field
+  reads and stores stay concrete instead of unfolding into nested projections. Each short-circuit
+  temporary is joined by `forward_if` on its value, and the branch obligations are closed by case
+  analysis on the finiteness and comparison bits (`bool_solve`). Before each `return` the
+  postcondition is rewritten to the concrete status and state (`init_post`, `step_post`): left to
+  VST's `forward`, the entailment simplifies the unreduced model and does not terminate. `c_keep`,
+  `c_mid` and `c_abs` stay `Opaque` during symbolic execution. `init` keeps the caller's contents
+  until every error exit has passed, then weakens `data_at` to `data_at_` for the stores, so an
+  error leaves `*s` unchanged.
+- **C8**: `c_step` and `fstep` take the same branches once `fx` and `fa` are finite:
+  `Float.cmp Ceq fx 0` is `B2R fx = 0`, `Float.cmp Cgt x 0` is `fpos x`, `Float.cmp Cle` is `fle`,
+  and `Float.sub`/`c_mid` are `fwidth`/`mid` at CompCert's NaN-payload function.
+- **C9/C10**: the comparisons that do not take an error exit become real inequalities on finite
+  operands (`cmp_real`); `|a|, |b| <= DBL_MAX/2` comes from `c_abs_B2R` and the exact value of the
+  constant `DBL_MAX / 2.0` (`c_max_B2R`), the strict sign change from excluding equal strict signs
+  and zero f-values, and `a < x < b` from the stagnation test once `mid_in_bracket` (B1) makes `x`
+  finite. C10 obtains `Bracket` from C8 and B2. Together, C6, C7 and C9/C10 put every state that a
+  run of `init` then `step` reaches while the status is `DIANA_CONTINUE` under B2–B4.
 
 ## Model correspondence
 
@@ -164,6 +220,11 @@ replaces the midpoint by `0.5 * (a + b)` in binary64 round-to-nearest-even.
   `verification/clight/bisection_aarch64_macos.v`, CompCert target AArch64 macOS): CompCert's `Float.add`/`Float.mul` are Flocq's `Bplus`/`Bmult`
   with CompCert's NaN-payload function, so the model instantiates directly. `c_half` is the literal
   `0.5` as emitted by clightgen, and `c_mid` is the C midpoint `Float.mul c_half (Float.add a b)`.
+  `c_max` is `DBL_MAX / 2.0` as the C computes it, a run-time division of two literals. `cstate`
+  is `diana_bisection_state`: the layer-B `state` with `iter` and `max_iter` as CompCert `int`, laid
+  out by `cstate_repr` (`cstate_repr_state_repr` relates it to the `state_repr` of C5). `c_keep` is
+  the C's sign test `(fx > 0.0) == (s->fa > 0.0)` and the endpoint it replaces, the analogue of
+  `fkeep`.
 
 ## Tolerance rationale
 
@@ -185,6 +246,8 @@ a root in reals and within `tol/2 + 1 ulp` in binary64.
 | BISECTION-C3 | – | proved | – |
 | BISECTION-C4 | – | proved | – |
 | BISECTION-C5 | – | proved | – |
-
-`diana_bisection_init` and `diana_bisection_step` have no VST theorem yet; their layer-C guarantee
-is BISECTION-C2 (Frama-C WP) only.
+| BISECTION-C6 | – | proved | – |
+| BISECTION-C7 | – | proved | – |
+| BISECTION-C8 | – | proved | – |
+| BISECTION-C9 | – | proved | – |
+| BISECTION-C10 | – | proved | – |
