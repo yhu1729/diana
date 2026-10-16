@@ -61,6 +61,7 @@ Definition c_step (c : cstate) (fx dfx : float) : Z * cstate :=
   if (negb (c_fin fx) || negb (c_fin dfx))%bool then (-1, c) else
   let it := Int.add (citer c) Int.one in
   if Float.cmp Ceq fx c_zero then (0, mkcstate (cx c) c_zero (ctol c) it (cmax c)) else
+  if Float.cmp Ceq dfx c_zero then (-4, c) else
   let dx := Float.div fx dfx in
   if negb (c_fin dx) then (-1, c) else
   let x := Float.sub (cx c) dx in
@@ -274,6 +275,8 @@ Proof.
   destruct Hf as [Hfx Hdfx].
   forward_if.
   { forward. forward. forward. step_post. forward. }
+  forward_if.
+  { step_post. forward. }
   forward.
   forward_call (Float.div fx dfx).
   change (Binary.is_finite 53 1024 (Float.div fx dfx)) with (c_fin (Float.div fx dfx)).
@@ -317,6 +320,7 @@ Qed.
 
 Theorem c_step_fstep (c : cstate) (fx dfx : float) :
   c_fin fx = true -> c_fin dfx = true -> Float.cmp Ceq fx c_zero = false ->
+  Float.cmp Ceq dfx c_zero = false ->
   c_fin (Float.div fx dfx) = true -> c_fin (Float.sub (cx c) (Float.div fx dfx)) = true ->
   fst (c_step c fx dfx) <> (-1)%Z /\
   cx (snd (c_step c fx dfx)) = FN.fstep Float.binop_nan Float.binop_nan (cx c) fx dfx /\
@@ -324,7 +328,8 @@ Theorem c_step_fstep (c : cstate) (fx dfx : float) :
   citer (snd (c_step c fx dfx)) = Int.add (citer c) Int.one /\
   cmax (snd (c_step c fx dfx)) = cmax c.
 Proof.
-  intros Hfx Hdfx Hz Hdx Hx. unfold c_step. rewrite Hfx, Hdfx, Hz. cbn [negb orb]. cbv zeta.
+  intros Hfx Hdfx Hz Hdz Hdx Hx. unfold c_step. rewrite Hfx, Hdfx, Hz, Hdz. cbn [negb orb].
+  cbv zeta.
   rewrite Hdx, Hx. cbn [negb].
   destruct (Float.cmp Ceq _ _ || Float.cmp Cle _ _)%bool; [| destruct (negb (Int.ltu _ _))];
     cbn [fst snd cx cdx ctol citer cmax]; repeat split; try discriminate; reflexivity.
