@@ -81,6 +81,9 @@ All notable changes to this project are documented here. The format follows
   gate, Frama-C and Flocq boundary, libm-free helpers, local verification, compiler comparison).
   The generated theorem report moves from the end of `doc/verification.md` to
   `doc/verification/report.md`, which `script/check_spec.py` now rewrites.
+- The Lean sources under `verification/lean/` are modules (`module`, `public import`, and a
+  `public section`, with `@[expose]` where the file defines something); `Mathlib.Tactic` is a
+  private import, used only by proofs.
 
 ### Removed
 
