@@ -27,7 +27,7 @@ environment:
   DIANA_OPAM_SWITCH    opam switch with Rocq, CompCert, VST, and Frama-C (default: current)
   DIANA_CLIGHT_UPDATE  1: verify overwrites a Clight AST that differs instead of failing
   DIANA_COMPARE_CC     host compilers verify compares with ccomp (default: clang, gcc,
-                       cc, gcc-N, clang-N, Homebrew LLVM clang; duplicates dropped)
+                       cc, gcc-N, clang-N, every Homebrew LLVM keg; duplicates dropped)
   DIANA_CLANG_TIDY     clang-tidy to run in test (default: first one found, else skip)
 EOF
 }
