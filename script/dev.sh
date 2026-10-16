@@ -13,7 +13,7 @@ usage: script/dev.sh config [cmake option...]
 
   config  configure CMake in the build directory and sync the uv environment
   build   build the C library and tests, rebuild the Python extension
-  test    run ctest and pytest, then the ruff and clang-format checks
+  test    run ctest and pytest, then the ruff, clang-format and clang-tidy checks
   verify  check the Clight ASTs, compare the ccomp build of the kernels with
           gcc/clang builds bitwise, build the Lean and Rocq proofs, run Frama-C
           WP, and run the spec gate in strict mode, which fails on a theorem that
