@@ -55,8 +55,9 @@ theorem:
       separation of outputs from the state, the state invariant (x, dx and tol finite, tol ≥ 0)
       established by init and preserved by step, iter increments, DIANA_OK only with |dx| ≤ tol or
       x unchanged, DIANA_CONTINUE only with |dx| > tol, x changed and iter < max_iter,
-      DIANA_ERR_MAXITER only with iter = max_iter, and the state unchanged when init or step
-      reports DIANA_ERR_ARG. No assumed contract.
+      DIANA_ERR_MAXITER only with iter = max_iter, DIANA_ERR_SINGULAR only with dfx = 0 and
+      fx ≠ 0, and the state unchanged when init reports DIANA_ERR_ARG or step reports
+      DIANA_ERR_ARG or DIANA_ERR_SINGULAR. No assumed contract.
     acsl: src/newton.c
   - id: NEWTON-C2
     layer: C
@@ -78,16 +79,16 @@ theorem:
     informal: >
       diana_newton_step computes c_step (VST, AArch64 macOS Clight AST): for s pointing to a
       writable state, it returns the c_step status (DIANA_ERR_ARG for a non-finite fx, dfx,
-      correction or iterate, DIANA_OK for a zero fx, the tolerance and the stagnation stops,
-      DIANA_ERR_MAXITER, DIANA_CONTINUE) and writes the c_step state, which is *s unchanged on
-      DIANA_ERR_ARG and otherwise has iter incremented as unsigned C arithmetic. The NULL path is
-      NEWTON-C1.
+      correction or iterate, DIANA_ERR_SINGULAR for a zero dfx, DIANA_OK for a zero fx, the
+      tolerance and the stagnation stops, DIANA_ERR_MAXITER, DIANA_CONTINUE) and writes the
+      c_step state, which is *s unchanged on DIANA_ERR_ARG and DIANA_ERR_SINGULAR and otherwise
+      has iter incremented as unsigned C arithmetic. The NULL path is NEWTON-C1.
     rocq: Diana.VST.Newton.body_diana_newton_step
   - id: NEWTON-C5
     layer: C
     informal: >
-      c_step agrees with the binary64 model: when fx and dfx are finite, fx ≠ 0 and the correction
-      and the iterate are finite, the state c_step writes has x = fstep x fx dfx and
+      c_step agrees with the binary64 model: when fx and dfx are finite and non-zero and the
+      correction and the iterate are finite, the state c_step writes has x = fstep x fx dfx and
       dx = fdiv fx dfx at CompCert's NaN-payload functions, so by NEWTON-C4 the iterate
       diana_newton_step writes is the layer-B fstep and NEWTON-B2/B3 apply to it.
     rocq: Diana.VST.Newton.c_step_fstep
@@ -102,10 +103,11 @@ in binary64 round-to-nearest-even, and checks each for finiteness.
 ## Operation order
 
 1. `fx = 0` is tested first: an exact zero converges with `dx = 0`, whatever `f′(x)`;
-2. `dx = fl(fx / dfx)`, rejected (`DIANA_ERR_ARG`, state unchanged) when not finite, which
-   covers a zero `dfx` with a non-zero `fx`;
-3. `x′ = fl(x − dx)`, rejected the same way when not finite;
-4. the state is updated (`iter + 1`, `dx`, `x′`), then `DIANA_OK` if `x′ = x` or `|dx| ≤ tol`,
+2. `dfx = 0` (either sign) is `DIANA_ERR_SINGULAR`, state unchanged: the step is undefined;
+3. `dx = fl(fx / dfx)`, rejected (`DIANA_ERR_ARG`, state unchanged) when not finite, which
+   covers a subnormal `dfx` against a large `fx`;
+4. `x′ = fl(x − dx)`, rejected the same way when not finite;
+5. the state is updated (`iter + 1`, `dx`, `x′`), then `DIANA_OK` if `x′ = x` or `|dx| ≤ tol`,
    `DIANA_ERR_MAXITER` if `iter ≥ max_iter`, else `DIANA_CONTINUE`.
 
 ## Proof sketch
@@ -181,7 +183,7 @@ in binary64 round-to-nearest-even, and checks each for finiteness.
 | NEWTON-B1 | – | proved | – |
 | NEWTON-B2 | – | proved | – |
 | NEWTON-B3 | – | proved | – |
-| NEWTON-C1 | – | – | 101/101 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
+| NEWTON-C1 | – | – | 103/103 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
 | NEWTON-C2 | – | proved | – |
 | NEWTON-C3 | – | proved | – |
 | NEWTON-C4 | – | proved | – |
