@@ -59,6 +59,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The CMake option `BUILD_SHARED_LIBS` is renamed `DIANA_BUILD_SHARED_LIB`; the library type is
+  set explicitly, so the generic variable of an enclosing project no longer changes it
+  (`script/check_wheel.py`, the `test_install` CI job and the docs use the new name).
 - `script/check_spec.py` rewrites `doc/verification/report.md` only when both provers ran
   (`--run` without `--prover`), so a structural or one-prover run no longer overwrites the
   committed statuses with `planned`; theorem IDs may contain digits and underscores after the
@@ -78,6 +81,13 @@ All notable changes to this project are documented here. The format follows
   gate, Frama-C and Flocq boundary, libm-free helpers, local verification, compiler comparison).
   The generated theorem report moves from the end of `doc/verification.md` to
   `doc/verification/report.md`, which `script/check_spec.py` now rewrites.
+
+### Removed
+
+- Windows support: the `WINDOWS_EXPORT_ALL_SYMBOLS` and `RUNTIME` install branches of
+  `CMakeLists.txt`, the MSVC flags of `cmake/warning.cmake`, the MSVC libm exception of the ctest
+  link, and the `diana.dll`, `Scripts/python.exe` and `PATH` cases of `script/check_wheel.py`.
+  Linux and macOS are the supported platforms.
 
 ### Fixed
 
