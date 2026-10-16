@@ -9,6 +9,19 @@ linked with the parent's `CMAKE_EXE_LINKER_FLAGS` for coverage builds; sanitizer
 come from the installed target. On macOS, the consumer inherits the configured architecture
 list, SDK, and deployment target, including universal builds.
 
+`test/doc/test_example.py` (pytest) checks the examples in `doc/api/`. Each fenced `c` block is
+compiled with the host C compiler (`CC`, else `cc`) together with `src/*.c` and `src/wrapper/*.c`,
+with `-std=c11 -pedantic -Werror` and the warning and floating-point flags of `cmake/warning.cmake`,
+then run; its stdout and stderr, merged, must equal the next `text` block, which must come before
+the next `c` block. A block without `main` is wrapped in one that includes `<stdio.h>` and
+`<diana/diana.h>`, and a `#line` directive points compiler diagnostics at the Markdown line. Each
+`c` block must also be unchanged by the pinned clang-format with `.clang-format` (skipped without
+the uv `lint` group). The `python` blocks of a page run as doctest sessions in one namespace, in
+page order, and each needs a `>>>` example. The CMake consumer in `overview.md` is not built:
+ctest's `find_package` test builds `test/install/` with the same `find_package` call and
+`diana::diana` target, so only the version the page requests is checked against `project()` in
+`CMakeLists.txt`. The C examples run with one compiler and without sanitizers.
+
 The pytest suite also checks the spec gate with temporary spec and expectation files and mocked
 prover execution. The `test` dependency group includes PyYAML for those checks.
 
