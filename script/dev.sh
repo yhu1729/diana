@@ -14,9 +14,11 @@ usage: script/dev.sh config [cmake option...]
   config  configure CMake in the build directory and sync the uv environment
   build   build the C library and tests, rebuild the Python extension
   test    run ctest and pytest, then the ruff and clang-format checks
-  verify  check the Clight ASTs, build the Lean and Rocq proofs, run Frama-C WP,
-          and run the spec gate in strict mode, which fails on a theorem that is
-          listed in spec/ but not proved (rewrites the report in doc/verification.md)
+  verify  check the Clight ASTs, compare the ccomp build of the kernels with
+          gcc/clang builds bitwise, build the Lean and Rocq proofs, run Frama-C
+          WP, and run the spec gate in strict mode, which fails on a theorem that
+          is listed in spec/ but not proved (rewrites the report in
+          doc/verification.md)
 
 environment:
   DIANA_BUILD_DIR      CMake build directory (default build)
@@ -24,6 +26,8 @@ environment:
   DIANA_SANITIZER      DIANA_SANITIZER for config (default ON)
   DIANA_OPAM_SWITCH    opam switch with Rocq, CompCert, VST, and Frama-C (default: current)
   DIANA_CLIGHT_UPDATE  1: verify overwrites a Clight AST that differs instead of failing
+  DIANA_COMPARE_CC     host compilers verify compares with ccomp (default: clang, gcc,
+                       cc, gcc-N, clang-N, Homebrew LLVM clang; duplicates dropped)
   DIANA_CLANG_TIDY     clang-tidy to run in test (default: first one found, else skip)
 EOF
 }
@@ -169,6 +173,7 @@ check_clight() {
 dev_verify() {
     need_venv
     check_clight
+    opam_run script/compare_compiler.sh
     (cd verification/lean && lake exe cache get && lake build)
     opam_run make -C verification/rocq
     opam_run script/verify_frama_c.sh
