@@ -747,11 +747,266 @@ static void test_euler(void) {
   }
 }
 
+typedef double (*newton_fn)(double x, double c, double *dfx);
+
+static double g_linear(double x, double c, double *dfx) {
+  *dfx = 1.0;
+  return x - c;
+}
+
+static double g_square(double x, double c, double *dfx) {
+  *dfx = 2.0 * x;
+  return x * x - c;
+}
+
+static double g_cube(double x, double c, double *dfx) {
+  *dfx = 3.0 * x * x;
+  return x * x * x - c;
+}
+
+static double g_flat(double x, double c, double *dfx) {
+  (void)x;
+  *dfx = 0.0;
+  return c;
+}
+
+static double g_cycle(double x, double c, double *dfx) {
+  (void)c;
+  *dfx = 3.0 * x * x - 2.0;
+  return x * x * x - 2.0 * x + 2.0;
+}
+
+static void put_newton_state(const diana_newton_state *s) {
+  put_double(s->x);
+  put_double(s->dx);
+  put_double(s->tol);
+  printf(" %08x %08x", s->iter, s->max_iter);
+}
+
+static uint64_t mix_newton_state(uint64_t h, diana_status st,
+                                 const diana_newton_state *s) {
+  h = mix(h, (uint64_t)(unsigned)st);
+  h = mix(h, to_bits(s->x));
+  h = mix(h, to_bits(s->dx));
+  h = mix(h, to_bits(s->tol));
+  h = mix(h, (uint64_t)s->iter);
+  return mix(h, (uint64_t)s->max_iter);
+}
+
+static void set_newton_sentinel(diana_newton_state *s) {
+  s->x = 7.0;
+  s->dx = -0.5;
+  s->tol = 0.125;
+  s->iter = 3u;
+  s->max_iter = 9u;
+}
+
+static void newton_init_case(const char *label, double x0, double tol,
+                             unsigned max_iter) {
+  diana_newton_state s;
+  diana_status st;
+
+  set_newton_sentinel(&s);
+  st = diana_newton_init(&s, x0, tol, max_iter);
+  put_head("newton_init", label);
+  put_double(x0);
+  put_double(tol);
+  printf(" %08x", max_iter);
+  put_status(st);
+  put_newton_state(&s);
+  printf("\n");
+}
+
+static void newton_step_case(const char *label, double x0, double fx,
+                             double dfx) {
+  diana_newton_state s;
+  diana_status st;
+
+  set_newton_sentinel(&s);
+  st = diana_newton_init(&s, x0, 0.0, 100u);
+  put_head("newton_step", label);
+  put_status(st);
+  st = diana_newton_step(&s, fx, dfx);
+  put_double(fx);
+  put_double(dfx);
+  put_status(st);
+  put_newton_state(&s);
+  printf("\n");
+}
+
+static void newton_run(const char *label, newton_fn f, double c, double x0,
+                       double tol, unsigned max_iter, int verbose) {
+  diana_newton_state s;
+  diana_status st;
+  diana_status rst;
+  double root = SENTINEL;
+  double dx = SENTINEL;
+  double dfx;
+  uint64_t digest = FNV_OFFSET;
+  unsigned steps = 0u;
+
+  set_newton_sentinel(&s);
+  st = diana_newton_init(&s, x0, tol, max_iter);
+  put_head("newton_run", label);
+  put_double(c);
+  put_double(x0);
+  put_double(tol);
+  printf(" %08x", max_iter);
+  put_status(st);
+  put_newton_state(&s);
+  printf("\n");
+  while (st == DIANA_CONTINUE && steps < STEP_LIMIT) {
+    double fx = f(s.x, c, &dfx);
+    st = diana_newton_step(&s, fx, dfx);
+    ++steps;
+    if (verbose) {
+      printf("  step %u", steps);
+      put_double(fx);
+      put_double(dfx);
+      put_status(st);
+      put_newton_state(&s);
+      printf("\n");
+    } else {
+      digest = mix_newton_state(digest, st, &s);
+    }
+  }
+  rst = diana_newton_result(&s, &root, &dx);
+  printf("  end %u %016llx", steps, (unsigned long long)digest);
+  put_status(st);
+  put_newton_state(&s);
+  put_status(rst);
+  put_double(root);
+  put_double(dx);
+  printf("\n");
+}
+
+static void newton_result_case(const char *label, int want_root, int want_dx) {
+  diana_newton_state s;
+  double root = SENTINEL;
+  double dx = SENTINEL;
+  diana_status st;
+
+  set_newton_sentinel(&s);
+  st = diana_newton_result(&s, want_root ? &root : (double *)0,
+                           want_dx ? &dx : (double *)0);
+  put_head("newton_result", label);
+  put_status(st);
+  put_double(root);
+  put_double(dx);
+  printf("\n");
+}
+
+static void test_newton(void) {
+  const double inf = VAL_INF;
+  const double nan = VAL_QNAN;
+  const double tiny = VAL_TRUE_MIN;
+  const double eps = 0x1p-52;
+  diana_status st;
+  unsigned k;
+
+  st = diana_newton_init((diana_newton_state *)0, 0.0, 0.0, 10u);
+  put_head("newton_init", "null");
+  put_status(st);
+  printf("\n");
+  newton_init_case("nan_x0", nan, 0.0, 10u);
+  newton_init_case("snan_x0", VAL_SNAN, 0.0, 10u);
+  newton_init_case("inf_x0", inf, 0.0, 10u);
+  newton_init_case("negative_inf_x0", -inf, 0.0, 10u);
+  newton_init_case("nan_tol", 0.0, nan, 10u);
+  newton_init_case("inf_tol", 0.0, inf, 10u);
+  newton_init_case("negative_tol", 0.0, -tiny, 10u);
+  newton_init_case("negative_zero_tol", 0.0, -0.0, 10u);
+  newton_init_case("zero_iter", 0.0, 0.0, 0u);
+  newton_init_case("max_x0", VAL_MAX, 0.0, 10u);
+  newton_init_case("subnormal", tiny, tiny, 1u);
+  newton_init_case("continue", 2.0, 1e-12, 100u);
+
+  newton_step_case("nan_fx", 1.0, nan, 1.0);
+  newton_step_case("snan_fx", 1.0, VAL_SNAN, 1.0);
+  newton_step_case("inf_fx", 1.0, inf, 1.0);
+  newton_step_case("nan_dfx", 1.0, 1.0, nan);
+  newton_step_case("inf_dfx", 1.0, 1.0, -inf);
+  newton_step_case("zero_dfx", 1.0, 1.0, 0.0);
+  newton_step_case("negative_zero_dfx", 1.0, -1.0, -0.0);
+  newton_step_case("zero_fx", 1.0, 0.0, 2.0);
+  newton_step_case("negative_zero_fx", 1.0, -0.0, 2.0);
+  newton_step_case("zero_fx_zero_dfx", 1.0, 0.0, 0.0);
+  newton_step_case("zero_fx_nan_dfx", 1.0, 0.0, nan);
+  newton_step_case("tiny_fx", 1.0, 1e-300, 1.0);
+  newton_step_case("underflow", 1.0, tiny, 4.0);
+  newton_step_case("tie_up", 1.0, -0.5 * eps, 1.0);
+  newton_step_case("half_ulp_down", 1.0, 0.5 * eps, 1.0);
+  newton_step_case("ulp_up", 1.0, -eps, 1.0);
+  newton_step_case("overflow_dx", 1.0, VAL_MAX, 0.5);
+  newton_step_case("overflow_dx_subnormal", 1.0, 1.0, tiny);
+  newton_step_case("overflow_x", -VAL_MAX, VAL_MAX, 1.0);
+  newton_step_case("half_max_x", -VAL_MAX, -VAL_MAX, 2.0);
+  newton_step_case("exact", 0.0, -0.5, 1.0);
+  newton_step_case("inf_dx_inf_dfx", 1.0, inf, inf);
+  st = diana_newton_step((diana_newton_state *)0, 1.0, 1.0);
+  put_head("newton_step", "null");
+  put_status(st);
+  printf("\n");
+
+  newton_run("sqrt2_tol", g_square, 2.0, 2.0, 1e-12, 100u, 1);
+  newton_run("sqrt2_from_1", g_square, 2.0, 1.0, 1e-12, 100u, 1);
+  newton_run("sqrt2_two_cycle", g_square, 2.0, 2.0, 0.0, 100u, 1);
+  newton_run("sqrt2_coarse", g_square, 2.0, 2.0, 1e-6, 100u, 1);
+  newton_run("tenth", g_linear, 0.1, 0.0, 0.0, 10u, 1);
+  newton_run("third", g_linear, 1.0 / 3.0, 1.0, 0.0, 10u, 1);
+  newton_run("cbrt10", g_cube, 10.0, 2.0, 1e-12, 100u, 1);
+  newton_run("double_root", g_square, 0.0, 1.0, 0.0, 2100u, 0);
+  newton_run("double_root_tol", g_square, 0.0, 1.0, 1e-6, 100u, 1);
+  newton_run("cycle", g_cycle, 0.0, 0.0, 1e-12, 8u, 1);
+  newton_run("flat", g_flat, 1.0, 2.0, 0.0, 10u, 1);
+  newton_run("max_iter_one", g_square, 2.0, 2.0, 1e-12, 1u, 1);
+  newton_run("large_root", g_linear, 1e300, 0.0, 0.0, 10u, 1);
+  newton_run("square_overflow", g_square, 1.0, VAL_MAX, 0.0, 10u, 1);
+  newton_run("no_root", g_square, -1.0, 1.0, 1e-12, 50u, 1);
+
+  st = diana_newton_result((const diana_newton_state *)0, (double *)0,
+                           (double *)0);
+  put_head("newton_result", "null");
+  put_status(st);
+  printf("\n");
+  newton_result_case("both", 1, 1);
+  newton_result_case("root", 1, 0);
+  newton_result_case("dx", 0, 1);
+  newton_result_case("neither", 0, 0);
+
+  for (k = 0u; k < RANDOM_RUN; ++k) {
+    double c = random_bounded((int)(k % 2u));
+    double x0 = random_bounded((int)(k % 2u));
+    double tol = 0.0;
+    unsigned max_iter = 100u;
+    newton_fn f = g_linear;
+
+    switch (rng_below(3u)) {
+    case 0u:
+      f = g_square;
+      break;
+    case 1u:
+      f = g_cube;
+      break;
+    default:
+      break;
+    }
+    if (rng_below(2u) == 0u) {
+      tol = from_bits(to_bits(random_bounded((int)(k % 2u))) & ~SIGN_BIT);
+    }
+    if (rng_below(8u) == 0u) {
+      max_iter = 1u + rng_below(60u);
+    }
+    newton_run("random", f, c, x0, tol, max_iter, 0);
+  }
+}
+
 int main(void) {
   test_bisection();
   test_trapezoidal();
   test_simpson();
   test_euler();
+  test_newton();
   printf("end %u\n", case_count);
   if (fflush(stdout) != 0 || ferror(stdout)) {
     return 1;
