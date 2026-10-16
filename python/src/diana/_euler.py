@@ -48,8 +48,9 @@ def euler(
     ``f(t, y)`` returns the derivative at time ``t`` and state ``y`` (an ``array.array("d")``,
     which ``f`` must not modify) as a buffer or iterable of floats of the same length. Step ``k``
     evaluates ``f`` at ``t0 + k*h``, computed from ``k`` rather than accumulated, then calls
-    :func:`euler_step`. ``y0`` is copied, so the caller's data is never modified. The loop runs in
-    Python, so ``f`` is not part of the verified code.
+    :func:`euler_step`. ``y0`` is copied element by element (``bytes`` is a sequence of integers,
+    not raw float64 data), so the caller's data is never modified. The loop runs in Python, so
+    ``f`` is not part of the verified code.
 
     Raises :class:`ValueError` for an empty ``y0``, for a negative ``nstep``, and from
     :func:`euler_step` when a step fails; :class:`TypeError` when ``nstep`` is not an integer or
@@ -60,7 +61,7 @@ def euler(
         raise ValueError("nstep must be non-negative")
     t0 = real(t0, "t0")
     h = real(h, "h")
-    y = array("d", y0)
+    y = array("d", iter(y0))
     if len(y) == 0:
         raise ValueError("y0 must have at least one sample")
     for k in range(nstep):

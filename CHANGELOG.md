@@ -101,6 +101,9 @@ All notable changes to this project are documented here. The format follows
   (`TypeError`), as `diana.Bisection` and `diana.euler` already did, instead of converting it with
   `float`; an object with `__float__` or `__index__` is still accepted. The check is `real` in
   `diana._convert`, shared with `diana.euler`.
+- `diana.euler` copies a `bytes` or `bytearray` `y0` element by element, like every other
+  iterable, instead of decoding it as raw float64 data (`bytes(16)` gave two zeros, any other
+  length a `ValueError` about the item size).
 
 ## [0.2.0] - 2026-10-15
 
