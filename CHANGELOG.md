@@ -8,6 +8,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- VST proves EULER-C2 (`Diana.VST.Euler.body_diana_euler_step`) against the committed AArch64
+  macOS Clight AST `verification/clight/euler_aarch64_macos.v`: for non-NULL, disjoint `y`, `f`
+  and `y_out` with `d >= 1`, `diana_euler_step` writes the Flocq model values and returns
+  `DIANA_OK` exactly when all of them are finite, and otherwise returns `DIANA_ERR_ARG` with
+  `y_out` unchanged. Every Euler theorem listed in `spec/euler.md` is now proved.
 - Flocq proves the Euler binary64 theorems in `verification/rocq/theory/Float/Euler.v`: EULER-B1
   (`finite_result`: a finite component implies finite `y_i`, `f_i`, `h` and product, so neither
   operation overflowed) and EULER-B2 (`forward_error`: `|r_i − (y_i + h·f_i)| ≤
