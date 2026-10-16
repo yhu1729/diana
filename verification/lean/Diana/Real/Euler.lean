@@ -1,6 +1,10 @@
-import Mathlib.Analysis.Calculus.Deriv.Pow
-import Mathlib.Analysis.Calculus.MeanValue
-import Diana.Real.OneStep
+module
+
+public import Mathlib.Analysis.Calculus.Deriv.Pow
+public import Mathlib.Analysis.Calculus.MeanValue
+public import Diana.Real.OneStep
+
+public section
 
 namespace Diana.Real.Euler
 
