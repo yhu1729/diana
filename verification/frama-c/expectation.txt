@@ -1,5 +1,5 @@
 src/bisection.c 162
 src/euler.c 49
-src/newton.c 101
+src/newton.c 103
 src/simpson.c 58
 src/trapezoidal.c 41

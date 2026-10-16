@@ -40,15 +40,18 @@ diana_status diana_newton_init(diana_newton_state *s, double x0, double tol,
 
 /*@ requires s == \null || (newton_state(s) && s->iter < s->max_iter);
   @ assigns *s;
-  @ ensures \result == DIANA_ERR_ARG || \result == DIANA_ERR_MAXITER ||
-  @         \result == DIANA_OK || \result == DIANA_CONTINUE;
-  @ ensures \result != DIANA_ERR_ARG ==> newton_state(s) && s->iter == \old(s->iter) + 1 &&
-  @         s->tol == \old(s->tol) && s->max_iter == \old(s->max_iter);
+  @ ensures \result == DIANA_ERR_ARG || \result == DIANA_ERR_SINGULAR ||
+  @         \result == DIANA_ERR_MAXITER || \result == DIANA_OK || \result == DIANA_CONTINUE;
+  @ ensures \result != DIANA_ERR_ARG && \result != DIANA_ERR_SINGULAR ==>
+  @         newton_state(s) && s->iter == \old(s->iter) + 1 && s->tol == \old(s->tol) &&
+  @         s->max_iter == \old(s->max_iter);
   @ ensures \result == DIANA_OK ==> \abs(s->dx) <= s->tol || s->x == \old(s->x);
   @ ensures \result == DIANA_CONTINUE ==> s->iter < s->max_iter && \abs(s->dx) > s->tol &&
   @         s->x != \old(s->x);
   @ ensures \result == DIANA_ERR_MAXITER ==> s->iter == s->max_iter;
-  @ ensures \result == DIANA_ERR_ARG && s != \null ==> newton_unchanged{Pre, Post}(s);
+  @ ensures \result == DIANA_ERR_SINGULAR ==> dfx == 0. && fx != 0.;
+  @ ensures (\result == DIANA_ERR_ARG || \result == DIANA_ERR_SINGULAR) && s != \null ==>
+  @         newton_unchanged{Pre, Post}(s);
   @*/
 diana_status diana_newton_step(diana_newton_state *s, double fx, double dfx) {
   double dx;
@@ -63,6 +66,9 @@ diana_status diana_newton_step(diana_newton_state *s, double fx, double dfx) {
     s->dx = 0.0;
     s->iter = s->iter + 1u;
     return DIANA_OK;
+  }
+  if (dfx == 0.0) {
+    return DIANA_ERR_SINGULAR;
   }
   dx = fx / dfx;
   if (!diana_fp_finite(dx)) {
