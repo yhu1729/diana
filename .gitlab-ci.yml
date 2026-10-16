@@ -27,6 +27,7 @@ stages:
 
 .change_python: &change_python
   - .gitlab-ci.yml
+  - .clang-format
   - .python-version
   - pyproject.toml
   - uv.lock
@@ -36,6 +37,8 @@ stages:
   - src/**/*
   - python/**/*
   - test/python/**/*
+  - test/doc/**/*
+  - doc/api/**/*
   - script/check_spec.py
   - script/check_wheel.py
 
@@ -48,6 +51,7 @@ stages:
   - src/**/*
   - python/**/*
   - test/python/**/*
+  - test/doc/**/*
   - script/**/*
   - spec/**/*
   - verification/**/*
@@ -221,8 +225,8 @@ style_python:
     - changes: *change_style
   script:
     - uv sync --group lint --group spec
-    - uv run ruff check python test/python script
-    - uv run ruff format --check python test/python script
+    - uv run ruff check python test/python test/doc script
+    - uv run ruff format --check python test/python test/doc script
     - uv run script/check_spec.py --no-report
 
 build_gcc_debug:
@@ -288,7 +292,7 @@ test_python:
     - changes: *change_python
   needs: []
   script:
-    - uv sync --group test
+    - uv sync --group test --group lint
     - uv run pytest -q
     - uv build
     - uv run --with twine twine check dist/*
