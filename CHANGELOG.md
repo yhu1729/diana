@@ -8,7 +8,54 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+#### C library
+
+- Newton's method in reverse-communication form, `diana_newton_init`, `diana_newton_step` and
+  `diana_newton_result` over a caller-owned `diana_newton_state` (`x`, `dx`, `tol`, `iter`,
+  `max_iter`) in `diana/newton.h`. `step` consumes `f(x)` and `f'(x)`: an exact zero `f(x)`
+  converges at once whatever `f'(x)`; otherwise the correction `fl(f/f')` and the iterate
+  `fl(x - dx)` are each checked, and a non-finite one (a zero `f'` against a non-zero `f`, an
+  overflow) is `DIANA_ERR_ARG` with the state unchanged, like a NaN or infinite input; a finite
+  step stores `dx` and the new `x`, increments `iter`, and returns `DIANA_OK` when `|dx| <= tol`
+  or the iterate did not change, `DIANA_ERR_MAXITER` at the step limit, else `DIANA_CONTINUE`.
+  `init` takes `x0`, `tol >= 0` and `max_iter > 0` and always returns `DIANA_CONTINUE`. A zero
+  derivative has no dedicated status: that is an open design question, so it is reported as the
+  non-finite correction it produces. Frama-C WP proves the ACSL contracts (101 goals, NEWTON-C1):
+  the state invariant, `iter` increments, the meaning of each status, and the state unchanged on
+  `DIANA_ERR_ARG`. `test/c/test_newton.c` covers every path of the kernel and the wrapper at
+  100% line and branch coverage.
+- Callback wrapper `diana_newton(f, ctx, x0, tol, max_iter, root, iter)` in `diana/wrapper.h`,
+  with `diana_newton_fn f(x, &dfx, ctx)` returning `f(x)` and writing `f'(x)`; `*dfx` is reset to
+  0 before each call so a callback that never writes it fails cleanly. Unverified, like
+  `diana_bisection`.
+
+#### Python binding
+
+- `diana.Newton(x0, tol, max_iter=100)` (reverse-communication state with `step(fx, dfx)`,
+  `result() -> (root, dx)` and read-only fields) and the driver `diana.newton(f, x0, tol,
+  max_iter=100)` for a callable returning `(f(x), f'(x))` (module `diana._newton`). `tol` is
+  required because Newton's method has no parameter-free stopping rule: with `tol = 0` the
+  iteration near a simple root commonly ends in a two-cycle of adjacent doubles until
+  `max_iter`. A non-finite `f(x)` or `f'(x)`, a zero `f'(x)`, and an overflowing correction or
+  iterate raise `ValueError` with a message naming which; `MaxIterError` carries the iterate as
+  `estimate` and `|dx|` as `width`. `test/python/test_newton.py` covers the binding.
+
 #### Verification
+
+- Newton's method is proved through every layer (`spec/newton.md`, 10 theorems). Lean and Rocq
+  prove NEWTON-A1 (`Diana.Real.Newton.step_error`: `|x - f(x)/f'(x) - r| <= (M/(2m))(x - r)^2`
+  for `|f''| <= M` and `|f'| >= m` on an interval containing `x` and the root `r`, `f''` not
+  necessarily continuous) and NEWTON-A2 (`converge`: from `|x0 - r| <= delta` with
+  `q = M delta/(2m) < 1`, every iterate stays within `delta` and `|x_n - r| <= delta q^(2^n - 1)`),
+  by the mean-value bound of `Diana.Real.Quadrature` applied along the segment from `x` to `r`.
+  Flocq proves NEWTON-B1 (`finite_result`), NEWTON-B2 (`forward_error`: the step error
+  `u |x - f/f'| + (1 + u)(u |f/f'| + eta)` per EULER-B2 with a quotient) and NEWTON-B3
+  (`stagnation`: `fl(x - dx) = x` implies `|dx| <= ulp(x)/2`, the meaning of the "iterate
+  unchanged" stop). VST proves `diana_newton_result`, `diana_newton_init` and
+  `diana_newton_step` against the committed AArch64 macOS Clight AST
+  `verification/clight/newton_aarch64_macos.v` (NEWTON-C2 to C4, C-order models `c_init`/`c_step`
+  with every exit, an error leaving `*s` unchanged) and that `c_step` writes the Flocq `fstep`
+  (NEWTON-C5).
 
 - VST proves `diana_bisection_init` (BISECTION-C6, `Diana.VST.Bisection.body_diana_bisection_init`)
   and `diana_bisection_step` (BISECTION-C7, `body_diana_bisection_step`) against the committed
@@ -25,9 +72,10 @@ All notable changes to this project are documented here. The format follows
 
 - Local bitwise differential test between the CompCert build of the kernels, which the VST proofs
   cover, and the gcc/clang builds that ship: `script/compare_compiler.sh` builds `src/*.c` with
-  the corpus driver `test/c/test_compiler.c` (976 cases: every argument error, NaN and ±∞ inputs,
-  `h = ±0`, subnormals, overflow in each operation, the 2098-step bisection worst case, seeded
-  random inputs) with `ccomp` and with each available gcc and clang at `-O0`, `-O2` and `-O3`, and
+  the corpus driver `test/c/test_compiler.c` (1128 cases: every argument error, NaN and ±∞ inputs,
+  `h = ±0`, subnormals, overflow in each operation, the 2098-step bisection worst case, the Newton
+  two-cycle and double root, seeded random inputs) with `ccomp` and with each available gcc and
+  clang at `-O0`, `-O2` and `-O3`, and
   fails on any difference in the printed bit patterns. `script/dev.sh verify` runs it and skips it
   without `ccomp`. On macOS it sets an unset `MACOSX_DEPLOYMENT_TARGET` to the running version, so
   Homebrew GCC 13 can build there. The candidates include the `clang` of every Homebrew LLVM keg
