@@ -9,7 +9,7 @@ and, in the generated [report](#report) at the end, the status of every theorem.
 |---|---|---|---|
 | A | real-number model of the algorithm | Lean 4 + Mathlib **and** Rocq (Stdlib reals, Coquelicot) | convergence, invariants, error bounds over ℝ |
 | B | binary64 model of the C arithmetic | Rocq + Flocq | rounding facts the C code relies on (finiteness, bracket containment, forward error) |
-| C-VST | the C source (Clight AST) | Rocq + VST, via CompCert `clightgen` | a C function returns / updates exactly the layer-B model value (so far `bisection_mid`, `diana_bisection_result`, `diana_trapezoidal`, `diana_simpson`, and the `src/fp.h` helpers) |
+| C-VST | the C source (Clight AST) | Rocq + VST, via CompCert `clightgen` | a C function returns / updates exactly the layer-B model value (so far `bisection_mid`, `diana_bisection_result`, `diana_trapezoidal`, `diana_simpson`, `diana_euler_step`, and the `src/fp.h` helpers) |
 | C-WP | the C source | Frama-C WP, float model, RTE plugin | memory safety, absence of undefined behaviour, separation, contract invariants |
 
 The three models of a kernel are: `rspec` (ℝ), `fmodel` (Flocq, same operation order as the C),
@@ -29,7 +29,7 @@ inside one Rocq development with no translation step.
   layer-B theorem (currently only `bisection_mid`, discharged by BISECTION-B1).
 - `clightgen` as the translation from C to Clight. The committed
   `verification/clight/<kernel>_<target>.v` (today `bisection_aarch64_macos.v`,
-  `simpson_aarch64_macos.v` and `trapezoidal_aarch64_macos.v`, CompCert configured for AArch64 macOS) is generated locally on that target and is the AST the VST proofs are about;
+  `euler_aarch64_macos.v`, `simpson_aarch64_macos.v` and `trapezoidal_aarch64_macos.v`, CompCert configured for AArch64 macOS) is generated locally on that target and is the AST the VST proofs are about;
   CI neither regenerates nor re-proves it.
 
 ## Where each layer is checked
@@ -184,6 +184,7 @@ Status per theorem and prover: `ok` (constant exists, axioms within the allowed 
 | euler | EULER-B1 | B | – | ok | – | a finite component certifies its evaluation: if the binary64 model fl(y_i + fl(h·f_i)) is finite, then y_i, f_i, h and the product fl(h·f_i) are finite; since a finite Bplus or Bmult of finite operands is the rounded exact value (fadd_value, fmul_value), neither operation overflowed. This is why the kernel checks only each computed component. |
 | euler | EULER-B2 | B | – | ok | – | step error per component: if the binary64 model r_i = fl(y_i + fl(h·f_i)) is finite, then \|r_i − (y_i + h·f_i)\| ≤ u·\|y_i + h·f_i\| + (1 + u)·(u·\|h·f_i\| + η), with u = 2⁻⁵³ and η = 2⁻¹⁰⁷⁵ (underflow in the product). |
 | euler | EULER-C1 | C | – | – | ok (49/49) | ACSL contract in src/euler.c, Frama-C WP float model with RTE: memory safety (only y[0 .. d−1] and f[0 .. d−1] are read, only y_out[0 .. d−1] is written, y_out separate from both), no UB, termination of both loops, DIANA_OK only for non-NULL pointers with d ≥ 1, and y_out untouched on DIANA_ERR_ARG. No assumed contract; that y_out is finite on DIANA_OK is left to VST. |
+| euler | EULER-C2 | C | – | ok | – | diana_euler_step computes the binary64 model (VST, AArch64 macOS Clight AST): for y and f pointing to d ≥ 1 readable doubles and y_out to d writable doubles, the three disjoint, it returns DIANA_OK and writes the model values when every component is finite, and returns DIANA_ERR_ARG leaving y_out unchanged otherwise. The NULL and d = 0 paths are EULER-C1. |
 | simpson | SIMPSON-A1 | A | ok | ok | – | local error: under H1 on [x, x + 2h] with h ≥ 0, \|∫ₓ^{x+2h} f − (h/3)·(f(x) + 4·f(x + h) + f(x + 2h))\| ≤ M₄·h⁵/90 |
 | simpson | SIMPSON-A2 | A | ok | ok | – | composite error: under H1 and H2, \|∫ₐᵇ f − S\| ≤ (b − a)·h⁴·M₄/180 |
 | simpson | SIMPSON-B1 | B | – | ok | – | a finite result certifies the whole evaluation: if the binary64 model returns a finite value, then h, y₀, yₙ₋₁, every odd and every even interior yᵢ, and every partial sum of sₒ and sₑ are finite; since a finite Bplus, Bmult or Bdiv of finite operands is the rounded exact value (fadd_value, fmul_value, fdiv_value), no operation overflowed. This is why the kernel checks only its result. |
