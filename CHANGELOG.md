@@ -97,6 +97,10 @@ All notable changes to this project are documented here. The format follows
 - `diana.euler_step` reports `y` and `f` of different lengths as "y and f must have the same
   length"; the message no longer names the `out` buffer, which only the extension function takes
   and which is now checked separately.
+- `diana.bisection` rejects a string for `a`, `b`, `tol` and for a value `f` returns
+  (`TypeError`), as `diana.Bisection` and `diana.euler` already did, instead of converting it with
+  `float`; an object with `__float__` or `__index__` is still accepted. The check is `real` in
+  `diana._convert`, shared with `diana.euler`.
 
 ## [0.2.0] - 2026-10-15
 
