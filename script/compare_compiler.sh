@@ -30,10 +30,12 @@ list_candidate() (
             fi
         done
     done
-    for path in /opt/homebrew/opt/llvm/bin/clang /usr/local/opt/llvm/bin/clang; do
-        if [ -x "$path" ]; then
-            echo "$path"
-        fi
+    for prefix in /opt/homebrew /usr/local; do
+        for path in "$prefix"/opt/llvm/bin/clang "$prefix"/opt/llvm@[0-9]*/bin/clang; do
+            if [ -x "$path" ]; then
+                echo "$path"
+            fi
+        done
     done
 )
 
