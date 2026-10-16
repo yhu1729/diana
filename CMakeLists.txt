@@ -17,7 +17,7 @@ endif()
 option(DIANA_BUILD_TEST "Build the C test suite" OFF)
 option(DIANA_SANITIZER "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 option(DIANA_WERROR "Treat warnings as errors" OFF)
-option(BUILD_SHARED_LIBS "Build Diana as a shared library" OFF)
+option(DIANA_BUILD_SHARED_LIB "Build Diana as a shared library" OFF)
 
 string(TOUPPER "${CMAKE_BUILD_TYPE}" diana_config)
 foreach(flag_var CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
@@ -44,7 +44,12 @@ if(DIANA_SANITIZER)
     endif()
 endif()
 
-add_library(diana
+if(DIANA_BUILD_SHARED_LIB)
+    set(diana_library_type SHARED)
+else()
+    set(diana_library_type STATIC)
+endif()
+add_library(diana ${diana_library_type}
     src/status.c
     src/bisection.c
     src/euler.c
@@ -63,9 +68,6 @@ diana_set_strict_flag(diana)
 if(DIANA_SANITIZER AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
     target_link_options(diana PUBLIC -fsanitize=address,undefined)
 endif()
-if(WIN32 AND BUILD_SHARED_LIBS)
-    set_target_properties(diana PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
-endif()
 
 if(NOT DEFINED SKBUILD)
     set_target_properties(diana PROPERTIES
@@ -73,8 +75,7 @@ if(NOT DEFINED SKBUILD)
         SOVERSION ${PROJECT_VERSION_MAJOR})
     install(TARGETS diana EXPORT dianaTargets
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
     install(DIRECTORY include/diana DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
     install(EXPORT dianaTargets NAMESPACE diana:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/diana)
 
@@ -138,17 +139,16 @@ if(DIANA_BUILD_PYTHON)
     diana_set_strict_flag(_diana)
     if(DEFINED SKBUILD)
         install(TARGETS _diana DESTINATION diana)
-        if(BUILD_SHARED_LIBS)
+        if(DIANA_BUILD_SHARED_LIB)
             install(TARGETS diana
                 LIBRARY DESTINATION diana
-                RUNTIME DESTINATION diana
                 ARCHIVE DESTINATION diana EXCLUDE_FROM_ALL)
             if(APPLE)
                 set_target_properties(diana PROPERTIES
                     MACOSX_RPATH ON
                     INSTALL_NAME_DIR "@rpath")
                 set_target_properties(_diana PROPERTIES INSTALL_RPATH "@loader_path")
-            elseif(UNIX)
+            else()
                 set_target_properties(_diana PROPERTIES INSTALL_RPATH "$ORIGIN")
             endif()
             set_target_properties(_diana PROPERTIES INSTALL_RPATH_USE_LINK_PATH OFF)
