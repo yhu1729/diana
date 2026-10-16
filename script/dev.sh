@@ -81,8 +81,8 @@ dev_test() {
     need_venv
     ctest --test-dir "$build_dir" --output-on-failure
     uv run --no-sync pytest -q -v
-    uv run --no-sync ruff check python test/python script
-    uv run --no-sync ruff format --check python test/python script
+    uv run --no-sync ruff check python test/python test/doc script
+    uv run --no-sync ruff format --check python test/python test/doc script
     find include src test/c test/install python/ext -name '*.[ch]' -print0 |
         xargs -0 uv run --no-sync clang-format --dry-run --Werror
     run_tidy
