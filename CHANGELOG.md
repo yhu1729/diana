@@ -32,6 +32,13 @@ All notable changes to this project are documented here. The format follows
   without `ccomp`. On AArch64 macOS, Apple clang 21, GCC 16.2 and LLVM clang 23.1 match CompCert
   3.17 bitwise. ctest runs the driver as the `compiler` test, without the comparison.
 
+#### Documentation
+
+- Examples in `doc/api/`: a complete CMake consumer project, a C program with its output for every
+  kernel and callback wrapper (reverse-communication loop, iteration limit, context pointer, the
+  alternating buffers of an Euler loop), and Python sessions in doctest form for every function,
+  including NumPy input, the array-argument checks, and the exceptions.
+
 ### Changed
 
 - The documentation is split by topic and indexed by `doc/README.md`: `doc/api/` (an overview and
