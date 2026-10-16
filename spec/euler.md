@@ -20,6 +20,21 @@ theorem:
     informal: "global error: under H1 and H2 on [t₀, t₀ + N·h] with h > 0, the iterates y₀ = Y(t₀), yₖ₊₁ = yₖ + h·F(t₀ + k·h, yₖ) satisfy ‖yₖ − Y(t₀ + k·h)‖ ≤ (M₂·h/(2L))·(e^{L·k·h} − 1) for every k ≤ N"
     lean: Diana.Real.Euler.global_error
     rocq: Diana.Real.Euler.global_error
+  - id: EULER-B1
+    layer: B
+    informal: >
+      a finite component certifies its evaluation: if the binary64 model fl(y_i + fl(h·f_i)) is
+      finite, then y_i, f_i, h and the product fl(h·f_i) are finite; since a finite Bplus or Bmult
+      of finite operands is the rounded exact value (fadd_value, fmul_value), neither operation
+      overflowed. This is why the kernel checks only each computed component.
+    rocq: Diana.Float.Euler.finite_result
+  - id: EULER-B2
+    layer: B
+    informal: >
+      step error per component: if the binary64 model r_i = fl(y_i + fl(h·f_i)) is finite, then
+      |r_i − (y_i + h·f_i)| ≤ u·|y_i + h·f_i| + (1 + u)·(u·|h·f_i| + η), with u = 2⁻⁵³ and
+      η = 2⁻¹⁰⁷⁵ (underflow in the product).
+    rocq: Diana.Float.Euler.forward_error
   - id: EULER-C1
     layer: C
     informal: >
@@ -61,6 +76,13 @@ buffer, as the other kernels leave their outputs untouched. A NaN or infinite `y
   `‖eₖ‖ ≤ τ·((1 + hL)ᵏ − 1)/(hL) ≤ (τ/(hL))·(e^{khL} − 1)` (`pow_le_exp`, from `1 + x ≤ eˣ`).
   A1 supplies `τ = M₂·h²/2` on every subinterval `[tₖ, tₖ + h]`, so `τ/(hL) = M₂·h/(2L)`. The
   lemma takes any increment function, so RK4 reuses it.
+- **B1**: `fadd_finite_inv` and `fmul_value` (`Diana.Float.Sum`) peel the component from the
+  outside in. Proof: `finite_result` in `verification/rocq/theory/Float/Euler.v`.
+- **B2**: the product is `fl(h·f) = h·f·(1 + e₁) + d₁` with `|e₁| ≤ u`, `|d₁| ≤ η`
+  (`round_error`), and the sum of two binary64 values has relative error at most `u` even below
+  the normal range (`add_error`): `r = (y + m)·(1 + e₂)`. Then
+  `r − (y + h·f) = (m − h·f)·(1 + e₂) + e₂·(y + h·f)`. The bound is attained up to rounding: on
+  random inputs with subnormal products, the error reaches 99.995 % of it. Proof: `forward_error`.
 - **C1**: the `/*@ ... */` annotations in `src/euler.c`. Every early return happens before the
   second loop, and the only write is `y_out[i]` in that loop, so `assigns y_out[0 .. d − 1]` and
   the error post-condition follow from the control flow; the loop invariants are only the index
@@ -89,14 +111,18 @@ finiteness and the exact values together.
   Lean, which agree on `Fin d → ℝ`. Rocq takes `0 ≤ M₂` as a hypothesis, since for `d = 0` the
   bound on `Y″` says nothing; Lean derives it from the bound at `t₀`.
 
+- **Layer B** (`verification/rocq/theory/Float/Euler.v`): `fstep h y f = fadd y (fmul h f)` is one
+  component in the C's operation order, and `feuler h ys fs` maps it over `combine ys fs`; `fadd`
+  and `fmul` are the `Bplus` and `Bmult` of `Diana.Float.Sum`, parameterised by the NaN-payload
+  functions so that they instantiate to CompCert's `Float.add`/`Float.mul`. B1 and B2 are per
+  component, because the kernel's components are independent; a max-norm form follows by taking
+  the maximum over `i`.
+
 ## Planned theorems
 
 A theorem is listed in the front matter together with its proof, because the strict spec gate fails
 on a listed theorem that is not proved:
 
-- **B1** (Flocq): a finite component certifies that `y_i`, `f_i` and `h` are finite and that no
-  operation overflowed.
-- **B2** (Flocq): per component, `|r_i − (y_i + h·f_i)| ≤ u·|y_i + h·f_i| + (1 + u)·(u·|h·f_i| + η)`.
 - **C2** (VST): `diana_euler_step` writes the Flocq model values and returns `DIANA_OK` exactly
   when all of them are finite, leaving `y_out` unchanged otherwise.
 
@@ -106,4 +132,6 @@ on a listed theorem that is not proved:
 |---|---|---|---|
 | EULER-A1 | proved | proved | – |
 | EULER-A2 | proved | proved | – |
+| EULER-B1 | – | proved | – |
+| EULER-B2 | – | proved | – |
 | EULER-C1 | – | – | 49/49 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
