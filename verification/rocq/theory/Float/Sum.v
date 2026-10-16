@@ -1,5 +1,5 @@
 From Stdlib Require Import Reals ZArith Lia Lra Psatz List.
-From Flocq Require Import Core Plus_error Relative IEEE754.BinarySingleNaN IEEE754.Binary.
+From Flocq Require Import Core Plus_error Relative Mult_error IEEE754.BinarySingleNaN IEEE754.Binary.
 Import ListNotations.
 Open Scope R_scope.
 
@@ -61,6 +61,16 @@ Proof.
   assert (INR 1 * u < 1) by (simpl; lra). lra.
 Qed.
 
+Lemma gamma_mono (j k : nat) : (j <= k)%nat -> INR k * u < 1 -> gamma j <= gamma k.
+Proof.
+  intros Hjk Hk. induction Hjk as [| k Hjk IH]; [lra |].
+  assert (Hk' : INR k * u < 1).
+  { eapply Rle_lt_trans; [| exact Hk]. apply Rmult_le_compat_r; [left; apply u_pos |].
+    apply le_INR. lia. }
+  pose proof (gamma_step k Hk) as Hs. pose proof (gamma_nonneg k Hk') as Hg.
+  pose proof u_pos. specialize (IH Hk'). nra.
+Qed.
+
 Lemma add_error (x y : R) :
   generic_format radix2 fexp x -> generic_format radix2 fexp y ->
   exists d, Rabs d <= u /\ round radix2 fexp ZnearestE (x + y) = (x + y) * (1 + d).
@@ -71,6 +81,43 @@ Proof.
   exists d. split; [| exact Hr]. rewrite u_ro_u in Hd. eapply Rle_trans; [exact Hd |].
   pose proof u_pos. apply Rmult_le_reg_r with (1 + u); [lra |].
   unfold Rdiv. rewrite Rmult_assoc, Rinv_l by lra. nra.
+Qed.
+
+Lemma round_pow2_mul (e : Z) (x : R) :
+  (0 <= e)%Z -> generic_format radix2 fexp x ->
+  round radix2 fexp ZnearestE (bpow radix2 e * x) = bpow radix2 e * x.
+Proof.
+  intros He Hx. apply round_generic; try typeclasses eauto.
+  rewrite Rmult_comm. apply mult_bpow_pos_exact_FLT; assumption.
+Qed.
+
+Lemma add_step (a b X Y Ra Rb : R) (k : nat) :
+  generic_format radix2 fexp a -> generic_format radix2 fexp b ->
+  Rabs (a - X) <= gamma k * Ra -> Rabs (b - Y) <= gamma k * Rb ->
+  Rabs X <= Ra -> Rabs Y <= Rb -> INR (S k) * u < 1 ->
+  Rabs (round radix2 fexp ZnearestE (a + b) - (X + Y)) <= gamma (S k) * (Ra + Rb).
+Proof.
+  intros Fa Fb Ha Hb HX HY Hk.
+  destruct (add_error a b Fa Fb) as [d [Hd Hr]]. rewrite Hr.
+  assert (Hk0 : INR k * u < 1).
+  { eapply Rle_lt_trans; [| exact Hk]. apply Rmult_le_compat_r; [left; apply u_pos |].
+    apply le_INR. lia. }
+  pose proof (gamma_step k Hk) as Hs. pose proof (gamma_nonneg k Hk0) as Hg. pose proof u_pos.
+  assert (HR : 0 <= Ra + Rb).
+  { pose proof (Rabs_pos X). pose proof (Rabs_pos Y). lra. }
+  assert (Hab : Rabs (a + b) <= (Ra + Rb) * (1 + gamma k)).
+  { replace (a + b) with (X + Y + ((a - X) + (b - Y))) by ring.
+    eapply Rle_trans; [apply Rabs_triang |].
+    pose proof (Rabs_triang X Y). pose proof (Rabs_triang (a - X) (b - Y)). nra. }
+  replace ((a + b) * (1 + d) - (X + Y)) with ((a - X) + (b - Y) + d * (a + b)) by ring.
+  eapply Rle_trans; [apply Rabs_triang |].
+  eapply Rle_trans; [apply Rplus_le_compat_r; apply Rabs_triang |].
+  rewrite Rabs_mult.
+  assert (Hdab : Rabs d * Rabs (a + b) <= u * ((Ra + Rb) * (1 + gamma k)))
+    by (apply Rmult_le_compat; [apply Rabs_pos | apply Rabs_pos | exact Hd | exact Hab]).
+  assert (H1 : (gamma k * (1 + u) + u) * (Ra + Rb) <= gamma (S k) * (Ra + Rb))
+    by (apply Rmult_le_compat_r; [exact HR | exact Hs]).
+  nra.
 Qed.
 
 Lemma round_error (x : R) :
@@ -104,10 +151,11 @@ Qed.
 
 Section Op.
 
-Variable plus_nan mult_nan : b64 -> b64 -> {x : b64 | is_nan prec emax x = true}.
+Variable plus_nan mult_nan div_nan : b64 -> b64 -> {x : b64 | is_nan prec emax x = true}.
 
 Definition fadd (x y : b64) : b64 := Bplus prec emax _ _ plus_nan mode_NE x y.
 Definition fmul (x y : b64) : b64 := Bmult prec emax _ _ mult_nan mode_NE x y.
+Definition fdiv (x y : b64) : b64 := Bdiv prec emax _ _ div_nan mode_NE x y.
 
 Lemma fadd_finite_inv (x y : b64) : fin (fadd x y) -> fin x /\ fin y.
 Proof.
@@ -140,6 +188,31 @@ Proof.
   - destruct Hc as [Hv [Hf _]]. unfold fmul in H. rewrite Hf in H.
     destruct (andb_prop _ _ H) as [Hx Hy]. auto.
   - exfalso. unfold fmul in H. rewrite <- is_finite_B2FF, Hc in H. discriminate.
+Qed.
+
+Lemma fmul_exact (c x : b64) (e : Z) :
+  (0 <= e)%Z -> r c = bpow radix2 e -> fin (fmul c x) -> r (fmul c x) = bpow radix2 e * r x.
+Proof.
+  intros He Hc H. destruct (fmul_value c x H) as [_ [_ Hv]]. rewrite Hv, Hc.
+  apply round_pow2_mul; [exact He | apply generic_format_B2R].
+Qed.
+
+Lemma fdiv_finite_inv (x y : b64) : fin (fdiv x y) -> fin x.
+Proof.
+  unfold fdiv, Bdiv. rewrite is_finite_BSN2B.
+  destruct x as [sx|sx|sx plx Hx|sx mx ex Hx]; destruct y as [sy|sy|sy ply Hy|sy my ey Hy];
+    intro H; try reflexivity; simpl in H; try discriminate.
+Qed.
+
+Lemma fdiv_value (x y : b64) :
+  fin (fdiv x y) -> r y <> 0 -> r (fdiv x y) = round radix2 fexp ZnearestE (r x / r y).
+Proof.
+  intros H Hy. pose proof (Bdiv_correct prec emax _ _ div_nan mode_NE x y Hy) as Hc.
+  change (SpecFloat.fexp 53 1024) with fexp in Hc.
+  change (round_mode mode_NE) with ZnearestE in Hc.
+  revert Hc. case Rlt_bool; intro Hc.
+  - exact (proj1 Hc).
+  - exfalso. unfold fdiv in H. rewrite <- is_finite_B2FF, Hc in H. discriminate.
 Qed.
 
 Lemma fold_finite_inv (m : list b64) (s : b64) :
@@ -212,3 +285,6 @@ Arguments fadd_value {plus_nan} x y _.
 Arguments fmul_value {mult_nan} x y _.
 Arguments fold_finite_inv {plus_nan} m s _.
 Arguments fold_error {plus_nan} m s X Rb e0 j _ _ _ _ _.
+Arguments fmul_exact {mult_nan} c x e _ _ _.
+Arguments fdiv_finite_inv {div_nan} x y _.
+Arguments fdiv_value {div_nan} x y _ _.
