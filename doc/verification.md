@@ -179,6 +179,8 @@ Status per theorem and prover: `ok` (constant exists, axioms within the allowed 
 | bisection | BISECTION-C3 | C | – | ok | – | diana_fp_finite implements its IEEE semantics (VST, AArch64 macOS Clight AST): it returns 1 exactly when its argument is finite. |
 | bisection | BISECTION-C4 | C | – | ok | – | diana_fp_abs returns the conditional negation the C performs (VST, AArch64 macOS Clight AST); c_abs_B2R identifies it with Rabs on finite input. |
 | bisection | BISECTION-C5 | C | – | ok | – | diana_bisection_result writes the model midpoint and the rounded width (VST, AArch64 macOS Clight AST) |
+| euler | EULER-A1 | A | ok | ok | – | local truncation: under H1 on [t, t + h] with h ≥ 0, ‖Y(t + h) − Y(t) − h·F(t, Y(t))‖ ≤ M₂·h²/2 |
+| euler | EULER-A2 | A | ok | ok | – | global error: under H1 and H2 on [t₀, t₀ + N·h] with h > 0, the iterates y₀ = Y(t₀), yₖ₊₁ = yₖ + h·F(t₀ + k·h, yₖ) satisfy ‖yₖ − Y(t₀ + k·h)‖ ≤ (M₂·h/(2L))·(e^{L·k·h} − 1) for every k ≤ N |
 | euler | EULER-C1 | C | – | – | ok (49/49) | ACSL contract in src/euler.c, Frama-C WP float model with RTE: memory safety (only y[0 .. d−1] and f[0 .. d−1] are read, only y_out[0 .. d−1] is written, y_out separate from both), no UB, termination of both loops, DIANA_OK only for non-NULL pointers with d ≥ 1, and y_out untouched on DIANA_ERR_ARG. No assumed contract; that y_out is finite on DIANA_OK is left to VST. |
 | simpson | SIMPSON-A1 | A | ok | ok | – | local error: under H1 on [x, x + 2h] with h ≥ 0, \|∫ₓ^{x+2h} f − (h/3)·(f(x) + 4·f(x + h) + f(x + 2h))\| ≤ M₄·h⁵/90 |
 | simpson | SIMPSON-A2 | A | ok | ok | – | composite error: under H1 and H2, \|∫ₐᵇ f − S\| ≤ (b − a)·h⁴·M₄/180 |
