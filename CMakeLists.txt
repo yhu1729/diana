@@ -40,7 +40,8 @@ add_library(diana
     src/euler.c
     src/simpson.c
     src/trapezoidal.c
-    src/wrapper/bisection.c)
+    src/wrapper/bisection.c
+    src/wrapper/euler.c)
 add_library(diana::diana ALIAS diana)
 target_include_directories(diana PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
