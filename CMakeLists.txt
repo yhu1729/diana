@@ -121,6 +121,7 @@ if(DIANA_BUILD_PYTHON)
         python/ext/convert.c
         python/ext/status.c
         python/ext/bisection.c
+        python/ext/euler.c
         python/ext/simpson.c
         python/ext/trapezoidal.c)
     target_link_libraries(_diana PRIVATE diana::diana)
