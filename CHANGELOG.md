@@ -8,6 +8,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Flocq proves the Euler binary64 theorems in `verification/rocq/theory/Float/Euler.v`: EULER-B1
+  (`finite_result`: a finite component implies finite `y_i`, `f_i`, `h` and product, so neither
+  operation overflowed) and EULER-B2 (`forward_error`: `|r_i − (y_i + h·f_i)| ≤
+  u·|y_i + h·f_i| + (1 + u)·(u·|h·f_i| + η)` per component).
 - Lean and Rocq prove the Euler error bounds EULER-A1 (`Diana.Real.Euler.local_error`, one step:
   `M₂·h²/2`) and EULER-A2 (`global_error`: `(M₂·h/(2L))·(e^{L·k·h} − 1)` after `k` steps) for
   `y′ = F(t, y)` with `F` L-Lipschitz in `y` and `‖y″‖ ≤ M₂`; `y″` need not be continuous. Lean
