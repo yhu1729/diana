@@ -17,7 +17,9 @@ carries CompCert.
   and `clang-N` on `PATH`, and the `clang` of every Homebrew LLVM keg (`llvm` and each
   `llvm@N` under `/opt/homebrew/opt` or `/usr/local/opt`); candidates with the same first line of
   `--version` are one compiler (on macOS `gcc` and `cc` are Apple clang, and `llvm` is the
-  newest `llvm@N`). A candidate that cannot
+  newest `llvm@N`). Each result line names the candidate, its optimization level and a short
+  description taken from that first line: the vendor string of gcc (`Homebrew GCC 16.2.0`) or
+  `<vendor> clang <version>` (`Apple clang 21.0.0`). A candidate that cannot
   link a trivial program is skipped with its first error line. A driver that does not build fails.
 - On macOS, when `MACOSX_DEPLOYMENT_TARGET` is unset or empty, the script sets it to the running
   version (`sw_vers -productVersion`) for every build, `ccomp` included. Without it Homebrew GCC 13
