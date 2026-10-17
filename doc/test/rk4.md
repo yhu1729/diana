@@ -29,6 +29,17 @@ Expected values in `test/c/test_rk4.c`:
   `k1 + k4` and `k2 + k3`, and `0 * inf`, give NaN.
 - Two failing cases per function, one in the last component and one in the first, check that
   `y_out` keeps its sentinel values: the first pass rejects before the second pass writes.
+- Every successful stage and step case also runs the unchecked function and requires the same
+  bits in all 100 output slots, so both write only `y_out[0 .. d-1]`; each argument error is
+  checked for the checked and the unchecked function.
+- On inputs the checked functions reject, the unchecked ones return `DIANA_OK` and write the IEEE
+  results. For the stage: overflow in the product with `c = h` and with `c = h/2` (`h = DBL_MAX`,
+  `k = 4`), in the sum, and a negative overflow, `∞ − ∞` and `0·∞` NaN, NaN `h`, `h = +∞` at
+  stage 2, and the finite components beside a non-finite one (`(1, 2, DBL_MAX) + 2·(1, 1, DBL_MAX)`
+  gives `(3, 4, +∞)`). For the step: overflow in `k2 + k3`, the doubling, the slope sum, `h * s`
+  and the final sum, a negative overflow, `∞ − ∞` in each pair sum, `0·∞`, NaN `h`, and
+  `(−1, NaN, 0.5)` with every slope `(6, 0, −∞)` and `h = 1`, which gives `(5, NaN, −∞)`. A NaN
+  result is checked with `isnan`, not by its bits.
 - The wrapper cases keep every stage and iterate exact. `y' = -y` with `h = 1` has the stages
   `y, y/2, 3y/4, y/4` and multiplies the state by `3/8` per step (`64 -> 24 -> 9 -> 3.375`). The
   rotation `y' = (y2, -y1)` with `h = 6` applies `37 I - 30 A`, so `(1, 0)` goes to `(37, 30)` and
