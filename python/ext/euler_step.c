@@ -1,16 +1,9 @@
 #include <stddef.h>
-#include <stdint.h>
 
 #include "module.h"
 
-static int overlap(const Py_buffer *a, const Py_buffer *b) {
-  uintptr_t a0 = (uintptr_t)a->buf;
-  uintptr_t b0 = (uintptr_t)b->buf;
-  return a0 < b0 + (uintptr_t)b->len && b0 < a0 + (uintptr_t)a->len;
-}
-
-static PyObject *mod_euler_step(PyObject *Py_UNUSED(self), PyObject *args,
-                                PyObject *kwds) {
+PyObject *diana_py_euler_step(PyObject *Py_UNUSED(self), PyObject *args,
+                              PyObject *kwds) {
   static char *kwlist[] = {"y", "f", "h", "out", NULL};
   PyObject *y;
   PyObject *f;
@@ -46,7 +39,7 @@ static PyObject *mod_euler_step(PyObject *Py_UNUSED(self), PyObject *args,
     PyErr_SetString(PyExc_ValueError, "out must have the same length as y");
     goto cleanup;
   }
-  if (overlap(&vo, &vy) || overlap(&vo, &vf)) {
+  if (diana_py_overlap(&vo, &vy) || diana_py_overlap(&vo, &vf)) {
     PyErr_SetString(PyExc_ValueError, "out must not overlap y or f");
     goto cleanup;
   }
@@ -66,17 +59,4 @@ release_f:
 release_y:
   PyBuffer_Release(&vy);
   return ret;
-}
-
-static PyMethodDef euler_method[] = {
-    {"euler_step", (PyCFunction)(void (*)(void))mod_euler_step,
-     METH_VARARGS | METH_KEYWORDS,
-     "euler_step(y, f, h, out) -> None\n\nOne explicit Euler step "
-     "out[i] = y[i] + h * f[i] over one-dimensional, C-contiguous, aligned "
-     "buffers of native float64 of equal length; y and f are read in place "
-     "and out, writable and separate from both, is written only on success."},
-    {NULL, NULL, 0, NULL}};
-
-int diana_py_euler_exec(PyObject *m) {
-  return PyModule_AddFunctions(m, euler_method);
 }
