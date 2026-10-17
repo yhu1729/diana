@@ -114,7 +114,7 @@ the IEEE operations `add_f64` and `mul_f64`, while an ACSL term can only express
 only through the range axioms of the float theory, so a loop invariant cannot carry "this component
 was finite" from the first pass to the second (the same gap as "Why the functional contract is not
 in ACSL" in `spec/trapezoidal.md`). Asserting it would need an assumed helper contract, as
-`bisection_mid` has. Instead the VST theorem C2, which relates the C to the Flocq model, gives
+`diana_bisection_mid` has. Instead the VST theorem C2, which relates the C to the Flocq model, gives
 finiteness and the exact values together.
 
 ## Model correspondence
