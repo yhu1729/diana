@@ -24,6 +24,7 @@ theory/Float/Newton.v
 theory/Float/RK4.v
 theory/Float/RK4Unchecked.v
 theory/Float/Simpson.v
+theory/Float/Substitution.v
 theory/Float/Trapezoidal.v
 theory/VST/Tactic.v
 theory/VST/Bisection.v
