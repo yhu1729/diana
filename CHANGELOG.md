@@ -41,6 +41,18 @@ All notable changes to this project are documented here. The format follows
 
 #### Verification
 
+- Lean and Rocq prove RK4 layer A (`spec/rk4.md`, RK4-A1 to A7): the step-size derivatives of the
+  increment through third order as explicit jets (A1), the order conditions
+  `Phi(0) = G`, `Phi'(0) = E2/2`, `Phi''(0) = E3/3`, `Phi'''(0) = E4/4` without symmetry of the
+  second derivative (A2), the local truncation bound `(M5/120 + N4/24) h^5` (A3), the Lipschitz
+  constant `L (1 + hL/2 + (hL)^2/6 + (hL)^3/24)` of the increment (A4), convergence
+  `tau/(hL) (e^(Lkh) - 1)` from a per-step local truncation `tau` (A5), autonomization through
+  `G(t, y) = (1, F(t, y))` (A6), and the order-4 global bound
+  `((M5/120 + N4/24) h^4 / L) (e^(Lkh) - 1)` (A7). Lean takes Fréchet derivatives up to third
+  order; Rocq takes the chain rule along curves and multilinearity, shown satisfiable for linear
+  fields by `linear_instance`. The new shared modules `Diana.Real.Taylor` (Lean, Rocq) bound a
+  Taylor remainder through a Lipschitz top derivative, and `one_step_pow` is factored out of
+  `one_step_error` in `Diana.Real.OneStep`.
 - Flocq proves RK4 layer B (`verification/rocq/theory/Float/RK4.v`): a finite stage or step
   component certifies every operation of its evaluation (RK4-B1, RK4-B4); the stage coefficient
   `fl(h/2)` is within `eta` of `h/2` and exact for `|h| >= 2^-1021` (RK4-B2); a stage component is
