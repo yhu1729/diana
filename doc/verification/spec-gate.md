@@ -10,7 +10,9 @@ A real / B float / C code, informal statement, and the fully qualified constant 
 2. writes `verification/lean/CheckSpec.lean` and `verification/rocq/CheckSpec.v`, which print the
    axioms of every listed constant. A constant not declared in its module file is marked `missing`
    and left out, so one absent constant does not abort the prover run for all others; the prover
-   run stays the authority on what a constant proves;
+   run stays the authority on what a constant proves. Neither step compares the constant's type
+   with the informal statement: a `Definition` of a trivial proposition under the listed name
+   would pass, so the correspondence between the two is reviewed, not checked;
 3. with `--run`, runs each prover on its check file and compares the printed axioms with
    `script/axiom_allow.yaml`. Lean prints `'N' depends on axioms: [...]` or `'N' does not depend on
    any axioms`. Rocq's `Print Assumptions` prints `Closed under the global context` or an `Axioms:`

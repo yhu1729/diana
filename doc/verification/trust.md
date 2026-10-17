@@ -13,8 +13,10 @@ checked. The status of every theorem is in the generated [report](report.md).
 | C-WP | the C source | Frama-C WP, float model, RTE plugin | memory safety, absence of undefined behaviour, separation, contract invariants |
 
 The three models of a kernel are: `rspec` (ℝ), `fmodel` (Flocq, same operation order as the C),
-and the C function. VST proves C = `fmodel`; Flocq relates `fmodel` to `rspec`; layer A is about
-`rspec`. CompCert's `Float.add`/`Float.mul` are Flocq's `Bplus`/`Bmult`, so B and C-VST compose
+and the C function. VST proves C = `fmodel`; Flocq relates `fmodel` to `rspec` for the kernels
+with a forward-error theorem (trapezoidal, Simpson, Euler, RK4, Newton), while for bisection the
+layer-B theorems are invariants of `fmodel` alone (`spec/bisection.md`, "What the theorems do not
+say"); layer A is about `rspec`. CompCert's `Float.add`/`Float.mul` are Flocq's `Bplus`/`Bmult`, so B and C-VST compose
 inside one Rocq development with no translation step.
 
 ## Trust base
@@ -99,7 +101,9 @@ x86-64 build has been compared yet. CompCert is not in CI, so the test runs loca
   across source files, from `diana_bisection_init`, `diana_bisection_step` and
   `diana_bisection_result` to `diana_bisection_mid`, the callers use the funspec that BISECTION-C1
   proves of the callee (`Diana.VST.BisectionMid.mid_spec`); the system linker, not CompCert, joins
-  the object files.
+  the object files. For the same reason the `src/fp.h` helpers, which `clightgen` emits once per
+  AST, are listed per copy (BISECTION-C5/C6/C13, NEWTON-C8 to C10, EULER-C3, RK4-C7/C8,
+  TRAPEZOIDAL-C3, SIMPSON-C3): a caller's proof would not reveal an admitted copy.
 - Termination of Newton's method: `max_iter` bounds the step count, and no theorem says the
   iteration converges from a given `x0` in binary64 (NEWTON-A2 is about exact arithmetic and a
   start within the basin it describes).

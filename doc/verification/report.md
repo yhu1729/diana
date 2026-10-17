@@ -1,7 +1,11 @@
 # Verification report
 
 Status per theorem and prover: `ok` (constant exists, axioms within the allowed list), `planned`
-(prover project absent), or the reason it is not verified. The [trust statement](trust.md) says
+(prover project absent), or the reason it is not verified. The Frama-C column is `ok (N/N)` when
+`verification/frama-c/expectation.txt` has a row for the theorem's source, the count a fresh WP run
+must reproduce (`script/verify_frama_c.sh`, run by CI); the gate itself runs no WP. The statement
+column is the informal text of the spec: the gate checks that the named constant exists and what
+axioms it uses, not that its type says what the text says, which is left to review. The [trust statement](trust.md) says
 what each layer means and where it is checked. The table below is rewritten by the
 [spec gate](spec-gate.md) (`uv run script/check_spec.py --run --strict`, run locally and committed;
 CI does not regenerate it).
