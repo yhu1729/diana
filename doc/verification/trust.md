@@ -31,8 +31,8 @@ inside one Rocq development with no translation step.
 - `clightgen` as the translation from C to Clight. The committed
   `verification/clight/<source>_<target>.v`, one per verified source file (today
   `bisection_init_aarch64_macos.v`, `bisection_mid_aarch64_macos.v`,
-  `bisection_result_aarch64_macos.v`, `bisection_step_aarch64_macos.v`, `euler_aarch64_macos.v`,
-  `euler_step_unchecked_aarch64_macos.v`, `newton_init_aarch64_macos.v`,
+  `bisection_result_aarch64_macos.v`, `bisection_step_aarch64_macos.v`,
+  `euler_step_aarch64_macos.v`, `euler_step_unchecked_aarch64_macos.v`, `newton_init_aarch64_macos.v`,
   `newton_result_aarch64_macos.v`, `newton_step_aarch64_macos.v`, `rk4_stage_aarch64_macos.v`,
   `rk4_stage_unchecked_aarch64_macos.v`, `rk4_step_aarch64_macos.v`,
   `rk4_step_unchecked_aarch64_macos.v`, `simpson_aarch64_macos.v` and
@@ -82,8 +82,10 @@ x86-64 build has been compared yet. CompCert is not in CI, so the test runs loca
 
 ## Not verified
 
-- The callback wrappers in `src/wrapper/` and the Python package: the Python loop drives the
-  verified state machine, but the loop and the CPython extension are ordinary tested code.
+- The callback wrappers (`diana_bisection`, `diana_euler`, `diana_newton`, `diana_rk4` in
+  `src/bisection.c`, `src/euler.c`, `src/newton.c`, `src/rk4.c`) and the Python package: the
+  Python loop drives the verified state machine, but the loop and the CPython extension are
+  ordinary tested code.
 - The build system, the compilers, and the operating system.
 - Under VST, the argument-error paths a funspec excludes by its precondition: a NULL pointer in
   every kernel, `d = 0`, `n < 2`, `n < 3` or an even `n` in the array kernels, and an RK4 stage
