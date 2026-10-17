@@ -16,6 +16,22 @@ Python calls the kernel as `diana.euler_step` and loops as `diana.euler` (see [P
   `f` or `y_out`, for `d == 0`, and when any component is not finite: a NaN or infinite `y[i]`,
   `f[i]` or `h`, or an overflow in either operation. The kernel checks every component before it
   writes any, so a failure in the last one leaves `y_out` as it was.
+- `diana_euler_step_unchecked(y, f, d, h, y_out)` is the same step without the finiteness check,
+  chosen explicitly by the caller. It returns `DIANA_ERR_ARG`, without writing `y_out`, for a
+  NULL `y`, `f` or `y_out` and for `d == 0`, and otherwise writes every component in one pass,
+  in the same operation order, and returns `DIANA_OK`. A non-finite component (NaN or ±∞, from
+  a non-finite input or an overflow) is written as computed, and the components before and after
+  it are written too: `DIANA_OK` says nothing about finiteness. Whenever `diana_euler_step`
+  returns `DIANA_OK`, the two write the same bits.
+
+`diana_euler_step` is the default. Use the unchecked step only where the caller checks the state
+itself, or does not need to stop at the first non-finite component, and the step is a measured
+cost: with one pass and no branch the compiler vectorizes the loop. On an Apple Silicon Mac
+(Release build, clang and gcc 15) the checked step takes about 0.44 to 0.67 ns per component and
+the unchecked one 0.10 to 0.29, a factor of 2.4 to 4.9 on the kernel; with a right-hand side as
+cheap as `dy[i] = -0.5 * y[i]` the whole step is 1.6 to 3.3 times faster. The difference is
+0.3 to 0.4 ns per component, so it is small next to a right-hand side that costs a few
+nanoseconds per component.
 
 Frama-C WP proves memory safety, termination, the status cases and that `y_out` is untouched on
 `DIANA_ERR_ARG` (EULER-C1). For `y′ = F(t, y)` with `F` L-Lipschitz in `y` and `‖y″‖ ≤ M₂` in the max
@@ -25,7 +41,9 @@ Each computed component is within `u·|y[i] + h·f[i]| + (1 + u)·(u·|h·f[i]| 
 `y[i] + h·f[i]` whenever it is finite, with `u = 2⁻⁵³` and `η = 2⁻¹⁰⁷⁵` (EULER-B2, Flocq).
 VST proves that the C writes exactly these binary64 values and returns `DIANA_OK` exactly when all
 of them are finite, leaving `y_out` unchanged otherwise (EULER-C2, for non-NULL, disjoint `y`, `f`
-and `y_out` with `d >= 1`).
+and `y_out` with `d >= 1`). For the unchecked step, WP proves the same memory safety, termination
+and argument cases (EULER-C3), and VST that it always writes these binary64 values and returns
+`DIANA_OK` (EULER-C4), so EULER-B2 holds for each component it writes that is finite.
 
 `y_out` must not overlap `y`, so a loop alternates two buffers. The rotation `y′ = (y₂, −y₁)` from
 `(0, 1)` has the solution `(sin t, cos t)`, `(0.841471, 0.540302)` at `t = 1`; with `h = 1/1000`
