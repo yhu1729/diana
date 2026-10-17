@@ -154,6 +154,7 @@ if(DIANA_BUILD_PYTHON)
     find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
     Python_add_library(_diana MODULE WITH_SOABI
         python/ext/module.c
+        python/ext/back_substitution.c
         python/ext/bisection_exec.c
         python/ext/bisection_init.c
         python/ext/bisection_new.c
@@ -164,6 +165,7 @@ if(DIANA_BUILD_PYTHON)
         python/ext/convert_uint.c
         python/ext/euler_exec.c
         python/ext/euler_step.c
+        python/ext/forward_substitution.c
         python/ext/get_array.c
         python/ext/newton_exec.c
         python/ext/newton_init.c
@@ -178,6 +180,8 @@ if(DIANA_BUILD_PYTHON)
         python/ext/simpson_exec.c
         python/ext/status_exec.c
         python/ext/status_str.c
+        python/ext/substitution.c
+        python/ext/substitution_exec.c
         python/ext/trapezoidal.c
         python/ext/trapezoidal_exec.c
         python/ext/version.c)
