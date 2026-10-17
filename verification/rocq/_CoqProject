@@ -16,6 +16,7 @@ theory/Real/Trapezoidal.v
 theory/Float/Bisection.v
 theory/Float/Sum.v
 theory/Float/Euler.v
+theory/Float/EulerUnchecked.v
 theory/Float/Newton.v
 theory/Float/RK4.v
 theory/Float/Simpson.v
