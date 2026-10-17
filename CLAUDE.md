@@ -46,10 +46,13 @@ one line per idea, no design (a design is written only when an item is picked up
   `DIANA_WERROR`, OFF by default so end-user builds survive new compiler warnings; CI and `script/dev.sh`
   turn it ON); no `malloc` and **no libm
   call** in a verified kernel (use `src/fp.h`: `diana_fp_finite`, `diana_fp_abs`; every external call
-  would need an axiom in VST and Frama-C, and clightgen cannot parse macOS `<math.h>`); caller-owned
+  would need an axiom in VST and Frama-C, and clightgen cannot parse macOS `<math.h>`; the one
+  square root is `__builtin_sqrt` in `diana_fp_sqrt`, `src/fp_sqrt.c`, whose WP contract and VST
+  funspec for the builtin are assumed, note FP-006); caller-owned
   buffer; every public function returns `diana_status` (except the string functions `diana_status_str`
   and `diana_version`); prefix `diana_`; `-ffp-contract=off`, no
-  `-ffast-math`/`-Ofast` (the verified semantics are strict IEEE binary64). Format with `clang-format`
+  `-ffast-math`/`-Ofast` (the verified semantics are strict IEEE binary64); `-fno-math-errno` so the
+  builtin square root needs no libm. Format with `clang-format`
   (LLVM style, `.clang-format`; use the version pinned in the uv `lint` group, CI `style_c` checks it).
 - **Floating-point environment:** every numerical call requires nearest-even rounding, gradual
   underflow (no flush-to-zero or denormals-are-zero mode), and disabled traps on the calling
@@ -183,7 +186,7 @@ note/                 technical notes per topic, index by topic and by path (REA
   rows at a time, each row in its own `verification/frama-c/session/<row>` and `cache/<row>`,
   one `report.txt` in row order; all goals must prove and each count must match;
   `script/dev.sh verify` and CI both call it)
-- Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/<kernel>_aarch64_macos.v src/<kernel>.c` (today `bisection_init`, `bisection_mid`, `bisection_result`, `bisection_step`, `euler_step`, `euler_step_unchecked`, `newton_init`, `newton_result`, `newton_step`, `rk4_stage`, `rk4_stage_unchecked`, `rk4_step`, `rk4_step_unchecked`, `simpson` and `trapezoidal`) **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
+- Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/<kernel>_aarch64_macos.v src/<kernel>.c` (today `bisection_init`, `bisection_mid`, `bisection_result`, `bisection_step`, `cholesky`, `euler_step`, `euler_step_unchecked`, `fp_sqrt`, `newton_init`, `newton_result`, `newton_step`, `rk4_stage`, `rk4_stage_unchecked`, `rk4_step`, `rk4_step_unchecked`, `simpson` and `trapezoidal`) **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
 - Compiler comparison: `opam exec -- script/compare_compiler.sh` builds `src/*.c` with the corpus
   driver `test/c/test_compiler.c` once with `ccomp` and with each gcc/clang found
   (`DIANA_COMPARE_CC` to choose) at `-O0`/`-O2`/`-O3`, and fails on any byte of difference in the
@@ -218,6 +221,20 @@ and VST both functions against the Flocq models (RK4-C3 to C6); the
 unverified wrapper `diana_rk4` (work `5d`) loops over them with a `diana_ode_fn`, and Python
 exposes `diana.rk4_stage`, `diana.rk4_step` and the driver `diana.rk4` (copies each slope).
 
+Unreleased (toward 1.0): Cholesky factorization `diana_cholesky(a, n, l)` (`src/cholesky.c`,
+`diana/cholesky.h`), `n×n` column-major (`a[i + j·n]`), only the lower triangle of `a` read, `L`
+written with a `+0` strict upper triangle; `DIANA_ERR_ARG` (checked before any write) leaves `l`
+untouched, a pivot that is not positive returns `DIANA_ERR_SINGULAR` with `l` partly written, the
+one exception to the write-nothing-on-error rule (KERNEL-002, API-003). The square root is the
+helper `diana_fp_sqrt` (`src/fp_sqrt.c`, `__builtin_sqrt`), the second `SKIP` entry. Proved
+through every layer (`spec/cholesky.md`): Lean and Rocq layer A (CHOLESKY-A1 to A3: `L·Lᵀ = A`,
+positive pivots iff symmetric positive definite), Flocq layer B (B1 the sqrt contract, B2
+finiteness on `DIANA_OK`, B3 the componentwise backward error `γⱼ₊₂·Σ|L̂ᵢₖL̂ⱼₖ|` plus underflow),
+WP the ACSL contract (C1, 108 goals, nonlinear index bounds via the lemma `column_end`, note
+WP-011), VST the kernel against the Flocq model (C3), the helper (C2, assuming CompCert's
+`__builtin_sqrt` funspec) and the `diana_fp_finite` copy (C4). Python `diana.cholesky(a)` returns
+an `array.array("d")` (length a square, `SingularError` when not positive definite).
+
 Unreleased experiment: opt-in one-pass kernels with no finiteness check (non-finite components
 written as computed, `DIANA_OK` for valid arguments): `diana_euler_step_unchecked`,
 `diana_rk4_stage_unchecked` and `diana_rk4_step_unchecked`, one per source file
@@ -235,7 +252,7 @@ function per source file (`bisection_mid`, `bisection_init`, `bisection_step`, `
 `newton_init`, `newton_step`, `newton_result`; `rk4_stage`, `rk4_step`), each with its own WP row,
 Clight AST and VST file (`VST/BisectionInit.v`, …); `VST/Bisection.v`, `VST/Newton.v` and
 `VST/RK4.v` keep only the AST-free models, model theorems and shared lemmas. The midpoint helper is
-now the external `diana_bisection_mid` (still the only `SKIP` entry, no WP row of its own), and the
+now the external `diana_bisection_mid` (a `SKIP` entry, no WP row of its own), and the
 `init`, `step` and `result` proofs take its funspec from `VST/BisectionMid.v`. The C layers are
 renumbered with one ACSL theorem per source file: BISECTION-C1 to C12, NEWTON-C1 to C7, RK4-C1 to
 C6. Every copy of a `src/fp.h` helper that `clightgen` emits into a kernel's AST is a listed VST
