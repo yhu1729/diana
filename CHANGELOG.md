@@ -109,6 +109,7 @@ All notable changes to this project are documented here. The format follows
   kernel and callback wrapper (reverse-communication loop, iteration limit, context pointer, the
   alternating buffers of an Euler loop), and Python sessions in doctest form for every function,
   including NumPy input, the array-argument checks, and the exceptions.
+- `doc/roadmap.md`, a list of ideas for future work, one line each.
 
 ### Changed
 
