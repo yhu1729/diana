@@ -1,58 +1,24 @@
 # Explicit Euler step
 
-Status codes, linking, and the Python conventions shared by every kernel are in the
-[API overview](overview.md); the theorems cited below are listed in `spec/euler.md` and, for the
-unchecked step, `spec/euler_unchecked.md`.
+The explicit Euler method solves the initial value problem `y′ = F(t, y)`, `y(t₀) = y₀`, for a
+vector `y` of dimension `d` by the step `y ← y + h·F(t, y)`. It is first order: halving `h`
+roughly halves the error. The kernel takes one step from a slope `f = F(t, y)` you have computed;
+a loop over the steps is yours to write, or `diana_euler` runs it over a callback. Shared
+conventions are in the [API overview](overview.md).
 
-## C (`diana/euler.h`)
+## C
 
-One step of the explicit Euler method on a vector of dimension `d`; the caller evaluates
-`f = F(t, y)` and loops over the steps, or lets `diana_euler` ([below](#callback-wrapper)) do it;
-Python calls the kernel as `diana.euler_step` and loops as `diana.euler` (see [Python](#python)).
+`#include <diana/euler.h>`.
 
-- `diana_euler_step(y, f, d, h, y_out)` writes `y_out[i] = y[i] + h * f[i]` for
-  `i = 0, ..., d-1`, the product rounded before the sum (no fused multiply-add). `y_out[0 .. d-1]`
-  must not overlap `y[0 .. d-1]` or `f[0 .. d-1]`, which are only read. Returns `DIANA_OK` when
-  every component is finite. Returns `DIANA_ERR_ARG`, without writing `y_out`, for a NULL `y`,
-  `f` or `y_out`, for `d == 0`, and when any component is not finite: a NaN or infinite `y[i]`,
-  `f[i]` or `h`, or an overflow in either operation. The kernel checks every component before it
-  writes any, so a failure in the last one leaves `y_out` as it was.
-- `diana_euler_step_unchecked(y, f, d, h, y_out)` is the same step without the finiteness check,
-  chosen explicitly by the caller. It returns `DIANA_ERR_ARG`, without writing `y_out`, for a
-  NULL `y`, `f` or `y_out` and for `d == 0`, and otherwise writes every component in one pass,
-  in the same operation order, and returns `DIANA_OK`. A non-finite component (NaN or ±∞, from
-  a non-finite input or an overflow) is written as computed, and the components before and after
-  it are written too: `DIANA_OK` says nothing about finiteness. Whenever `diana_euler_step`
-  returns `DIANA_OK`, the two write the same bits.
+- `diana_euler_step(y, f, d, h, y_out)` writes `y_out[i] = y[i] + h·f[i]` for `i < d`, the
+  product rounded before the sum (no fused multiply-add). It returns `DIANA_OK`, or
+  `DIANA_ERR_ARG` without writing `y_out` for a `NULL` pointer, `d == 0`, or a component that is
+  not finite: a NaN or infinite input or `h`, or an overflow. It checks every component before
+  writing any, so a failure leaves `y_out` as it was.
 
-`diana_euler_step` is the default. Use the unchecked step only where the caller checks the state
-itself, or does not need to stop at the first non-finite component, and the step is a measured
-cost: with one pass and no branch the compiler vectorizes the loop. On an Apple M4 Mac (Release
-build, Apple clang 21 and GCC 15.3, `d` from 64 to 16384; [benchmark](../development/benchmark.md))
-the checked step takes about 0.44 to 0.52 ns per component and the unchecked one 0.10 to 0.19, a
-factor of 2.8 to 4.8 on the kernel; with a right-hand side as cheap as `dy[i] = -0.5 * y[i]` the
-whole step is 1.7 to 3.3 times faster. The difference is
-0.3 to 0.4 ns per component, so it is small next to a right-hand side that costs a few
-nanoseconds per component.
-
-Frama-C WP proves memory safety, termination, the status cases and that `y_out` is untouched on
-`DIANA_ERR_ARG` (EULER-C1). For `y′ = F(t, y)` with `F` L-Lipschitz in `y` and `‖y″‖ ≤ M₂` in the max
-norm, `k` exact Euler steps of size `h` from `y(t₀)` are within `(M₂·h/(2L))·(e^{L·k·h} − 1)` of
-`y(t₀ + k·h)` (EULER-A2, proved in Lean and Rocq; one step is within `M₂·h²/2`, EULER-A1).
-Each computed component is within `u·|y[i] + h·f[i]| + (1 + u)·(u·|h·f[i]| + η)` of the exact
-`y[i] + h·f[i]` whenever it is finite, with `u = 2⁻⁵³` and `η = 2⁻¹⁰⁷⁵` (EULER-B2, Flocq).
-VST proves that the C writes exactly these binary64 values and returns `DIANA_OK` exactly when all
-of them are finite, leaving `y_out` unchanged otherwise (EULER-C2, for non-NULL, disjoint `y`, `f`
-and `y_out` with `d >= 1`). For the unchecked step, WP proves the same memory safety, termination
-and argument cases (EULER-UNCHECKED-C1), and VST that it always writes these binary64 values and
-returns `DIANA_OK` (EULER-UNCHECKED-C2), so EULER-B2 holds for each component it writes that is
-finite. Flocq proves that a written component is finite exactly when `y[i]`, `f[i]` and `h` are
-finite and neither operation overflows (EULER-UNCHECKED-B1): checking `y_out` for finiteness after
-the call rejects exactly the inputs `diana_euler_step` rejects.
-
-`y_out` must not overlap `y`, so a loop alternates two buffers. The rotation `y′ = (y₂, −y₁)` from
-`(0, 1)` has the solution `(sin t, cos t)`, `(0.841471, 0.540302)` at `t = 1`; with `h = 1/1000`
-the error is `4.2e-4`, within the EULER-A2 bound `(h/2)·(e − 1) = 8.6e-4` (`L = M₂ = 1`):
+`y_out` must not overlap `y` or `f`, so a loop alternates two buffers. The rotation
+`y′ = (y₂, −y₁)` from `(0, 1)` has the solution `(sin t, cos t)`, `(0.841471, 0.540302)` at
+`t = 1`; with `h = 1/1000` the error is `4.2e-4`, within the proved bound `(h/2)·(e − 1) = 8.6e-4`:
 
 ```c
 #include <stdio.h>
@@ -90,23 +56,28 @@ int main(void) {
 y(1) = (0.841892, 0.540573)
 ```
 
+### Unchecked step
+
+`diana_euler_step_unchecked(y, f, d, h, y_out)` is the same step without the finiteness check. It
+rejects only a `NULL` pointer or `d == 0`; otherwise it writes every component in one pass and
+returns `DIANA_OK`, even when a component is NaN or infinite. Where `diana_euler_step` succeeds,
+both write the same bits, and checking `y_out` for finiteness afterwards rejects exactly what
+`diana_euler_step` rejects.
+
+Use it only when the step itself is a measured cost and you check the state yourself: without
+the check pass the compiler vectorizes the loop, which made the kernel 2.8 to 4.8 times faster in
+the project's [benchmark](../development/benchmark.md), a saving of 0.3 to 0.4 ns per component.
+That saving is small next to a right-hand side that costs a few nanoseconds per component.
+
 ## Callback wrapper
 
-`diana/euler.h` (callback type `diana_ode_fn` from `diana/ode.h`); not verified, see
-[callback wrapper](overview.md#callback-wrapper).
-
-- `diana_euler(fn, ctx, t0, h, nstep, y, d, work, done)` takes `nstep` explicit Euler steps of size
-  `h` from `y(t0) = y[0 .. d-1]`, in place, with `fn` of type `diana_ode_fn`: `fn(t, y, dy, d, ctx)`
-  must write `F(t, y)` to `dy[0 .. d-1]`. Step `k` evaluates `fn` at `t0 + k * h`, computed from `k`
-  rather than accumulated, then calls `diana_euler_step`. `work` holds `2 * d` doubles and must not
-  overlap `y`. It returns `DIANA_ERR_ARG` for a NULL `fn`, `y` or `work`, for `d == 0`, and when a
-  step fails (a non-finite derivative or result); `y` then holds the state after the last
-  successful step. `*done` (optional) receives the number of completed steps on every return
-  (0 when the arguments are rejected). `nstep == 0` leaves `y` unchanged and returns `DIANA_OK`.
-
-The same loop with a callback: exponential decay `y′ = −r·y` with the rate `r` in `ctx`, three
-components, 50 steps of `0.01`. Each component is multiplied by `(1 − 0.02)⁵⁰ = 0.364170` against
-the exact `e⁻¹ = 0.367879`:
+`diana_euler(fn, ctx, t0, h, nstep, y, d, work, &done)` takes `nstep` steps from `y(t0) = y`, in
+place, with a callback `void fn(double t, const double *y, double *dy, size_t d, void *ctx)`
+(`diana_ode_fn` in `diana/ode.h`) that writes `F(t, y)` to every component of `dy`. Step `k`
+evaluates `fn` at `t0 + k·h`. `work` holds `2·d` doubles and must not overlap `y`; `done` (may be
+`NULL`) receives the number of completed steps. When a step fails, it returns `DIANA_ERR_ARG` with
+`y` at the last successful step. Exponential decay `y′ = −r·y` with the rate in `ctx`: each
+component is multiplied by `(1 − 0.02)⁵⁰ = 0.364170`, against the exact `e⁻¹ = 0.367879`:
 
 ```c
 #include <stdio.h>
@@ -147,17 +118,14 @@ y(0.5) = (0.364170, 0.728339, 1.456679)
 
 ## Python
 
-`diana.euler_step(y, f, h)` returns one step of `diana_euler_step` as a new `array.array("d")`,
-with the same operation order. `y` and `f` are [array arguments](overview.md#array-argument), each
-with its own name in the messages and at least one sample; a length mismatch, then a non-finite
-component, raise `ValueError`. The output is a fresh array, so it never overlaps the inputs, and
-the inputs are never modified. `diana.euler(f, t0, y0, h, nstep)` copies `y0` element by element
-into an `array.array("d")` (a `bytes` object is a sequence of integers, not raw float64 data) and
-takes `nstep` steps, calling `f(t0 + k*h, y)` for the derivative of step
-`k`; the loop runs in Python, like `diana.bisection`, and `f` must not modify `y`. It raises
-`ValueError` for an empty `y0` or a negative `nstep`, `TypeError` for a non-integer `nstep` or a
-`t0` or `h` that is not a real number (a string is not converted), and lets the errors of
-`euler_step` through.
+- `diana.euler_step(y, f, h)` returns one checked step as a new `array.array("d")`; `y` and `f`
+  are [array arguments](overview.md#array-arguments) of the same length. A non-finite component
+  raises `ValueError`.
+- `diana.euler(f, t0, y0, h, nstep)` takes `nstep` steps from a copy of `y0`, calling `f(t, y)`
+  for the slope at `t0 + k·h`, and returns the final state. `f` must not modify `y`, and its
+  result is passed to `euler_step` as an array argument.
+
+The unchecked step has no Python binding.
 
 ```python
 >>> import diana
@@ -180,7 +148,7 @@ sample `t = 1, 1.25, 1.5, 1.75`, so `y = (1 + 1.25 + 1.5 + 1.75)/4`:
 array('d', [1.375])
 ```
 
-`f` may return a NumPy array; `np.asarray` views the state without a copy:
+`f` may return a NumPy array, and `np.asarray` views the state without a copy:
 
 ```python
 >>> import numpy as np
@@ -188,3 +156,23 @@ array('d', [1.375])
 >>> np.asarray(y)
 array([0.36416968, 0.72833936, 1.45667872])
 ```
+
+## Guarantees
+
+Proved in Lean and Rocq: for `F` Lipschitz in `y` with constant `L` and `‖y″‖ <= M₂` in the max
+norm, `k` exact steps of size `h` are within `(M₂·h/(2L))·(e^{L·k·h} − 1)` of the solution.
+Proved in Rocq with Flocq: each computed component is within `u·|y[i] + h·f[i]| + u·|h·f[i]|` of
+the exact `y[i] + h·f[i]`, to first order in `u = 2⁻⁵³`. Proved of the C code: VST shows that
+both steps compute exactly that binary64 value, and Frama-C that they are memory-safe and free of
+undefined behaviour. Not proved: a bound on the rounding error accumulated over many steps, and
+anything about the wrappers. Theorems: `spec/euler.md` and `spec/euler_unchecked.md`; status: the
+[verification report](../verification/report.md).
+
+## Technical notes
+
+[API-015](../../note/api/API-015.md) evaluation order and exits,
+[API-017](../../note/api/API-017.md) ODE wrappers,
+[API-018](../../note/api/API-018.md) unchecked kernels,
+[API-019](../../note/api/API-019.md) when to use them,
+[API-026](../../note/api/API-026.md) Python drivers,
+[PROOF-005](../../note/proof/PROOF-005.md) what is proved, with the exact bounds.
