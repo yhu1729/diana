@@ -241,6 +241,8 @@ All notable changes to this project are documented here. The format follows
   branch coverage. Every implementation file in `src/` and `python/ext/` now defines one function,
   `static inline` helpers aside; `CLAUDE.md` and `CONTRIBUTING.md` record this as a convention, with
   the tests exempt.
+- The `release` job pins its image to `registry.gitlab.com/gitlab-org/release-cli:v0.24.0`,
+  the image `latest` named when pinned.
 
 ### Removed
 
