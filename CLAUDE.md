@@ -12,7 +12,7 @@ no design (a design is written only when an item is picked up).
 ## Convention
 
 - **Name:** single-form noun and base-form verb everywhere: directory (`test/`, `verification/`, `script/`,
-  `doc/`, `wrapper/`), identifier (`diana_bisection_init`, `check_spec`), CI job (`build`, `test`),
+  `doc/`, `spec/`), identifier (`diana_bisection_init`, `check_spec`), CI job (`build`, `test`),
   Python API (`diana.bisection`). No plural, no `-ing`/`-s` verb form.
   - **Project name:** `Diana` in prose (heading, documentation sentence, user-facing string);
     lowercase `diana` only where it is an identifier (package, CMake target, library file, URL).
@@ -73,7 +73,9 @@ no design (a design is written only when an item is picked up).
   header (`src/bisection_acsl.h`, `src/newton_acsl.h`).
 - **Verified kernel shape:** reverse communication. A kernel is a pure state machine on a caller-owned
   struct (`init` / `step` / `result`) or a function over tabulated arrays. No function pointer in a
-  verified kernel. Callback convenience wrappers live in `src/wrapper/` and are not VST-verified.
+  verified kernel. Callback convenience wrappers (`diana_bisection`, `diana_euler`, `diana_newton`,
+  `diana_rk4`) are in `src/<method>.c`, declared in the method's header (the ODE callback type
+  `diana_ode_fn` in `diana/ode.h`), and are not VST-verified.
 - **One function per file:** every function of a verified kernel is in its own source file named
   after it without `diana_` (`src/bisection_init.c`, `src/rk4_stage_unchecked.c`), and each source
   file has its own WP expectation row, Clight AST and VST file (`VST/BisectionInit.v`); the C-order
@@ -113,8 +115,8 @@ only in local opam switches; no CI job or container image contains it.
 ## Layout
 
 ```
-include/diana/        public header             src/                verified kernel
-src/wrapper/          callback wrapper          python/src/         Python package (pyproject.toml at root)
+include/diana/        public header             src/                verified kernel, callback wrapper
+python/src/           Python package (pyproject.toml at root)
 python/ext/           CPython extension         test/doc/           doc/api example
 test/c/               ctest                     test/python/        pytest
 test/install/         find_package consumer     spec/               theorem list per method
@@ -150,7 +152,7 @@ doc/                  README index; api/, development/, test/, verification/ (tr
 - Frama-C: `script/verify_frama_c.sh` (runs `script/run_frama_c.sh` and `script/check_frama_c.sh`
   for every `<source> <goal-count>` row of `verification/frama-c/expectation.txt`; all goals must
   prove and each count must match; `script/dev.sh verify` and CI both call it)
-- Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/<kernel>_aarch64_macos.v src/<kernel>.c` (today `bisection_init`, `bisection_mid`, `bisection_result`, `bisection_step`, `euler`, `euler_step_unchecked`, `newton_init`, `newton_result`, `newton_step`, `rk4_stage`, `rk4_stage_unchecked`, `rk4_step`, `rk4_step_unchecked`, `simpson` and `trapezoidal`) **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
+- Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/<kernel>_aarch64_macos.v src/<kernel>.c` (today `bisection_init`, `bisection_mid`, `bisection_result`, `bisection_step`, `euler_step`, `euler_step_unchecked`, `newton_init`, `newton_result`, `newton_step`, `rk4_stage`, `rk4_stage_unchecked`, `rk4_step`, `rk4_step_unchecked`, `simpson` and `trapezoidal`) **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
 - Compiler comparison: `opam exec -- script/compare_compiler.sh` builds `src/*.c` with the corpus
   driver `test/c/test_compiler.c` once with `ccomp` and with each gcc/clang found
   (`DIANA_COMPARE_CC` to choose) at `-O0`/`-O2`/`-O3`, and fails on any byte of difference in the
@@ -205,3 +207,9 @@ now the external `diana_bisection_mid` (still the only `SKIP` entry, no WP row o
 `init`, `step` and `result` proofs take its funspec from `VST/BisectionMid.v`. The C layers are
 renumbered with one ACSL theorem per source file: BISECTION-C1 to C12, NEWTON-C1 to C7, RK4-C1 to
 C6.
+
+Unreleased file structure: the callback wrappers moved from `src/wrapper/` to `src/bisection.c`,
+`src/euler.c`, `src/newton.c` and `src/rk4.c`, their declarations from the removed
+`diana/wrapper.h` to the method headers, and `diana_ode_fn` to the new `diana/ode.h`; the verified
+Euler step is `src/euler_step.c` (AST `euler_step_aarch64_macos.v`, still proved in
+`VST/Euler.v`).
