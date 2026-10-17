@@ -38,8 +38,9 @@ sanitizer, opam switch, `clang-tidy` binary).
   alters a fact recorded there, `CLAUDE.md`.
 - **Kernel shape:** a verified kernel is a pure state machine on a caller-owned struct
   (`init`/`step`/`result`) or a function over tabulated arrays — no `malloc`, no libm call, no
-  function pointer. Callback convenience wrappers live in `src/wrapper/` and are outside the
-  VST-verified core.
+  function pointer. Callback convenience wrappers (`src/bisection.c`, `src/euler.c`,
+  `src/newton.c`, `src/rk4.c`, declared in their method's header) are outside the VST-verified
+  core.
 
 `CLAUDE.md` records the same conventions in condensed form, together with the toolchain pins.
 
