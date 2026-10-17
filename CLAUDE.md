@@ -164,8 +164,11 @@ read-only state fields and positional-only `step` arguments.
 Unreleased (toward 1.0): the classical Runge–Kutta step RK4 in reverse communication,
 `diana_rk4_stage` (the point of stage 2, 3 or 4: `y + (h/2)·k` or `y + h·k`) and
 `diana_rk4_step` (`y + h·((k₁ + k₄) + 2·(k₂ + k₃))/6`), both two-pass like Euler (C tests at 100%
-line and branch coverage); WP proves the ACSL contracts (98 goals, RK4-C1, `spec/rk4.md`), and
-Flocq its layer B (RK4-B1 to B5: finiteness, the `fl(h/2)` coefficient, stage and step error),
+line and branch coverage); WP proves the ACSL contracts (98 goals, RK4-C1, `spec/rk4.md`), Lean
+and Rocq its layer A (RK4-A1 to A7: increment jets, order conditions, local truncation
+`(M₅/120 + N₄/24)·h⁵`, Lipschitz increment, convergence from consistency, autonomization, and the
+order-4 global bound; shared modules `Diana.Real.Taylor` and `OneStep.one_step_pow`; Lean takes
+Fréchet derivatives, Rocq curve derivatives plus multilinearity), and Flocq its layer B (RK4-B1 to B5: finiteness, the `fl(h/2)` coefficient, stage and step error),
 and VST both functions against the Flocq models (RK4-C2 to C5, `rk4_aarch64_macos.v`); the
 unverified wrapper `diana_rk4` (work `5d`) loops over them with a `diana_ode_fn`, and Python
 exposes `diana.rk4_stage`, `diana.rk4_step` and the driver `diana.rk4` (copies each slope).
