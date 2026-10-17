@@ -1,36 +1,55 @@
 # Build
 
-- `cmake/warning.cmake` (`diana_set_strict_flag`) applies the strict warning set and compiler
-  settings for IEEE binary64 arithmetic to every Diana target. The verified semantics assume no
-  FMA contraction, no fast-math, and SSE2 or AArch64 arithmetic; `src/fp.h` makes the last one a
-  compile-time check (`_Static_assert(FLT_EVAL_METHOD == 0)`). Callers must also maintain the
-  [runtime floating-point environment](../api/overview.md#floating-point-environment); these
-  compiler settings do not select the runtime rounding mode, underflow handling, or trap state.
-- `DIANA_BUILD_PYTHON` is ON by default, so a plain `cmake -S . -B build` describes `python/ext/`
-  in `compile_commands.json`; without it clang-tidy parses those files with a guessed command, fails
-  to find `<Python.h>`, and reports a cascade of findings that are artefacts of the failed parse.
-  It needs Python with `Development.Module` (`find_package(... REQUIRED)`), so a build on a machine
-  with no Python headers passes `-DDIANA_BUILD_PYTHON=OFF`, as the C-only CI jobs do. The extension
-  is installed only under scikit-build; `cmake --install` of the C library never carries it.
-- scikit-build-core builds the CPython extension in-tree and sets `SKBUILD`, which forces
-  `DIANA_BUILD_PYTHON=ON`. Static wheels carry only the extension module and the Python package.
-  With `DIANA_BUILD_SHARED_LIB=ON`, the wheel also carries an unversioned `libdiana` runtime
-  beside the extension, without headers, archives, or CMake exports. Standalone CMake
-  installations retain the library's `VERSION`/`SOVERSION`. The wheel extension uses an install
-  RPATH of `@loader_path` on macOS and `$ORIGIN` on Linux; the macOS library has an `@rpath` install
-  name.
-- `DIANA_BUILD_SHARED_LIB` selects the library type explicitly (`add_library(diana SHARED|STATIC)`),
-  so the generic `BUILD_SHARED_LIBS` of an enclosing project does not change it. Linux and macOS
-  are the supported platforms; there is no Windows or MSVC branch.
-- `GNUInstallDirs` is loaded before configuring the target's installed include directory, so
-  `CMAKE_INSTALL_INCLUDEDIR` controls both header installation and the exported include path.
-- `CMakeLists.txt` fails to configure unless `DIANA_VERSION_STRING` and the three
-  `DIANA_VERSION_MAJOR`/`MINOR`/`PATCH` macros of `include/diana/diana.h` equal the project
-  version, so the four cannot drift apart.
-- `DIANA_WERROR` (`-Werror`) is OFF by default, so building from the sdist with a newer compiler
-  that adds a warning does not fail for an end user. CI turns it ON in every job that compiles (CMake
-  `-DDIANA_WERROR=ON`, and `SKBUILD_CMAKE_DEFINE` for the uv jobs that build the extension), and so
-  does `script/dev.sh` (`config` and the `uv sync` of `config`/`build`).
-- `DIANA_SANITIZER` uses directory-wide `add_compile_options`, which only reach targets created
-  after the call, so it comes before `add_library(diana)`. The required sanitizer runtime link
-  options are public usage requirements of `diana::diana`, including its installed target.
+Diana builds with CMake ≥ 3.25 and gcc or clang, on Linux and macOS; there is no Windows support.
+The Python package is built by `uv` through scikit-build-core from the same `CMakeLists.txt`.
+
+## C library
+
+```bash
+cmake -S . -B build -DDIANA_BUILD_TEST=ON
+cmake --build build
+ctest --test-dir build
+cmake --install build --prefix <prefix>
+```
+
+| Option | Default | Effect |
+|---|---|---|
+| `DIANA_BUILD_TEST` | OFF | build the C tests and register them with ctest |
+| `DIANA_BUILD_PYTHON` | ON | also build the CPython extension; needs the Python development headers, so turn it off on a machine without them |
+| `DIANA_BUILD_SHARED_LIB` | OFF | build a shared instead of a static library (the generic `BUILD_SHARED_LIBS` is ignored) |
+| `DIANA_WERROR` | OFF | treat warnings as errors; CI and `script/dev.sh` turn it on |
+| `DIANA_SANITIZER` | OFF | build with AddressSanitizer and UndefinedBehaviorSanitizer |
+
+Every target is compiled with a strict warning set and the settings that keep the arithmetic
+strict IEEE binary64: no fused multiply-add contraction and no fast-math. Configuration fails if
+`CMAKE_C_FLAGS` asks for `-Ofast`, `-ffast-math` or `-funsafe-math-optimizations`, and the build
+fails on a compiler that would evaluate `double` in a wider format. These settings do not set the
+runtime [floating-point environment](../api/overview.md#floating-point-environment), which stays
+the caller's responsibility.
+
+The installed package exports `diana::diana` for `find_package(diana)`
+([API overview](../api/overview.md#headers-and-linking)).
+
+## Python package
+
+```bash
+uv sync
+uv run python -c "import diana; print(diana.version())"
+```
+
+`uv sync` builds the extension in Release mode. It does not notice a change to the C sources by
+itself: `uv sync --reinstall-package diana` (or `script/dev.sh build`) rebuilds it. A wheel
+contains only the extension and the Python package; with `DIANA_BUILD_SHARED_LIB=ON` it also
+carries the shared library next to the extension. `uv run script/check_wheel.py` builds and
+installs both kinds of wheel and imports them from a clean environment.
+
+## Technical notes
+
+[CMAKE-001](../../note/cmake/CMAKE-001.md) warning flags,
+[CMAKE-002](../../note/cmake/CMAKE-002.md) CMake options,
+[CMAKE-003](../../note/cmake/CMAKE-003.md) why the extension is on by default,
+[CMAKE-004](../../note/cmake/CMAKE-004.md) wheel layout,
+[CMAKE-006](../../note/cmake/CMAKE-006.md) version check,
+[CMAKE-008](../../note/cmake/CMAKE-008.md) sanitizer,
+[CMAKE-011](../../note/cmake/CMAKE-011.md) source distribution,
+[FP-004](../../note/fp/FP-004.md) strict IEEE flags.
