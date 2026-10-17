@@ -1,11 +1,6 @@
 #include "module.h"
 
-static PyObject *mod_version(PyObject *Py_UNUSED(self),
-                             PyObject *Py_UNUSED(ignored)) {
-  return PyUnicode_FromString(diana_version());
-}
-
-static PyMethodDef mod_method[] = {{"version", mod_version, METH_NOARGS,
+static PyMethodDef mod_method[] = {{"version", diana_py_version, METH_NOARGS,
                                     "Version string of the linked C library."},
                                    {NULL, NULL, 0, NULL}};
 
