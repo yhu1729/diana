@@ -71,6 +71,11 @@ no design (a design is written only when an item is picked up).
 - **Verified kernel shape:** reverse communication. A kernel is a pure state machine on a caller-owned
   struct (`init` / `step` / `result`) or a function over tabulated arrays. No function pointer in a
   verified kernel. Callback convenience wrappers live in `src/wrapper/` and are not VST-verified.
+- **One function per file:** a new C function goes in its own source file named after it
+  (`src/rk4_stage_unchecked.c`); the older multi-function kernels (`bisection.c`, `newton.c`,
+  `rk4.c`) are not split. A variant of a method, such as the `_unchecked` kernels, gets its own
+  verification artifacts: WP expectation row, Clight AST and VST file per source file, its own
+  Flocq file, and its own `spec/<method>_unchecked.md` (IDs `<METHOD>-UNCHECKED-…`).
 - **Comment:** keep in-code comments to a minimum. Rationale, API description, and proof notes go
   in `doc/` (`api/`, `development/`, `test/`, `verification/`, indexed by `doc/README.md`) or
   `spec/<method>.md`. A method has its own `doc/api/<method>.md` and `doc/test/<method>.md`;
@@ -140,7 +145,7 @@ doc/                  README index; api/, development/, test/, verification/ (tr
 - Frama-C: `script/verify_frama_c.sh` (runs `script/run_frama_c.sh` and `script/check_frama_c.sh`
   for every `<source> <goal-count>` row of `verification/frama-c/expectation.txt`; all goals must
   prove and each count must match; `script/dev.sh verify` and CI both call it)
-- Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/<kernel>_aarch64_macos.v src/<kernel>.c` (today `bisection`, `euler`, `newton`, `rk4`, `simpson` and `trapezoidal`) **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
+- Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/<kernel>_aarch64_macos.v src/<kernel>.c` (today `bisection`, `euler`, `euler_step_unchecked`, `newton`, `rk4`, `rk4_stage_unchecked`, `rk4_step_unchecked`, `simpson` and `trapezoidal`) **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
 - Compiler comparison: `opam exec -- script/compare_compiler.sh` builds `src/*.c` with the corpus
   driver `test/c/test_compiler.c` once with `ccomp` and with each gcc/clang found
   (`DIANA_COMPARE_CC` to choose) at `-O0`/`-O2`/`-O3`, and fails on any byte of difference in the
@@ -174,8 +179,14 @@ and VST both functions against the Flocq models (RK4-C2 to C5, `rk4_aarch64_maco
 unverified wrapper `diana_rk4` (work `5d`) loops over them with a `diana_ode_fn`, and Python
 exposes `diana.rk4_stage`, `diana.rk4_step` and the driver `diana.rk4` (copies each slope).
 
-Unreleased experiment: `diana_euler_step_unchecked`, an opt-in one-pass Euler step with no
-finiteness check (non-finite components written as computed, `DIANA_OK` for valid arguments);
-the checked two-pass `diana_euler_step` stays the default and the wrapper and Python keep it.
-WP proves its contract (EULER-C3, `src/euler.c` now 68 goals) and VST that it writes the model
-unconditionally (EULER-C4).
+Unreleased experiment: opt-in one-pass kernels with no finiteness check (non-finite components
+written as computed, `DIANA_OK` for valid arguments): `diana_euler_step_unchecked`,
+`diana_rk4_stage_unchecked` and `diana_rk4_step_unchecked`, one per source file
+(`src/euler_step_unchecked.c`, `src/rk4_stage_unchecked.c`, `src/rk4_step_unchecked.c`). The
+checked two-pass kernels stay the default and the wrappers and Python keep them. Each has its own
+verification artifacts and spec (`spec/euler_unchecked.md`, `spec/rk4_unchecked.md`): WP proves
+the contracts (EULER-UNCHECKED-C1, RK4-UNCHECKED-C1/C2; 19, 21 and 22 goals), VST that each writes
+the model unconditionally (EULER-UNCHECKED-C2, RK4-UNCHECKED-C3/C4; `VST/EulerStepUnchecked.v`,
+`VST/RK4StageUnchecked.v`, `VST/RK4StepUnchecked.v`), and Flocq that a written component is finite
+exactly when its inputs are finite and no operation overflows (EULER-UNCHECKED-B1,
+RK4-UNCHECKED-B1/B2).
