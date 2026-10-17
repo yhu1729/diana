@@ -21,7 +21,9 @@ goal and no expectation row. Flocq proves it as BISECTION-B1 (`mid_in_bracket` i
 
 `SKIP` in `script/run_frama_c.sh` lists the functions whose contracts WP may assume this way, and
 the script enforces it: before WP it runs Frama-C's metrics plugin on the same sources and fails if
-a called function with a contract but no body ("Specified-only functions") is not in `SKIP`. It
+a called function with a contract but no body ("Specified-only functions") is not in `SKIP`, or
+if any called function has neither body nor contract ("Undefined and unspecified functions"),
+for which WP would generate and assume a contract; no `SKIP` entry can allow that case. It
 also passes a `SKIP` entry to `-wp-skip-fct` for a source that defines it, matched by a line that
 starts with the return type in column 0, since WP rejects that option for a function without a
 body. `SKIP` is the explicit trust boundary between layer C-WP and layer B: every entry needs a
