@@ -113,7 +113,7 @@ iteration limit reached after 8 steps: root 1.4142135623730949, dx 1.57e-16
 
 ## Callback wrapper
 
-`diana/wrapper.h`; not verified, see [callback wrapper](overview.md#callback-wrapper).
+`diana/newton.h`; not verified, see [callback wrapper](overview.md#callback-wrapper).
 
 - `diana_newton(f, ctx, x0, tol, max_iter, root, iter)` runs Newton's method from `x0`, with `f`
   of type `diana_newton_fn`: `f(x, &dfx, ctx)` returns `f(x)` and must write `f′(x)` to `*dfx`.
@@ -128,7 +128,7 @@ The cube root of 10 as the root of `x³ − c` with `c` in `ctx`:
 ```c
 #include <stdio.h>
 
-#include <diana/wrapper.h>
+#include <diana/newton.h>
 
 struct cubic {
   double c;
