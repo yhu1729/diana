@@ -21,7 +21,7 @@ a version request matches only the same minor version. A complete consumer is tw
 cmake_minimum_required(VERSION 3.25)
 project(app LANGUAGES C)
 
-find_package(diana 0.2 CONFIG REQUIRED)
+find_package(diana 0.3 CONFIG REQUIRED)
 
 add_executable(app main.c)
 target_link_libraries(app PRIVATE diana::diana)
