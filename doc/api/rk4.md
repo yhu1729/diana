@@ -51,12 +51,13 @@ cases and that `y_out` is untouched on `DIANA_ERR_ARG` (RK4-C1, C2).
 The checked functions are the default, and `diana_rk4` uses them. Use the unchecked ones only
 where the caller checks the state itself, or does not need to stop at the first non-finite
 component, and the kernel is a measured cost: with one pass and no branch the compiler
-vectorizes the loop. On an Apple Silicon Mac (Release build, Apple clang 21 and gcc 15, `d` from
-64 to 16384) the checked stage takes about 0.44 to 0.52 ns per component and the unchecked one
-0.10 to 0.16, a factor of 2.8 to 4.8; the checked step takes 0.86 to 1.23 ns and the unchecked
-one 0.25 to 0.41, a factor of 2.2 to 4.5. A whole RK4 step calls the stage three times and the
-step once, so the kernels save about 1.3 to 2 ns per component, small next to four evaluations
-of a right-hand side that costs a few nanoseconds per component.
+vectorizes the loop. On an Apple M4 Mac (Release build, Apple clang 21 and GCC 15.3, `d` from 64
+to 16384; [benchmark](../development/benchmark.md)) the checked stage takes about 0.44 to 0.56 ns
+per component and the unchecked one 0.10 to 0.17, a factor of 2.9 to 4.8; the checked step takes
+0.86 to 1.26 ns and the unchecked one 0.25 to 0.37, a factor of 2.6 to 4.5. A whole RK4 step with
+the right-hand side `dy[i] = -0.5 * y[i]` takes 2.8 to 3.7 ns per component checked and 0.8 to
+2.0 unchecked, a saving of 1.3 to 2.0 ns, small next to four evaluations of a right-hand side that
+costs a few nanoseconds per component.
 
 RK4 is of order 4 (Lean and Rocq). For `y′ = F(t, y)` with `F` L-Lipschitz in `y` in the max norm
 and the time-augmented field `(1, F)` three times differentiable, `k` exact steps of size `h`
