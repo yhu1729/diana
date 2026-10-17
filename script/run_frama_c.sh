@@ -5,6 +5,26 @@ cd "$(dirname "$0")/.."
 if [ "$#" -eq 0 ]; then
     set -- src/bisection_init.c
 fi
+files=
+for arg in "$@"; do
+    if [ -f "$arg" ]; then
+        files="$files $arg"
+    fi
+done
+assumed=$(frama-c -cpp-extra-args="-Iinclude -Isrc" -metrics $files 2>&1 |
+    awk '/Specified-only functions/ { on = 1; next }
+         on && /functions \(|global variables \(/ { on = 0 }
+         on { for (i = 1; i < NF; i++) if ($(i + 1) ~ /^\(/ && $(i + 1) != "(0") print $i }')
+for name in $assumed; do
+    case " $SKIP " in
+    *" $name "*) ;;
+    *)
+        echo "error: WP would assume the contract of $name, which is called without a body" \
+            "and is not in SKIP" >&2
+        exit 1
+        ;;
+    esac
+done
 skip=
 for name in $SKIP; do
     for arg in "$@"; do
