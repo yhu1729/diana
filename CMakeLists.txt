@@ -56,6 +56,7 @@ add_library(diana ${diana_library_type}
     src/euler_step_unchecked.c
     src/newton.c
     src/rk4.c
+    src/rk4_stage_unchecked.c
     src/simpson.c
     src/trapezoidal.c
     src/wrapper/bisection.c
