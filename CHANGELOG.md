@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-16
+
 ### Added
 
 #### C library
@@ -100,7 +102,8 @@ All notable changes to this project are documented here. The format follows
 #### Python
 
 - `python/src/diana/_diana.pyi`, a type stub for the extension module, so the `py.typed` package
-  is typed throughout (`Bisection` and its attributes, the status constants, `BracketError`,
+  is typed throughout (`Bisection` and `Newton` with their read-only state fields and
+  positional-only `step` arguments, the status constants, `BracketError`, `SingularError`,
   `version`, `status_str` and the array functions).
 
 #### Documentation
@@ -148,6 +151,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- The API and trust statement specify the runtime floating-point requirements: nearest-even
+  rounding, gradual underflow, and disabled traps, maintained by callers and callbacks. Strict
+  compiler flags alone do not establish these settings.
 - `diana.euler_step` reports `y` and `f` of different lengths as "y and f must have the same
   length"; the message no longer names the `out` buffer, which only the extension function takes
   and which is now checked separately.
@@ -476,6 +482,7 @@ and what it assumes; its generated report gives the status of every theorem.
   and is never shipped, and Alt-Ergo is only a proof oracle. Diana itself has no runtime
   dependency.
 
-[Unreleased]: https://gitlab.com/yhu1729/diana/-/compare/v0.2.0...main
+[Unreleased]: https://gitlab.com/yhu1729/diana/-/compare/v0.3.0...main
+[0.3.0]: https://gitlab.com/yhu1729/diana/-/compare/v0.2.0...v0.3.0
 [0.2.0]: https://gitlab.com/yhu1729/diana/-/compare/v0.1.0...v0.2.0
 [0.1.0]: https://gitlab.com/yhu1729/diana/-/tags/v0.1.0
