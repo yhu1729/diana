@@ -1,6 +1,6 @@
 ---
 # The extension follows CPython naming (BisectionObject, BisectionType), not the
-# library's lower_case convention; see doc/development/style.md.
+# library's lower_case convention; see note STYLE-007.
 InheritParentConfig: true
 Checks: >
   -readability-identifier-naming
