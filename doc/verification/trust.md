@@ -51,9 +51,14 @@ statuses in the [report](report.md) come from the last local `check_spec.py --ru
 
 The VST proof is about CompCert's Clight semantics, so it carries to a `ccomp`-compiled binary. The
 shipped library is built with gcc or clang with `-std=c11 -ffp-contract=off -fno-fast-math` (and
-`-fexcess-precision=standard` on gcc) on x86-64 SSE2 or AArch64: no x87 excess precision, no FMA
-contraction, so the arithmetic is the same IEEE binary64 round-to-nearest sequence the model
-describes. This equivalence is an argument, not a theorem. A bitwise differential test backs it:
+`-fexcess-precision=standard` on gcc) on x86-64 SSE2 or AArch64: no x87 excess precision and no FMA
+contraction. The model also assumes the calling thread uses round-to-nearest, ties-to-even,
+gradual underflow (no flush-to-zero or denormals-are-zero mode), and disabled floating-point
+traps. Compiler flags do not establish these runtime settings. Diana neither checks nor changes
+them; callers, including callbacks, must maintain the
+[API floating-point environment](../api/overview.md#floating-point-environment).
+Under these conditions the arithmetic follows the IEEE binary64 sequence the model describes.
+This equivalence is an argument, not a theorem. A bitwise differential test backs it:
 `script/compare_compiler.sh` builds the kernels with the corpus driver `test/c/test_compiler.c`
 once with `ccomp` and with each available gcc and clang at `-O0`, `-O2` and `-O3` under the flags
 above, and fails unless every host build prints exactly the bytes the `ccomp` build prints. The
