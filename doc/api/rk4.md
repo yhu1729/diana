@@ -1,7 +1,8 @@
 # Classical Runge–Kutta step (RK4)
 
 Status codes, linking, and the Python conventions shared by every kernel are in the
-[API overview](overview.md); the theorems cited below are listed in `spec/rk4.md`.
+[API overview](overview.md); the theorems cited below are listed in `spec/rk4.md` and, for the
+unchecked variants, `spec/rk4_unchecked.md`.
 
 ## C (`diana/rk4.h`)
 
@@ -37,6 +38,26 @@ overlap each other. Each function checks every component before it writes any, s
 the last one leaves `y_out` as it was. Frama-C WP proves memory safety, termination, the status
 cases and that `y_out` is untouched on `DIANA_ERR_ARG` (RK4-C1).
 
+- `diana_rk4_stage_unchecked(y, k, d, h, stage, y_out)` and
+  `diana_rk4_step_unchecked(y, k1, k2, k3, k4, d, h, y_out)` are the same stage and step without
+  the finiteness check, chosen explicitly by the caller. Each returns `DIANA_ERR_ARG`, without
+  writing `y_out`, for a NULL pointer, for `d == 0` and, for the stage, for a `stage` other than
+  2, 3 or 4, and otherwise writes every component in one pass, in the same operation order, and
+  returns `DIANA_OK`. A non-finite component (NaN or ±∞, from a non-finite input or an overflow)
+  is written as computed, and the components before and after it are written too: `DIANA_OK`
+  says nothing about finiteness. Whenever the checked function returns `DIANA_OK`, the two write
+  the same bits.
+
+The checked functions are the default, and `diana_rk4` uses them. Use the unchecked ones only
+where the caller checks the state itself, or does not need to stop at the first non-finite
+component, and the kernel is a measured cost: with one pass and no branch the compiler
+vectorizes the loop. On an Apple Silicon Mac (Release build, Apple clang 21 and gcc 15, `d` from
+64 to 16384) the checked stage takes about 0.44 to 0.52 ns per component and the unchecked one
+0.10 to 0.16, a factor of 2.8 to 4.8; the checked step takes 0.86 to 1.23 ns and the unchecked
+one 0.25 to 0.41, a factor of 2.2 to 4.5. A whole RK4 step calls the stage three times and the
+step once, so the kernels save about 1.3 to 2 ns per component, small next to four evaluations
+of a right-hand side that costs a few nanoseconds per component.
+
 RK4 is of order 4 (Lean and Rocq). For `y′ = F(t, y)` with `F` L-Lipschitz in `y` in the max norm
 and the time-augmented field `(1, F)` three times differentiable, `k` exact steps of size `h`
 from `y(t₀)` are within `((M₅/120 + N₄/24)·h⁴/L)·(e^{L·k·h} − 1)` of `y(t₀ + k·h)` (RK4-A7), and
@@ -53,7 +74,13 @@ exact `y[i] + c·k[i]`, `c = h/2` or `h`, when `|h| ≥ 2⁻¹⁰²¹`; below th
 `A = |k1[i] + k4[i]| + 2·|k2[i] + k3[i]|` and `γ₄ = 4u/(1 − 4u)` (RK4-B5).
 VST proves that each function writes exactly these binary64 values and returns `DIANA_OK` exactly
 when all of them are finite, leaving `y_out` unchanged otherwise (RK4-C2 to C5, for non-NULL,
-disjoint arrays with `d >= 1` and, for the stage, `2 <= stage <= 4`).
+disjoint arrays with `d >= 1` and, for the stage, `2 <= stage <= 4`). For the unchecked
+functions, WP proves the same memory safety, termination and argument cases
+(RK4-UNCHECKED-C1, C2), and VST that they always write these binary64 values and return
+`DIANA_OK` (RK4-UNCHECKED-C3, C4), so the bounds above hold for each component they write that
+is finite. Flocq proves that a written component is finite exactly when its inputs are finite
+and no operation overflows (RK4-UNCHECKED-B1, B2): checking `y_out` for finiteness after the
+call rejects exactly the inputs the checked function rejects.
 
 The rotation `y′ = (y₂, −y₁)` from `(0, 1)` has the solution `(sin t, cos t)`,
 `(0.841470985, 0.540302306)` at `t = 1`. `F` does not depend on `t`, so the stage times are not
