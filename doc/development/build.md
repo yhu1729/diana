@@ -45,11 +45,11 @@ installs both kinds of wheel and imports them from a clean environment.
 
 ## Technical notes
 
-[CMAKE-001](../../note/cmake/CMAKE-001.md) warning flags,
-[CMAKE-002](../../note/cmake/CMAKE-002.md) CMake options,
-[CMAKE-003](../../note/cmake/CMAKE-003.md) why the extension is on by default,
-[CMAKE-004](../../note/cmake/CMAKE-004.md) wheel layout,
-[CMAKE-006](../../note/cmake/CMAKE-006.md) version check,
-[CMAKE-008](../../note/cmake/CMAKE-008.md) sanitizer,
-[CMAKE-011](../../note/cmake/CMAKE-011.md) source distribution,
+[BUILD-001](../../note/build/BUILD-001.md) warning flags,
+[BUILD-002](../../note/build/BUILD-002.md) CMake options,
+[BUILD-003](../../note/build/BUILD-003.md) why the extension is on by default,
+[BUILD-004](../../note/build/BUILD-004.md) wheel layout,
+[BUILD-006](../../note/build/BUILD-006.md) version check,
+[BUILD-008](../../note/build/BUILD-008.md) sanitizer,
+[BUILD-011](../../note/build/BUILD-011.md) source distribution,
 [FP-004](../../note/fp/FP-004.md) strict IEEE flags.
