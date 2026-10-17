@@ -138,6 +138,11 @@ All notable changes to this project are documented here. The format follows
   before WP starts, so rows run at the same time share no WP directory; WP's own creation of a
   missing cache directory raced between processes and left cached `Failed` verdicts
   (`doc/verification/frama-c.md`).
+- `script/verify_frama_c.sh` runs its rows concurrently, `DIANA_JOBS` at a time (default: the
+  CPU count from the new `script/job_count.sh`; `1` is the previous sequential loop), the rows
+  with the most goals first and `-wp-par` scaled so about four provers of one row are in flight
+  overall; it still writes one `verification/frama-c/report.txt` in row order and now checks
+  every row before failing.
 - `diana.MaxIterError` names its second attribute and argument `uncertainty` instead of `width`:
   the bracket width for `diana.bisection`, the last `|dx|` for `diana.newton`, which the old name
   did not fit. `estimate`, `iter`, the positional order and the pickled `args` are unchanged; the

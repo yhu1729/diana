@@ -164,8 +164,10 @@ doc/                  README index; api/, development/, test/, verification/ (tr
   steps in `doc/verification/local.md` before committing a change to `src/`,
   `include/`, `verification/`, or `spec/`
 - Frama-C: `script/verify_frama_c.sh` (runs `script/run_frama_c.sh` and `script/check_frama_c.sh`
-  for every `<source> <goal-count>` row of `verification/frama-c/expectation.txt`; all goals must
-  prove and each count must match; `script/dev.sh verify` and CI both call it)
+  for every `<source> <goal-count>` row of `verification/frama-c/expectation.txt`, `DIANA_JOBS`
+  rows at a time, each row in its own `verification/frama-c/session/<row>` and `cache/<row>`,
+  one `report.txt` in row order; all goals must prove and each count must match;
+  `script/dev.sh verify` and CI both call it)
 - Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/<kernel>_aarch64_macos.v src/<kernel>.c` (today `bisection_init`, `bisection_mid`, `bisection_result`, `bisection_step`, `euler_step`, `euler_step_unchecked`, `newton_init`, `newton_result`, `newton_step`, `rk4_stage`, `rk4_stage_unchecked`, `rk4_step`, `rk4_step_unchecked`, `simpson` and `trapezoidal`) **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
 - Compiler comparison: `opam exec -- script/compare_compiler.sh` builds `src/*.c` with the corpus
   driver `test/c/test_compiler.c` once with `ccomp` and with each gcc/clang found
