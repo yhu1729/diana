@@ -4,6 +4,7 @@
 -arg -deprecated-syntactic-definition
 
 theory/Real/Bisection.v
+theory/Real/Cholesky.v
 theory/Real/Quadrature.v
 theory/Real/Vector.v
 theory/Real/OneStep.v
