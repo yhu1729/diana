@@ -124,6 +124,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- `diana.MaxIterError` names its second attribute and argument `uncertainty` instead of `width`:
+  the bracket width for `diana.bisection`, the last `|dx|` for `diana.newton`, which the old name
+  did not fit. `estimate`, `iter`, the positional order and the pickled `args` are unchanged; the
+  message reads `uncertainty` instead of `width`.
 - The local Frama-C is pinned to 32.1, the version of the CI image `framac/frama-c:32.1`, instead
   of 33.0 (`CONTRIBUTING.md`: `opam pin add frama-c 32.1`), so a local WP run and its goal counts
   are those of CI. Every row of `verification/frama-c/expectation.txt` proves with the same count

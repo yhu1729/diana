@@ -8,15 +8,21 @@ __all__ = ["BracketError", "MaxIterError", "SingularError"]
 
 
 class MaxIterError(RuntimeError):
-    """The iteration limit was reached before the tolerance was met."""
+    """The iteration limit was reached before the tolerance was met.
 
-    def __init__(self, estimate: float, width: float, iter: int) -> None:
-        super().__init__(estimate, width, iter)
+    ``estimate`` is the current root estimate, ``uncertainty`` what the method knows about its
+    error (the bracket width for bisection, the last correction ``|dx|`` for Newton) and
+    ``iter`` the number of steps taken.
+    """
+
+    def __init__(self, estimate: float, uncertainty: float, iter: int) -> None:
+        super().__init__(estimate, uncertainty, iter)
         self.estimate = estimate
-        self.width = width
+        self.uncertainty = uncertainty
         self.iter = iter
 
     def __str__(self) -> str:
         return (
-            f"iteration limit {self.iter} reached; estimate {self.estimate!r}, width {self.width!r}"
+            f"iteration limit {self.iter} reached; estimate {self.estimate!r}, "
+            f"uncertainty {self.uncertainty!r}"
         )
