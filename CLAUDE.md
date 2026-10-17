@@ -160,3 +160,8 @@ See `CHANGELOG.md`. v0.1.0: scaffolding and bisection end-to-end. Layers A and B
 The 0.3.0 release preparation also aligns the package, CMake, header and consumer versions,
 specifies the runtime floating-point environment, and makes the extension stubs match the
 read-only state fields and positional-only `step` arguments.
+
+Unreleased (toward 1.0): the classical Runge–Kutta step RK4 in reverse communication,
+`diana_rk4_stage` (the point of stage 2, 3 or 4: `y + (h/2)·k` or `y + h·k`) and
+`diana_rk4_step` (`y + h·((k₁ + k₄) + 2·(k₂ + k₃))/6`), both two-pass like Euler (C tests at 100%
+line and branch coverage); WP proves the ACSL contracts (98 goals, RK4-C1, `spec/rk4.md`).
