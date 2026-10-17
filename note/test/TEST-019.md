@@ -1,0 +1,27 @@
+---
+id: TEST-019
+title: Euler callback wrapper cases keep every iterate exact
+kind: fact
+path:
+  - test/c/test_euler.c
+  - test/python/test_euler.py
+  - src/euler.c
+related: [TEST-016, TEST-025]
+---
+The `diana_euler` tests use right-hand sides whose iterates are exactly representable, so the
+expected states are exact; the wrapper evaluates `fn` at `t0 + k h` and copies each accepted step
+into `y`.
+
+- `y' = -y` from `(1, 3)` with `h = 1/2`: each step halves the state, `(0.125, 0.375)` after three
+  steps, `done == 3`.
+- Rotation `y' = (y2, -y1)` from `(1, 0)` with `h = 1`: `(1, -1)`, `(0, -2)`, `(-2, -2)`.
+- `y' = t` from `t0 = 1`, `y = 0`, `h = 1/4`, four steps: `fn` is called at `1, 1.25, 1.5, 1.75`
+  with the caller's `ctx`, and `y = (1 + 1.25 + 1.5 + 1.75) / 4 = 1.375`.
+- `nstep = 0` calls nothing and leaves `y`; NULL `fn`, `y` or `work` and `d = 0` are
+  `DIANA_ERR_ARG` with `done = 0` and no call.
+- Failure: a derivative that turns infinite on the third call stops with `DIANA_ERR_ARG` after two
+  steps, `y` at the second state and three calls; `y' = -y` with `h = -2` from `DBL_MAX/2`
+  overflows (`y + 2y`) on the first step and leaves `y` unchanged, `done = 0`.
+- Python `diana.euler` gives the same exact paths and times, copies `y0` (a NumPy input is left
+  unchanged), calls nothing for `nstep = 0`, checks the callback's length, and raises
+  `ValueError` after exactly three calls when the third returns `inf`.
