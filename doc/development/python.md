@@ -7,7 +7,7 @@ How the binding's sources are laid out; what it exposes is in the [API overview]
   constants, `status_str`, `BracketError`, and `diana_py_raise`, which maps a `diana_status` to a
   Python exception), `convert.c` (argument converters for `PyArg_Parse*` `O&` and the buffer
   check `diana_py_get_samples`), and one file per kernel (`bisection.c`, the `Bisection` type;
-  `newton.c`, the `Newton` type; `trapezoidal.c`, `simpson.c` and `euler.c`, the array functions). A new kernel adds `python/ext/<kernel>.c` with a
+  `newton.c`, the `Newton` type; `trapezoidal.c`, `simpson.c`, `euler.c` and `rk4.c`, the array functions). A new kernel adds `python/ext/<kernel>.c` with a
   `diana_py_<kernel>_exec(PyObject *m)` that registers its types and functions, declares it in
   `module.h`, calls it from `PyInit__diana`, and lists the file in `CMakeLists.txt`.
 - `python/src/diana/` is the pure-Python package: `_error.py` (the exceptions defined in Python;
@@ -15,7 +15,7 @@ How the binding's sources are laid out; what it exposes is in the [API overview]
   a scalar argument before `float`: `__float__` or `__index__`, so a string is rejected as the C
   `d` converter rejects it), one private driver module per kernel
   (`_bisection.py`: `diana.bisection`; `_newton.py`: `diana.newton`; `_trapezoidal.py`,
-  `_simpson.py`, `_euler.py`), and
+  `_simpson.py`, `_euler.py`, `_rk4.py`), and
   `__init__.py`, which re-exports them and aliases `version`, `status_str` and `__version__`.
   `_diana.pyi` is the type stub of the extension, so the `py.typed` package is typed throughout.
   Driver modules are private so that a module name never shadows the function of the same name.
