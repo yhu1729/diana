@@ -39,3 +39,28 @@ Expected values in `test/c/test_rk4.c`:
   for `k1`, `k2`, `k3`, the step for `k4`); one in the second step's `k2` stops after one step at
   `y = 1/2`. `y' = -y` with `h = -2` from `DBL_MAX/2` reaches `Y2 = DBL_MAX` and overflows in
   `Y3`, leaving `y` unchanged.
+
+## Python
+
+Expected values in `test/python/test_rk4.py`, beyond the cases it shares with the C test:
+
+- The Hypothesis tests draw vectors of equal length (1 to 20) and require bitwise agreement with
+  `y[i] + c*k[i]` (`c = 0.5*h` or `h`) and `y[i] + h*((k1[i] + k4[i]) + 2*(k2[i] + k3[i]))/6` in
+  Python floats, which round each operation separately, and `ValueError` exactly when a
+  component is not finite.
+- The rounding tests check RK4-B2 and B3 on 500 random stage components per case, in the normal
+  range and with subnormal inputs, for a random `h` and for the odd subnormal `h = 3·2^-1074` and
+  `-7·2^-1074` where `h/2` rounds, and RK4-B5 on 500 random step components in each range,
+  against exact `fractions.Fraction` arithmetic.
+- `diana.rk4` agrees bitwise with the same three steps written out with `rk4_stage` and
+  `rk4_step` for a non-autonomous, nonlinear `f`, and gives the exact wrapper results (`3/8` per
+  step for `y' = -y`, `(469, 2220)` for the rotation with `h = 6`, the slope times and `0.625` for
+  `y' = t`), also when `f` returns the same NumPy array on every call.
+- The convergence test integrates the rotation `y' = (y2, -y1)` from `(0, 1)` to `t = 1`, where
+  the solution is `(sin t, cos t)`. The error is fourth order, about `0.007 h^4`: halving `h`
+  divides it by 16 up to an O(h) correction, measured 14.57, 15.38, 15.71, 15.86 and 15.93 for
+  `n = 4` to `128`; the test takes `n = 8` to `128` and allows 0.7. Rounding, about `n u`, is at
+  most `1e-3` of the smallest error, about `2.6e-11`.
+- The extension's own `out` checks are tested directly on `diana._diana.rk4_stage` and
+  `rk4_step`: a read-only `out` (`BufferError`), an empty or shorter `out`, and `out` equal to or
+  overlapping each input.
