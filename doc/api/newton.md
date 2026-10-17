@@ -43,11 +43,11 @@ root 1.4142135623730949, dx 1.57e-16, 6 steps
 | `iter` | steps performed so far |
 | `max_iter` | step limit |
 
-Invariant kept by every call (Frama-C WP, NEWTON-C1 in `spec/newton.md`): `x`, `dx` and `tol`
+Invariant kept by every call (Frama-C WP, NEWTON-C1 to C3 in `spec/newton.md`): `x`, `dx` and `tol`
 finite and `tol >= 0`. VST proves that every function computes its model: `init` and `step` with
-every status and every field of the state (NEWTON-C3/C4), and `diana_newton_result` (NEWTON-C2);
-the correction and the iterate `step` writes are the Flocq `fstep` (NEWTON-C5), so the layer-B
-bounds apply to them. A rejected call leaves the state unchanged (NEWTON-C1, and C3/C4 for a
+every status and every field of the state (NEWTON-C5/C6), and `diana_newton_result` (NEWTON-C4);
+the correction and the iterate `step` writes are the Flocq `fstep` (NEWTON-C7), so the layer-B
+bounds apply to them. A rejected call leaves the state unchanged (NEWTON-C1/C2, and C5/C6 for a
 non-NULL `s`): `init` returning `DIANA_ERR_ARG`, and `step` returning `DIANA_ERR_ARG`, write
 nothing to `*s`; so does `step` returning `DIANA_ERR_SINGULAR`.
 
