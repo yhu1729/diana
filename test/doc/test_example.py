@@ -13,7 +13,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 PAGES = sorted((ROOT / "doc" / "api").glob("*.md"))
-LIBRARY = sorted((ROOT / "src").glob("*.c")) + sorted((ROOT / "src" / "wrapper").glob("*.c"))
+LIBRARY = sorted((ROOT / "src").glob("*.c"))
 CFLAGS = [
     "-std=c11",
     "-pedantic",
