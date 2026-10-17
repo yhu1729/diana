@@ -20,6 +20,11 @@ All notable changes to this project are documented here. The format follows
   WP proves the ACSL contracts (98 goals, RK4-C1, `spec/rk4.md`). `test/c/test_rk4.c` covers both
   functions at 100% line and branch coverage, and the compiler-comparison corpus has 544 RK4
   cases (1672 in all); every gcc and clang build matches CompCert bitwise.
+- Callback wrapper `diana_rk4(fn, ctx, t0, h, nstep, y, d, work, done)` in `diana/wrapper.h`, with
+  the `diana_ode_fn` of `diana_euler` and a `work` of `5 d` doubles. Step `k` evaluates `fn` at
+  `t0 + k h`, `t0 + (k + 0.5) h` (twice) and `t0 + (k + 1) h`, each computed from `k`. A failing
+  stage or step returns `DIANA_ERR_ARG` with `y` at the last good state. Unverified, like
+  `diana_euler`.
 
 #### Verification
 
