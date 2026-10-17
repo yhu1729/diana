@@ -86,7 +86,7 @@ Interpolation and approximation:
 - `medium` Coverage-guided fuzzing of the C kernels
 - `high` Compiler comparison on x86-64 Linux
 - `low` Mutation testing of the C test suite
-- `medium` Benchmark suite
+- `medium` Benchmark suite covering every kernel
 
 ## Tooling
 
