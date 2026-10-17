@@ -352,6 +352,159 @@ static void test_step_failure_keeps_output(void) {
   step_arg(g, e, e, e, e, 3u, 1.0);
 }
 
+/* Callback wrapper. Each right-hand side below keeps every stage and iterate
+   exactly representable, so the expected states are exact. */
+
+struct record {
+  unsigned calls;
+  double t[16];
+  unsigned fail_at;
+  void *self;
+};
+
+static void decay(double t, const double *y, double *dy, size_t d, void *ctx) {
+  size_t i;
+
+  (void)t;
+  (void)ctx;
+  for (i = 0; i < d; ++i) {
+    dy[i] = -y[i];
+  }
+}
+
+static void rotation(double t, const double *y, double *dy, size_t d,
+                     void *ctx) {
+  (void)t;
+  (void)d;
+  (void)ctx;
+  dy[0] = y[1];
+  dy[1] = -y[0];
+}
+
+/* y' = t, recording each time and the context pointer; the derivative is
+   infinite from call fail_at on. */
+static void ramp(double t, const double *y, double *dy, size_t d, void *ctx) {
+  struct record *rec = (struct record *)ctx;
+
+  (void)y;
+  (void)d;
+  rec->self = ctx;
+  if (rec->calls < 16u) {
+    rec->t[rec->calls] = t;
+  }
+  dy[0] = rec->calls >= rec->fail_at ? HUGE_VAL : t;
+  rec->calls++;
+}
+
+static void test_wrapper_integrate(void) {
+  double y[2] = {64.0, -8.0};
+  double w[10];
+  double r[2] = {1.0, 0.0};
+  double z[1] = {0.0};
+  struct record rec = {0u, {0.0}, 100u, (void *)0};
+  const double times[8] = {1.0, 1.125, 1.125, 1.25, 1.25, 1.375, 1.375, 1.5};
+  unsigned done = 99u;
+  unsigned i;
+
+  /* y' = -y with h = 1: the stages are y, y/2, 3y/4, y/4 and the step
+     multiplies by 1 - 1 + 1/2 - 1/6 + 1/24 = 3/8 */
+  CHECK_EQ_STATUS(diana_rk4(decay, (void *)0, 0.0, 1.0, 3u, y, 2u, w, &done),
+                  DIANA_OK);
+  CHECK(done == 3u);
+  CHECK(y[0] == 3.375 && y[1] == -0.421875);
+
+  /* y' = (y2, -y1) with h = 6: the step is 37 I - 30 A for the rotation A,
+     (1, 0) -> (37, 30) -> (469, 2220) */
+  CHECK_EQ_STATUS(
+      diana_rk4(rotation, (void *)0, 0.0, 6.0, 1u, r, 2u, w, (unsigned *)0),
+      DIANA_OK);
+  CHECK(r[0] == 37.0 && r[1] == 30.0);
+  CHECK_EQ_STATUS(
+      diana_rk4(rotation, (void *)0, 6.0, 6.0, 1u, r, 2u, w, (unsigned *)0),
+      DIANA_OK);
+  CHECK(r[0] == 469.0 && r[1] == 2220.0);
+
+  /* y' = t from t0 = 1 with h = 1/4: the slopes are taken at t, t + h/2
+     (twice) and t + h, and RK4 integrates t exactly to (1.5^2 - 1) / 2 */
+  CHECK_EQ_STATUS(diana_rk4(ramp, &rec, 1.0, 0.25, 2u, z, 1u, w, &done),
+                  DIANA_OK);
+  CHECK(done == 2u && rec.calls == 8u && rec.self == (void *)&rec);
+  for (i = 0; i < 8u; ++i) {
+    CHECK(rec.t[i] == times[i]);
+  }
+  CHECK(z[0] == 0.625);
+}
+
+static void test_wrapper_no_step(void) {
+  double y[1] = {2.0};
+  double w[5];
+  struct record rec = {0u, {0.0}, 100u, (void *)0};
+  unsigned done = 99u;
+
+  CHECK_EQ_STATUS(diana_rk4(ramp, &rec, 0.0, 1.0, 0u, y, 1u, w, &done),
+                  DIANA_OK);
+  CHECK(done == 0u && rec.calls == 0u && y[0] == 2.0);
+}
+
+static void test_wrapper_argument(void) {
+  double y[1] = {2.0};
+  double w[5];
+  struct record rec = {0u, {0.0}, 100u, (void *)0};
+  unsigned done = 99u;
+
+  CHECK_EQ_STATUS(
+      diana_rk4((diana_ode_fn)0, &rec, 0.0, 1.0, 1u, y, 1u, w, &done),
+      DIANA_ERR_ARG);
+  CHECK(done == 0u);
+  CHECK_EQ_STATUS(
+      diana_rk4(ramp, &rec, 0.0, 1.0, 1u, (double *)0, 1u, w, &done),
+      DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(
+      diana_rk4(ramp, &rec, 0.0, 1.0, 1u, y, 1u, (double *)0, &done),
+      DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(diana_rk4(ramp, &rec, 0.0, 1.0, 1u, y, 0u, w, &done),
+                  DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(
+      diana_rk4((diana_ode_fn)0, &rec, 0.0, 1.0, 1u, y, 1u, w, (unsigned *)0),
+      DIANA_ERR_ARG);
+  CHECK(rec.calls == 0u && y[0] == 2.0);
+}
+
+/* A failing stage or step leaves y at the last good state and done at the
+   number of completed steps. */
+static void test_wrapper_failure(void) {
+  double z[1] = {0.0};
+  double w[5];
+  double big[1] = {DBL_MAX / 2.0};
+  unsigned done = 99u;
+  unsigned fail;
+
+  /* y' = t from t0 = 0, h = 1: an infinite k1, k2 or k3 fails the stage that
+     uses it, an infinite k4 fails the step */
+  for (fail = 0u; fail < 4u; ++fail) {
+    struct record rec = {0u, {0.0}, 0u, (void *)0};
+    rec.fail_at = fail;
+    z[0] = 0.0;
+    CHECK_EQ_STATUS(diana_rk4(ramp, &rec, 0.0, 1.0, 5u, z, 1u, w, &done),
+                    DIANA_ERR_ARG);
+    CHECK(done == 0u && rec.calls == fail + 1u && z[0] == 0.0);
+  }
+  {
+    /* the first step reaches y(1) = 1/2, the second fails at k2 */
+    struct record rec = {0u, {0.0}, 5u, (void *)0};
+    z[0] = 0.0;
+    CHECK_EQ_STATUS(diana_rk4(ramp, &rec, 0.0, 1.0, 5u, z, 1u, w, &done),
+                    DIANA_ERR_ARG);
+    CHECK(done == 1u && rec.calls == 6u && z[0] == 0.5);
+  }
+
+  /* y' = -y with h = -2 from DBL_MAX/2: Y2 = 2y = DBL_MAX, and
+     Y3 = y + DBL_MAX overflows */
+  CHECK_EQ_STATUS(diana_rk4(decay, (void *)0, 0.0, -2.0, 3u, big, 1u, w, &done),
+                  DIANA_ERR_ARG);
+  CHECK(done == 0u && big[0] == DBL_MAX / 2.0);
+}
+
 int main(void) {
   test_stage_argument();
   test_stage_exact();
@@ -370,5 +523,9 @@ int main(void) {
   test_step_overflow();
   test_step_nonfinite();
   test_step_failure_keeps_output();
+  test_wrapper_integrate();
+  test_wrapper_no_step();
+  test_wrapper_argument();
+  test_wrapper_failure();
   return check_report("rk4");
 }
