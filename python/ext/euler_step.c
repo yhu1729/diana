@@ -19,16 +19,16 @@ PyObject *diana_py_euler_step(PyObject *Py_UNUSED(self), PyObject *args,
                                    &f, &h, &out)) {
     return NULL;
   }
-  if (diana_py_get_samples(y, &vy, "y", 0, 1,
-                           "y must have at least one sample") < 0) {
+  if (diana_py_get_array(y, &vy, "y", 0, 1, "y must have at least one sample") <
+      0) {
     return NULL;
   }
-  if (diana_py_get_samples(f, &vf, "f", 0, 1,
-                           "f must have at least one sample") < 0) {
+  if (diana_py_get_array(f, &vf, "f", 0, 1, "f must have at least one sample") <
+      0) {
     goto release_y;
   }
-  if (diana_py_get_samples(out, &vo, "out", 1, 1,
-                           "out must have at least one sample") < 0) {
+  if (diana_py_get_array(out, &vo, "out", 1, 1,
+                         "out must have at least one sample") < 0) {
     goto release_f;
   }
   if (vf.shape[0] != vy.shape[0]) {

@@ -151,7 +151,7 @@ if(DIANA_BUILD_PYTHON)
         python/ext/convert_uint.c
         python/ext/euler_exec.c
         python/ext/euler_step.c
-        python/ext/get_samples.c
+        python/ext/get_array.c
         python/ext/newton_exec.c
         python/ext/newton_init.c
         python/ext/newton_new.c

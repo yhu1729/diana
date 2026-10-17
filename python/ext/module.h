@@ -14,9 +14,9 @@ extern PyObject *diana_py_singular_error;
 void diana_py_raise(diana_status st, const char *msg);
 
 int diana_py_convert_uint(PyObject *obj, void *out);
-int diana_py_get_samples(PyObject *obj, Py_buffer *view, const char *name,
-                         int writable, Py_ssize_t min_count,
-                         const char *count_message);
+int diana_py_get_array(PyObject *obj, Py_buffer *view, const char *name,
+                       int writable, Py_ssize_t min_count,
+                       const char *count_message);
 
 static inline int diana_py_overlap(const Py_buffer *a, const Py_buffer *b) {
   uintptr_t a0 = (uintptr_t)a->buf;

@@ -16,8 +16,8 @@ PyObject *diana_py_trapezoidal(PyObject *Py_UNUSED(self), PyObject *args,
                                    &h)) {
     return NULL;
   }
-  if (diana_py_get_samples(y, &view, "y", 0, 2,
-                           "y must have at least two samples") < 0) {
+  if (diana_py_get_array(y, &view, "y", 0, 2,
+                         "y must have at least two samples") < 0) {
     return NULL;
   }
   st =

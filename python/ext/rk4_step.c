@@ -27,13 +27,13 @@ PyObject *diana_py_rk4_step(PyObject *Py_UNUSED(self), PyObject *args,
     return NULL;
   }
   for (i = 0; i < 5; ++i) {
-    if (diana_py_get_samples(obj[i], &view[i], name[i], 0, 1, empty[i]) < 0) {
+    if (diana_py_get_array(obj[i], &view[i], name[i], 0, 1, empty[i]) < 0) {
       goto cleanup;
     }
     ++got;
   }
-  if (diana_py_get_samples(out, &vo, "out", 1, 1,
-                           "out must have at least one sample") < 0) {
+  if (diana_py_get_array(out, &vo, "out", 1, 1,
+                         "out must have at least one sample") < 0) {
     goto cleanup;
   }
   have_out = 1;

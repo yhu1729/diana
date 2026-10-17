@@ -10,9 +10,9 @@ static inline int is_native_double(const char *format) {
   return format[0] == 'd' && format[1] == '\0';
 }
 
-int diana_py_get_samples(PyObject *obj, Py_buffer *view, const char *name,
-                         int writable, Py_ssize_t min_count,
-                         const char *count_message) {
+int diana_py_get_array(PyObject *obj, Py_buffer *view, const char *name,
+                       int writable, Py_ssize_t min_count,
+                       const char *count_message) {
   const char *format;
 
   if (PyObject_GetBuffer(obj, view,

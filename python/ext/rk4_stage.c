@@ -24,16 +24,16 @@ PyObject *diana_py_rk4_stage(PyObject *Py_UNUSED(self), PyObject *args,
     PyErr_SetString(PyExc_ValueError, "stage must be 2, 3 or 4");
     return NULL;
   }
-  if (diana_py_get_samples(y, &vy, "y", 0, 1,
-                           "y must have at least one sample") < 0) {
+  if (diana_py_get_array(y, &vy, "y", 0, 1, "y must have at least one sample") <
+      0) {
     return NULL;
   }
-  if (diana_py_get_samples(k, &vk, "k", 0, 1,
-                           "k must have at least one sample") < 0) {
+  if (diana_py_get_array(k, &vk, "k", 0, 1, "k must have at least one sample") <
+      0) {
     goto release_y;
   }
-  if (diana_py_get_samples(out, &vo, "out", 1, 1,
-                           "out must have at least one sample") < 0) {
+  if (diana_py_get_array(out, &vo, "out", 1, 1,
+                         "out must have at least one sample") < 0) {
     goto release_k;
   }
   if (vk.shape[0] != vy.shape[0]) {
