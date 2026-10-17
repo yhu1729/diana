@@ -51,9 +51,9 @@ the goal count matches its row: a drop means a contract or RTE guard silently di
 `script/verify_frama_c.sh` runs WP and this check for every row, writing each WP output under a
 `==> <source> <==` header to the single `verification/frama-c/report.txt`, in the order of the
 rows (CI uploads that one file); `script/dev.sh verify` and the `verify_frama_c` CI job both call
-it, so CI and the local workflow check the same files. It runs `DIANA_JOBS` rows at a time
+it, so CI and the local workflow check the same files. It runs `DIANA_JOB` rows at a time
 (`script/job_count.sh`: the variable, else the CPU count; `1` is the sequential loop), the rows
-with the most goals first, and gives each row `-wp-par ceil(4 / DIANA_JOBS)` provers so that about
+with the most goals first, and gives each row `-wp-par ceil(4 / DIANA_JOB)` provers so that about
 the default four Alt-Ergo processes of one row are in flight over all the rows; each goal's
 verdict is independent of this scheduling, and `why3server` enforces the 30 s limit as CPU time
 (`setrlimit`), so sharing a core cannot turn a proved goal into a timeout. The rows finish in any
