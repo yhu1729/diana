@@ -5,6 +5,18 @@ if any, and its Python functions: [bisection](bisection.md),
 [composite trapezoidal rule](trapezoidal.md), [composite Simpson rule](simpson.md),
 [explicit Euler step](euler.md), and [Newton's method](newton.md).
 
+## Floating-point environment
+
+For both the C and Python APIs, the numerical guarantees require IEEE binary64 arithmetic with
+round-to-nearest, ties-to-even (`FE_TONEAREST` in C), gradual underflow (no flush-to-zero or
+denormals-are-zero mode), and floating-point traps disabled. These are runtime requirements on
+each calling thread, in addition to the [compiler settings](../development/build.md).
+
+Diana does not check or change the floating-point environment. Callers must establish these
+settings before calling a numerical method, and callbacks must preserve them. The verified
+error bounds and stopping guarantees do not apply under other settings; enabled traps can
+interrupt a call before it returns an error status.
+
 ## C
 
 Every public function returns `diana_status` and is declared in `include/diana/`; `diana/diana.h`
