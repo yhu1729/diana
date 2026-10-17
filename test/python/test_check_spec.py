@@ -183,3 +183,25 @@ def test_id_prefix_must_match_method(gate, monkeypatch, capsys):
     write_spec(gate, "other", "BISECTION-C2", "other.c")
     assert run_gate(gate, monkeypatch, "--no-report") == 1
     assert "BISECTION-C2: id prefix must be 'OTHER'" in capsys.readouterr().err
+
+
+def test_id_prefix_maps_underscore_to_hyphen(gate, monkeypatch, capsys):
+    write_spec(gate, "other_unchecked", "OTHER-UNCHECKED-C1", "other.c")
+    gate.FRAMA_C_EXPECTATION.write_text("kernel.c 1\nother.c 1\n")
+    assert run_gate(gate, monkeypatch, "--run", "--strict", "--no-report") == 0
+    write_spec(gate, "other_unchecked", "OTHER_UNCHECKED-C1", "other.c")
+    assert run_gate(gate, monkeypatch, "--no-report") == 1
+    assert "bad theorem id 'OTHER_UNCHECKED-C1'" in capsys.readouterr().err
+    write_spec(gate, "other_unchecked", "OTHER-C1", "other.c")
+    assert run_gate(gate, monkeypatch, "--no-report") == 1
+    assert "OTHER-C1: id prefix must be 'OTHER-UNCHECKED'" in capsys.readouterr().err
+
+
+def test_kernel_may_list_files(gate, monkeypatch, capsys):
+    path = gate.SPEC_DIR / "bisection.md"
+    path.write_text(path.read_text().replace("kernel: kernel.c", "kernel: [kernel.c, other.c]"))
+    gate.FRAMA_C_EXPECTATION.write_text("kernel.c 1\n")
+    assert run_gate(gate, monkeypatch, "--run", "--strict", "--no-report") == 0
+    path.write_text(path.read_text().replace("other.c]", "missing.c]"))
+    assert run_gate(gate, monkeypatch, "--no-report") == 1
+    assert "kernel 'missing.c' does not exist" in capsys.readouterr().err
