@@ -172,3 +172,9 @@ Fréchet derivatives, Rocq curve derivatives plus multilinearity), and Flocq its
 and VST both functions against the Flocq models (RK4-C2 to C5, `rk4_aarch64_macos.v`); the
 unverified wrapper `diana_rk4` (work `5d`) loops over them with a `diana_ode_fn`, and Python
 exposes `diana.rk4_stage`, `diana.rk4_step` and the driver `diana.rk4` (copies each slope).
+
+Unreleased experiment: `diana_euler_step_unchecked`, an opt-in one-pass Euler step with no
+finiteness check (non-finite components written as computed, `DIANA_OK` for valid arguments);
+the checked two-pass `diana_euler_step` stays the default and the wrapper and Python keep it.
+WP proves its contract (EULER-C3, `src/euler.c` now 68 goals) and VST that it writes the model
+unconditionally (EULER-C4).
