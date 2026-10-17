@@ -26,16 +26,30 @@ All notable changes to this project are documented here. The format follows
   stage or step returns `DIANA_ERR_ARG` with `y` at the last good state. Unverified, like
   `diana_euler`.
 - `diana_euler_step_unchecked(y, f, d, h, y_out)` in `diana/euler.h`, an opt-in explicit Euler
-  step without the finiteness check: it rejects NULL pointers and `d == 0` like
-  `diana_euler_step`, then writes every component in one pass in the same operation order, NaN
-  and ±∞ included, and returns `DIANA_OK`. Where the checked step succeeds the two write the same
-  bits; `diana_euler_step` and the `diana_euler` wrapper are unchanged. Frama-C WP proves its
-  ACSL contract (EULER-C3; 68 goals for `src/euler.c`) and VST that it writes the binary64 model
-  unconditionally (EULER-C4). `test/c/test_euler.c` keeps `src/euler.c` at 100% line and branch
-  coverage, and the compiler corpus runs both steps on every Euler case (1920 cases in all, every
-  gcc and clang build matching CompCert bitwise, NaN results included). On an Apple Silicon Mac
-  the unchecked kernel is 2.4 to 4.9 times faster (about 0.1 to 0.3 ns per component against
-  0.44 to 0.67).
+  step without the finiteness check, in its own source file `src/euler_step_unchecked.c`: it
+  rejects NULL pointers and `d == 0` like `diana_euler_step`, then writes every component in one
+  pass in the same operation order, NaN and ±∞ included, and returns `DIANA_OK`. Where the
+  checked step succeeds the two write the same bits; `diana_euler_step` and the `diana_euler`
+  wrapper are unchanged. Its theorems are in `spec/euler_unchecked.md`: Frama-C WP proves its
+  ACSL contract (EULER-UNCHECKED-C1, 19 goals) and VST that it writes the binary64 model
+  unconditionally (EULER-UNCHECKED-C2). `test/c/test_euler.c` covers it at 100% line and branch
+  coverage, and the compiler corpus runs both steps on every Euler case, every gcc and clang
+  build matching CompCert bitwise, NaN results included. On an Apple Silicon Mac the unchecked
+  kernel is 2.4 to 4.9 times faster (about 0.1 to 0.3 ns per component against 0.44 to 0.67).
+- `diana_rk4_stage_unchecked(y, k, d, h, stage, y_out)` and
+  `diana_rk4_step_unchecked(y, k1, k2, k3, k4, d, h, y_out)` in `diana/rk4.h`, the opt-in RK4
+  stage and step without the finiteness check, each in its own source file
+  (`src/rk4_stage_unchecked.c`, `src/rk4_step_unchecked.c`): they reject the argument errors of
+  the checked functions (a NULL pointer, `d == 0`, a stage outside 2 to 4), then write every
+  component in one pass in the same operation order, NaN and ±∞ included, and return
+  `DIANA_OK`. Where the checked function succeeds the two write the same bits; the checked
+  functions and the `diana_rk4` wrapper are unchanged. Their theorems are in
+  `spec/rk4_unchecked.md`: Frama-C WP proves the ACSL contracts (RK4-UNCHECKED-C1 and C2, 21 and
+  22 goals) and VST that each writes the binary64 model unconditionally (RK4-UNCHECKED-C3 and
+  C4). `test/c/test_rk4.c` covers both at 100% line and branch coverage, and the compiler corpus
+  runs the checked and unchecked functions on every RK4 case (544 more cases). On an Apple Silicon
+  Mac the unchecked stage is 2.8 to 4.8 times faster (about 0.10 to 0.16 ns per component against
+  0.44 to 0.52) and the unchecked step 2.2 to 4.5 times (0.25 to 0.41 ns against 0.86 to 1.23).
 
 #### Python binding
 
@@ -74,6 +88,18 @@ All notable changes to this project are documented here. The format follows
   AST `verification/clight/rk4_aarch64_macos.v` (RK4-C2, RK4-C3): each returns `DIANA_OK` and
   writes the C-order model exactly when every component is finite, and leaves `y_out` unchanged
   otherwise; the C-order models are the Flocq models (RK4-C4, RK4-C5).
+- Flocq proves that a component written by an unchecked kernel is finite exactly when its inputs
+  are finite and none of its operations overflows, each correctly rounded exact result staying
+  below `2^1024` in magnitude (EULER-UNCHECKED-B1, RK4-UNCHECKED-B1 and B2, in
+  `verification/rocq/theory/Float/EulerUnchecked.v` and `RK4Unchecked.v`, on the new
+  `fadd_finite_iff`, `fmul_finite_iff` and `fdiv_finite_iff` of `Diana.Float.Sum`): a finiteness
+  check of the output after the call rejects exactly what the checked kernel rejects. Each
+  unchecked function has its own Frama-C expectation row, Clight AST
+  (`<source>_aarch64_macos.v`) and VST file (`verification/rocq/theory/VST/EulerStepUnchecked.v`,
+  `RK4StageUnchecked.v`, `RK4StepUnchecked.v`); `src/euler.c` and its proofs are back to the
+  checked step alone (49 WP goals).
+- The spec gate accepts a method name with `_`, written `-` in its theorem IDs
+  (`EULER-UNCHECKED-C1` in `spec/euler_unchecked.md`), and a list of source files as `kernel`.
 
 ## [0.3.0] - 2026-10-16
 
