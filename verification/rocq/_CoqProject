@@ -34,6 +34,7 @@ theory/VST/BisectionMid.v
 theory/VST/BisectionResult.v
 ../clight/bisection_step_aarch64_macos.v
 theory/VST/BisectionStep.v
+../clight/cholesky_aarch64_macos.v
 ../clight/euler_step_aarch64_macos.v
 theory/VST/Euler.v
 theory/VST/EulerStep.v
