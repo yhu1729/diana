@@ -10,6 +10,23 @@ All notable changes to this project are documented here. The format follows
 
 #### C library
 
+- Cholesky factorization `diana_cholesky(a, n, l)` in `diana/cholesky.h`: `a` holds a symmetric
+  positive definite `n×n` matrix column-major (`a[i + j n] = A[i, j]`), of which only the entries
+  on or below the diagonal are read, and `l` receives the lower-triangular `L` with `A = L L^T` in
+  the same layout, its strict upper triangle `+0`. Column `j` subtracts the rounded products
+  `L[i,k] L[j,k]` from `A[i,j]` in order `k = 0, ..., j - 1`, takes the correctly rounded square
+  root of the pivot and divides by it. `DIANA_ERR_ARG` (a NULL pointer, `n == 0`, an `n` whose
+  `n n` overflows `size_t`, a NaN or infinite entry on or below the diagonal) leaves `l`
+  untouched; a pivot that is not positive, the matrix not being positive definite to working
+  precision, returns `DIANA_ERR_SINGULAR` with `l` partly written, the first kernel that writes
+  before it knows the call succeeds. Frama-C WP proves the ACSL contract (108 goals,
+  CHOLESKY-C1, `spec/cholesky.md`); `test/c/test_cholesky.c` covers it at 100% line and branch
+  coverage, and the compiler corpus has 248 Cholesky cases, every gcc and clang build matching
+  CompCert bitwise.
+- `diana_fp_sqrt(x)` (`src/fp_sqrt.c`, private header `src/fp_sqrt.h`), the square root of the
+  Cholesky pivots: `__builtin_sqrt`, which gcc, clang and CompCert compile to the IEEE square-root
+  instruction, so no libm call. Its contract is the second `SKIP` entry of
+  `script/run_frama_c.sh`.
 - Classical fourth-order Runge–Kutta step in reverse communication, `diana_rk4_stage` and
   `diana_rk4_step` in `diana/rk4.h`. The caller evaluates the four slopes; `diana_rk4_stage(y, k,
   d, h, stage, y_out)` writes the point of stage 2, 3 or 4 (`y + (h/2) k` for stages 2 and 3,
@@ -60,6 +77,13 @@ All notable changes to this project are documented here. The format follows
 
 #### Python binding
 
+- `diana.cholesky(a)` returns the factor as a new `array.array("d")` in the column-major layout of
+  `a`, a float64 buffer read in place or an iterable copied first, whose length must be a square
+  (module `diana._cholesky`; extension function `diana._diana.cholesky(a, out)`). A non-finite
+  entry on or below the diagonal raises `ValueError`, a matrix that is not positive definite
+  `diana.SingularError`. `test/python/test_cholesky.py` checks bitwise agreement with the
+  operations in Python floats, the CHOLESKY-B3 bound in exact rationals, and agreement with
+  `numpy.linalg.cholesky`.
 - `diana.rk4_stage(y, k, h, stage)` and `diana.rk4_step(y, k1, k2, k3, k4, h)` return a new
   `array.array("d")` from the kernels, reading float64 buffers in place and copying other iterables
   (module `diana._rk4`; extension functions `diana._diana.rk4_stage` and `rk4_step` with an explicit
@@ -75,6 +99,19 @@ All notable changes to this project are documented here. The format follows
 
 #### Verification
 
+- Cholesky through every layer (`spec/cholesky.md`). Lean and Rocq prove layer A: with positive
+  pivots `L L^T = A` on the lower triangle (CHOLESKY-A1), the pivots of a symmetric positive
+  definite matrix are positive (A2, by back substitution and the quadratic form), and a symmetric
+  matrix with positive pivots is positive definite (A3). Flocq proves the contract WP assumes for
+  `diana_fp_sqrt` (B1), that every entry of the binary64 factor is finite when the kernel returns
+  `DIANA_OK` (B2), and the componentwise backward error
+  `|A[i,j] - sum_{k<=j} L[i,k] L[j,k]| <= gamma_{j+2} sum_{k<=j} |L[i,k] L[j,k]|` plus
+  `(1 + gamma_{j+2})(j + |L[j,j]|) eta` (B3, Higham's bound with the underflow terms). VST proves
+  `diana_cholesky` against the Flocq model with CompCert's operations (C3: each status exactly
+  when the model gives it, and the model factor on `DIANA_OK`), `diana_fp_sqrt` (C2) and the
+  AST's copy of `diana_fp_finite` (C4), on the committed ASTs `verification/clight/cholesky_aarch64_macos.v` and
+  `fp_sqrt_aarch64_macos.v`. The VST proof of `diana_fp_sqrt` assumes CompCert's semantics of
+  `__builtin_sqrt` as a funspec, a new item of `doc/verification/trust.md`.
 - Lean and Rocq prove RK4 layer A (`spec/rk4.md`, RK4-A1 to A7): the step-size derivatives of the
   increment through third order as explicit jets (A1), the order conditions
   `Phi(0) = G`, `Phi'(0) = E2/2`, `Phi''(0) = E3/3`, `Phi'''(0) = E4/4` without symmetry of the
@@ -143,6 +180,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The strict compile flags add `-fno-math-errno` (`cmake/warning.cmake`,
+  `script/compare_compiler.sh`, `test/doc/test_example.py`), so that gcc and Linux clang compile
+  `__builtin_sqrt` without a libm fallback that would set `errno`; no result changes.
 - `doc/` is rewritten for human readers: each page explains what a method or tool does and why,
   with its examples, and ends with links to the notes that hold the exact detail it no longer
   repeats (evaluation and check order, theorem coverage and bounds, tool behaviour, CI internals).
