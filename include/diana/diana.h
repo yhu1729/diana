@@ -9,6 +9,7 @@
 #include "diana/bisection.h"
 #include "diana/euler.h"
 #include "diana/newton.h"
+#include "diana/rk4.h"
 #include "diana/simpson.h"
 #include "diana/status.h"
 #include "diana/trapezoidal.h"
