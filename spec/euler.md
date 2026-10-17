@@ -43,7 +43,7 @@ theorem:
       both), no UB, termination of both loops, DIANA_OK only for non-NULL pointers with d ≥ 1,
       and y_out untouched on DIANA_ERR_ARG. No assumed contract; that y_out is finite on DIANA_OK
       is left to VST.
-    acsl: src/euler.c:diana_euler_step
+    acsl: src/euler.c
   - id: EULER-C2
     layer: C
     informal: >
@@ -52,21 +52,6 @@ theorem:
       returns DIANA_OK and writes the model values when every component is finite, and returns
       DIANA_ERR_ARG leaving y_out unchanged otherwise. The NULL and d = 0 paths are EULER-C1.
     rocq: Diana.VST.Euler.body_diana_euler_step
-  - id: EULER-C3
-    layer: C
-    informal: >
-      ACSL contract of diana_euler_step_unchecked in src/euler.c, Frama-C WP float model with
-      RTE: the memory safety, separation and assigns clause of EULER-C1, no UB, termination of
-      its single loop, DIANA_OK exactly for non-NULL pointers with d ≥ 1, and y_out untouched on
-      DIANA_ERR_ARG. No assumed contract and no statement about the written values.
-    acsl: src/euler.c:diana_euler_step_unchecked
-  - id: EULER-C4
-    layer: C
-    informal: >
-      diana_euler_step_unchecked computes the binary64 model unconditionally (VST, AArch64 macOS
-      Clight AST): under the precondition of EULER-C2 it returns DIANA_OK and writes the model
-      values, finite or not. The NULL and d = 0 paths are EULER-C3.
-    rocq: Diana.VST.Euler.body_diana_euler_step_unchecked
 ---
 # euler
 
@@ -83,19 +68,8 @@ the first computes every component and checks it with `diana_fp_finite` without 
 returns `DIANA_ERR_ARG` at the first non-finite one; the second recomputes each component, bit
 for bit the same, and writes it. So `y_out` is untouched on every error without a scratch
 buffer, as the other kernels leave their outputs untouched. A NaN or infinite `y[i]`, `f[i]` or
-`h`, or an overflow in either operation, is an error; underflow is not.
-
-## Unchecked step
-
-`diana_euler_step_unchecked` is the opt-in variant without the finiteness check: it rejects the
-same NULL pointers and `d = 0` before writing anything, then makes one pass that computes each
-component in the same operation order and writes it, NaN and ±∞ included, and returns
-`DIANA_OK`. Where the checked step succeeds, the two write the same bits (both are `c_euler`,
-EULER-C2 and C4). Since C4 writes the layer-B model values, B1 and B2 hold for every component
-it writes that is finite; for a non-finite one there is no statement. Which NaN a component
-holds when both operands of an operation are NaN is the IEEE choice of the target, which the
-VST model fixes to CompCert's `Float.add`/`Float.mul`; the compiler comparison found no
-difference on AArch64 macOS.
+`h`, or an overflow in either operation, is an error; underflow is not. The opt-in one-pass step
+without the check, `diana_euler_step_unchecked`, has its own spec, `spec/euler_unchecked.md`.
 
 ## Proof sketch
 
@@ -130,13 +104,6 @@ difference on AArch64 macOS.
   that `list_solve` folds into the next prefix (`Znth_c_euler` names the stored value). The
   first VST proof in Diana that writes an array and calls a function inside a loop.
   Proof: `body_diana_euler_step` in `verification/rocq/theory/VST/Euler.v`.
-- **C3**: the annotations of `diana_euler_step_unchecked`. The only early return is the
-  argument check, before the loop writes anything, so the status equivalence and the error
-  post-condition follow from the control flow; the loop invariant is the index bound.
-- **C4**: the argument checks and the loop are those of C2 without the first loop: the write
-  loop of C2, with the same invariant and the same `upd_Znth` step, ends with
-  `y_out = map Vfloat (c_euler h ys fs)` and returns 0. Proof:
-  `body_diana_euler_step_unchecked` in `verification/rocq/theory/VST/Euler.v`.
 
 ## Why finiteness on success is not in ACSL
 
@@ -172,8 +139,7 @@ finiteness and the exact values together.
   is the C computation with CompCert's `Float.add`/`Float.mul`, componentwise over the two
   arrays, and `c_euler_model` identifies it with `feuler`. The funspec holds three separate
   `data_at`, so overlapping `y` and `f`, which the C allows because both are only read, is
-  outside the theorem; WP (C1, C3) covers it for memory safety. C2 and C4 share the funspec
-  precondition and `c_euler`.
+  outside the theorem; WP (C1) covers it for memory safety.
 
 ## Status
 
@@ -183,7 +149,5 @@ finiteness and the exact values together.
 | EULER-A2 | proved | proved | – |
 | EULER-B1 | – | proved | – |
 | EULER-B2 | – | proved | – |
-| EULER-C1 | – | – | 68/68 goals for `src/euler.c`, with C3 (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
+| EULER-C1 | – | – | 49/49 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
 | EULER-C2 | – | proved | – |
-| EULER-C3 | – | – | with C1 |
-| EULER-C4 | – | proved | – |
