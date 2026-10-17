@@ -54,6 +54,7 @@ add_library(diana ${diana_library_type}
     src/bisection.c
     src/euler.c
     src/newton.c
+    src/rk4.c
     src/simpson.c
     src/trapezoidal.c
     src/wrapper/bisection.c

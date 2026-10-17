@@ -1,5 +1,6 @@
 src/bisection.c 162
 src/euler.c 49
 src/newton.c 103
+src/rk4.c 98
 src/simpson.c 58
 src/trapezoidal.c 41
