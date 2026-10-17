@@ -115,6 +115,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The local Frama-C is pinned to 32.1, the version of the CI image `framac/frama-c:32.1`, instead
+  of 33.0 (`CONTRIBUTING.md`: `opam pin add frama-c 32.1`), so a local WP run and its goal counts
+  are those of CI. Every row of `verification/frama-c/expectation.txt` proves with the same count
+  under both versions, and both reject hexadecimal float literals in ACSL the same way.
 - `script/run_frama_c.sh` fails when WP would assume the contract of a called function that has
   no body and is not in `SKIP` (the "Specified-only functions" of Frama-C's metrics plugin), so
   the skip list is again the enforced trust boundary between WP and Flocq now that
