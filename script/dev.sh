@@ -117,7 +117,7 @@ run_tidy() {
         fail "$build_dir/compile_commands.json has no entry for python/ext;" \
             "reconfigure with DIANA_BUILD_PYTHON=ON (script/dev.sh config)"
     "$tidy" --version | head -n 1
-    git ls-files 'src/*.c' 'src/wrapper/*.c' 'test/c/*.c' 'test/install/*.c' \
+    git ls-files 'src/*.c' 'test/c/*.c' 'test/install/*.c' \
         'python/ext/*.c' |
         xargs "$tidy" --quiet -p "$build_dir" --warnings-as-errors='*'
 }
