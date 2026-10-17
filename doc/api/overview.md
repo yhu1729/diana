@@ -108,7 +108,8 @@ invalid argument
 The wrappers in `diana/wrapper.h` loop over the verified reverse-communication kernels and are not
 verified (neither VST nor Frama-C); the callback is a trust boundary. Each is described with its
 kernel: `diana_bisection` under [bisection](bisection.md), `diana_euler` under
-[explicit Euler step](euler.md), `diana_newton` under [Newton's method](newton.md).
+[explicit Euler step](euler.md), `diana_rk4` under [classical Runge–Kutta step](rk4.md),
+`diana_newton` under [Newton's method](newton.md).
 
 ## Python
 

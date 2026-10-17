@@ -100,3 +100,60 @@ int main(void) {
 ```text
 y(1) = (0.841470478, 0.540302967)
 ```
+
+## Callback wrapper
+
+`diana/wrapper.h`; not verified, see [callback wrapper](overview.md#callback-wrapper).
+
+- `diana_rk4(fn, ctx, t0, h, nstep, y, d, work, done)` takes `nstep` RK4 steps of size `h` from
+  `y(t0) = y[0 .. d-1]`, in place, with `fn` of type `diana_ode_fn`: `fn(t, y, dy, d, ctx)` must
+  write `F(t, y)` to `dy[0 .. d-1]`. Step `k` evaluates `fn` at `t0 + k * h`,
+  `t0 + (k + 0.5) * h` (twice) and `t0 + (k + 1) * h`, each computed from `k` rather than
+  accumulated, building the stage points with `diana_rk4_stage` and the new state with
+  `diana_rk4_step`. `work` holds `5 * d` doubles (the four slopes and the stage point) and must
+  not overlap `y`. It returns `DIANA_ERR_ARG` for a NULL `fn`, `y` or `work`, for `d == 0`, and
+  when a stage or step fails (a non-finite slope or result); `y` then holds the state after the
+  last successful step. `*done` (optional) receives the number of completed steps on every
+  return (0 when the arguments are rejected). `nstep == 0` leaves `y` unchanged and returns
+  `DIANA_OK`.
+
+Exponential decay `y′ = −r·y` with the rate `r` in `ctx`, three components, 10 steps of `0.05`.
+Each component is multiplied by `R(−0.1)¹⁰ = 0.367879774`, with
+`R(z) = 1 + z + z²/2 + z³/6 + z⁴/24`, against the exact `e⁻¹ = 0.367879441`:
+
+```c
+#include <stdio.h>
+
+#include <diana/wrapper.h>
+
+#define D 3
+
+struct decay {
+  double rate;
+};
+
+static void decay(double t, const double *y, double *dy, size_t d, void *ctx) {
+  const struct decay *p = ctx;
+  (void)t;
+  for (size_t i = 0; i < d; ++i) {
+    dy[i] = -p->rate * y[i];
+  }
+}
+
+int main(void) {
+  struct decay p = {2.0};
+  double y[D] = {1.0, 2.0, 4.0}, work[5 * D];
+  unsigned done;
+  diana_status st = diana_rk4(decay, &p, 0.0, 0.05, 10u, y, D, work, &done);
+  if (st != DIANA_OK) {
+    fprintf(stderr, "rk4: %s after %u steps\n", diana_status_str(st), done);
+    return 1;
+  }
+  printf("y(0.5) = (%.9f, %.9f, %.9f)\n", y[0], y[1], y[2]);
+  return 0;
+}
+```
+
+```text
+y(0.5) = (0.367879774, 0.735759549, 1.471519098)
+```
