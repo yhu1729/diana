@@ -14,6 +14,46 @@ model: >
 hypothesis:
   - "H3 (float layers): y_i, k_i, k₁ᵢ, …, k₄ᵢ and h are arbitrary binary64 values supplied by the caller"
 theorem:
+  - id: RK4-B1
+    layer: B
+    informal: >
+      a finite stage component certifies its evaluation: if the binary64 model
+      fl(y_i + fl(c·k_i)) is finite, with c = h for stage 4 and c = fl(h/2) otherwise, then h,
+      y_i, k_i, c and the product fl(c·k_i) are finite, so no operation overflowed.
+    rocq: Diana.Float.RK4.stage_finite
+  - id: RK4-B2
+    layer: B
+    informal: >
+      stage coefficient: if the computed coefficient c̃ is finite, then |c̃ − c| ≤ η for the exact
+      c = h/2 (stages 2 and 3) or c = h (stage 4), and c̃ = c exactly when |h| ≥ 2⁻¹⁰²¹ or the stage
+      is 4; η = 2⁻¹⁰⁷⁵.
+    rocq: Diana.Float.RK4.coef_error
+  - id: RK4-B3
+    layer: B
+    informal: >
+      stage error per component: if r_i = fl(y_i + fl(c̃·k_i)) is finite, then
+      |r_i − (y_i + c·k_i)| ≤ u·|y_i + c·k_i| + (1 + u)·(u·|c·k_i| + η) + (1 + u)²·|c̃ − c|·|k_i|,
+      with c the exact coefficient of RK4-B2 (so the last term is 0 for |h| ≥ 2⁻¹⁰²¹),
+      u = 2⁻⁵³ and η = 2⁻¹⁰⁷⁵.
+    rocq: Diana.Float.RK4.stage_error
+  - id: RK4-B4
+    layer: B
+    informal: >
+      a finite step component certifies its evaluation: if the binary64 model
+      fl(y_i + fl(fl(h·s_i)/6)) with s_i = fl(fl(k₁ᵢ + k₄ᵢ) + 2·fl(k₂ᵢ + k₃ᵢ)) is finite, then h,
+      y_i, the four slopes and every intermediate (both pair sums, the doubling, s_i, the product
+      and the quotient) are finite, so no operation overflowed. This is why the kernel checks only
+      each computed component.
+    rocq: Diana.Float.RK4.step_finite
+  - id: RK4-B5
+    layer: B
+    informal: >
+      step error per component: if r_i is finite, then
+      |r_i − (y_i + h·S_i/6)| ≤ u·|y_i + h·S_i/6| + (1 + u)·(γ₄·|h|·A_i/6 + (1 + u)·η/6 + η), with
+      S_i = k₁ᵢ + 2·k₂ᵢ + 2·k₃ᵢ + k₄ᵢ the exact slope sum, A_i = |k₁ᵢ + k₄ᵢ| + 2·|k₂ᵢ + k₃ᵢ|,
+      γ₄ = 4u/(1 − 4u), u = 2⁻⁵³ and η = 2⁻¹⁰⁷⁵ (underflow in the product and in the division
+      by 6).
+    rocq: Diana.Float.RK4.step_error
   - id: RK4-C1
     layer: C
     informal: >
@@ -60,13 +100,47 @@ is an error even when `h·s/6` would be finite.
 
 ## Proof sketch
 
+- **B1, B4**: `fadd_finite_inv`, `fmul_value` and `fdiv_finite_inv` (`Diana.Float.Sum`) peel a
+  finite result from the outside in; the stage is `fstep` of `Diana.Float.Euler` with the
+  computed coefficient as its step, so B1 reuses EULER-B1. Proofs: `stage_finite`,
+  `step_finite` in `verification/rocq/theory/Float/RK4.v`.
+- **B2**: for stage 4 the coefficient is `h` itself. Otherwise it is `fl(h/2)`, within `η` of
+  `h/2` by `half_error` of `Diana.Float.Trapezoidal`, and exact when `|h| ≥ 2⁻¹⁰²¹`: then
+  `mag(h) ≥ −1020` and Flocq's `mult_bpow_exact_FLT` puts `h·2⁻¹` in the format (`half_exact`).
+  Proof: `coef_error`.
+- **B3**: the product is `fl(c̃·k) = c̃·k·(1 + e₁) + d₁` and the sum `(y + m)·(1 + e₂)`, as in
+  EULER-B2; writing `c̃·k = c·k + (c̃ − c)·k` adds `(1 + u)·|c̃ − c|·|k|` to the product error,
+  and the factor `1 + e₂` makes it `(1 + u)²`. Proof: `stage_error`.
+- **B5**: each pair sum has relative error at most `u ≤ γ₁` (`add_error`); the doubling is exact
+  (`fmul_exact`); `add_step` with `k = 1` gives `|s − S| ≤ γ₂·A` for the exact `S` and
+  `|S| ≤ A`. The product with `h` and the division by 6 add two more relative errors and an
+  absolute `η` each (`scale_div6_error`, the Simpson argument with 6 for 3):
+  `|q − h·S/6| ≤ γ₄·|h|·A/6 + (1 + u)·η/6 + η`. The final sum is `(y + q)·(1 + e)`, which gives
+  the bound as in EULER-B2. On 200 000 random components (half with normal, half with subnormal
+  slopes) the error reaches 99.93 % of the bound. Proof: `step_error`.
 - **C1**: the `/*@ ... */` annotations in `src/rk4.c`, as for `src/euler.c` (EULER-C1): every
   early return happens before the second loop, and the only write is `y_out[i]` in that loop, so
   `assigns y_out[0 .. d − 1]` and the error post-condition follow from the control flow; the loop
   invariants are only the index bounds.
 
+## Model correspondence
+
+- **Layer B** (`verification/rocq/theory/Float/RK4.v`): `coef s h` is `h` for `s = 4` and
+  `fmul half h` otherwise, with `half` the binary64 constant `0.5` of `Diana.Float.Trapezoidal`;
+  `fstage s h y k` is `Diana.Float.Euler.fstep` with step `coef s h`, and `frk4_stage` maps it
+  over the components (`feuler`). `fstep h y k₁ k₂ k₃ k₄ = fadd y (fdiv (fmul h (fslope …)) six)`
+  with `fslope k₁ k₂ k₃ k₄ = fadd (fadd k₁ k₄) (fmul two (fadd k₂ k₃))` is one step component in
+  the C's operation order, and `frk4_step` maps it over five lists. `fadd`, `fmul` and `fdiv` are
+  the `Bplus`, `Bmult` and `Bdiv` of `Diana.Float.Sum`, parameterised by the NaN-payload
+  functions. B1 to B5 are per component; a max-norm form follows by taking the maximum over `i`.
+
 ## Status
 
 | ID | Lean | Rocq | Frama-C |
 |---|---|---|---|
+| RK4-B1 | – | proved | – |
+| RK4-B2 | – | proved | – |
+| RK4-B3 | – | proved | – |
+| RK4-B4 | – | proved | – |
+| RK4-B5 | – | proved | – |
 | RK4-C1 | – | – | 98/98 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
