@@ -10,10 +10,73 @@ model: >
   model evaluates the stage coefficient as c = fl(h/2) (or h) once and each stage component as
   fl(y_i + fl(c·k_i)), and each step component as fl(y_i + fl(fl(h·s_i)/6)) with
   s_i = fl(fl(k₁ᵢ + k₄ᵢ) + 2·fl(k₂ᵢ + k₃ᵢ)), every operation rounded to nearest-even (no fused
-  multiply-add; the doubling is exact unless it overflows).
+  multiply-add; the doubling is exact unless it overflows). Over the reals the step is
+  y_{n+1} = y_n + h·Φ(t_n, y_n) with the increment Φ = (k₁ + 2·k₂ + 2·k₃ + k₄)/6 evaluated exactly
+  (incT in both provers), and rk4 F t₀ h y₀ k is its k-th iterate.
 hypothesis:
-  - "H3 (float layers): y_i, k_i, k₁ᵢ, …, k₄ᵢ and h are arbitrary binary64 values supplied by the caller"
+  - "H1: y′ = F(t, y) is treated as the autonomous system z′ = G(z) on z = (t, y) with G(t, y) = (1, F(t, y)), which RK4 respects (RK4-A6). G has derivatives G′, G″, G‴ (Lean: Fréchet, G₂ = D G₁ and G₃ = D G₂ everywhere, as continuous (multi)linear maps; Rocq: componentwise along every curve differentiable in the first D components, with G′(x), G″(x), G‴(x) linear in each vector argument). Only G‴ appears, not a fourth derivative"
+  - "H2: the solution satisfies Y′ = G(Y) on [t, t + h], and its fourth derivative E₄(Y(s)), written through G′, G″, G‴ (E₂ = G′G, E₃ = G″(G, G) + G′E₂, E₄ = G‴(G, G, G) + G″(E₂, G) + 2·G″(G, E₂) + G′E₃), satisfies ‖E₄(Y(s)) − E₄(Y(t))‖ ≤ M₅·(s − t) in the max norm for s ∈ [t, t + h]; this holds when ‖Y⁽⁵⁾‖ ≤ M₅"
+  - "H3: Φ(s), the increment of one step of size s from Y(t), has the third step-size derivative Φ‴ = d₃ of RK4-A1 with ‖Φ‴(s) − Φ‴(0)‖ ≤ N₄·s for s ∈ [0, h]; this holds when ‖Φ⁗‖ ≤ N₄, and is a hypothesis on the method applied to F rather than on F alone"
+  - "H4: F is L-Lipschitz in y in the max norm for t ∈ [t₀, T], with L > 0"
+  - "H5 (float layers): y_i, k_i, k₁ᵢ, …, k₄ᵢ and h are arbitrary binary64 values supplied by the caller"
 theorem:
+  - id: RK4-A1
+    layer: A
+    informal: >
+      step-size derivatives of the increment: under H1, for the autonomous increment
+      Φ(s) = inc G y s and every s, the jet components d₁, d₂, d₃ of incJet (explicit sums of G′,
+      G″, G‴ along the three stage curves y + (s/2)·k₁(s), y + (s/2)·k₂(s), y + s·k₃(s)) are the
+      first, second and third derivatives of Φ in s.
+    lean: Diana.Real.RK4.inc_deriv
+    rocq: Diana.Real.RK4.inc_deriv
+  - id: RK4-A2
+    layer: A
+    informal: >
+      order conditions: under H1, Φ(0) = G(y), Φ′(0) = E₂(y)/2, Φ″(0) = E₃(y)/3 and
+      Φ‴(0) = E₄(y)/4, so the Taylor polynomial of y + s·Φ(s) agrees with that of the solution
+      through s⁴. Only linearity is used, not the symmetry of G″.
+    lean: Diana.Real.RK4.order_conditions
+    rocq: Diana.Real.RK4.order_conditions
+  - id: RK4-A3
+    layer: A
+    informal: >
+      local truncation of order 4: under H1, H2 and H3 with h ≥ 0,
+      ‖Y(t + h) − Y(t) − h·Φ(h)‖ ≤ (M₅/120 + N₄/24)·h⁵ (Rocq also takes 0 ≤ M₅ and 0 ≤ N₄).
+    lean: Diana.Real.RK4.local_error
+    rocq: Diana.Real.RK4.local_error
+  - id: RK4-A4
+    layer: A
+    informal: >
+      stability: if F(s, ·) is L-Lipschitz for s ∈ [t, t + h] with h ≥ 0 and L ≥ 0, then
+      ‖Φ(t, y) − Φ(t, z)‖ ≤ L·(1 + hL/2 + (hL)²/6 + (hL)³/24)·‖y − z‖.
+    lean: Diana.Real.RK4.lipschitz
+    rocq: Diana.Real.RK4.lipschitz
+  - id: RK4-A5
+    layer: A
+    informal: >
+      convergence from consistency: under H4 on [t₀, t₀ + N·h] with h > 0, if one step from the
+      solution at every grid point is within τ ≥ 0 of the solution, the iterates
+      y_{k+1} = y_k + h·Φ(t₀ + k·h, y_k), y₀ = Y(t₀), satisfy
+      ‖y_k − Y(t₀ + k·h)‖ ≤ τ/(hL)·(e^{L·k·h} − 1) for every k ≤ N, the Euler form with L itself.
+    lean: Diana.Real.RK4.global_error
+    rocq: Diana.Real.RK4.global_error
+  - id: RK4-A6
+    layer: A
+    informal: >
+      autonomization: the increment of the autonomous field G(t, y) = (1, F(t, y)) at (t, y) is
+      (1, Φ(t, y)), so RK4 on the augmented state is RK4 on y with the stage times t + h/2 and
+      t + h (Lean on ℝ × E; Rocq on vectors with time at index d, for F whose first d components
+      depend only on the first d components of y at the stage times, which H4 implies).
+    lean: Diana.Real.RK4.inc_autonomous
+    rocq: Diana.Real.RK4.inc_autonomous
+  - id: RK4-A7
+    layer: A
+    informal: >
+      global error of order 4: under H1, H4, Y′ = F(t, Y) on [t₀, t₀ + N·h] and H2, H3 at every
+      grid point for G = (1, F) and Ŷ(s) = (s, Y(s)), with h > 0, the iterates satisfy
+      ‖y_k − Y(t₀ + k·h)‖ ≤ ((M₅/120 + N₄/24)·h⁴/L)·(e^{L·k·h} − 1) for every k ≤ N.
+    lean: Diana.Real.RK4.convergence
+    rocq: Diana.Real.RK4.convergence
   - id: RK4-B1
     layer: B
     informal: >
@@ -132,6 +195,39 @@ is an error even when `h·s/6` would be finite.
 
 ## Proof sketch
 
+- **A1**: a jet is a value with its first three derivatives. `Jet.app` (Rocq `japp`) maps the jet
+  of a curve γ to that of G∘γ by the chain rule: (G∘γ)‴ = G‴(γ′, γ′, γ′) + G″(γ″, γ′) +
+  2·G″(γ′, γ″) + G′γ‴, where G″(a, b) is the derivative of G′ in direction a applied to b.
+  `Jet.lin` maps the jet of K to that of s ↦ y + (c·s)·K(s), whose j-th derivative is
+  j·c·K⁽ʲ⁻¹⁾ + c·s·K⁽ʲ⁾. Chaining `app ∘ lin` three times gives the stage slopes k₂, k₃, k₄
+  (`chain_app`, `chain_lin`, `chain_inc`); `incJet_v` (Rocq `incjet_v`) identifies the value with
+  the increment.
+- **A2**: at s = 0 every `lin` term with the factor c·s vanishes, the jets of the stages reduce to
+  linear combinations of G, G′G, G″(G, G), G‴(G, G, G), G″(G′G, G), G″(G, G′G), G′G″(G, G) and
+  G′G′G′G, and the weights 1, 2, 2, 1 over 6 give E₂/2, E₃/3 and E₄/4. The terms G″(γ″, γ′) and
+  2·G″(γ′, γ″) appear in the same proportion in Φ‴ and in Y⁗, so G″ need not be symmetric. Lean
+  closes each identity with `module`; Rocq computes the jets at 0 stage by stage (`jet2_0`,
+  `jet3_0`, `jet4_0`) with the linearity hypotheses.
+- **A3**: `taylor_bound` (`Diana.Real.Taylor`, both provers) bounds the remainder of an order-n
+  Taylor polynomial by M·(x − a)ⁿ⁺¹/(n + 1)! when the n-th derivative is M-Lipschitz from a; it is
+  proved by induction with the mean-value bound used for Euler. Applied to Y with n = 4
+  (derivatives G∘Y, E₂∘Y, E₃∘Y, E₄∘Y, H2) and to Φ with n = 3 (A1, H3), it gives
+  ‖Y(t + h) − P_Y‖ ≤ M₅h⁵/120 and ‖Φ(h) − P_Φ‖ ≤ N₄h⁴/24, and A2 makes
+  P_Y − Y(t) − h·P_Φ vanish. Splitting the hypotheses at the top derivative avoids a fourth
+  derivative of G, which a fifth derivative of y + s·Φ(s) would need.
+- **A4**: stage by stage, ‖Δk₁‖ ≤ L·e, ‖Δk₂‖ ≤ L·(e + (h/2)·‖Δk₁‖), ‖Δk₃‖ ≤ L·(e + (h/2)·‖Δk₂‖),
+  ‖Δk₄‖ ≤ L·(e + h·‖Δk₃‖) with e = ‖y − z‖; the weighted sum is the stated polynomial.
+- **A5**: `one_step_pow` (factored out of `one_step_error` in `Diana.Real.OneStep`) gives
+  ‖e_k‖ ≤ τ·((1 + hK)ᵏ − 1)/(hK) for the Lipschitz constant K of A4. Then 1 + hK = Σᵢ₌₀⁴ (hL)ⁱ/i!
+  ≤ e^{hL} (Mathlib `Real.sum_le_exp_of_nonneg`; Rocq `exp_ge_poly`, by monotonicity) and
+  hK ≥ hL, so the bound becomes τ/(hL)·(e^{Lkh} − 1).
+- **A6**: the stage points of the augmented system have time components t, t + h/2, t + h/2,
+  t + h and the y components of the non-autonomous stages; Lean is direct algebra on ℝ × E, and
+  Rocq uses that F's first d components ignore the time slot of the augmented vector (`local`,
+  derived from H4 by `lipschitz_local`).
+- **A7**: A3 for G = (1, F) and Ŷ(s) = (s, Y(s)) on each grid interval bounds the y component of
+  the augmented local error by τ = (M₅/120 + N₄/24)·h⁵ (A6), and A5 turns τ into the global
+  bound.
 - **B1, B4**: `fadd_finite_inv`, `fmul_value` and `fdiv_finite_inv` (`Diana.Float.Sum`) peel a
   finite result from the outside in; the stage is `fstep` of `Diana.Float.Euler` with the
   computed coefficient as its step, so B1 reuses EULER-B1. Proofs: `stage_finite`,
@@ -169,6 +265,17 @@ is an error even when `h·s/6` would be finite.
 
 ## Model correspondence
 
+- **Layer A** (`verification/lean/Diana/Real/RK4.lean`, `verification/rocq/theory/Real/RK4.v`):
+  the iterate is `rk4 F t₀ h y₀ k`, `iterate` of `Diana.Real.OneStep` with the increment
+  `incT F t y h` = (k₁ + 2·k₂ + 2·k₃ + k₄)/6, k₁ = F(t, y), k₂ = F(t + h/2, y + (h/2)·k₁),
+  k₃ = F(t + h/2, y + (h/2)·k₂), k₄ = F(t + h, y + h·k₃), evaluated exactly: the kernel's step with
+  the caller's slopes. Lean states the theorems in any real normed space E (A6 and A7 on ℝ × E with
+  the max norm); Rocq uses `nat → R` over the first D components with `vnorm`, and puts time at
+  index d of the augmented vector (`aug`, `auto`). The derivative hypotheses differ in form: Lean
+  takes Fréchet derivatives (`HasFDerivAt` for G, G₁, G₂); Rocq takes the chain rule along curves
+  for G, G₁, G₂ and linearity of G₁, G₂, G₃ in each vector argument, the consequences of Fréchet
+  differentiability that the proof uses. `linear_instance` checks that these Rocq hypotheses hold
+  for the linear field F(t, y) = a·y, so they are not contradictory.
 - **Layer B** (`verification/rocq/theory/Float/RK4.v`): `coef s h` is `h` for `s = 4` and
   `fmul half h` otherwise, with `half` the binary64 constant `0.5` of `Diana.Float.Trapezoidal`;
   `fstage s h y k` is `Diana.Float.Euler.fstep` with step `coef s h`, and `frk4_stage` maps it
@@ -188,6 +295,13 @@ is an error even when `h·s/6` would be finite.
 
 | ID | Lean | Rocq | Frama-C |
 |---|---|---|---|
+| RK4-A1 | proved | proved | – |
+| RK4-A2 | proved | proved | – |
+| RK4-A3 | proved | proved | – |
+| RK4-A4 | proved | proved | – |
+| RK4-A5 | proved | proved | – |
+| RK4-A6 | proved | proved | – |
+| RK4-A7 | proved | proved | – |
 | RK4-B1 | – | proved | – |
 | RK4-B2 | – | proved | – |
 | RK4-B3 | – | proved | – |
