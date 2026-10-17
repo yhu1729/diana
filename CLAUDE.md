@@ -78,7 +78,8 @@ no design (a design is written only when an item is picked up).
   by a `text` block of its output, a `python` block is a doctest session.
   ACSL `/*@ ... */` annotations are code, not comments. Python docstrings and CPython
   `tp_doc`/`ml_doc` strings stay (they are runtime API).
-- **Spec:** one `spec/<method>.md` per method with YAML front matter listing theorem IDs prefixed with the method in capitals (`BISECTION-A1`, …),
+- **Spec:** one `spec/<method>.md` per method with YAML front matter listing theorem IDs prefixed with the method in capitals,
+  `_` written as `-` (`BISECTION-A1`, `EULER-UNCHECKED-C1`, …), the `kernel` source file or list of files,
   layer (A real, B float, C code), informal statement, and the per-prover constant name. `script/check_spec.py`
   is the gate: every listed constant must exist, with axioms within the allowed list, and no `sorry`/`Admitted`.
 
