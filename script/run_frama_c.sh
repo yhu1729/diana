@@ -11,6 +11,8 @@ for arg in "$@"; do
         files="$files $arg"
     fi
 done
+row=${files# }
+row=$(basename "${row%% *}" .c)
 metrics=$(frama-c -cpp-extra-args="-Iinclude -Isrc" -metrics $files 2>&1)
 called_in_section() {
     echo "$metrics" |
@@ -46,13 +48,16 @@ done
 if [ -n "$skip" ]; then
     set -- -wp-skip-fct "$skip" "$@"
 fi
+# Make the row's directories before WP does: its own mkdir of a missing parent
+# races with the rows started at the same time and fails the goal instead.
+mkdir -p "verification/frama-c/session/$row" "verification/frama-c/cache/$row"
 exec frama-c \
     -cpp-extra-args="-Iinclude -Isrc" \
     -warn-special-float none \
     -wp -wp-rte -wp-model "+float" \
     -wp-prover alt-ergo \
     -wp-timeout 30 \
-    -wp-session verification/frama-c/session -wp-cache update \
-    -wp-cache-dir verification/frama-c/cache \
+    -wp-session "verification/frama-c/session/$row" -wp-cache update \
+    -wp-cache-dir "verification/frama-c/cache/$row" \
     -wp-status \
     "$@"

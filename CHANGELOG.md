@@ -133,6 +133,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- `script/run_frama_c.sh` gives each WP row its own `verification/frama-c/session/<row>` and
+  `verification/frama-c/cache/<row>` (`<row>` is the basename of the first source), created
+  before WP starts, so rows run at the same time share no WP directory; WP's own creation of a
+  missing cache directory raced between processes and left cached `Failed` verdicts
+  (`doc/verification/frama-c.md`).
 - `diana.MaxIterError` names its second attribute and argument `uncertainty` instead of `width`:
   the bracket width for `diana.bisection`, the last `|dx|` for `diana.newton`, which the old name
   did not fit. `estimate`, `iter`, the positional order and the pickled `args` are unchanged; the
