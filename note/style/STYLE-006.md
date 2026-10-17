@@ -17,5 +17,4 @@ trailing whitespace and space indentation, then per file type:
 
 C has no `max_line_length`: clang-format wraps code at 80 columns but leaves ACSL annotations as
 written (STYLE-005), and some contract lines in `src/` are longer. Nothing checks EditorConfig,
-neither `script/dev.sh` nor CI, although `.change_style_c` and `.change_any` list
-`.editorconfig`; it only guides editors.
+neither `script/dev.sh` nor CI; it only guides editors.

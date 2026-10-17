@@ -65,8 +65,6 @@ stages:
 .change_style_c: &change_style_c
   - .gitlab-ci.yml
   - .clang-format
-  - .clang-tidy
-  - .editorconfig
   - pyproject.toml
   - uv.lock
   - include/**/*
@@ -77,8 +75,6 @@ stages:
 
 .change_any: &change_any
   - .gitlab-ci.yml
-  - .clang-tidy
-  - .editorconfig
   - .python-version
   - pyproject.toml
   - uv.lock

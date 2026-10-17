@@ -243,6 +243,8 @@ All notable changes to this project are documented here. The format follows
   the tests exempt.
 - The `release` job pins its image to `registry.gitlab.com/gitlab-org/release-cli:v0.24.0`,
   the image `latest` named when pinned.
+- `.change_style_c` and `.change_any` no longer list `.clang-tidy` and `.editorconfig`, which no
+  CI job reads (`clang-tidy` runs only in `script/dev.sh test`, EditorConfig only in editors).
 
 ### Removed
 
