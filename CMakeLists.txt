@@ -157,6 +157,8 @@ if(DIANA_BUILD_PYTHON)
         python/ext/bisection_new.c
         python/ext/bisection_result.c
         python/ext/bisection_step.c
+        python/ext/cholesky.c
+        python/ext/cholesky_exec.c
         python/ext/convert_uint.c
         python/ext/euler_exec.c
         python/ext/euler_step.c

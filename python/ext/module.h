@@ -26,6 +26,7 @@ static inline int diana_py_overlap(const Py_buffer *a, const Py_buffer *b) {
 
 PyObject *diana_py_version(PyObject *self, PyObject *ignored);
 PyObject *diana_py_status_str(PyObject *self, PyObject *arg);
+PyObject *diana_py_cholesky(PyObject *self, PyObject *args, PyObject *kwds);
 PyObject *diana_py_euler_step(PyObject *self, PyObject *args, PyObject *kwds);
 PyObject *diana_py_rk4_stage(PyObject *self, PyObject *args, PyObject *kwds);
 PyObject *diana_py_rk4_step(PyObject *self, PyObject *args, PyObject *kwds);
@@ -34,6 +35,7 @@ PyObject *diana_py_trapezoidal(PyObject *self, PyObject *args, PyObject *kwds);
 
 int diana_py_status_exec(PyObject *m);
 int diana_py_bisection_exec(PyObject *m);
+int diana_py_cholesky_exec(PyObject *m);
 int diana_py_euler_exec(PyObject *m);
 int diana_py_newton_exec(PyObject *m);
 int diana_py_rk4_exec(PyObject *m);
