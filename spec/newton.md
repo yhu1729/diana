@@ -135,12 +135,14 @@ in binary64 round-to-nearest-even, and checks each for finiteness.
 
 ## Operation order
 
-1. `fx = 0` is tested first: an exact zero converges with `dx = 0`, whatever `f′(x)`;
-2. `dfx = 0` (either sign) is `DIANA_ERR_SINGULAR`, state unchanged: the step is undefined;
-3. `dx = fl(fx / dfx)`, rejected (`DIANA_ERR_ARG`, state unchanged) when not finite, which
+1. a `NULL` state, or a NaN or infinite `fx` or `dfx`, is `DIANA_ERR_ARG`, state unchanged;
+2. `fx = 0` is tested next: an exact zero converges with `dx = 0` and `iter + 1`, whatever the
+   finite `f′(x)`;
+3. `dfx = 0` (either sign) is `DIANA_ERR_SINGULAR`, state unchanged: the step is undefined;
+4. `dx = fl(fx / dfx)`, rejected (`DIANA_ERR_ARG`, state unchanged) when not finite, which
    covers a subnormal `dfx` against a large `fx`;
-4. `x′ = fl(x − dx)`, rejected the same way when not finite;
-5. the state is updated (`iter + 1`, `dx`, `x′`), then `DIANA_OK` if `x′ = x` or `|dx| ≤ tol`,
+5. `x′ = fl(x − dx)`, rejected the same way when not finite;
+6. the state is updated (`iter + 1`, `dx`, `x′`), then `DIANA_OK` if `x′ = x` or `|dx| ≤ tol`,
    `DIANA_ERR_MAXITER` if `iter ≥ max_iter`, else `DIANA_CONTINUE`.
 
 ## Proof sketch
@@ -206,7 +208,7 @@ in binary64 round-to-nearest-even, and checks each for finiteness.
 - Nothing about termination from an arbitrary `x₀`: A2 needs `x₀` within `δ` of a root with
   `M·δ/(2m) < 1`, in exact arithmetic. In binary64 the iteration near a simple root commonly
   ends in a two-cycle of adjacent doubles, which only `tol > 0` or `max_iter` stops
-  (`doc/test/newton.md`); `max_iter` is the only bound on the step count.
+  (note TEST-028); `max_iter` is the only bound on the step count.
 - A multiple root (`m = 0`) is outside H2: convergence is then linear, as the double root of `x²`
   in the tests shows, and the quadratic bound does not apply.
 - The errors of the caller's `f(x)` and `f′(x)` evaluations are the caller's; B2 is about the
