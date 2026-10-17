@@ -278,6 +278,45 @@ Proof.
     + eapply Rle_trans; [apply Rabs_triang | lra].
 Qed.
 
+Lemma fadd_finite_iff (x y : b64) :
+  fin x -> fin y ->
+  fin (fadd x y) <-> Rabs (round radix2 fexp ZnearestE (r x + r y)) < bpow radix2 emax.
+Proof.
+  intros Hx Hy. pose proof (Bplus_correct prec emax _ _ plus_nan mode_NE x y Hx Hy) as Hc.
+  change (SpecFloat.fexp 53 1024) with fexp in Hc.
+  change (round_mode mode_NE) with ZnearestE in Hc.
+  unfold fadd. revert Hc. case Rlt_bool_spec; intros Hlt Hc.
+  - split; intros _; [exact Hlt | exact (proj1 (proj2 Hc))].
+  - split; intro H; [exfalso | lra].
+    destruct Hc as [Hovf _]. rewrite <- is_finite_B2FF, Hovf in H. discriminate.
+Qed.
+
+Lemma fmul_finite_iff (x y : b64) :
+  fin x -> fin y ->
+  fin (fmul x y) <-> Rabs (round radix2 fexp ZnearestE (r x * r y)) < bpow radix2 emax.
+Proof.
+  intros Hx Hy. pose proof (Bmult_correct prec emax _ _ mult_nan mode_NE x y) as Hc.
+  change (SpecFloat.fexp 53 1024) with fexp in Hc.
+  change (round_mode mode_NE) with ZnearestE in Hc.
+  unfold fmul. revert Hc. case Rlt_bool_spec; intros Hlt Hc.
+  - split; intros _; [exact Hlt |]. destruct Hc as [_ [Hf _]]. rewrite Hf, Hx, Hy. reflexivity.
+  - split; intro H; [exfalso | lra].
+    rewrite <- is_finite_B2FF, Hc in H. discriminate.
+Qed.
+
+Lemma fdiv_finite_iff (x y : b64) :
+  fin x -> r y <> 0 ->
+  fin (fdiv x y) <-> Rabs (round radix2 fexp ZnearestE (r x / r y)) < bpow radix2 emax.
+Proof.
+  intros Hx Hy. pose proof (Bdiv_correct prec emax _ _ div_nan mode_NE x y Hy) as Hc.
+  change (SpecFloat.fexp 53 1024) with fexp in Hc.
+  change (round_mode mode_NE) with ZnearestE in Hc.
+  unfold fdiv. revert Hc. case Rlt_bool_spec; intros Hlt Hc.
+  - split; intros _; [exact Hlt |]. destruct Hc as [_ [Hf _]]. rewrite Hf. exact Hx.
+  - split; intro H; [exfalso | lra].
+    rewrite <- is_finite_B2FF, Hc in H. discriminate.
+Qed.
+
 End Op.
 
 Arguments fadd_finite_inv {plus_nan} x y _.
@@ -288,3 +327,6 @@ Arguments fold_error {plus_nan} m s X Rb e0 j _ _ _ _ _.
 Arguments fmul_exact {mult_nan} c x e _ _ _.
 Arguments fdiv_finite_inv {div_nan} x y _.
 Arguments fdiv_value {div_nan} x y _ _.
+Arguments fadd_finite_iff {plus_nan} x y _ _.
+Arguments fmul_finite_iff {mult_nan} x y _ _.
+Arguments fdiv_finite_iff {div_nan} x y _ _.
