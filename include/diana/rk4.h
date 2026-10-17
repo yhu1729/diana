@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 
+#include "diana/ode.h"
 #include "diana/status.h"
 
 #ifdef __cplusplus
@@ -22,6 +23,10 @@ diana_status diana_rk4_step_unchecked(const double *y, const double *k1,
                                       const double *k2, const double *k3,
                                       const double *k4, size_t d, double h,
                                       double *y_out);
+
+diana_status diana_rk4(diana_ode_fn fn, void *ctx, double t0, double h,
+                       unsigned nstep, double *y, size_t d, double *work,
+                       unsigned *done);
 
 #ifdef __cplusplus
 }
