@@ -21,6 +21,15 @@ All notable changes to this project are documented here. The format follows
   functions at 100% line and branch coverage, and the compiler-comparison corpus has 544 RK4
   cases (1672 in all); every gcc and clang build matches CompCert bitwise.
 
+#### Verification
+
+- Flocq proves RK4 layer B (`verification/rocq/theory/Float/RK4.v`): a finite stage or step
+  component certifies every operation of its evaluation (RK4-B1, RK4-B4); the stage coefficient
+  `fl(h/2)` is within `eta` of `h/2` and exact for `|h| >= 2^-1021` (RK4-B2); a stage component is
+  within the EULER-B2 bound of the exact `y + c k`, plus `(1 + u)^2 |fl(h/2) - h/2| |k|` (RK4-B3);
+  and a step component is within `u |T| + (1 + u)(gamma_4 |h| A / 6 + (1 + u) eta / 6 + eta)` of
+  the exact `T = y + h (k1 + 2 k2 + 2 k3 + k4) / 6`, `A = |k1 + k4| + 2 |k2 + k3|` (RK4-B5).
+
 ## [0.3.0] - 2026-10-16
 
 ### Added
