@@ -4,8 +4,9 @@ Diana itself is BSD-3-Clause (`LICENSE`). It has **no runtime dependency**: the 
 library and the Python wheel contain only Diana's own code, so nothing listed below is
 redistributed with a release artifact.
 
-Everything here is a *development* or *verification* tool. The versions are the pins in
-`CLAUDE.md` (Toolchain pin); licenses are the `license` field of the installed package.
+Everything here is a *development* or *verification* tool. The versions of the main tools are the
+pins in `CLAUDE.md` (Toolchain pin); those of their dependencies are the ones installed in the
+reference opam switch. Licenses are the `license` field of the installed package.
 
 ## License condition that constrains how this project is used
 
@@ -17,15 +18,8 @@ shipped, so the conditions are met; they still have to be stated.
 | CompCert 3.18 | INRIA Non-Commercial License Agreement: free for research, teaching, personal and evaluation use only | Used only to generate and check the Clight AST in a local opam switch. No CI image and no release artifact contains CompCert, and `ccomp` is never shipped ([trust statement](verification/trust.md)). |
 | Alt-Ergo 2.6.4 | dual: `LicenseRef-OCamlpro-Non-Commercial` and Apache-2.0 | Used only as the local/CI proof oracle for Frama-C WP. Not shipped. |
 
-The `verification/clight/<source>_<target>.v` files (today `bisection_init_aarch64_macos.v`,
-`bisection_mid_aarch64_macos.v`, `bisection_result_aarch64_macos.v`,
-`bisection_step_aarch64_macos.v`, `euler_step_aarch64_macos.v`,
-`euler_step_unchecked_aarch64_macos.v`,
-`newton_init_aarch64_macos.v`, `newton_result_aarch64_macos.v`, `newton_step_aarch64_macos.v`,
-`rk4_stage_aarch64_macos.v`, `rk4_stage_unchecked_aarch64_macos.v`, `rk4_step_aarch64_macos.v`,
-`rk4_step_unchecked_aarch64_macos.v`, `simpson_aarch64_macos.v` and
-`trapezoidal_aarch64_macos.v`) are committed `clightgen` output, so they are the only files in the
-tree derived from CompCert. They are excluded from the sdist (`verification/**` in
+The `verification/clight/*.v` files are committed `clightgen` output, so they are the only files
+in the tree derived from CompCert. They are excluded from the sdist (`verification/**` in
 `sdist.exclude` of `pyproject.toml`).
 
 ## Proof assistant and library
@@ -36,9 +30,10 @@ tree derived from CompCert. They are excluded from the sdist (`verification/**` 
 | VST (Verified Software Toolchain) | 2.17 | BSD-2-Clause |
 | Flocq | 4.2.2 | LGPL-3.0-or-later |
 | Coquelicot | 3.4.5 | LGPL-3.0-or-later |
-| MathComp ssreflect (pulled in by VST) | 2.6.0 | CECILL-B |
+| MathComp ssreflect (pulled in by VST and Coquelicot) | 2.6.0 | CECILL-B |
 | `coq-vst-zlist` (pulled in by VST) | 2.13 | BSD-2-Clause |
-| `rocq-elpi` (pulled in by MathComp) | 3.5.1 | LGPL-2.1-or-later |
+| `rocq-hierarchy-builder` (pulled in by MathComp) | 1.10.3 | MIT |
+| `rocq-elpi` (pulled in by Hierarchy Builder) | 3.5.1 | LGPL-2.1-or-later |
 | `coq-menhirlib` (pulled in by CompCert) | 20250912 | LGPL-3.0-or-later |
 | Lean 4 toolchain | v4.35.0 | Apache-2.0 |
 | Mathlib | `v4.35.0` (pinned in `lake-manifest.json`) | Apache-2.0 |
@@ -69,6 +64,8 @@ Mathlib's pinned transitive dependencies, all Apache-2.0 except `Cli` (MIT):
 | NumPy | test group only | BSD-3-Clause (with 0BSD, MIT, Zlib and other terms for bundled code) |
 | mpmath | test group only | BSD-3-Clause |
 | hypothesis | test group only | MPL-2.0 |
+| PyYAML | test and spec groups | MIT |
+| twine | CI `test_python` only | Apache-2.0 |
 | pytest-cov, gcovr | coverage group only | MIT, BSD-3-Clause |
 
 The Python extension is compiled against the CPython headers and links the Python runtime it is
