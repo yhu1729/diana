@@ -91,7 +91,8 @@ y(1) = (0.841892, 0.540573)
 
 ## Callback wrapper
 
-`diana/wrapper.h`; not verified, see [callback wrapper](overview.md#callback-wrapper).
+`diana/euler.h` (callback type `diana_ode_fn` from `diana/ode.h`); not verified, see
+[callback wrapper](overview.md#callback-wrapper).
 
 - `diana_euler(fn, ctx, t0, h, nstep, y, d, work, done)` takes `nstep` explicit Euler steps of size
   `h` from `y(t0) = y[0 .. d-1]`, in place, with `fn` of type `diana_ode_fn`: `fn(t, y, dy, d, ctx)`
@@ -109,7 +110,7 @@ the exact `e⁻¹ = 0.367879`:
 ```c
 #include <stdio.h>
 
-#include <diana/wrapper.h>
+#include <diana/euler.h>
 
 #define D 3
 
