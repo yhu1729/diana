@@ -1389,6 +1389,192 @@ static void test_cholesky(void) {
   }
 }
 
+typedef diana_status (*substitution_fn)(const double *, size_t, const double *,
+                                        double *);
+
+static void substitution_run(const char *kernel, substitution_fn solve,
+                             const char *label, const double *l, size_t n,
+                             const double *b) {
+  static double x[MATRIX + 1u];
+  size_t m = n <= MATRIX ? n : 0u;
+  size_t i;
+  diana_status st;
+
+  for (i = 0u; i < MATRIX + 1u; ++i) {
+    x[i] = SENTINEL;
+  }
+  st = solve(l, n, b, x);
+  put_head(kernel, label);
+  printf(" %llu", (unsigned long long)n);
+  put_array(l, l == (const double *)0 ? 0u : m * m);
+  put_array(b, b == (const double *)0 ? 0u : m);
+  put_status(st);
+  put_array(x, m + 1u);
+  printf("\n");
+}
+
+static void substitution_case(const char *label, const double *l, size_t n,
+                              const double *b) {
+  substitution_run("forward_substitution", diana_forward_substitution, label, l,
+                   n, b);
+  substitution_run("back_substitution", diana_back_substitution, label, l, n,
+                   b);
+}
+
+static void test_substitution(void) {
+  static const double one[1] = {4.0};
+  static const double one_b[1] = {2.0};
+  static const double exact3[9] = {2.0, 1.0, -1.0, 0.0, 4.0,
+                                   2.0, 0.0, 0.0,  1.0};
+  static const double forward_b[3] = {6.0, -5.0, -2.0};
+  static const double back_b[3] = {-1.0, 2.0, 5.0};
+  static double upper_bad[9];
+  static const double signed_zero[4] = {-2.0, 0.0, 0.0, 4.0};
+  static const double zero_b[2] = {0.0, 0.0};
+  static const double fma[4] = {1.0, 0x1.0000000000001p0, 0.0, 1.0};
+  static const double fma_forward_b[2] = {0x1.0000000000001p0,
+                                          0x1.0000000000003p0};
+  static const double fma_back_b[2] = {0x1.0000000000003p0,
+                                       0x1.0000000000001p0};
+  static const double order_forward[9] = {1.0, 0.0, 1.0, 0.0, 1.0,
+                                          1.0, 0.0, 0.0, 1.0};
+  static const double order_forward_b[3] = {-1.0, -0x1p-53, 0x1p-53};
+  static const double order_back[9] = {1.0, 1.0, 1.0, 0.0, 1.0,
+                                       0.0, 0.0, 0.0, 1.0};
+  static const double order_back_b[3] = {0x1p-53, -0x1p-53, -1.0};
+  static const double three[1] = {3.0};
+  static const double five[1] = {5.0};
+  static const double two[1] = {2.0};
+  static const double half[1] = {0.5};
+  static const double true_min[1] = {VAL_TRUE_MIN};
+  static const double big[4] = {VAL_MAX, VAL_HALF_MAX, 0.0, VAL_MAX};
+  static const double big_b[2] = {VAL_MAX, VAL_HALF_MAX};
+  static const double tiny[1] = {1e-300};
+  static const double huge[1] = {1e300};
+  static const double product[4] = {1.0, 1e300, 0.0, 1.0};
+  static const double product_b[2] = {1e300, 0.0};
+  static const double difference[4] = {1.0, -1.0, 0.0, 1.0};
+  static const double difference_b[2] = {VAL_MAX, VAL_MAX};
+  static const double nan_forward[9] = {1.0,   0.0, -1e300, 0.0, 1.0,
+                                        1e300, 0.0, 0.0,    1.0};
+  static const double nan_forward_b[3] = {1e300, 1e300, 0.0};
+  static const double nan_back[9] = {1.0, 1e300, -1e300, 0.0, 1.0,
+                                     0.0, 0.0,   0.0,    1.0};
+  static const double nan_back_b[3] = {0.0, 1e300, 1e300};
+  static double l[MATRIX * MATRIX];
+  static double b[MATRIX];
+  static double out[1] = {SENTINEL};
+  diana_status st;
+  unsigned k;
+  size_t n;
+  size_t i;
+  size_t j;
+
+  substitution_case("null_l", (const double *)0, 3u, forward_b);
+  substitution_case("null_b", exact3, 3u, (const double *)0);
+  st = diana_forward_substitution(exact3, 3u, forward_b, (double *)0);
+  put_head("forward_substitution", "null_x");
+  put_status(st);
+  printf("\n");
+  st = diana_back_substitution(exact3, 3u, back_b, (double *)0);
+  put_head("back_substitution", "null_x");
+  put_status(st);
+  printf("\n");
+  substitution_case("empty", exact3, 0u, forward_b);
+  st =
+      diana_forward_substitution((const double *)0, 0u, (const double *)0, out);
+  put_head("forward_substitution", "all_null");
+  put_status(st);
+  put_double(out[0]);
+  printf("\n");
+  st = diana_back_substitution((const double *)0, 0u, (const double *)0, out);
+  put_head("back_substitution", "all_null");
+  put_status(st);
+  put_double(out[0]);
+  printf("\n");
+  substitution_case("size_overflow", exact3, (size_t)1 << 32, forward_b);
+  substitution_case("size_max", exact3, (size_t)-1, forward_b);
+  substitution_case("one", one, 1u, one_b);
+  substitution_case("exact_forward", exact3, 3u, forward_b);
+  substitution_case("exact_back", exact3, 3u, back_b);
+  memcpy(upper_bad, exact3, sizeof exact3);
+  upper_bad[3] = VAL_QNAN;
+  upper_bad[6] = VAL_INF;
+  upper_bad[7] = -VAL_INF;
+  substitution_case("upper_ignored", upper_bad, 3u, forward_b);
+  substitution_case("signed_zero", signed_zero, 2u, zero_b);
+  substitution_case("fma_forward", fma, 2u, fma_forward_b);
+  substitution_case("fma_back", fma, 2u, fma_back_b);
+  substitution_case("order_forward", order_forward, 3u, order_forward_b);
+  substitution_case("order_back", order_back, 3u, order_back_b);
+  substitution_case("division", three, 1u, five);
+  substitution_case("underflow_tie", two, 1u, true_min);
+  substitution_case("subnormal", half, 1u, true_min);
+  substitution_case("big", big, 2u, big_b);
+  substitution_case("quotient_overflow", tiny, 1u, huge);
+  substitution_case("product_overflow", product, 2u, product_b);
+  substitution_case("difference_overflow", difference, 2u, difference_b);
+  substitution_case("nan_forward", nan_forward, 3u, nan_forward_b);
+  substitution_case("nan_back", nan_back, 3u, nan_back_b);
+  for (i = 0u; i < 3u; ++i) {
+    memcpy(l, exact3, sizeof exact3);
+    l[i + 3u * i] = 0.0;
+    substitution_case("zero_diagonal", l, 3u, forward_b);
+    l[i + 3u * i] = -0.0;
+    substitution_case("negative_zero_diagonal", l, 3u, forward_b);
+    memcpy(b, forward_b, sizeof forward_b);
+    b[i] = VAL_QNAN;
+    substitution_case("zero_diagonal_nan_b", l, 3u, b);
+  }
+  for (j = 0u; j < 3u; ++j) {
+    for (i = j; i < 3u; ++i) {
+      memcpy(l, exact3, sizeof exact3);
+      l[i + 3u * j] = VAL_QNAN;
+      substitution_case("nan", l, 3u, forward_b);
+      l[i + 3u * j] = VAL_SNAN;
+      substitution_case("snan", l, 3u, forward_b);
+      l[i + 3u * j] = VAL_INF;
+      substitution_case("inf", l, 3u, forward_b);
+      l[i + 3u * j] = -VAL_INF;
+      substitution_case("negative_inf", l, 3u, forward_b);
+    }
+    memcpy(b, forward_b, sizeof forward_b);
+    b[j] = VAL_QNAN;
+    substitution_case("nan_b", exact3, 3u, b);
+    b[j] = VAL_SNAN;
+    substitution_case("snan_b", exact3, 3u, b);
+    b[j] = VAL_INF;
+    substitution_case("inf_b", exact3, 3u, b);
+    b[j] = -VAL_INF;
+    substitution_case("negative_inf_b", exact3, 3u, b);
+  }
+
+  for (k = 0u; k < RANDOM_ARRAY; ++k) {
+    int mixed = (int)(k % 2u);
+    n = 1u + (size_t)rng_below(MATRIX);
+    for (i = 0u; i < n * n; ++i) {
+      l[i] = random_value(mixed);
+    }
+    for (i = 0u; i < n; ++i) {
+      b[i] = random_value(mixed);
+    }
+    if (k % 4u >= 2u) {
+      for (j = 0u; j < n; ++j) {
+        double s = 1.0;
+        for (i = j + 1u; i < n; ++i) {
+          l[i + n * j] = random_bounded(0);
+          s = s + magnitude(l[i + n * j]);
+        }
+        l[j + n * j] = rng_below(2u) == 0u ? s : -s;
+        b[j] = random_bounded(0);
+      }
+      substitution_case("dominant", l, n, b);
+    } else {
+      substitution_case("random", l, n, b);
+    }
+  }
+}
+
 int main(void) {
   test_bisection();
   test_trapezoidal();
@@ -1397,6 +1583,7 @@ int main(void) {
   test_rk4();
   test_newton();
   test_cholesky();
+  test_substitution();
   printf("end %u\n", case_count);
   if (fflush(stdout) != 0 || ferror(stdout)) {
     return 1;
