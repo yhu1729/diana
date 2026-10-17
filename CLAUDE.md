@@ -73,7 +73,8 @@ no design (a design is written only when an item is picked up).
   (`src/bisection_mid.c`), with its contract on the declaration in a private header
   (`src/bisection_mid.h`), listed in `SKIP` of `script/run_frama_c.sh` and proved in Flocq. That
   skip list is the trust boundary between Frama-C and Rocq (the script fails when WP would assume
-  the contract of a called, body-less function that is not in it); every entry needs a
+  the contract of a called, body-less function that is not in it, and on any called function
+  with neither body nor contract); every entry needs a
   `BISECTION-B*`-style theorem. ACSL predicates shared by the functions of a kernel go in a private
   header (`src/bisection_acsl.h`, `src/newton_acsl.h`).
 - **Verified kernel shape:** reverse communication. A kernel is a pure state machine on a caller-owned

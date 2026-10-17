@@ -11,10 +11,19 @@ for arg in "$@"; do
         files="$files $arg"
     fi
 done
-assumed=$(frama-c -cpp-extra-args="-Iinclude -Isrc" -metrics $files 2>&1 |
-    awk '/Specified-only functions/ { on = 1; next }
-         on && /functions \(|global variables \(/ { on = 0 }
-         on { for (i = 1; i < NF; i++) if ($(i + 1) ~ /^\(/ && $(i + 1) != "(0") print $i }')
+metrics=$(frama-c -cpp-extra-args="-Iinclude -Isrc" -metrics $files 2>&1)
+called_in_section() {
+    echo "$metrics" |
+        awk -v section="$1" 'index($0, section) { on = 1; next }
+             on && /functions \(|global variables \(/ { on = 0 }
+             on { for (i = 1; i < NF; i++) if ($(i + 1) ~ /^\(/ && $(i + 1) != "(0") print $i }'
+}
+for name in $(called_in_section "Undefined and unspecified functions"); do
+    echo "error: $name is called without a body or a contract, so WP would assume a generated" \
+        "contract for it" >&2
+    exit 1
+done
+assumed=$(called_in_section "Specified-only functions")
 for name in $assumed; do
     case " $SKIP " in
     *" $name "*) ;;

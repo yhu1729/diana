@@ -110,6 +110,9 @@ All notable changes to this project are documented here. The format follows
   the checked step alone (49 WP goals).
 - The spec gate accepts a method name with `_`, written `-` in its theorem IDs
   (`EULER-UNCHECKED-C1` in `spec/euler_unchecked.md`), and a list of source files as `kernel`.
+- `script/run_frama_c.sh` also fails when a called function has neither a body nor a contract
+  ("Undefined and unspecified functions" of the metrics plugin), the case WP would otherwise
+  cover with a generated contract; `SKIP` cannot allow it.
 
 #### Tests and tooling
 
