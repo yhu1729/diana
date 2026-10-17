@@ -27,7 +27,7 @@ each named after its function without `diana_py_` (STYLE-002); all are listed in
 - Per kernel, `<kernel>_exec.c` holds the static method, member and type tables and registers
   them. The state types have `<kernel>_new.c`, `_init.c`, `_step.c`, `_result.c` and the object
   struct in `bisection_object.h` / `newton_object.h`; the array functions are `trapezoidal.c`,
-  `simpson.c`, `euler_step.c`, `rk4_stage.c` and `rk4_step.c`.
+  `simpson.c`, `euler_step.c`, `rk4_stage.c`, `rk4_step.c` and `cholesky.c`.
 
 The extension is ordinary tested code, not verified; it may use libm (`newton_step.c` calls
 `isfinite`) and is compiled with the strict flags (BUILD-001).

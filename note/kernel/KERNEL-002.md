@@ -8,6 +8,7 @@ path:
   - src/rk4_step.c
   - src/trapezoidal.c
   - src/simpson.c
+  - src/cholesky.c
 related: [KERNEL-003, API-003, FP-002]
 ---
 A checked kernel writes its output only once it knows the call succeeds, so `DIANA_ERR_ARG`
@@ -20,6 +21,10 @@ leaves every output untouched. The vector kernels do this in two passes without 
 - `diana_trapezoidal`, `diana_simpson`: the scalar is computed into a local, tested, then written
   to `*result`.
 - The state machines check every argument before they assign to the struct.
+- `diana_cholesky` is the exception: it checks its arguments and every input entry before
+  writing (so `DIANA_ERR_ARG` leaves `l` untouched), but column `j` needs columns `0` to `j - 1`,
+  so it writes as it goes and a failing pivot (`DIANA_ERR_SINGULAR`) leaves `l` partly written
+  (API-028). Keeping `l` untouched would take a second `n*n` buffer.
 - Proved: `y_out` untouched on `DIANA_ERR_ARG` by WP (EULER-C1, RK4-C1, RK4-C2) and unchanged
   unless every component is finite by VST (EULER-C2, RK4-C3, RK4-C4).
 

@@ -113,6 +113,8 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [API-025](api/API-025.md) | rationale | Python Newton takes tol without default and f returning a pair |
 | [API-026](api/API-026.md) | fact | Python ODE functions euler_step, rk4_stage, rk4_step, euler and rk4 |
 | [API-027](api/API-027.md) | fact | Python version, status constants and status_str |
+| [API-028](api/API-028.md) | fact | Cholesky evaluation order, exits and what each exit writes |
+| [API-029](api/API-029.md) | fact | Python cholesky and the extension function cholesky(a, out) |
 
 ### benchmark
 
@@ -185,6 +187,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [FP-003](fp/FP-003.md) | fact | src/fp.h asserts FLT_EVAL_METHOD == 0 at compile time |
 | [FP-004](fp/FP-004.md) | rule | Strict IEEE binary64 compile flags |
 | [FP-005](fp/FP-005.md) | rationale | Verified artifact versus shipped binary |
+| [FP-006](fp/FP-006.md) | fact | The square-root helper diana_fp_sqrt and its assumed semantics |
 
 ### gate
 
@@ -236,6 +239,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [PROOF-006](proof/PROOF-006.md) | fact | RK4 layer A, local error O(h⁵) and global error O(h⁴) |
 | [PROOF-007](proof/PROOF-007.md) | fact | Three models per kernel and how layers A, B and C compose |
 | [PROOF-008](proof/PROOF-008.md) | fact | RK4 rounding and C-code theorems, checked and unchecked |
+| [PROOF-009](proof/PROOF-009.md) | fact | Cholesky theorems, their hypotheses and the backward error bound |
 
 ### prover
 
@@ -315,6 +319,8 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [TEST-030](test/TEST-030.md) | fact | Newton double root, step limit, cube root and cos fixed point |
 | [TEST-031](test/TEST-031.md) | fact | Newton singular and argument errors keep the state |
 | [TEST-032](test/TEST-032.md) | fact | Newton callback wrapper cases |
+| [TEST-033](test/TEST-033.md) | fact | Cholesky C test values, rounding pins and failure cases |
+| [TEST-034](test/TEST-034.md) | fact | Cholesky Python tests against a binary64 reference and the B3 bound |
 
 ### verify
 
@@ -352,6 +358,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [WP-008](wp/WP-008.md) | fact | verify_frama_c.sh runs every expectation row in parallel and checks each |
 | [WP-009](wp/WP-009.md) | fact | Each WP row has its own session and cache directory |
 | [WP-010](wp/WP-010.md) | procedure | Clear a row's WP cache after a Failed goal caused by a Why3 anomaly |
+| [WP-011](wp/WP-011.md) | rationale | Nonlinear index bounds proved through the column_end lemma and assertions |
 
 ## By path
 
@@ -379,6 +386,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `doc/verification/report.md` | GATE-006 |
 | `include/diana/*.h` | KERNEL-001 |
 | `include/diana/bisection.h` | API-007 |
+| `include/diana/cholesky.h` | API-028 |
 | `include/diana/diana.h` | API-001, API-002, BUILD-006, KERNEL-006 |
 | `include/diana/euler.h` | API-015, API-018 |
 | `include/diana/newton.h` | API-010 |
@@ -398,6 +406,8 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `python/ext/bisection_new.c` | PYTHON-008 |
 | `python/ext/bisection_result.c` | PYTHON-008 |
 | `python/ext/bisection_step.c` | PYTHON-008, TEST-009 |
+| `python/ext/cholesky.c` | API-029, PYTHON-004 |
+| `python/ext/cholesky_exec.c` | API-029 |
 | `python/ext/convert_uint.c` | API-021 |
 | `python/ext/euler_step.c` | API-026, PYTHON-004 |
 | `python/ext/get_array.c` | API-020 |
@@ -418,6 +428,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `python/src/diana/*.py` | PYTHON-002 |
 | `python/src/diana/__init__.py` | API-027, PYTHON-007 |
 | `python/src/diana/_bisection.py` | API-022, API-024, TEST-008 |
+| `python/src/diana/_cholesky.py` | API-020, API-029 |
 | `python/src/diana/_convert.py` | API-021 |
 | `python/src/diana/_diana.pyi` | API-023, PYTHON-002, PYTHON-007 |
 | `python/src/diana/_error.py` | API-022 |
@@ -441,6 +452,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `script/verify_frama_c.sh` | CI-011, WP-008 |
 | `spec/*.md` | GATE-001, GATE-002, GATE-008, PROOF-007, VST-004, VST-006 |
 | `spec/bisection.md` | PROOF-001, TEST-008 |
+| `spec/cholesky.md` | PROOF-009 |
 | `spec/euler.md` | PROOF-005 |
 | `spec/euler_unchecked.md` | KERNEL-003, PROOF-005 |
 | `spec/newton.md` | PROOF-002 |
@@ -457,11 +469,14 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `src/bisection_mid.h` | KERNEL-005, WP-002, WP-003, WP-004, WP-005 |
 | `src/bisection_result.c` | API-004, API-008, PROOF-001, WP-001 |
 | `src/bisection_step.c` | API-007, API-008, PROOF-001, WP-006 |
+| `src/cholesky.c` | API-003, API-004, API-028, FP-001, KERNEL-001, KERNEL-002, WP-011 |
 | `src/euler.c` | API-006, API-017, KERNEL-004, TEST-019 |
 | `src/euler_step*.c` | FP-001, KERNEL-001 |
 | `src/euler_step.c` | API-004, API-015, KERNEL-002, PROOF-005, TEST-016 |
 | `src/euler_step_unchecked.c` | API-018, API-019, KERNEL-003, PROOF-005, TEST-018 |
 | `src/fp.h` | API-001, FP-001, FP-002, FP-003, FP-005, KERNEL-005, VST-006 |
+| `src/fp_sqrt.c` | FP-006, KERNEL-001, KERNEL-005 |
+| `src/fp_sqrt.h` | FP-006, KERNEL-005, WP-003 |
 | `src/newton.c` | API-006, API-012, KERNEL-004, TEST-032 |
 | `src/newton_*.c` | FP-001, KERNEL-001 |
 | `src/newton_acsl.h` | API-010, KERNEL-007, WP-001, WP-002 |
@@ -484,18 +499,20 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `test/c/check.h` | TEST-001 |
 | `test/c/test_*.c` | TEST-006 |
 | `test/c/test_bisection.c` | API-009, API-024, TEST-007, TEST-008, TEST-009 |
+| `test/c/test_cholesky.c` | TEST-033 |
 | `test/c/test_compiler.c` | COMPILER-001, COMPILER-005, COMPILER-006, COMPILER-007, COMPILER-008, COMPILER-009, COMPILER-010, COMPILER-011, FP-005, KERNEL-006 |
 | `test/c/test_euler.c` | API-017, TEST-016, TEST-017, TEST-018, TEST-019 |
 | `test/c/test_newton.c` | API-011, API-012, TEST-027, TEST-028, TEST-029, TEST-030, TEST-031, TEST-032 |
 | `test/c/test_rk4.c` | API-017, TEST-021, TEST-022, TEST-023, TEST-024, TEST-025 |
 | `test/c/test_simpson.c` | TEST-013, TEST-014 |
 | `test/c/test_trapezoidal.c` | TEST-010, TEST-011 |
-| `test/doc/test_example.py` | CI-009, TEST-003 |
+| `test/doc/test_example.py` | CI-009, FP-004, TEST-003 |
 | `test/install/.clang-tidy` | STYLE-007 |
 | `test/install/CMakeLists.txt` | API-005, BUILD-009, CI-009, TEST-002 |
 | `test/install/main.c` | API-005, BUILD-006, BUILD-009, TEST-002 |
 | `test/python/test_bisection.py` | API-024, TEST-007, TEST-008, TEST-009 |
 | `test/python/test_check_spec.py` | TEST-005 |
+| `test/python/test_cholesky.py` | TEST-034 |
 | `test/python/test_euler.py` | TEST-016, TEST-017, TEST-019, TEST-020 |
 | `test/python/test_newton.py` | API-025, TEST-027, TEST-028, TEST-029, TEST-030, TEST-031 |
 | `test/python/test_rk4.py` | TEST-022, TEST-023, TEST-025, TEST-026 |
@@ -506,14 +523,18 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `verification/frama-c/expectation.txt` | CI-011, GATE-006, KERNEL-006, PROVER-005, WP-005, WP-007, WP-008 |
 | `verification/lean/Diana.lean` | GATE-003, KERNEL-006, PROVER-009 |
 | `verification/lean/Diana/Real/Bisection.lean` | WP-006 |
+| `verification/lean/Diana/Real/Cholesky.lean` | PROOF-009 |
 | `verification/lean/lake-manifest.json` | CI-015, PROVER-001, PROVER-009 |
 | `verification/lean/lakefile.toml` | CI-015, PROVER-001, PROVER-009 |
 | `verification/lean/lean-toolchain` | CI-012, CI-015, PROVER-001, PROVER-009 |
 | `verification/rocq/Makefile` | CI-013, GATE-003, KERNEL-006, PROVER-007, PROVER-008, VERIFY-005 |
 | `verification/rocq/_CoqProject` | GATE-003, KERNEL-006, PROVER-007, VST-001, VST-002, VST-004 |
+| `verification/rocq/theory/Float/Cholesky.v` | PROOF-009 |
 | `verification/rocq/theory/Real/Bisection.v` | WP-006 |
+| `verification/rocq/theory/Real/Cholesky.v` | PROOF-009 |
 | `verification/rocq/theory/VST/*.v` | VST-004, VST-007 |
 | `verification/rocq/theory/VST/BisectionInit.v` | VST-005 |
 | `verification/rocq/theory/VST/BisectionMid.v` | VST-005 |
 | `verification/rocq/theory/VST/BisectionResult.v` | VST-005 |
 | `verification/rocq/theory/VST/BisectionStep.v` | VST-005 |
+| `verification/rocq/theory/VST/FpSqrt.v` | FP-006, VST-005 |

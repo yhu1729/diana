@@ -14,12 +14,14 @@ definitions under "Model correspondence".
 - Layer A: the exact method (`step`, `iterate`, `rk4` with `incT`, the quadrature sums), proved
   separately in Lean 4 with Mathlib and in Rocq with Stdlib reals (Coquelicot where needed).
 - Layer B, Rocq only: Flocq models (`fstep`, `ftrap`, `fsimpson`, `feuler`, `frk4_stage`,
-  `frk4_step`) from `Bplus`, `Bmult`, `Bdiv`, `Bminus` in `mode_NE`, over NaN-payload functions.
+  `frk4_step`, `fchol`) from `Bplus`, `Bmult`, `Bdiv`, `Bminus` and `Bsqrt` in `mode_NE`, over
+  NaN-payload functions.
 - Layer C has two tools. Frama-C WP proves each source file's ACSL contract: memory safety, no
   undefined behaviour, separation, the condition behind each status, untouched output on error,
   but no computed value of the array kernels. VST proves that each function of the
   AArch64 macOS Clight AST (VST-001) computes a C-order model (`c_init`, `c_step`, `c_trap`,
-  `c_simpson`, `c_euler`, `c_stage`, `c_rk4`) written in CompCert's `Float` operations.
+  `c_simpson`, `c_euler`, `c_stage`, `c_rk4`) written in CompCert's `Float` operations;
+  Cholesky's `c_l` is the Flocq `fchol` at CompCert's NaN functions, equal by conversion.
 - C to B: CompCert's `Float.add`, `Float.mul`, `Float.div`, `Float.sub` are Flocq's `Bplus`,
   `Bmult`, `Bdiv`, `Bminus` at CompCert's NaN-payload function, so a model theorem
   (`c_trap_model`, `c_simpson_model`, `c_euler_model`, BISECTION-C10, NEWTON-C7, RK4-C5, C6)
