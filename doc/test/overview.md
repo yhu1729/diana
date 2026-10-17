@@ -35,5 +35,5 @@ ctest also runs the driver of the [compiler comparison](../verification/compiler
 `compiler` test.
 
 The expected values of each kernel's tests are explained per method: [bisection](bisection.md),
-[composite trapezoidal rule](trapezoidal.md), [composite Simpson rule](simpson.md), and
-[explicit Euler step](euler.md).
+[composite trapezoidal rule](trapezoidal.md), [composite Simpson rule](simpson.md),
+[explicit Euler step](euler.md), and [classical Runge–Kutta step](rk4.md).

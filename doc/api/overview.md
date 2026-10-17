@@ -3,7 +3,8 @@
 What every kernel shares. Each method has its own page, with its C functions, its callback wrapper
 if any, and its Python functions: [bisection](bisection.md),
 [composite trapezoidal rule](trapezoidal.md), [composite Simpson rule](simpson.md),
-[explicit Euler step](euler.md), and [Newton's method](newton.md).
+[explicit Euler step](euler.md), [classical Runge–Kutta step](rk4.md), and
+[Newton's method](newton.md).
 
 ## Floating-point environment
 

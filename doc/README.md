@@ -11,6 +11,7 @@ what is verified and how, and the rationale that used to live in code comments.
 - [Composite trapezoidal rule](api/trapezoidal.md)
 - [Composite Simpson rule](api/simpson.md)
 - [Explicit Euler step](api/euler.md)
+- [Classical Runge–Kutta step (RK4)](api/rk4.md)
 - [Newton's method](api/newton.md)
 
 ## Verification
@@ -39,7 +40,8 @@ what is verified and how, and the rationale that used to live in code comments.
 
 - [Test suite](test/overview.md): ctest, pytest, installed consumer, wheel check
 - Expected values: [bisection](test/bisection.md), [trapezoidal rule](test/trapezoidal.md),
-  [Simpson rule](test/simpson.md), [Euler step](test/euler.md), [Newton's method](test/newton.md)
+  [Simpson rule](test/simpson.md), [Euler step](test/euler.md), [RK4 step](test/rk4.md),
+  [Newton's method](test/newton.md)
 
 ## Roadmap
 
