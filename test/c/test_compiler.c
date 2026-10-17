@@ -766,8 +766,16 @@ static void test_euler(void) {
   }
 }
 
-static void rk4_stage_case(const char *label, const double *y, const double *k,
-                           size_t d, double h, int stage) {
+typedef diana_status (*rk4_stage_fn)(const double *y, const double *k, size_t d,
+                                     double h, int stage, double *y_out);
+typedef diana_status (*rk4_step_fn)(const double *y, const double *k1,
+                                    const double *k2, const double *k3,
+                                    const double *k4, size_t d, double h,
+                                    double *y_out);
+
+static void rk4_stage_run(const char *kernel, const char *label,
+                          rk4_stage_fn fn, const double *y, const double *k,
+                          size_t d, double h, int stage) {
   static double out[CAPACITY];
   size_t i;
   diana_status st;
@@ -775,8 +783,8 @@ static void rk4_stage_case(const char *label, const double *y, const double *k,
   for (i = 0u; i < CAPACITY; ++i) {
     out[i] = SENTINEL;
   }
-  st = diana_rk4_stage(y, k, d, h, stage, out);
-  put_head("rk4_stage", label);
+  st = fn(y, k, d, h, stage, out);
+  put_head(kernel, label);
   put_double(h);
   printf(" %d", stage);
   put_array(y, y == (const double *)0 ? 0u : d);
@@ -786,9 +794,17 @@ static void rk4_stage_case(const char *label, const double *y, const double *k,
   printf("\n");
 }
 
-static void rk4_step_case(const char *label, const double *y, const double *k1,
-                          const double *k2, const double *k3, const double *k4,
-                          size_t d, double h) {
+static void rk4_stage_case(const char *label, const double *y, const double *k,
+                           size_t d, double h, int stage) {
+  rk4_stage_run("rk4_stage", label, diana_rk4_stage, y, k, d, h, stage);
+  rk4_stage_run("rk4_stage_unchecked", label, diana_rk4_stage_unchecked, y, k,
+                d, h, stage);
+}
+
+static void rk4_step_run(const char *kernel, const char *label, rk4_step_fn fn,
+                         const double *y, const double *k1, const double *k2,
+                         const double *k3, const double *k4, size_t d,
+                         double h) {
   static double out[CAPACITY];
   size_t i;
   diana_status st;
@@ -796,8 +812,8 @@ static void rk4_step_case(const char *label, const double *y, const double *k1,
   for (i = 0u; i < CAPACITY; ++i) {
     out[i] = SENTINEL;
   }
-  st = diana_rk4_step(y, k1, k2, k3, k4, d, h, out);
-  put_head("rk4_step", label);
+  st = fn(y, k1, k2, k3, k4, d, h, out);
+  put_head(kernel, label);
   put_double(h);
   put_array(y, y == (const double *)0 ? 0u : d);
   put_array(k1, k1 == (const double *)0 ? 0u : d);
@@ -807,6 +823,14 @@ static void rk4_step_case(const char *label, const double *y, const double *k1,
   put_status(st);
   put_array(out, d < CAPACITY ? d : CAPACITY);
   printf("\n");
+}
+
+static void rk4_step_case(const char *label, const double *y, const double *k1,
+                          const double *k2, const double *k3, const double *k4,
+                          size_t d, double h) {
+  rk4_step_run("rk4_step", label, diana_rk4_step, y, k1, k2, k3, k4, d, h);
+  rk4_step_run("rk4_step_unchecked", label, diana_rk4_step_unchecked, y, k1, k2,
+               k3, k4, d, h);
 }
 
 static void test_rk4(void) {
@@ -856,6 +880,16 @@ static void test_rk4(void) {
   put_status(st);
   put_double(out[0]);
   printf("\n");
+  st = diana_rk4_stage_unchecked(y4, a4, 4u, 1.0, 2, (double *)0);
+  put_head("rk4_stage_unchecked", "null_out");
+  put_status(st);
+  printf("\n");
+  st = diana_rk4_stage_unchecked((const double *)0, (const double *)0, 0u, 1.0,
+                                 0, out);
+  put_head("rk4_stage_unchecked", "all_null");
+  put_status(st);
+  put_double(out[0]);
+  printf("\n");
   for (stage = 2; stage <= 4; ++stage) {
     rk4_stage_case("exact", y4, a4, 4u, 0.5, stage);
     rk4_stage_case("third", y4, a4, 4u, 1.0 / 3.0, stage);
@@ -898,6 +932,10 @@ static void test_rk4(void) {
   rk4_step_case("null_k4", y4, a4, b4, c4, (const double *)0, 4u, 1.0);
   st = diana_rk4_step(y4, a4, b4, c4, e4, 4u, 1.0, (double *)0);
   put_head("rk4_step", "null_out");
+  put_status(st);
+  printf("\n");
+  st = diana_rk4_step_unchecked(y4, a4, b4, c4, e4, 4u, 1.0, (double *)0);
+  put_head("rk4_step_unchecked", "null_out");
   put_status(st);
   printf("\n");
   rk4_step_case("empty", y4, a4, b4, c4, e4, 0u, 1.0);
