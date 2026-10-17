@@ -1,4 +1,6 @@
-src/bisection.c 162
+src/bisection_init.c 84
+src/bisection_result.c 19
+src/bisection_step.c 71
 src/euler.c 49
 src/euler_step_unchecked.c 19
 src/newton.c 103
