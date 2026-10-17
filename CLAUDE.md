@@ -63,7 +63,7 @@ no design (a design is written only when an item is picked up).
   uninitialized objects, and a failed reinitialization preserves the previous state. `Newton` takes `tol`
   without a default (no parameter-free stopping rule; `tol = 0` commonly ends in a two-cycle of adjacent doubles).
   An array kernel reads a buffer in place (`PyBUF_RECORDS_RO`; native float64, one-dimensional,
-  C-contiguous, aligned, checked in the extension by `diana_py_get_samples` in `python/ext/get_samples.c`) and its driver copies any non-buffer iterable
+  C-contiguous, aligned, checked in the extension by `diana_py_get_array` in `python/ext/get_array.c`) and its driver copies any non-buffer iterable
   into `array.array("d")`; no NumPy in the package, only in tests.
 - **ACSL:** arithmetic on doubles is exact real arithmetic, write rounded values with casts
   `(double)(...)`; no hexadecimal float literal anywhere in ACSL (WP 33.0 rejects them in lemmas and
@@ -71,7 +71,8 @@ no design (a design is written only when an item is picked up).
   a float fact that WP cannot prove goes into a small helper in its own source file
   (`src/bisection_mid.c`), with its contract on the declaration in a private header
   (`src/bisection_mid.h`), listed in `SKIP` of `script/run_frama_c.sh` and proved in Flocq. That
-  skip list is the trust boundary between Frama-C and Rocq; every entry needs a
+  skip list is the trust boundary between Frama-C and Rocq (the script fails when WP would assume
+  the contract of a called, body-less function that is not in it); every entry needs a
   `BISECTION-B*`-style theorem. ACSL predicates shared by the functions of a kernel go in a private
   header (`src/bisection_acsl.h`, `src/newton_acsl.h`).
 - **Verified kernel shape:** reverse communication. A kernel is a pure state machine on a caller-owned
@@ -129,7 +130,7 @@ python/ext/           CPython extension         test/doc/           doc/api exam
 test/c/               ctest                     test/python/        pytest
 test/install/         find_package consumer     spec/               theorem list per method
 verification/lean/    Lake project              verification/rocq/  Real/ Float/ VST/
-verification/clight/  committed clightgen out
+verification/clight/  committed clightgen out  test/benchmark/      timing driver
 verification/frama-c/ WP goal count/session/cache
 script/               check_spec, dev, frama_c   ci/docker/          prover image
 doc/                  README index; api/, development/, test/, verification/ (trust, report)
@@ -151,6 +152,9 @@ doc/                  README index; api/, development/, test/, verification/ (tr
   respect `CMAKE_INSTALL_INCLUDEDIR` in the exported target. Linux and macOS only, no Windows
   branch anywhere. Sanitized installations export their runtime link options; macOS install tests
   inherit the architecture list, SDK, and deployment target.
+- Benchmark: `script/benchmark.sh [cc...]` builds Release with each compiler and times the checked
+  against the unchecked kernels (`test/benchmark/unchecked.c`); the figures in the docs are its output
+  (`doc/development/benchmark.md`), so re-run it and update them together
 - Coverage: `uv sync --group test --group coverage && uv run pytest --cov=diana`; C and extension coverage via gcovr as in the `coverage_c`/`coverage_python` CI jobs
 - Lean: `cd verification/lean && lake exe cache get && lake build` (Mathlib pinned by `lake-manifest.json`)
 - Rocq: `cd verification/rocq && make && make check` (inside the opam switch, see `CONTRIBUTING.md`).
@@ -219,6 +223,6 @@ C6.
 Unreleased file structure: the callback wrappers moved from `src/wrapper/` to `src/bisection.c`,
 `src/euler.c`, `src/newton.c` and `src/rk4.c`, their declarations from the removed `diana/wrapper.h`
 to the method headers, and `diana_ode_fn` to the new `diana/ode.h`; the verified Euler step is
-`src/euler_step.c` (AST `euler_step_aarch64_macos.v`, still proved in `VST/Euler.v`), `src/status.c`
+`src/euler_step.c` (AST `euler_step_aarch64_macos.v`, proved in `VST/EulerStep.v`; `VST/Euler.v` keeps the AST-free model `c_euler`), `src/status.c`
 is split into `src/status_str.c` and `src/version.c`, and `python/ext/` into one file per function
 (26 files), so every implementation file defines one function.
