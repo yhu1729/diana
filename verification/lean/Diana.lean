@@ -1,6 +1,7 @@
 module
 
 public import Diana.Real.Bisection
+public import Diana.Real.Cholesky
 public import Diana.Real.Euler
 public import Diana.Real.Newton
 public import Diana.Real.OneStep
