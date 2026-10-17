@@ -51,7 +51,10 @@ else()
 endif()
 add_library(diana ${diana_library_type}
     src/status.c
-    src/bisection.c
+    src/bisection_init.c
+    src/bisection_mid.c
+    src/bisection_result.c
+    src/bisection_step.c
     src/euler.c
     src/euler_step_unchecked.c
     src/newton.c
