@@ -36,7 +36,7 @@ and `diana_rk4_step(y, k1, k2, k3, k4, d, h, y_out)` writes `y + h·(k1 + 2·k2 
 `y_out[0 .. d-1]` must not overlap `y[0 .. d-1]` or a slope; the inputs are only read and may
 overlap each other. Each function checks every component before it writes any, so a failure in
 the last one leaves `y_out` as it was. Frama-C WP proves memory safety, termination, the status
-cases and that `y_out` is untouched on `DIANA_ERR_ARG` (RK4-C1).
+cases and that `y_out` is untouched on `DIANA_ERR_ARG` (RK4-C1, C2).
 
 - `diana_rk4_stage_unchecked(y, k, d, h, stage, y_out)` and
   `diana_rk4_step_unchecked(y, k1, k2, k3, k4, d, h, y_out)` are the same stage and step without
@@ -73,7 +73,7 @@ exact `y[i] + c·k[i]`, `c = h/2` or `h`, when `|h| ≥ 2⁻¹⁰²¹`; below th
 `T = y[i] + h·(k1[i] + 2·k2[i] + 2·k3[i] + k4[i])/6`, with
 `A = |k1[i] + k4[i]| + 2·|k2[i] + k3[i]|` and `γ₄ = 4u/(1 − 4u)` (RK4-B5).
 VST proves that each function writes exactly these binary64 values and returns `DIANA_OK` exactly
-when all of them are finite, leaving `y_out` unchanged otherwise (RK4-C2 to C5, for non-NULL,
+when all of them are finite, leaving `y_out` unchanged otherwise (RK4-C3 to C6, for non-NULL,
 disjoint arrays with `d >= 1` and, for the stage, `2 <= stage <= 4`). For the unchecked
 functions, WP proves the same memory safety, termination and argument cases
 (RK4-UNCHECKED-C1, C2), and VST that they always write these binary64 values and return
