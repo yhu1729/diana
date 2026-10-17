@@ -7,7 +7,8 @@ not part of the verified code. Kernels over tabulated samples, :func:`trapezoida
 :func:`simpson`, take a float64 buffer or a sequence of numbers. :func:`euler_step` takes one
 explicit Euler step and :func:`euler` loops over it with a callable; :func:`rk4_stage` and
 :func:`rk4_step` build one classical Runge–Kutta step and :func:`rk4` loops over them.
-:func:`cholesky` factors a symmetric positive definite matrix stored column-major.
+:func:`cholesky` factors a symmetric positive definite matrix stored column-major, and
+:func:`forward_substitution` and :func:`back_substitution` solve with its triangular factor.
 """
 
 from __future__ import annotations
@@ -30,6 +31,7 @@ from diana._euler import euler, euler_step
 from diana._newton import newton
 from diana._rk4 import rk4, rk4_stage, rk4_step
 from diana._simpson import simpson
+from diana._substitution import back_substitution, forward_substitution
 from diana._trapezoidal import trapezoidal
 
 __all__ = [
@@ -45,10 +47,12 @@ __all__ = [
     "MaxIterError",
     "Newton",
     "SingularError",
+    "back_substitution",
     "bisection",
     "cholesky",
     "euler",
     "euler_step",
+    "forward_substitution",
     "newton",
     "rk4",
     "rk4_stage",
