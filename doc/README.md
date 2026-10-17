@@ -41,6 +41,10 @@ what is verified and how, and the rationale that used to live in code comments.
 - Expected values: [bisection](test/bisection.md), [trapezoidal rule](test/trapezoidal.md),
   [Simpson rule](test/simpson.md), [Euler step](test/euler.md), [Newton's method](test/newton.md)
 
+## Roadmap
+
+- [Roadmap](roadmap.md): ideas for future work, one line each
+
 ## License
 
 - [Third-party components](third-party.md): every development and verification tool, with its
