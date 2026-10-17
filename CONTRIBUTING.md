@@ -100,10 +100,16 @@ Alt-Ergo on its own:
 
 ```
 opam repo add rocq-released https://rocq-prover.org/opam/released
-opam install frama-c.33.0 alt-ergo.2.6.4 rocq-prover rocq-core.9.2.0 \
+opam install frama-c.32.1 alt-ergo.2.6.4 rocq-prover rocq-core.9.2.0 \
     coq-flocq.4.2.2 coq-coquelicot.3.4.5 coq-compcert.3.18 coq-vst.2.17
+opam pin add -n frama-c 32.1
 why3 config detect
 ```
+
+Frama-C is pinned to 32.1, the version of the CI image `framac/frama-c:32.1`, so the local WP run
+and its goal counts match CI and `opam upgrade` does not move it. An existing switch with a newer
+Frama-C downgrades in place with `opam pin add frama-c 32.1`; check that the plan opam shows
+changes no other package.
 
 Two version traps are worth stating outright. Rocq stays at 9.2 because the CompCert 3.18 opam
 package caps `coq < 9.3~`, so a Homebrew `rocq` 9.3 on `PATH` is unused — `script/dev.sh verify`
