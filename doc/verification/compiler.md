@@ -34,7 +34,7 @@ carries CompCert.
 
 The driver prints one line per case with every status as `s` plus 8 hex digits and every double as
 its 16 hex-digit bit pattern, inputs included, so the sign of zero and any change to the corpus
-itself show up in the diff. The corpus (1672 cases, 6662 lines) covers:
+itself show up in the diff. The corpus (1920 cases, 6910 lines) covers:
 
 - bisection: every `init` argument error (NaN, signalling NaN, ±∞ in each argument, `a > b`,
   `tol < 0`, `max_iter == 0`, `|a|` or `|b|` past `DBL_MAX / 2`), both bracket errors, each
@@ -46,10 +46,11 @@ itself show up in the diff. The corpus (1672 cases, 6662 lines) covers:
 - the trapezoidal and Simpson rules: every argument error, the operation-order and overflow cases
   of the ctest suites, `h = ±0`, ±0 samples, subnormal samples and `h`, results that underflow to
   0, and NaN, signalling NaN and ±∞ at each position and in `h`;
-- the Euler step: every argument error, the case that tells a fused multiply-add from separate
-  rounding, `h = ±0` with signed-zero components, underflow ties, `DBL_MAX + 1`, overflow in the
-  product and in the sum, failures in the first and last component (the output keeps its
-  sentinels), and non-finite `y`, `f` and `h`;
+- the Euler step, checked and unchecked on the same inputs: every argument error, the case that
+  tells a fused multiply-add from separate rounding, `h = ±0` with signed-zero components,
+  underflow ties, `DBL_MAX + 1`, overflow in the product and in the sum, failures in the first
+  and last component (the checked output keeps its sentinels), and non-finite `y`, `f` and `h`,
+  where the unchecked step writes the NaN and ±∞ it computes, so their bits are compared too;
 - the RK4 stage and step: every argument error (each NULL pointer, `d = 0`, stages 1, 5 and
   -2), each stage with exact and inexact `h`, `h = ±0`, the coefficient tie at `h = 3·2⁻¹⁰⁷⁴`,
   `h = DBL_MAX`, the fused multiply-add case, the slope-sum order case, overflow in each operation
