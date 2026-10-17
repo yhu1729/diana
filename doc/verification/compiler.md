@@ -34,7 +34,7 @@ carries CompCert.
 
 The driver prints one line per case with every status as `s` plus 8 hex digits and every double as
 its 16 hex-digit bit pattern, inputs included, so the sign of zero and any change to the corpus
-itself show up in the diff. The corpus (1920 cases, 6910 lines) covers:
+itself show up in the diff. The corpus (2464 cases, 7454 lines) covers:
 
 - bisection: every `init` argument error (NaN, signalling NaN, ±∞ in each argument, `a > b`,
   `tol < 0`, `max_iter == 0`, `|a|` or `|b|` past `DBL_MAX / 2`), both bracket errors, each
@@ -51,11 +51,12 @@ itself show up in the diff. The corpus (1920 cases, 6910 lines) covers:
   underflow ties, `DBL_MAX + 1`, overflow in the product and in the sum, failures in the first
   and last component (the checked output keeps its sentinels), and non-finite `y`, `f` and `h`,
   where the unchecked step writes the NaN and ±∞ it computes, so their bits are compared too;
-- the RK4 stage and step: every argument error (each NULL pointer, `d = 0`, stages 1, 5 and
-  -2), each stage with exact and inexact `h`, `h = ±0`, the coefficient tie at `h = 3·2⁻¹⁰⁷⁴`,
-  `h = DBL_MAX`, the fused multiply-add case, the slope-sum order case, overflow in each operation
-  of both functions, cancellation, failures in the first and last component, and non-finite
-  values in every position and in `h`;
+- the RK4 stage and step, checked and unchecked on the same inputs: every argument error (each
+  NULL pointer, `d = 0`, stages 1, 5 and -2), each stage with exact and inexact `h`, `h = ±0`, the
+  coefficient tie at `h = 3·2⁻¹⁰⁷⁴`, `h = DBL_MAX`, the fused multiply-add case, the slope-sum
+  order case, overflow in each operation of both functions, cancellation, failures in the first
+  and last component, and non-finite values in every position and in `h`, where the unchecked
+  functions write the NaN and ±∞ they compute;
 - Newton: every `init` argument error, `step` with NaN, signalling NaN and ±∞ in `f` and `f′`, a
   zero or negative-zero `f′`, an exact zero `f` (with a zero or NaN `f′`), corrections that
   underflow, that are a rounding tie, that overflow, and an iterate that overflows; full runs
