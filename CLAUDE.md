@@ -219,7 +219,7 @@ Clight AST and VST file (`VST/BisectionInit.v`, …); `VST/Bisection.v`, `VST/Ne
 now the external `diana_bisection_mid` (still the only `SKIP` entry, no WP row of its own), and the
 `init`, `step` and `result` proofs take its funspec from `VST/BisectionMid.v`. The C layers are
 renumbered with one ACSL theorem per source file: BISECTION-C1 to C12, NEWTON-C1 to C7, RK4-C1 to
-C6.
+C6. `src/fp.h` asserts `FLT_EVAL_METHOD == 0` at compile time.
 
 Unreleased file structure: the callback wrappers moved from `src/wrapper/` to `src/bisection.c`,
 `src/euler.c`, `src/newton.c` and `src/rk4.c`, their declarations from the removed `diana/wrapper.h`

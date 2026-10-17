@@ -53,6 +53,10 @@ All notable changes to this project are documented here. The format follows
   the unchecked stage is 2.9 to 4.8 times faster (0.10 to 0.17 ns per component against 0.44 to
   0.56) and the unchecked step 2.6 to 4.5 times (0.25 to 0.37 ns against 0.86 to 1.26,
   `script/benchmark.sh`).
+- `src/fp.h` asserts `FLT_EVAL_METHOD == 0` at compile time (`_Static_assert`, `<float.h>`), so
+  a build that would evaluate `double` expressions in a wider format (x87) fails instead of
+  double-rounding away from the verified binary64 semantics. The assertion is a declaration:
+  every Clight AST is unchanged and every WP goal count is the same.
 
 #### Python binding
 

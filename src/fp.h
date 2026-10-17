@@ -1,6 +1,11 @@
 #ifndef DIANA_FP_H
 #define DIANA_FP_H
 
+#include <float.h>
+
+_Static_assert(FLT_EVAL_METHOD == 0,
+               "Diana requires binary64 evaluation of double expressions");
+
 /*@ assigns \nothing;
   @ ensures \result == 1 <==> \is_finite(x);
   @ ensures \result == 0 || \result == 1;
