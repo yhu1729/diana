@@ -2,8 +2,8 @@
 
 #include "module.h"
 
-static PyObject *mod_trapezoidal(PyObject *Py_UNUSED(self), PyObject *args,
-                                 PyObject *kwds) {
+PyObject *diana_py_trapezoidal(PyObject *Py_UNUSED(self), PyObject *args,
+                               PyObject *kwds) {
   static char *kwlist[] = {"y", "h", NULL};
   PyObject *y;
   double h;
@@ -31,16 +31,4 @@ static PyObject *mod_trapezoidal(PyObject *Py_UNUSED(self), PyObject *args,
 cleanup:
   PyBuffer_Release(&view);
   return out;
-}
-
-static PyMethodDef trapezoidal_method[] = {
-    {"trapezoidal", (PyCFunction)(void (*)(void))mod_trapezoidal,
-     METH_VARARGS | METH_KEYWORDS,
-     "trapezoidal(y, h) -> float\n\nComposite trapezoidal rule "
-     "h * (y[0]/2 + y[1] + ... + y[n-2] + y[n-1]/2) over a one-dimensional, "
-     "C-contiguous, aligned buffer y of native float64, read in place."},
-    {NULL, NULL, 0, NULL}};
-
-int diana_py_trapezoidal_exec(PyObject *m) {
-  return PyModule_AddFunctions(m, trapezoidal_method);
 }

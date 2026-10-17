@@ -143,30 +143,31 @@ if(DIANA_BUILD_PYTHON)
     find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
     Python_add_library(_diana MODULE WITH_SOABI
         python/ext/module.c
-        python/ext/version.c
-        python/ext/convert_uint.c
-        python/ext/get_samples.c
-        python/ext/raise.c
-        python/ext/status_exec.c
-        python/ext/status_str.c
         python/ext/bisection_exec.c
         python/ext/bisection_init.c
         python/ext/bisection_new.c
         python/ext/bisection_result.c
         python/ext/bisection_step.c
+        python/ext/convert_uint.c
         python/ext/euler_exec.c
         python/ext/euler_step.c
+        python/ext/get_samples.c
         python/ext/newton_exec.c
         python/ext/newton_init.c
         python/ext/newton_new.c
         python/ext/newton_result.c
         python/ext/newton_step.c
+        python/ext/raise.c
         python/ext/rk4_exec.c
         python/ext/rk4_stage.c
         python/ext/rk4_step.c
         python/ext/simpson.c
         python/ext/simpson_exec.c
-        python/ext/trapezoidal.c)
+        python/ext/status_exec.c
+        python/ext/status_str.c
+        python/ext/trapezoidal.c
+        python/ext/trapezoidal_exec.c
+        python/ext/version.c)
     target_link_libraries(_diana PRIVATE diana::diana)
     diana_set_strict_flag(_diana)
     if(DEFINED SKBUILD)
