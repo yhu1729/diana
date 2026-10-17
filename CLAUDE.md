@@ -65,17 +65,22 @@ no design (a design is written only when an item is picked up).
 - **ACSL:** arithmetic on doubles is exact real arithmetic, write rounded values with casts
   `(double)(...)`; no hexadecimal float literal anywhere in ACSL (WP 33.0 rejects them in lemmas and
   mistranslates them in predicates), use exact integer expressions such as `((1 << 53) - 1) << 970`;
-  a float fact that WP cannot prove goes into a small static helper whose contract is listed in
-  `SKIP` of `script/run_frama_c.sh` and proved in Flocq. That skip list is the trust boundary between
-  Frama-C and Rocq; every entry needs a `BISECTION-B*`-style theorem.
+  a float fact that WP cannot prove goes into a small helper in its own source file
+  (`src/bisection_mid.c`), with its contract on the declaration in a private header
+  (`src/bisection_mid.h`), listed in `SKIP` of `script/run_frama_c.sh` and proved in Flocq. That
+  skip list is the trust boundary between Frama-C and Rocq; every entry needs a
+  `BISECTION-B*`-style theorem. ACSL predicates shared by the functions of a kernel go in a private
+  header (`src/bisection_acsl.h`, `src/newton_acsl.h`).
 - **Verified kernel shape:** reverse communication. A kernel is a pure state machine on a caller-owned
   struct (`init` / `step` / `result`) or a function over tabulated arrays. No function pointer in a
   verified kernel. Callback convenience wrappers live in `src/wrapper/` and are not VST-verified.
-- **One function per file:** a new C function goes in its own source file named after it
-  (`src/rk4_stage_unchecked.c`); the older multi-function kernels (`bisection.c`, `newton.c`,
-  `rk4.c`) are not split. A variant of a method, such as the `_unchecked` kernels, gets its own
-  verification artifacts: WP expectation row, Clight AST and VST file per source file, its own
-  Flocq file, and its own `spec/<method>_unchecked.md` (IDs `<METHOD>-UNCHECKED-…`).
+- **One function per file:** every function of a verified kernel is in its own source file named
+  after it without `diana_` (`src/bisection_init.c`, `src/rk4_stage_unchecked.c`), and each source
+  file has its own WP expectation row, Clight AST and VST file (`VST/BisectionInit.v`); the C-order
+  models and lemmas the VST files of a method share are in the AST-free `VST/<Method>.v`, and a
+  spec's `kernel` lists its source files. A variant of a method, such as the `_unchecked` kernels,
+  gets its own verification artifacts: those per source file, its own Flocq file, and its own
+  `spec/<method>_unchecked.md` (IDs `<METHOD>-UNCHECKED-…`).
 - **Comment:** keep in-code comments to a minimum. Rationale, API description, and proof notes go
   in `doc/` (`api/`, `development/`, `test/`, `verification/`, indexed by `doc/README.md`) or
   `spec/<method>.md`. A method has its own `doc/api/<method>.md` and `doc/test/<method>.md`;
@@ -145,7 +150,7 @@ doc/                  README index; api/, development/, test/, verification/ (tr
 - Frama-C: `script/verify_frama_c.sh` (runs `script/run_frama_c.sh` and `script/check_frama_c.sh`
   for every `<source> <goal-count>` row of `verification/frama-c/expectation.txt`; all goals must
   prove and each count must match; `script/dev.sh verify` and CI both call it)
-- Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/<kernel>_aarch64_macos.v src/<kernel>.c` (today `bisection`, `euler`, `euler_step_unchecked`, `newton`, `rk4`, `rk4_stage_unchecked`, `rk4_step_unchecked`, `simpson` and `trapezoidal`) **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
+- Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/<kernel>_aarch64_macos.v src/<kernel>.c` (today `bisection_init`, `bisection_mid`, `bisection_result`, `bisection_step`, `euler`, `euler_step_unchecked`, `newton_init`, `newton_result`, `newton_step`, `rk4_stage`, `rk4_stage_unchecked`, `rk4_step`, `rk4_step_unchecked`, `simpson` and `trapezoidal`) **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
 - Compiler comparison: `opam exec -- script/compare_compiler.sh` builds `src/*.c` with the corpus
   driver `test/c/test_compiler.c` once with `ccomp` and with each gcc/clang found
   (`DIANA_COMPARE_CC` to choose) at `-O0`/`-O2`/`-O3`, and fails on any byte of difference in the
@@ -161,7 +166,7 @@ doc/                  README index; api/, development/, test/, verification/ (tr
 
 ## Status
 
-See `CHANGELOG.md`. v0.1.0: scaffolding and bisection end-to-end. Layers A and B are complete for the kernel, Frama-C WP proves all 162 goals, and VST covers `bisection_mid`, the `src/fp.h` helpers and `diana_bisection_result`; VST for `diana_bisection_init`/`diana_bisection_step` is deferred. v0.2.0 completes M1 (trapezoidal, Simpson, Euler): `diana_trapezoidal` (tabulated; C tests at 100% line and branch coverage; Python `diana.trapezoidal` over the buffer protocol) with its ACSL contract proved by WP (41 goals) and `spec/trapezoidal.md`; Lean and Rocq (Coquelicot) prove its layer A (TRAPEZOIDAL-A1/A2) and Flocq its layer B (TRAPEZOIDAL-B1/B2); VST proves the C against the Flocq model (TRAPEZOIDAL-C2, `trapezoidal_aarch64_macos.v`), so the full strict spec gate passes. Simpson follows the same path: `diana_simpson` (tabulated, odd `n >= 3`; C tests at 100% line and branch coverage; Python `diana.simpson` over the buffer protocol) with its ACSL contract proved by WP (58 goals) and `spec/simpson.md`; Lean and Rocq prove its layer A (SIMPSON-A1/A2), Flocq its layer B (SIMPSON-B1/B2), and VST the C against the Flocq model (SIMPSON-C2, `simpson_aarch64_macos.v`), so Simpson is proved through every layer and the full strict spec gate passes; Euler follows the same path through every layer: `diana_euler_step` (out of place, all buffers separate, two passes so `y_out` is untouched on error; C tests at 100% line and branch coverage) with its ACSL contract proved by WP (49 goals) and `spec/euler.md`, the unverified callback wrapper `diana_euler`, and Python `diana.euler_step` and `diana.euler`; Flocq proves its layer B (EULER-B1/B2) and VST the C against the Flocq model (EULER-C2, `euler_aarch64_macos.v`, the first VST proof that writes an array); Lean and Rocq prove its layer A (EULER-A1/A2) on the shared modules `Diana.Real.OneStep` (discrete Grönwall for one-step methods) and, in Rocq, `Diana.Real.Vector` (max norm over `nat → R`); the shared proof modules `Diana.Real.Quadrature` (Lean, Rocq) and `Diana.Float.Sum` (Rocq) hold the lemmas Simpson reuses from the trapezoidal proofs. v0.3.0 (release notes in `CHANGELOG.md`, not yet tagged): VST proves `diana_bisection_init` and `diana_bisection_step` against the C-order models `c_init`/`c_step` (BISECTION-C6/C7), `c_step` writes the Flocq `fstep` (C8), and `init` and every `DIANA_CONTINUE` step establish the layer-B invariant (C9/C10), so bisection is proved through every layer and every kernel function has a VST proof. Newton's method opens M2: `diana_newton_init`/`step`/`result` (reverse communication; `step` takes `f(x)` and `f'(x)`; a zero derivative is the new `DIANA_ERR_SINGULAR` (-4, Python `SingularError`, a `ValueError`; reserved for zero pivots in Cholesky and LU too) and an overflowing step `DIANA_ERR_ARG`, both with the state unchanged; C tests at 100% line and branch coverage), the unverified wrapper `diana_newton`, Python `diana.Newton`/`diana.newton` (`tol` required), WP proves its ACSL contract (103 goals, NEWTON-C1), Lean and Rocq its layer A (NEWTON-A1/A2, quadratic one-step bound and convergence), Flocq its layer B (NEWTON-B1 to B3, including the half-ulp meaning of the stagnation stop), and VST the C against the C-order models and the Flocq `fstep` (NEWTON-C2 to C5, `newton_aarch64_macos.v`).
+See `CHANGELOG.md`. v0.1.0: scaffolding and bisection end-to-end. Layers A and B are complete for the kernel, Frama-C WP proves all 162 goals, and VST covers `bisection_mid`, the `src/fp.h` helpers and `diana_bisection_result`; VST for `diana_bisection_init`/`diana_bisection_step` is deferred. v0.2.0 completes M1 (trapezoidal, Simpson, Euler): `diana_trapezoidal` (tabulated; C tests at 100% line and branch coverage; Python `diana.trapezoidal` over the buffer protocol) with its ACSL contract proved by WP (41 goals) and `spec/trapezoidal.md`; Lean and Rocq (Coquelicot) prove its layer A (TRAPEZOIDAL-A1/A2) and Flocq its layer B (TRAPEZOIDAL-B1/B2); VST proves the C against the Flocq model (TRAPEZOIDAL-C2, `trapezoidal_aarch64_macos.v`), so the full strict spec gate passes. Simpson follows the same path: `diana_simpson` (tabulated, odd `n >= 3`; C tests at 100% line and branch coverage; Python `diana.simpson` over the buffer protocol) with its ACSL contract proved by WP (58 goals) and `spec/simpson.md`; Lean and Rocq prove its layer A (SIMPSON-A1/A2), Flocq its layer B (SIMPSON-B1/B2), and VST the C against the Flocq model (SIMPSON-C2, `simpson_aarch64_macos.v`), so Simpson is proved through every layer and the full strict spec gate passes; Euler follows the same path through every layer: `diana_euler_step` (out of place, all buffers separate, two passes so `y_out` is untouched on error; C tests at 100% line and branch coverage) with its ACSL contract proved by WP (49 goals) and `spec/euler.md`, the unverified callback wrapper `diana_euler`, and Python `diana.euler_step` and `diana.euler`; Flocq proves its layer B (EULER-B1/B2) and VST the C against the Flocq model (EULER-C2, `euler_aarch64_macos.v`, the first VST proof that writes an array); Lean and Rocq prove its layer A (EULER-A1/A2) on the shared modules `Diana.Real.OneStep` (discrete Grönwall for one-step methods) and, in Rocq, `Diana.Real.Vector` (max norm over `nat → R`); the shared proof modules `Diana.Real.Quadrature` (Lean, Rocq) and `Diana.Float.Sum` (Rocq) hold the lemmas Simpson reuses from the trapezoidal proofs. v0.3.0 (release notes in `CHANGELOG.md`, not yet tagged): VST proves `diana_bisection_init` and `diana_bisection_step` against the C-order models `c_init`/`c_step` (BISECTION-C8/C9 since the renumbering below), `c_step` writes the Flocq `fstep` (C10), and `init` and every `DIANA_CONTINUE` step establish the layer-B invariant (C11/C12), so bisection is proved through every layer and every kernel function has a VST proof. Newton's method opens M2: `diana_newton_init`/`step`/`result` (reverse communication; `step` takes `f(x)` and `f'(x)`; a zero derivative is the new `DIANA_ERR_SINGULAR` (-4, Python `SingularError`, a `ValueError`; reserved for zero pivots in Cholesky and LU too) and an overflowing step `DIANA_ERR_ARG`, both with the state unchanged; C tests at 100% line and branch coverage), the unverified wrapper `diana_newton`, Python `diana.Newton`/`diana.newton` (`tol` required), WP proves its ACSL contracts (NEWTON-C1 to C3), Lean and Rocq its layer A (NEWTON-A1/A2, quadratic one-step bound and convergence), Flocq its layer B (NEWTON-B1 to B3, including the half-ulp meaning of the stagnation stop), and VST the C against the C-order models and the Flocq `fstep` (NEWTON-C4 to C7).
 
 The 0.3.0 release preparation also aligns the package, CMake, header and consumer versions,
 specifies the runtime floating-point environment, and makes the extension stubs match the
@@ -170,12 +175,12 @@ read-only state fields and positional-only `step` arguments.
 Unreleased (toward 1.0): the classical Runge–Kutta step RK4 in reverse communication,
 `diana_rk4_stage` (the point of stage 2, 3 or 4: `y + (h/2)·k` or `y + h·k`) and
 `diana_rk4_step` (`y + h·((k₁ + k₄) + 2·(k₂ + k₃))/6`), both two-pass like Euler (C tests at 100%
-line and branch coverage); WP proves the ACSL contracts (98 goals, RK4-C1, `spec/rk4.md`), Lean
+line and branch coverage); WP proves the ACSL contracts (RK4-C1/C2, `spec/rk4.md`), Lean
 and Rocq its layer A (RK4-A1 to A7: increment jets, order conditions, local truncation
 `(M₅/120 + N₄/24)·h⁵`, Lipschitz increment, convergence from consistency, autonomization, and the
 order-4 global bound; shared modules `Diana.Real.Taylor` and `OneStep.one_step_pow`; Lean takes
 Fréchet derivatives, Rocq curve derivatives plus multilinearity), and Flocq its layer B (RK4-B1 to B5: finiteness, the `fl(h/2)` coefficient, stage and step error),
-and VST both functions against the Flocq models (RK4-C2 to C5, `rk4_aarch64_macos.v`); the
+and VST both functions against the Flocq models (RK4-C3 to C6); the
 unverified wrapper `diana_rk4` (work `5d`) loops over them with a `diana_ode_fn`, and Python
 exposes `diana.rk4_stage`, `diana.rk4_step` and the driver `diana.rk4` (copies each slope).
 
@@ -190,3 +195,13 @@ the model unconditionally (EULER-UNCHECKED-C2, RK4-UNCHECKED-C3/C4; `VST/EulerSt
 `VST/RK4StageUnchecked.v`, `VST/RK4StepUnchecked.v`), and Flocq that a written component is finite
 exactly when its inputs are finite and no operation overflows (EULER-UNCHECKED-B1,
 RK4-UNCHECKED-B1/B2).
+
+Unreleased restructuring: `src/bisection.c`, `src/newton.c` and `src/rk4.c` are split into one
+function per source file (`bisection_mid`, `bisection_init`, `bisection_step`, `bisection_result`;
+`newton_init`, `newton_step`, `newton_result`; `rk4_stage`, `rk4_step`), each with its own WP row,
+Clight AST and VST file (`VST/BisectionInit.v`, …); `VST/Bisection.v`, `VST/Newton.v` and
+`VST/RK4.v` keep only the AST-free models, model theorems and shared lemmas. The midpoint helper is
+now the external `diana_bisection_mid` (still the only `SKIP` entry, no WP row of its own), and the
+`init`, `step` and `result` proofs take its funspec from `VST/BisectionMid.v`. The C layers are
+renumbered with one ACSL theorem per source file: BISECTION-C1 to C12, NEWTON-C1 to C7, RK4-C1 to
+C6.
