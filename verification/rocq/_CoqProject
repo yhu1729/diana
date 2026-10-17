@@ -35,8 +35,13 @@ theory/VST/BisectionStep.v
 theory/VST/Euler.v
 ../clight/euler_step_unchecked_aarch64_macos.v
 theory/VST/EulerStepUnchecked.v
-../clight/newton_aarch64_macos.v
 theory/VST/Newton.v
+../clight/newton_init_aarch64_macos.v
+theory/VST/NewtonInit.v
+../clight/newton_result_aarch64_macos.v
+theory/VST/NewtonResult.v
+../clight/newton_step_aarch64_macos.v
+theory/VST/NewtonStep.v
 ../clight/rk4_aarch64_macos.v
 theory/VST/RK4.v
 ../clight/rk4_stage_unchecked_aarch64_macos.v
