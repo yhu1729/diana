@@ -3,5 +3,7 @@ src/euler.c 49
 src/euler_step_unchecked.c 19
 src/newton.c 103
 src/rk4.c 98
+src/rk4_stage_unchecked.c 21
+src/rk4_step_unchecked.c 22
 src/simpson.c 58
 src/trapezoidal.c 41
