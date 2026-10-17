@@ -59,7 +59,8 @@ add_library(diana ${diana_library_type}
     src/trapezoidal.c
     src/wrapper/bisection.c
     src/wrapper/euler.c
-    src/wrapper/newton.c)
+    src/wrapper/newton.c
+    src/wrapper/rk4.c)
 add_library(diana::diana ALIAS diana)
 target_include_directories(diana PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
