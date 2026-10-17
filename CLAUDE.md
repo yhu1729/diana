@@ -52,7 +52,10 @@ no design (a design is written only when an item is picked up).
   thread. Diana does not check or change these settings; callbacks must preserve them. Compiler
   flags alone do not establish them (`doc/api/overview.md`).
 - **Python binding:** C extension sources in `python/ext/` (`module.c` creates `diana._diana` and calls one
-  `diana_py_<kernel>_exec` per file; shared helpers in `module.h`); pure-Python package in `python/src/diana/`
+  `diana_py_<kernel>_exec` per kernel, in `<kernel>_exec.c` with the kernel's method and type tables;
+  each method or function in its own file such as `bisection_step.c`; declarations and the
+  `static inline` `diana_py_overlap` in `module.h`, object structs in `bisection_object.h` and
+  `newton_object.h`); pure-Python package in `python/src/diana/`
   with one private driver module per kernel (`_bisection.py`, `_newton.py`) re-exported by `__init__.py`, and
   `_convert.py` (`real`, the scalar check the drivers share: a string is rejected as the C `d`
   converter rejects it).
@@ -60,7 +63,7 @@ no design (a design is written only when an item is picked up).
   uninitialized objects, and a failed reinitialization preserves the previous state. `Newton` takes `tol`
   without a default (no parameter-free stopping rule; `tol = 0` commonly ends in a two-cycle of adjacent doubles).
   An array kernel reads a buffer in place (`PyBUF_RECORDS_RO`; native float64, one-dimensional,
-  C-contiguous, aligned, checked in the extension by `diana_py_get_samples` in `python/ext/convert.c`) and its driver copies any non-buffer iterable
+  C-contiguous, aligned, checked in the extension by `diana_py_get_samples` in `python/ext/get_samples.c`) and its driver copies any non-buffer iterable
   into `array.array("d")`; no NumPy in the package, only in tests.
 - **ACSL:** arithmetic on doubles is exact real arithmetic, write rounded values with casts
   `(double)(...)`; no hexadecimal float literal anywhere in ACSL (WP 33.0 rejects them in lemmas and
@@ -76,12 +79,17 @@ no design (a design is written only when an item is picked up).
   verified kernel. Callback convenience wrappers (`diana_bisection`, `diana_euler`, `diana_newton`,
   `diana_rk4`) are in `src/<method>.c`, declared in the method's header (the ODE callback type
   `diana_ode_fn` in `diana/ode.h`), and are not VST-verified.
-- **One function per file:** every function of a verified kernel is in its own source file named
-  after it without `diana_` (`src/bisection_init.c`, `src/rk4_stage_unchecked.c`), and each source
-  file has its own WP expectation row, Clight AST and VST file (`VST/BisectionInit.v`); the C-order
-  models and lemmas the VST files of a method share are in the AST-free `VST/<Method>.v`, and a
-  spec's `kernel` lists its source files. A variant of a method, such as the `_unchecked` kernels,
-  gets its own verification artifacts: those per source file, its own Flocq file, and its own
+- **One function per file:** each implementation file (`src/*.c`, `python/ext/*.c`) defines exactly
+  one function, named after it without `diana_` or `diana_py_` (`src/bisection_init.c`,
+  `src/status_str.c`, `python/ext/bisection_step.c`); `static inline` helpers do not count (those of
+  `src/fp.h` are compiled into every file that includes them), static data such as a method table or
+  type object stays with the function that registers it (`python/ext/bisection_exec.c`), and a
+  helper several files call is a function and file of its own (`src/bisection_mid.c`).
+  `PyInit__diana` is in `python/ext/module.c`; the tests are exempt. Each verified source file has
+  its own WP expectation row, Clight AST and VST file (`VST/BisectionInit.v`); the C-order models
+  and lemmas the VST files of a method share are in the AST-free `VST/<Method>.v`, and a spec's
+  `kernel` lists its source files. A variant of a method, such as the `_unchecked` kernels, gets its
+  own verification artifacts: those per source file, its own Flocq file, and its own
   `spec/<method>_unchecked.md` (IDs `<METHOD>-UNCHECKED-…`).
 - **Comment:** keep in-code comments to a minimum. Rationale, API description, and proof notes go
   in `doc/` (`api/`, `development/`, `test/`, `verification/`, indexed by `doc/README.md`) or
@@ -209,7 +217,8 @@ renumbered with one ACSL theorem per source file: BISECTION-C1 to C12, NEWTON-C1
 C6.
 
 Unreleased file structure: the callback wrappers moved from `src/wrapper/` to `src/bisection.c`,
-`src/euler.c`, `src/newton.c` and `src/rk4.c`, their declarations from the removed
-`diana/wrapper.h` to the method headers, and `diana_ode_fn` to the new `diana/ode.h`; the verified
-Euler step is `src/euler_step.c` (AST `euler_step_aarch64_macos.v`, still proved in
-`VST/Euler.v`).
+`src/euler.c`, `src/newton.c` and `src/rk4.c`, their declarations from the removed `diana/wrapper.h`
+to the method headers, and `diana_ode_fn` to the new `diana/ode.h`; the verified Euler step is
+`src/euler_step.c` (AST `euler_step_aarch64_macos.v`, still proved in `VST/Euler.v`), `src/status.c`
+is split into `src/status_str.c` and `src/version.c`, and `python/ext/` into one file per function
+(26 files), so every implementation file defines one function.
