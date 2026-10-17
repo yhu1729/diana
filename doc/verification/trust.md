@@ -25,8 +25,9 @@ inside one Rocq development with no translation step.
   classical reals and functional extensionality (checked the same way), plus any VST axiom listed in
   `script/axiom_allow.yaml`.
 - Frama-C 33.0 / Why3 1.8.2 / Alt-Ergo 2.6.4 as a proof oracle for layer C-WP. WP assumes the
-  contracts of the functions listed in `SKIP` in `script/run_frama_c.sh`; each such contract is a
-  layer-B theorem (currently only `diana_bisection_mid`, discharged by BISECTION-B1; see
+  contract of a function it sees only declared; `script/run_frama_c.sh` fails unless each such
+  called function is listed in `SKIP`, and each `SKIP` contract is a layer-B theorem (currently
+  only `diana_bisection_mid`, discharged by BISECTION-B1; see
   [Frama-C and Flocq boundary](frama-c.md)).
 - `clightgen` as the translation from C to Clight. The committed
   `verification/clight/<source>_<target>.v`, one per verified source file (today
