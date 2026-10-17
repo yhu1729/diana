@@ -144,7 +144,9 @@ if(DIANA_BUILD_PYTHON)
     Python_add_library(_diana MODULE WITH_SOABI
         python/ext/module.c
         python/ext/convert.c
-        python/ext/status.c
+        python/ext/raise.c
+        python/ext/status_exec.c
+        python/ext/status_str.c
         python/ext/bisection.c
         python/ext/euler.c
         python/ext/newton.c
