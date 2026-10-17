@@ -1,6 +1,6 @@
 ---
 method: newton
-kernel: src/newton.c
+kernel: [src/newton_init.c, src/newton_step.c, src/newton_result.c]
 model: >
   newton f x₀ n : ℝ. Starting from x₀, step n replaces xₙ by xₙ₊₁ = xₙ − f(xₙ)/f′(xₙ); the
   kernel stops at an exact zero f(xₙ) = 0, when the correction f(xₙ)/f′(xₙ) is at most tol in
@@ -51,21 +51,35 @@ theorem:
   - id: NEWTON-C1
     layer: C
     informal: >
-      ACSL contracts in src/newton.c, Frama-C WP float model with RTE: memory safety, no UB,
-      separation of outputs from the state, the state invariant (x, dx and tol finite, tol ≥ 0)
-      established by init and preserved by step, iter increments, DIANA_OK only with |dx| ≤ tol or
-      x unchanged, DIANA_CONTINUE only with |dx| > tol, x changed and iter < max_iter,
-      DIANA_ERR_MAXITER only with iter = max_iter, DIANA_ERR_SINGULAR only with dfx = 0 and
-      fx ≠ 0, and the state unchanged when init reports DIANA_ERR_ARG or step reports
-      DIANA_ERR_ARG or DIANA_ERR_SINGULAR. No assumed contract.
-    acsl: src/newton.c
+      ACSL contract in src/newton_init.c, Frama-C WP float model with RTE: memory safety, no UB,
+      the state invariant (x, dx and tol finite, tol ≥ 0) established with x = x0, dx = 0,
+      tol, iter = 0 and max_iter > 0 on DIANA_CONTINUE, and the state unchanged when init reports
+      DIANA_ERR_ARG. No assumed contract.
+    acsl: src/newton_init.c
   - id: NEWTON-C2
     layer: C
     informal: >
-      diana_newton_result writes the iterate and the last correction to non-NULL root and dx
-      (VST, AArch64 macOS Clight AST). The NULL output paths are NEWTON-C1.
-    rocq: Diana.VST.Newton.body_diana_newton_result
+      ACSL contract in src/newton_step.c, Frama-C WP float model with RTE: memory safety, no UB,
+      the state invariant preserved, iter increments, DIANA_OK only with |dx| ≤ tol or x
+      unchanged, DIANA_CONTINUE only with |dx| > tol, x changed and iter < max_iter,
+      DIANA_ERR_MAXITER only with iter = max_iter, DIANA_ERR_SINGULAR only with dfx = 0 and
+      fx ≠ 0, and the state unchanged when step reports DIANA_ERR_ARG or DIANA_ERR_SINGULAR. No
+      assumed contract.
+    acsl: src/newton_step.c
   - id: NEWTON-C3
+    layer: C
+    informal: >
+      ACSL contract in src/newton_result.c, Frama-C WP float model with RTE: memory safety, no
+      UB, separation of the outputs from the state, and the iterate and the last correction
+      written to non-NULL root and dx. No assumed contract.
+    acsl: src/newton_result.c
+  - id: NEWTON-C4
+    layer: C
+    informal: >
+      diana_newton_result writes the iterate and the last correction to non-NULL root and dx
+      (VST, AArch64 macOS Clight AST). The NULL output paths are NEWTON-C3.
+    rocq: Diana.VST.NewtonResult.body_diana_newton_result
+  - id: NEWTON-C5
     layer: C
     informal: >
       diana_newton_init computes c_init, the model of every exit in the C's evaluation order
@@ -73,8 +87,8 @@ theorem:
       returns the c_init status (DIANA_ERR_ARG or DIANA_CONTINUE), writes x0, dx = 0, tol,
       iter = 0 and max_iter on DIANA_CONTINUE, and leaves *s unchanged on DIANA_ERR_ARG. The NULL
       path is NEWTON-C1.
-    rocq: Diana.VST.Newton.body_diana_newton_init
-  - id: NEWTON-C4
+    rocq: Diana.VST.NewtonInit.body_diana_newton_init
+  - id: NEWTON-C6
     layer: C
     informal: >
       diana_newton_step computes c_step (VST, AArch64 macOS Clight AST): for s pointing to a
@@ -82,14 +96,14 @@ theorem:
       correction or iterate, DIANA_ERR_SINGULAR for a zero dfx, DIANA_OK for a zero fx, the
       tolerance and the stagnation stops, DIANA_ERR_MAXITER, DIANA_CONTINUE) and writes the
       c_step state, which is *s unchanged on DIANA_ERR_ARG and DIANA_ERR_SINGULAR and otherwise
-      has iter incremented as unsigned C arithmetic. The NULL path is NEWTON-C1.
-    rocq: Diana.VST.Newton.body_diana_newton_step
-  - id: NEWTON-C5
+      has iter incremented as unsigned C arithmetic. The NULL path is NEWTON-C2.
+    rocq: Diana.VST.NewtonStep.body_diana_newton_step
+  - id: NEWTON-C7
     layer: C
     informal: >
       c_step agrees with the binary64 model: when fx and dfx are finite and non-zero and the
       correction and the iterate are finite, the state c_step writes has x = fstep x fx dfx and
-      dx = fdiv fx dfx at CompCert's NaN-payload functions, so by NEWTON-C4 the iterate
+      dx = fdiv fx dfx at CompCert's NaN-payload functions, so by NEWTON-C6 the iterate
       diana_newton_step writes is the layer-B fstep and NEWTON-B2/B3 apply to it.
     rocq: Diana.VST.Newton.c_step_fstep
 ---
@@ -132,18 +146,21 @@ in binary64 round-to-nearest-even, and checks each for finiteness.
   and `ulp(y) ≤ ulp(round(y))` (`ulp_le_ulp_round`: by `ulp_round`, either the ulps agree or
   `round(y)` is the power of two above `y`, whose ulp is at least `ulp(y)` since `fexp` is
   monotone). Proof: `stagnation`.
-- **C1**: the `/*@ ... */` annotations in `src/newton.c`. The value of `x′` is not an ACSL
+- **C1 to C3**: the `/*@ ... */` annotations in `src/newton_init.c`, `src/newton_step.c` and
+  `src/newton_result.c`, one WP run per file, with the predicates `newton_state` and
+  `newton_unchanged` shared from `src/newton_acsl.h`. The value of `x′` is not an ACSL
   post-condition (see "Why the functional contract is not in ACSL" in `spec/trapezoidal.md`); it
-  is the VST theorem C5 through C4. `|dx| ≤ tol` and `x′ = x` are post-conditions because WP
+  is the VST theorem C7 through C6. `|dx| ≤ tol` and `x′ = x` are post-conditions because WP
   decides the C comparisons on finite doubles exactly, with `diana_fp_abs` specified by `\abs`.
-- **C2 to C4**: as BISECTION-C5 to C7: `c_init` and `c_step` are total models over `cstate` (the
+- **C4 to C6**: as BISECTION-C7 to C9: `c_init` and `c_step` are total models over `cstate` (the
   five fields with `iter` and `max_iter` as CompCert `int`) in the C's evaluation order, the
   funspecs take the state as `data_at` of a concrete field tuple, each short-circuit temporary is
   joined by `forward_if` on its value, and before each `return` the postcondition is rewritten to
   the concrete status and state (`init_post`, `step_post`). `init` keeps the caller's contents
-  until the error exits have passed. The `src/fp.h` helpers are re-specified for this AST with the
-  lemmas of `verification/rocq/theory/VST/Bisection.v`.
-- **C5**: CompCert's `Float.div` and `Float.sub` are Flocq's `Bdiv` and `Bminus` at
+  until the error exits have passed. The `src/fp.h` helpers are re-specified for each AST that
+  calls them (`diana_fp_finite` for `init` and `step`, `diana_fp_abs` for `step`) with the lemmas
+  of `verification/rocq/theory/VST/Bisection.v`.
+- **C7**: CompCert's `Float.div` and `Float.sub` are Flocq's `Bdiv` and `Bminus` at
   `Float.binop_nan`, so after the error exits `c_step`'s `x` and `dx` are `fstep` and `fdiv` of
   `Diana.Float.Newton` by unfolding.
 
@@ -157,8 +174,10 @@ in binary64 round-to-nearest-even, and checks each for finiteness.
   `Bdiv` in `mode_NE`, parameterised by the NaN-payload functions; `fstep x fx dfx` is
   `fsub x (fdiv fx dfx)`, the C's two operations in order. `finite_result` and `forward_error`
   are about `fstep`, `stagnation` about `fsub` with an arbitrary finite correction.
-- **Layer C, VST** (`verification/rocq/theory/VST/Newton.v`, against the Clight AST
-  `verification/clight/newton_aarch64_macos.v`, CompCert target AArch64 macOS): `cstate` is
+- **Layer C, VST** (one file per source, `verification/rocq/theory/VST/NewtonInit.v`,
+  `NewtonStep.v` and `NewtonResult.v`, against the Clight ASTs
+  `verification/clight/newton_<function>_aarch64_macos.v`, CompCert target AArch64 macOS; the
+  models are in `VST/Newton.v`): `cstate` is
   `diana_newton_state`; `c_init` and `c_step` use CompCert's `Float.cmp`, `Float.div`,
   `Float.sub`, the conditional negation `c_abs` of `Diana.VST.Bisection` for `diana_fp_abs`,
   unsigned `iter + 1u`, and `iter >= max_iter` as `negb (Int.ltu iter max_iter)`.
@@ -183,8 +202,10 @@ in binary64 round-to-nearest-even, and checks each for finiteness.
 | NEWTON-B1 | – | proved | – |
 | NEWTON-B2 | – | proved | – |
 | NEWTON-B3 | – | proved | – |
-| NEWTON-C1 | – | – | 103/103 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
-| NEWTON-C2 | – | proved | – |
-| NEWTON-C3 | – | proved | – |
+| NEWTON-C1 | – | – | 36/36 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
+| NEWTON-C2 | – | – | 66/66 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
+| NEWTON-C3 | – | – | 13/13 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
 | NEWTON-C4 | – | proved | – |
 | NEWTON-C5 | – | proved | – |
+| NEWTON-C6 | – | proved | – |
+| NEWTON-C7 | – | proved | – |
