@@ -5,8 +5,8 @@
 ACSL arithmetic on doubles is exact real arithmetic; rounded values are written with casts. The
 bound `DBL_MAX/2 = (2^53 - 1) * 2^970` appears twice in the private header `src/bisection_mid.h`:
 `DIANA_BISECTION_MAX` for C (an exact power-of-two scaling) and `DIANA_BISECTION_MAX_ACSL` as an
-exact integer expression, because WP (Frama-C 33.0) rejects hexadecimal float literals in lemmas and
-mistranslates them in predicates.
+exact integer expression, because WP (Frama-C 32.1, and 33.0 too) rejects hexadecimal float
+literals in lemmas and mistranslates them in predicates.
 
 ## Skip list
 

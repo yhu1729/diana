@@ -24,7 +24,7 @@ inside one Rocq development with no translation step.
 - The Rocq kernel, Coquelicot, Flocq, VST, and CompCert's Clight semantics; axioms limited to
   classical reals and functional extensionality (checked the same way), plus any VST axiom listed in
   `script/axiom_allow.yaml`.
-- Frama-C 33.0 / Why3 1.8.2 / Alt-Ergo 2.6.4 as a proof oracle for layer C-WP. WP assumes the
+- Frama-C 32.1 / Why3 1.8.2 / Alt-Ergo 2.6.4 as a proof oracle for layer C-WP. WP assumes the
   contract of a function it sees only declared; `script/run_frama_c.sh` fails unless each such
   called function is listed in `SKIP`, and each `SKIP` contract is a layer-B theorem (currently
   only `diana_bisection_mid`, discharged by BISECTION-B1; see
@@ -47,7 +47,7 @@ inside one Rocq development with no translation step.
 | A, Lean | `verify_lean`: build and strict axiom gate (`--prover lean`) | `lake build`, `check_spec.py --run --strict` |
 | A, Rocq | `verify_rocq`: compilation only | `make`, `make check`, `check_spec.py --run --strict` |
 | B (Flocq), C-VST, Clight AST | – | `clightgen`, `make`, `make check`, `check_spec.py --run --strict` |
-| C-WP | `verify_frama_c` (Frama-C 32.1) | `script/run_frama_c.sh` (Frama-C 33.0) |
+| C-WP | `verify_frama_c` (Frama-C 32.1) | `script/run_frama_c.sh` (Frama-C 32.1) |
 | `ccomp` build versus gcc/clang build | – (ctest `compiler` only runs the driver) | `script/compare_compiler.sh` |
 
 A green pipeline therefore does not establish layers B and C-VST, and the CI Frama-C result assumes
