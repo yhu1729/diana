@@ -6,8 +6,9 @@ src/euler_step_unchecked.c 19
 src/newton_init.c 36
 src/newton_result.c 13
 src/newton_step.c 66
-src/rk4.c 98
+src/rk4_stage.c 53
 src/rk4_stage_unchecked.c 21
+src/rk4_step.c 57
 src/rk4_step_unchecked.c 22
 src/simpson.c 58
 src/trapezoidal.c 41
