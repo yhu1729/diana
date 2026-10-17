@@ -36,7 +36,7 @@ Fixpoint iterate (Phi : R -> (nat -> R) -> nat -> R) (t0 h : R) (y0 : nat -> R) 
                      + h * Phi (t0 + INR k' * h) (iterate Phi t0 h y0 k') i
   end.
 
-Theorem one_step_error (d : nat) (Phi : R -> (nat -> R) -> nat -> R) (Y : R -> nat -> R)
+Theorem one_step_pow (d : nat) (Phi : R -> (nat -> R) -> nat -> R) (Y : R -> nat -> R)
   (t0 h L tau : R) (N : nat) :
   0 < h -> 0 < L -> 0 <= tau ->
   (forall k, (k < N)%nat -> forall y z,
@@ -47,7 +47,7 @@ Theorem one_step_error (d : nat) (Phi : R -> (nat -> R) -> nat -> R) (Y : R -> n
                        - h * Phi (t0 + INR k * h) (Y (t0 + INR k * h)) i) <= tau) ->
   forall k, (k <= N)%nat ->
   vnorm d (fun i => iterate Phi t0 h (Y t0) k i - Y (t0 + INR k * h) i)
-    <= tau / (h * L) * (exp (L * (INR k * h)) - 1).
+    <= tau * ((1 + h * L) ^ k - 1) / (h * L).
 Proof.
   intros Hh HL Ht Hlip Htr.
   set (a := fun k => vnorm d (fun i => iterate Phi t0 h (Y t0) k i - Y (t0 + INR k * h) i)).
@@ -85,10 +85,28 @@ Proof.
     fold ek. eapply Rle_trans; [exact Hbound | right; ring]. }
   intros k Hk.
   assert (Hc : 0 < h * L) by nra.
-  pose proof (gronwall_pow a (h * L) tau N Hc Ht H0 Hs k Hk) as Hg.
+  exact (gronwall_pow a (h * L) tau N Hc Ht H0 Hs k Hk).
+Qed.
+
+Theorem one_step_error (d : nat) (Phi : R -> (nat -> R) -> nat -> R) (Y : R -> nat -> R)
+  (t0 h L tau : R) (N : nat) :
+  0 < h -> 0 < L -> 0 <= tau ->
+  (forall k, (k < N)%nat -> forall y z,
+     vnorm d (fun i => Phi (t0 + INR k * h) y i - Phi (t0 + INR k * h) z i)
+       <= L * vnorm d (fun i => y i - z i)) ->
+  (forall k, (k < N)%nat ->
+     vnorm d (fun i => Y (t0 + INR (S k) * h) i - Y (t0 + INR k * h) i
+                       - h * Phi (t0 + INR k * h) (Y (t0 + INR k * h)) i) <= tau) ->
+  forall k, (k <= N)%nat ->
+  vnorm d (fun i => iterate Phi t0 h (Y t0) k i - Y (t0 + INR k * h) i)
+    <= tau / (h * L) * (exp (L * (INR k * h)) - 1).
+Proof.
+  intros Hh HL Ht Hlip Htr k Hk.
+  assert (Hc : 0 < h * L) by nra.
+  pose proof (one_step_pow d Phi Y t0 h L tau N Hh HL Ht Hlip Htr k Hk) as Hg.
   pose proof (pow_le_exp (h * L) k ltac:(lra)) as Hp.
   replace (INR k * (h * L)) with (L * (INR k * h)) in Hp by ring.
-  fold (a k). eapply Rle_trans; [exact Hg |].
+  eapply Rle_trans; [exact Hg |].
   replace (tau * ((1 + h * L) ^ k - 1) / (h * L))
     with (tau / (h * L) * ((1 + h * L) ^ k - 1)) by (field; lra).
   apply Rmult_le_compat_l; [apply Rmult_le_pos; [lra | left; apply Rinv_0_lt_compat; lra] | lra].
