@@ -51,8 +51,8 @@ theorem:
       diana_rk4_stage_unchecked computes the binary64 model unconditionally (VST, AArch64 macOS
       Clight AST): for y and k pointing to d ≥ 1 readable doubles, y_out to d writable doubles,
       the three disjoint, and 2 ≤ stage ≤ 4, it returns DIANA_OK and writes c_stage stage h ys ks,
-      finite or not. c_stage is the C-order model of RK4-C2, equal to the Flocq model frk4_stage
-      (RK4-C4), so RK4-B1 to B3 hold for every finite component and RK4-UNCHECKED-B1 for every
+      finite or not. c_stage is the C-order model of RK4-C3, equal to the Flocq model frk4_stage
+      (RK4-C5), so RK4-B1 to B3 hold for every finite component and RK4-UNCHECKED-B1 for every
       component. The NULL, d = 0 and out-of-range stage paths are RK4-UNCHECKED-C1.
     rocq: Diana.VST.RK4StageUnchecked.body_diana_rk4_stage_unchecked
   - id: RK4-UNCHECKED-C4
@@ -61,8 +61,8 @@ theorem:
       diana_rk4_step_unchecked computes the binary64 model unconditionally (VST, AArch64 macOS
       Clight AST): for y and the four slopes pointing to d ≥ 1 readable doubles and y_out to d
       writable doubles, the six disjoint, it returns DIANA_OK and writes
-      c_rk4 h ys k₁s k₂s k₃s k₄s, finite or not. c_rk4 is the C-order model of RK4-C3, equal to
-      the Flocq model frk4_step (RK4-C5), so RK4-B4 and B5 hold for every finite component and
+      c_rk4 h ys k₁s k₂s k₃s k₄s, finite or not. c_rk4 is the C-order model of RK4-C4, equal to
+      the Flocq model frk4_step (RK4-C6), so RK4-B4 and B5 hold for every finite component and
       RK4-UNCHECKED-B2 for every component. The NULL and d = 0 paths are RK4-UNCHECKED-C2.
     rocq: Diana.VST.RK4StepUnchecked.body_diana_rk4_step_unchecked
 ---
@@ -82,8 +82,8 @@ stage 4 and `c = 0.5·h` otherwise, and the step needs none. Then one pass compu
 in the operation order of the checked function, `fl(y[i] + fl(c·k[i]))` or
 `fl(y[i] + fl(fl(h·s)/6))` with `s = (k₁[i] + k₄[i]) + 2·(k₂[i] + k₃[i])`, writes it, NaN and ±∞
 included, and returns `DIANA_OK`. Neither function calls anything. Where the checked function
-succeeds, the two write the same bits (both write `c_stage` or `c_rk4`: RK4-C2 and
-RK4-UNCHECKED-C3, RK4-C3 and RK4-UNCHECKED-C4), and the checked function fails exactly when some
+succeeds, the two write the same bits (both write `c_stage` or `c_rk4`: RK4-C3 and
+RK4-UNCHECKED-C3, RK4-C4 and RK4-UNCHECKED-C4), and the checked function fails exactly when some
 component written here is not finite. Which NaN a component holds when both operands of an
 operation are NaN is the IEEE choice of the target, which the VST models fix to CompCert's
 `Float` operations; the compiler comparison found no difference on AArch64 macOS.
@@ -106,11 +106,11 @@ operation are NaN is the IEEE choice of the target, which the VST models fix to 
   writes anything, so the status equivalence and the error post-condition follow from the
   control flow; the loop invariant is the index bound.
 - **C3**: five argument checks, the branch on `stage == 4` that sets `c` to `c_coef stage h`,
-  then the write loop of RK4-C2 for `L = c_stage stage h ys ks`, with the invariant
+  then the write loop of RK4-C3 for `L = c_stage stage h ys ks`, with the invariant
   `y_out = map Vfloat (sublist 0 i L) ++ sublist i d os` and three statements per component;
   `Znth_c_euler` names the stored value. Proof: `body_diana_rk4_stage_unchecked` in
   `verification/rocq/theory/VST/RK4StageUnchecked.v`.
-- **C4**: six argument checks, then the write loop of RK4-C3 for `L = c_rk4 h ys k₁s k₂s k₃s k₄s`
+- **C4**: six argument checks, then the write loop of RK4-C4 for `L = c_rk4 h ys k₁s k₂s k₃s k₄s`
   with seven statements per component; `Znth_c_rk4` names the stored value. Proof:
   `body_diana_rk4_step_unchecked` in `verification/rocq/theory/VST/RK4StepUnchecked.v`.
 
@@ -121,7 +121,7 @@ operation are NaN is the IEEE choice of the target, which the VST models fix to 
 - **Layer C, VST** (`verification/rocq/theory/VST/RK4StageUnchecked.v` and `RK4StepUnchecked.v`,
   against the Clight ASTs `verification/clight/rk4_stage_unchecked_aarch64_macos.v` and
   `rk4_step_unchecked_aarch64_macos.v`, CompCert target AArch64 macOS): `c_coef`, `c_stage` and
-  `c_rk4` of `Diana.VST.RK4`, which RK4-C4 and C5 identify with `frk4_stage` and `frk4_step`.
+  `c_rk4` of `Diana.VST.RK4`, which RK4-C5 and C6 identify with `frk4_stage` and `frk4_step`.
   Each funspec holds separate `data_at` for every array, so overlapping inputs, which the C
   allows because they are only read, are outside the theorems; WP (C1, C2) covers them for
   memory safety.
