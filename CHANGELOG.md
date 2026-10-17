@@ -6,6 +6,21 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+#### C library
+
+- Classical fourth-order Runge–Kutta step in reverse communication, `diana_rk4_stage` and
+  `diana_rk4_step` in `diana/rk4.h`. The caller evaluates the four slopes; `diana_rk4_stage(y, k,
+  d, h, stage, y_out)` writes the point of stage 2, 3 or 4 (`y + (h/2) k` for stages 2 and 3,
+  `y + h k` for stage 4, the coefficient computed once), and `diana_rk4_step(y, k1, k2, k3, k4, d,
+  h, y_out)` writes `y + h ((k1 + k4) + 2 (k2 + k3)) / 6` in that operation order. Both check
+  every component before writing any, so `y_out` is untouched on `DIANA_ERR_ARG` (a NULL pointer,
+  `d == 0`, a stage outside 2 to 4, a non-finite input or an overflow in any operation). Frama-C
+  WP proves the ACSL contracts (98 goals, RK4-C1, `spec/rk4.md`). `test/c/test_rk4.c` covers both
+  functions at 100% line and branch coverage, and the compiler-comparison corpus has 544 RK4
+  cases (1672 in all); every gcc and clang build matches CompCert bitwise.
+
 ## [0.3.0] - 2026-10-16
 
 ### Added
