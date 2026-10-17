@@ -1,6 +1,6 @@
 ---
 method: euler
-kernel: src/euler.c
+kernel: src/euler_step.c
 model: >
   euler y f h : ℝ^d with y_out_i = y_i + h·f_i for i = 0, …, d − 1, where f_i is the caller's
   F(t, y)_i. The binary64 model evaluates each component as fl(y_i + fl(h·f_i)), the product and
@@ -38,12 +38,12 @@ theorem:
   - id: EULER-C1
     layer: C
     informal: >
-      ACSL contract in src/euler.c, Frama-C WP float model with RTE: memory safety (only
+      ACSL contract in src/euler_step.c, Frama-C WP float model with RTE: memory safety (only
       y[0 .. d−1] and f[0 .. d−1] are read, only y_out[0 .. d−1] is written, y_out separate from
       both), no UB, termination of both loops, DIANA_OK only for non-NULL pointers with d ≥ 1,
       and y_out untouched on DIANA_ERR_ARG. No assumed contract; that y_out is finite on DIANA_OK
       is left to VST.
-    acsl: src/euler.c
+    acsl: src/euler_step.c
   - id: EULER-C2
     layer: C
     informal: >
@@ -92,7 +92,7 @@ without the check, `diana_euler_step_unchecked`, has its own spec, `spec/euler_u
   the normal range (`add_error`): `r = (y + m)·(1 + e₂)`. Then
   `r − (y + h·f) = (m − h·f)·(1 + e₂) + e₂·(y + h·f)`. The bound is attained up to rounding: on
   random inputs with subnormal products, the error reaches 99.995 % of it. Proof: `forward_error`.
-- **C1**: the `/*@ ... */` annotations in `src/euler.c`. Every early return happens before the
+- **C1**: the `/*@ ... */` annotations in `src/euler_step.c`. Every early return happens before the
   second loop, and the only write is `y_out[i]` in that loop, so `assigns y_out[0 .. d − 1]` and
   the error post-condition follow from the control flow; the loop invariants are only the index
   bounds.
@@ -135,7 +135,7 @@ finiteness and the exact values together.
   component, because the kernel's components are independent; a max-norm form follows by taking
   the maximum over `i`.
 - **Layer C, VST** (`verification/rocq/theory/VST/Euler.v`, against the Clight AST
-  `verification/clight/euler_aarch64_macos.v`, CompCert target AArch64 macOS): `c_euler h ys fs`
+  `verification/clight/euler_step_aarch64_macos.v`, CompCert target AArch64 macOS): `c_euler h ys fs`
   is the C computation with CompCert's `Float.add`/`Float.mul`, componentwise over the two
   arrays, and `c_euler_model` identifies it with `feuler`. The funspec holds three separate
   `data_at`, so overlapping `y` and `f`, which the C allows because both are only read, is
