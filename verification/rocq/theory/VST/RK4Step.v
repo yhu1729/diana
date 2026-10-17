@@ -2,6 +2,7 @@ From VST.floyd Require Import proofauto.
 From Diana.Clight Require Import rk4_step_aarch64_macos.
 From Diana.VST Require Bisection Euler.
 From Diana.VST Require Import RK4.
+From Diana.VST Require Import Tactic.
 
 #[export] Instance CompSpecs : compspecs. make_compspecs prog. Defined.
 Definition Vprog : varspecs. mk_varspecs prog. Defined.
@@ -73,70 +74,22 @@ Proof.
   assert_PROP (isptr y /\ isptr k1 /\ isptr k2 /\ isptr k3 /\ isptr k4 /\ isptr out)
     as Hptr by entailer!.
   destruct Hptr as [Hy [Hk1 [Hk2 [Hk3 [Hk4 Hout]]]]].
-  forward_if (PROP () LOCAL (temp _t'1 (Vint Int.zero); temp _y y; temp _k1 k1; temp _k2 k2;
-      temp _k3 k3; temp _k4 k4; temp _d (Vlong (Int64.repr (Zlength ys))); temp _h (Vfloat h);
-      temp _y_out out)
-    SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
-         data_at sh1 (tarray tdouble (Zlength ys)) (map Vfloat k1s) k1;
-         data_at sh2 (tarray tdouble (Zlength ys)) (map Vfloat k2s) k2;
-         data_at sh3 (tarray tdouble (Zlength ys)) (map Vfloat k3s) k3;
-         data_at sh4 (tarray tdouble (Zlength ys)) (map Vfloat k4s) k4;
-         data_at sho (tarray tdouble (Zlength ys)) os out)).
+  join_zero _t'1.
   { subst y. contradiction. }
   { forward. entailer!. destruct k1; try contradiction. reflexivity. }
-  forward_if (PROP () LOCAL (temp _t'2 (Vint Int.zero); temp _y y; temp _k1 k1; temp _k2 k2;
-      temp _k3 k3; temp _k4 k4; temp _d (Vlong (Int64.repr (Zlength ys))); temp _h (Vfloat h);
-      temp _y_out out)
-    SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
-         data_at sh1 (tarray tdouble (Zlength ys)) (map Vfloat k1s) k1;
-         data_at sh2 (tarray tdouble (Zlength ys)) (map Vfloat k2s) k2;
-         data_at sh3 (tarray tdouble (Zlength ys)) (map Vfloat k3s) k3;
-         data_at sh4 (tarray tdouble (Zlength ys)) (map Vfloat k4s) k4;
-         data_at sho (tarray tdouble (Zlength ys)) os out)).
+  join_zero _t'2.
   { contradiction. }
   { forward. entailer!. destruct k2; try contradiction. reflexivity. }
-  forward_if (PROP () LOCAL (temp _t'3 (Vint Int.zero); temp _y y; temp _k1 k1; temp _k2 k2;
-      temp _k3 k3; temp _k4 k4; temp _d (Vlong (Int64.repr (Zlength ys))); temp _h (Vfloat h);
-      temp _y_out out)
-    SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
-         data_at sh1 (tarray tdouble (Zlength ys)) (map Vfloat k1s) k1;
-         data_at sh2 (tarray tdouble (Zlength ys)) (map Vfloat k2s) k2;
-         data_at sh3 (tarray tdouble (Zlength ys)) (map Vfloat k3s) k3;
-         data_at sh4 (tarray tdouble (Zlength ys)) (map Vfloat k4s) k4;
-         data_at sho (tarray tdouble (Zlength ys)) os out)).
+  join_zero _t'3.
   { contradiction. }
   { forward. entailer!. destruct k3; try contradiction. reflexivity. }
-  forward_if (PROP () LOCAL (temp _t'4 (Vint Int.zero); temp _y y; temp _k1 k1; temp _k2 k2;
-      temp _k3 k3; temp _k4 k4; temp _d (Vlong (Int64.repr (Zlength ys))); temp _h (Vfloat h);
-      temp _y_out out)
-    SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
-         data_at sh1 (tarray tdouble (Zlength ys)) (map Vfloat k1s) k1;
-         data_at sh2 (tarray tdouble (Zlength ys)) (map Vfloat k2s) k2;
-         data_at sh3 (tarray tdouble (Zlength ys)) (map Vfloat k3s) k3;
-         data_at sh4 (tarray tdouble (Zlength ys)) (map Vfloat k4s) k4;
-         data_at sho (tarray tdouble (Zlength ys)) os out)).
+  join_zero _t'4.
   { contradiction. }
   { forward. entailer!. destruct k4; try contradiction. reflexivity. }
-  forward_if (PROP () LOCAL (temp _t'5 (Vint Int.zero); temp _y y; temp _k1 k1; temp _k2 k2;
-      temp _k3 k3; temp _k4 k4; temp _d (Vlong (Int64.repr (Zlength ys))); temp _h (Vfloat h);
-      temp _y_out out)
-    SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
-         data_at sh1 (tarray tdouble (Zlength ys)) (map Vfloat k1s) k1;
-         data_at sh2 (tarray tdouble (Zlength ys)) (map Vfloat k2s) k2;
-         data_at sh3 (tarray tdouble (Zlength ys)) (map Vfloat k3s) k3;
-         data_at sh4 (tarray tdouble (Zlength ys)) (map Vfloat k4s) k4;
-         data_at sho (tarray tdouble (Zlength ys)) os out)).
+  join_zero _t'5.
   { contradiction. }
   { forward. entailer!. destruct out; try contradiction. reflexivity. }
-  forward_if (PROP () LOCAL (temp _t'6 (Vint Int.zero); temp _y y; temp _k1 k1; temp _k2 k2;
-      temp _k3 k3; temp _k4 k4; temp _d (Vlong (Int64.repr (Zlength ys))); temp _h (Vfloat h);
-      temp _y_out out)
-    SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
-         data_at sh1 (tarray tdouble (Zlength ys)) (map Vfloat k1s) k1;
-         data_at sh2 (tarray tdouble (Zlength ys)) (map Vfloat k2s) k2;
-         data_at sh3 (tarray tdouble (Zlength ys)) (map Vfloat k3s) k3;
-         data_at sh4 (tarray tdouble (Zlength ys)) (map Vfloat k4s) k4;
-         data_at sho (tarray tdouble (Zlength ys)) os out)).
+  join_zero _t'6.
   { contradiction. }
   { forward. entailer!. destruct (zeq (Zlength ys) 0); [lia | reflexivity]. }
   forward_if; try contradiction.
