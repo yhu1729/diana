@@ -46,17 +46,17 @@ root 1.4142135623728791, width 9.09e-13, 41 steps
 | `iter` | steps performed so far |
 | `max_iter` | step limit |
 
-Invariant kept by every call (Frama-C WP, BISECTION-C2 in `spec/bisection.md`): `a <= b`,
+Invariant kept by every call (Frama-C WP, BISECTION-C2 to C4 in `spec/bisection.md`): `a <= b`,
 `|a|, |b| <= DBL_MAX/2`, `fa` and `fb` finite, `tol >= 0`, and either `fa` and `fb` of strictly
 opposite sign or `a == b` with `fa == fb == 0`; whenever the last status was `DIANA_CONTINUE`,
 `a < x < b`. The kernel sets `x` to the binary64 midpoint `0.5 * (a + b)`. VST proves that every
 function computes its Flocq model: the midpoint helper (BISECTION-C1), `init` and `step` with
-every status and every field of the state (BISECTION-C6/C7; the bracket `step` writes is the
-layer-B `fstep`, BISECTION-C8), and `diana_bisection_result` (BISECTION-C5); the state `init`
+every status and every field of the state (BISECTION-C8/C9; the bracket `step` writes is the
+layer-B `fstep`, BISECTION-C10), and `diana_bisection_result` (BISECTION-C7); the state `init`
 accepts and every state reached through `DIANA_CONTINUE` satisfy the layer-B invariant
-(BISECTION-C9/C10). A rejected call leaves the state unchanged (BISECTION-C2, and BISECTION-C6/C7
-for a non-NULL `s`): `init` returning `DIANA_ERR_ARG` or `DIANA_ERR_BRACKET`, and `step` returning
-`DIANA_ERR_ARG`, write nothing to `*s`.
+(BISECTION-C11/C12). A rejected call leaves the state unchanged (BISECTION-C2/C3, and
+BISECTION-C8/C9 for a non-NULL `s`): `init` returning `DIANA_ERR_ARG` or `DIANA_ERR_BRACKET`,
+and `step` returning `DIANA_ERR_ARG`, write nothing to `*s`.
 
 - `diana_bisection_init(s, a, b, fa, fb, tol, max_iter)` initialises the state from the bracket
   `[a, b]` and `fa = f(a)`, `fb = f(b)`. Returns `DIANA_CONTINUE` with `s->x` set to the first
@@ -74,7 +74,7 @@ for a non-NULL `s`): `init` returning `DIANA_ERR_ARG` or `DIANA_ERR_BRACKET`, an
   other output.
 
 The caller sees every point before `f` is evaluated there, so it can log, evaluate `f` elsewhere,
-or stop early. A step that returns `DIANA_ERR_MAXITER` still keeps the bracket (BISECTION-C2), so
+or stop early. A step that returns `DIANA_ERR_MAXITER` still keeps the bracket (BISECTION-C3), so
 `diana_bisection_result` reports the estimate reached so far:
 
 ```c
