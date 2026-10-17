@@ -139,7 +139,7 @@ doc/                  README index; api/, development/, test/, verification/ (tr
 - Frama-C: `script/verify_frama_c.sh` (runs `script/run_frama_c.sh` and `script/check_frama_c.sh`
   for every `<source> <goal-count>` row of `verification/frama-c/expectation.txt`; all goals must
   prove and each count must match; `script/dev.sh verify` and CI both call it)
-- Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/<kernel>_aarch64_macos.v src/<kernel>.c` (today `bisection`, `euler`, `newton`, `simpson` and `trapezoidal`) **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
+- Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/<kernel>_aarch64_macos.v src/<kernel>.c` (today `bisection`, `euler`, `newton`, `rk4`, `simpson` and `trapezoidal`) **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
 - Compiler comparison: `opam exec -- script/compare_compiler.sh` builds `src/*.c` with the corpus
   driver `test/c/test_compiler.c` once with `ccomp` and with each gcc/clang found
   (`DIANA_COMPARE_CC` to choose) at `-O0`/`-O2`/`-O3`, and fails on any byte of difference in the
@@ -165,4 +165,5 @@ Unreleased (toward 1.0): the classical Runge–Kutta step RK4 in reverse communi
 `diana_rk4_stage` (the point of stage 2, 3 or 4: `y + (h/2)·k` or `y + h·k`) and
 `diana_rk4_step` (`y + h·((k₁ + k₄) + 2·(k₂ + k₃))/6`), both two-pass like Euler (C tests at 100%
 line and branch coverage); WP proves the ACSL contracts (98 goals, RK4-C1, `spec/rk4.md`), and
-Flocq its layer B (RK4-B1 to B5: finiteness, the `fl(h/2)` coefficient, stage and step error).
+Flocq its layer B (RK4-B1 to B5: finiteness, the `fl(h/2)` coefficient, stage and step error),
+and VST both functions against the Flocq models (RK4-C2 to C5, `rk4_aarch64_macos.v`).
