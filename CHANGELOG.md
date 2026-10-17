@@ -35,8 +35,9 @@ All notable changes to this project are documented here. The format follows
   ACSL contract (EULER-UNCHECKED-C1, 19 goals) and VST that it writes the binary64 model
   unconditionally (EULER-UNCHECKED-C2). `test/c/test_euler.c` covers it at 100% line and branch
   coverage, and the compiler corpus runs both steps on every Euler case, every gcc and clang
-  build matching CompCert bitwise, NaN results included. On an Apple Silicon Mac the unchecked
-  kernel is 2.4 to 4.9 times faster (about 0.1 to 0.3 ns per component against 0.44 to 0.67).
+  build matching CompCert bitwise, NaN results included. On an Apple M4 Mac the unchecked kernel
+  is 2.8 to 4.8 times faster (0.10 to 0.19 ns per component against 0.44 to 0.52,
+  `script/benchmark.sh`).
 - `diana_rk4_stage_unchecked(y, k, d, h, stage, y_out)` and
   `diana_rk4_step_unchecked(y, k1, k2, k3, k4, d, h, y_out)` in `diana/rk4.h`, the opt-in RK4
   stage and step without the finiteness check, each in its own source file
@@ -48,9 +49,10 @@ All notable changes to this project are documented here. The format follows
   `spec/rk4_unchecked.md`: Frama-C WP proves the ACSL contracts (RK4-UNCHECKED-C1 and C2, 21 and
   22 goals) and VST that each writes the binary64 model unconditionally (RK4-UNCHECKED-C3 and
   C4). `test/c/test_rk4.c` covers both at 100% line and branch coverage, and the compiler corpus
-  runs the checked and unchecked functions on every RK4 case (544 more cases). On an Apple Silicon
-  Mac the unchecked stage is 2.8 to 4.8 times faster (about 0.10 to 0.16 ns per component against
-  0.44 to 0.52) and the unchecked step 2.2 to 4.5 times (0.25 to 0.41 ns against 0.86 to 1.23).
+  runs the checked and unchecked functions on every RK4 case (544 more cases). On an Apple M4 Mac
+  the unchecked stage is 2.9 to 4.8 times faster (0.10 to 0.17 ns per component against 0.44 to
+  0.56) and the unchecked step 2.6 to 4.5 times (0.25 to 0.37 ns against 0.86 to 1.26,
+  `script/benchmark.sh`).
 
 #### Python binding
 
@@ -103,7 +105,22 @@ All notable changes to this project are documented here. The format follows
 - The spec gate accepts a method name with `_`, written `-` in its theorem IDs
   (`EULER-UNCHECKED-C1` in `spec/euler_unchecked.md`), and a list of source files as `kernel`.
 
+#### Tests and tooling
+
+- `script/benchmark.sh [cc...]` builds the library in Release with each compiler and runs
+  `test/benchmark/unchecked.c`, which times the checked and unchecked Euler step, RK4 stage and
+  RK4 step, alone and inside a whole step with the right-hand side `y' = -y/2`, for `d` = 64, 1024
+  and 16384. `doc/development/benchmark.md` records the run behind the figures in the API pages
+  and in this file.
+
 ### Changed
+
+- `script/run_frama_c.sh` fails when WP would assume the contract of a called function that has
+  no body and is not in `SKIP` (the "Specified-only functions" of Frama-C's metrics plugin), so
+  the skip list is again the enforced trust boundary between WP and Flocq now that
+  `diana_bisection_mid` is only declared in the files that call it.
+- The VST proofs of the array kernels join their short-circuit argument checks with the tactic
+  `join_zero` of the new `Diana.VST.Tactic` instead of spelling out each intermediate assertion.
 
 - One function per source file for every verified kernel: `src/bisection.c` is split into
   `src/bisection_mid.c`, `src/bisection_init.c`, `src/bisection_step.c` and
@@ -142,18 +159,21 @@ All notable changes to this project are documented here. The format follows
 - The verified Euler step `diana_euler_step` moves from `src/euler.c` to `src/euler_step.c`, named
   after its function, with its Frama-C row (49 goals), its Clight AST
   `verification/clight/euler_step_aarch64_macos.v` (only the recorded source path changes) and
-  `spec/euler.md` following; `VST/Euler.v` proves it against the renamed AST.
+  `spec/euler.md` following; `VST/EulerStep.v` proves it against the renamed AST (EULER-C2 is
+  `Diana.VST.EulerStep.body_diana_euler_step`), and `VST/Euler.v` keeps only the AST-free model
+  `c_euler` and its list lemmas, which the RK4 and unchecked proofs import.
 
 - `src/status.c` is split into `src/status_str.c` (`diana_status_str`) and `src/version.c`
   (`diana_version`), and the CPython extension into one file per function: each method or module
   function becomes an external `diana_py_<name>` in `python/ext/<name>.c` (`bisection_step.c`,
-  `rk4_stage.c`, `raise.c`, `get_samples.c`, …), each kernel's method and type tables move with its
-  registration function to `python/ext/<kernel>_exec.c`, the object structs to
-  `python/ext/bisection_object.h` and `newton_object.h`, and the buffer overlap test to the
-  `static inline` `diana_py_overlap` in `module.h`. Messages, docstrings and behaviour are
-  unchanged, and so is the extension's line and branch coverage. Every implementation file in
-  `src/` and `python/ext/` now defines one function, `static inline` helpers aside; `CLAUDE.md`
-  and `CONTRIBUTING.md` record this as a convention, with the tests exempt.
+  `rk4_stage.c`, `raise.c`, `get_array.c`, …; the buffer check `diana_py_get_samples` is renamed
+  `diana_py_get_array`), each kernel's method and type tables move with its registration function to
+  `python/ext/<kernel>_exec.c`, the object structs to `python/ext/bisection_object.h` and
+  `newton_object.h`, and the buffer overlap test to the `static inline` `diana_py_overlap` in
+  `module.h`. Messages, docstrings and behaviour are unchanged, and so is the extension's line and
+  branch coverage. Every implementation file in `src/` and `python/ext/` now defines one function,
+  `static inline` helpers aside; `CLAUDE.md` and `CONTRIBUTING.md` record this as a convention, with
+  the tests exempt.
 
 ### Removed
 
