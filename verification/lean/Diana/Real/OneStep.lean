@@ -42,13 +42,12 @@ theorem step_bound {e D T : E} {h L τ : ℝ} (hh : 0 ≤ h) (hD : ‖D‖ ≤ L
     _ ≤ ‖e‖ + h * (L * ‖e‖) + τ := by gcongr
     _ = (1 + h * L) * ‖e‖ + τ := by ring
 
-theorem one_step_error {Φ : ℝ → E → E} {Y : ℝ → E} {t₀ h L τ : ℝ} {N : ℕ}
-    (hh : 0 < h) (hL : 0 < L) (hτ : 0 ≤ τ)
+theorem one_step_pow {Φ : ℝ → E → E} {Y : ℝ → E} {t₀ h L τ : ℝ} {N : ℕ}
+    (hh : 0 < h) (hL : 0 < L)
     (hlip : ∀ k < N, ∀ y z, ‖Φ (t₀ + k * h) y - Φ (t₀ + k * h) z‖ ≤ L * ‖y - z‖)
     (htr : ∀ k < N,
       ‖Y (t₀ + (k + 1) * h) - Y (t₀ + k * h) - h • Φ (t₀ + k * h) (Y (t₀ + k * h))‖ ≤ τ) :
-    ∀ k ≤ N, ‖iterate Φ t₀ h (Y t₀) k - Y (t₀ + k * h)‖ ≤
-      τ / (h * L) * (Real.exp (L * (k * h)) - 1) := by
+    ∀ k ≤ N, ‖iterate Φ t₀ h (Y t₀) k - Y (t₀ + k * h)‖ ≤ τ * ((1 + h * L) ^ k - 1) / (h * L) := by
   let a : ℕ → ℝ := fun k => ‖iterate Φ t₀ h (Y t₀) k - Y (t₀ + k * h)‖
   have h0 : a 0 ≤ 0 := by simp [a, iterate]
   have hs : ∀ k < N, a (k + 1) ≤ (1 + h * L) * a k + τ := by
@@ -67,13 +66,22 @@ theorem one_step_error {Φ : ℝ → E → E} {Y : ℝ → E} {t₀ h L τ : ℝ
     rw [heq]
     exact key
   intro k hk
+  exact gronwall_pow (mul_pos hh hL) h0 hs k hk
+
+theorem one_step_error {Φ : ℝ → E → E} {Y : ℝ → E} {t₀ h L τ : ℝ} {N : ℕ}
+    (hh : 0 < h) (hL : 0 < L) (hτ : 0 ≤ τ)
+    (hlip : ∀ k < N, ∀ y z, ‖Φ (t₀ + k * h) y - Φ (t₀ + k * h) z‖ ≤ L * ‖y - z‖)
+    (htr : ∀ k < N,
+      ‖Y (t₀ + (k + 1) * h) - Y (t₀ + k * h) - h • Φ (t₀ + k * h) (Y (t₀ + k * h))‖ ≤ τ) :
+    ∀ k ≤ N, ‖iterate Φ t₀ h (Y t₀) k - Y (t₀ + k * h)‖ ≤
+      τ / (h * L) * (Real.exp (L * (k * h)) - 1) := by
+  intro k hk
   have hc : 0 < h * L := mul_pos hh hL
-  have hg := gronwall_pow hc h0 hs k hk
+  have hg := one_step_pow hh hL hlip htr k hk
   have hp := pow_le_exp hc.le k
   have hexp : Real.exp (k * (h * L)) = Real.exp (L * (k * h)) := by congr 1; ring
   rw [hexp] at hp
-  calc ‖iterate Φ t₀ h (Y t₀) k - Y (t₀ + k * h)‖ = a k := rfl
-    _ ≤ τ * ((1 + h * L) ^ k - 1) / (h * L) := hg
+  calc ‖iterate Φ t₀ h (Y t₀) k - Y (t₀ + k * h)‖ ≤ τ * ((1 + h * L) ^ k - 1) / (h * L) := hg
     _ = τ / (h * L) * ((1 + h * L) ^ k - 1) := by ring
     _ ≤ τ / (h * L) * (Real.exp (L * (k * h)) - 1) := by
         apply mul_le_mul_of_nonneg_left _ (div_nonneg hτ hc.le)
