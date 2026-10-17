@@ -47,6 +47,10 @@ no design (a design is written only when an item is picked up).
   buffer; every public function returns `diana_status`; prefix `diana_`; `-ffp-contract=off`, no
   `-ffast-math`/`-Ofast` (the verified semantics are strict IEEE binary64). Format with `clang-format`
   (LLVM style, `.clang-format`; use the version pinned in the uv `lint` group, CI `style_c` checks it).
+- **Floating-point environment:** every numerical call requires nearest-even rounding, gradual
+  underflow (no flush-to-zero or denormals-are-zero mode), and disabled traps on the calling
+  thread. Diana does not check or change these settings; callbacks must preserve them. Compiler
+  flags alone do not establish them (`doc/api/overview.md`).
 - **Python binding:** C extension sources in `python/ext/` (`module.c` creates `diana._diana` and calls one
   `diana_py_<kernel>_exec` per file; shared helpers in `module.h`); pure-Python package in `python/src/diana/`
   with one private driver module per kernel (`_bisection.py`, `_newton.py`) re-exported by `__init__.py`, and
