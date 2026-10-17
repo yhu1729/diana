@@ -29,3 +29,13 @@ Expected values in `test/c/test_rk4.c`:
   `k1 + k4` and `k2 + k3`, and `0 * inf`, give NaN.
 - Two failing cases per function, one in the last component and one in the first, check that
   `y_out` keeps its sentinel values: the first pass rejects before the second pass writes.
+- The wrapper cases keep every stage and iterate exact. `y' = -y` with `h = 1` has the stages
+  `y, y/2, 3y/4, y/4` and multiplies the state by `3/8` per step (`64 -> 24 -> 9 -> 3.375`). The
+  rotation `y' = (y2, -y1)` with `h = 6` applies `37 I - 30 A`, so `(1, 0)` goes to `(37, 30)` and
+  then, from `t0 = 6`, to `(469, 2220)`. `y' = t` from `t0 = 1` with `h = 1/4` records the slope
+  times `1, 1.125, 1.125, 1.25, 1.25, 1.375, 1.375, 1.5` and ends at the exact
+  `(1.5^2 - 1)/2 = 0.625`, since RK4 is Simpson's rule for `y' = g(t)`. An infinite slope in
+  each of the four calls of the first step stops with `y` unchanged and `done = 0` (a stage fails
+  for `k1`, `k2`, `k3`, the step for `k4`); one in the second step's `k2` stops after one step at
+  `y = 1/2`. `y' = -y` with `h = -2` from `DBL_MAX/2` reaches `Y2 = DBL_MAX` and overflows in
+  `Y3`, leaving `y` unchanged.
