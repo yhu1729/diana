@@ -27,6 +27,12 @@ diana_status diana_bisection_step(diana_bisection_state *s, double fx);
 diana_status diana_bisection_result(const diana_bisection_state *s,
                                     double *root, double *width);
 
+typedef double (*diana_bisection_fn)(double x, void *ctx);
+
+diana_status diana_bisection(diana_bisection_fn f, void *ctx, double a,
+                             double b, double tol, unsigned max_iter,
+                             double *root, unsigned *iter);
+
 #ifdef __cplusplus
 }
 #endif
