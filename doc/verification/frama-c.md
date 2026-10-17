@@ -35,7 +35,7 @@ kernels (default `src/bisection_init.c`). WP does not set a non-zero exit status
 goal, so the report must always be checked: `script/check_frama_c.sh` is the gate.
 `verification/frama-c/expectation.txt` stores one `<source> <goal-count>` row per verified C file,
 currently `src/bisection_init.c 84`, `src/bisection_result.c 19`, `src/bisection_step.c 71`,
-`src/euler.c 49`, `src/euler_step_unchecked.c 19`, `src/newton_init.c 36`, `src/newton_result.c 13`,
+`src/euler_step.c 49`, `src/euler_step_unchecked.c 19`, `src/newton_init.c 36`, `src/newton_result.c 13`,
 `src/newton_step.c 66`, `src/rk4_stage.c 53`, `src/rk4_stage_unchecked.c 21`, `src/rk4_step.c 57`,
 `src/rk4_step_unchecked.c 22`, `src/simpson.c 58` and `src/trapezoidal.c 41`; the source path is the
 one WP runs on and the one an ACSL theorem names in its `acsl` field. `script/check_frama_c.sh
