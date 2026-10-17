@@ -1,35 +1,26 @@
 # Composite Simpson rule
 
-Status codes, linking, and the Python conventions shared by every kernel are in the
-[API overview](overview.md); the theorems cited below are listed in `spec/simpson.md`.
+The composite Simpson rule approximates `∫ f` over `[a, b]` from an odd number `n` of equally
+spaced samples `y[i] = f(a + i·h)` by fitting a parabola through each consecutive triple. Its
+error is `O(h⁴)` for a smooth `f`, and it is exact for cubics. Like the
+[trapezoidal rule](trapezoidal.md), the kernel only combines samples you have evaluated. Shared
+conventions are in the [API overview](overview.md).
 
-## C (`diana/simpson.h`)
+## C
 
-A function over tabulated samples, like the [trapezoidal rule](trapezoidal.md). There is no
-callback wrapper; Python calls the kernel as `diana.simpson` (see [Python](#python)).
+`#include <diana/simpson.h>`.
 
-- `diana_simpson(y, n, h, result)` writes `(h * s) / 3` to `*result`, with
-  `s = ((y[0] + y[n-1]) + 4 * so) + 2 * se`, where `so = y[1] + y[3] + ... + y[n-2]` and
-  `se = y[2] + y[4] + ... + y[n-3]` are each summed left to right from `+0`; every operation is
-  binary64 in that order (`n - 1` panels of width `h`, an even number). Returns `DIANA_OK` when the
-  result is finite. Returns `DIANA_ERR_ARG`, without writing `*result`, for a NULL `y` or `result`,
-  for `n < 3` or an even `n`, and when the result is not finite: a NaN or infinite sample or `h`, or
-  an overflow in any operation, including `h * s` when `(h * s) / 3` alone would be finite.
-  `y[0 .. n-1]` is only read and must not overlap `*result`.
+- `diana_simpson(y, n, h, &result)` writes
+  `(h/3)·(y[0] + 4·y[1] + 2·y[2] + 4·y[3] + … + 4·y[n−2] + y[n−1])` to `result`, for an odd
+  `n >= 3` samples spaced `h` apart. It returns `DIANA_OK`, or `DIANA_ERR_ARG` without writing
+  `result` for a `NULL` pointer, `n < 3` or an even `n`, or a result that is not finite: a NaN or
+  infinite sample or `h`, or an overflow in any intermediate step.
 
-Frama-C WP proves memory safety, termination, the status cases and the finiteness of `*result` on
-`DIANA_OK` (SIMPSON-C1). For exact samples of an `f` whose fourth derivative is bounded by `M₄` on
-`[a, b]`, the rule in exact arithmetic is within `(b − a)·h⁴·M₄/180` of the integral (SIMPSON-A2,
-proved in Lean and Rocq). The binary64 evaluation order above is within
-`γₚ₊₅·|h|·A/3 + (1 + u)·η/3 + η` of the exact rule whenever its result is finite, with `p = (n − 1)/2`,
-`A = |y[0] + y[n-1]| + 4·(|y[1]| + |y[3]| + ...) + 2·(|y[2]| + |y[4]| + ...)`,
-`γₖ = k·u/(1 − k·u)`, `u = 2⁻⁵³` and `η = 2⁻¹⁰⁷⁵` (SIMPSON-B2, Flocq); like the trapezoidal bound it
-is relative to `A`, not to the result. VST proves that the C computes exactly this binary64 value
-and returns `DIANA_OK` exactly when it is finite, leaving `*result` unchanged otherwise
-(SIMPSON-C2, for non-NULL `y` with an odd `n >= 3`).
-
-Integrating `x³` on `[0, 1]` from 101 samples, an odd count. The rule is exact for a cubic
-(`M₄ = 0` in SIMPSON-A2), so only rounding error remains, here none; an even count is rejected:
+The kernel sums the odd and the even interior samples separately, left to right, then forms
+`((y[0] + y[n−1]) + 4·odd) + 2·even`, multiplies by `h` and divides by 3, each operation rounded
+to binary64. `y` is only read and must not overlap `result`. Integrating `x³` on `[0, 1]` from
+101 samples: the rule is exact for a cubic, and here no rounding error remains either; an even
+count is rejected:
 
 ```c
 #include <stdio.h>
@@ -64,13 +55,11 @@ even n: invalid argument
 
 ## Python
 
-`diana.simpson(y, h)` returns the composite Simpson rule of `diana_simpson` as a `float`, with the
-same operation order. `y` is an [array argument](overview.md#array-argument) of at least three
-samples; after the array checks, an even number of samples raises `ValueError`. A non-finite result
-raises `ValueError`.
-
-The same samples as the [trapezoidal examples](trapezoidal.md#python), with errors of `1.1e-8` and
-`9.5e-11` instead of `1.6e-4` and `1.4e-5`:
+`diana.simpson(y, h)` returns the same value as a `float`. `y` is an
+[array argument](overview.md#array-arguments) of at least three samples; an even number of
+samples or a non-finite result raises `ValueError`. On the samples of the
+[trapezoidal examples](trapezoidal.md#python), the errors drop from `1.6e-4` and `1.4e-5` to
+`1.1e-8` and `9.5e-11`:
 
 ```python
 >>> import math
@@ -88,3 +77,18 @@ Traceback (most recent call last):
   ...
 ValueError: y must have an odd number of samples
 ```
+
+## Guarantees
+
+Proved in Lean and Rocq: for exact samples of an `f` with `|f⁗| <= M₄`, the rule is within
+`(b − a)·h⁴·M₄/180` of the integral. Proved in Rocq with Flocq: the binary64 evaluation is within
+a rounding bound proportional to `n·u·|h|` times the weighted sum of `|y[i]|` (`u = 2⁻⁵³`) of the
+exact rule, and a finite result means no intermediate step overflowed. Proved of the C code: VST
+shows that it computes exactly that binary64 value, and Frama-C that it is memory-safe and free
+of undefined behaviour. Theorems: `spec/simpson.md`; status: the
+[verification report](../verification/report.md).
+
+## Technical notes
+
+[API-014](../../note/api/API-014.md) evaluation order and exits,
+[PROOF-004](../../note/proof/PROOF-004.md) what is proved, with the exact bounds.
