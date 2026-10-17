@@ -53,6 +53,7 @@ add_library(diana ${diana_library_type}
     src/status.c
     src/bisection.c
     src/euler.c
+    src/euler_step_unchecked.c
     src/newton.c
     src/rk4.c
     src/simpson.c
