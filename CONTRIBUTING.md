@@ -36,6 +36,13 @@ sanitizer, opam switch, `clang-tidy` binary).
   runtime API.
 - **Living document:** update `CHANGELOG.md` (`Unreleased`, Keep a Changelog) and, when a change
   alters a fact recorded there, `CLAUDE.md`.
+- **One function per file:** each implementation file in `src/` and `python/ext/` defines one
+  function, named after it without the `diana_` or `diana_py_` prefix (`diana_bisection_init` in
+  `src/bisection_init.c`, `diana_py_bisection_step` in `python/ext/bisection_step.c`);
+  `static inline` helpers do not count, static data such as a CPython method table or type object
+  stays with the function that registers it, and a helper that several files call gets a file of
+  its own. `PyInit__diana` is in `python/ext/module.c`. A verified source file has its own Frama-C
+  expectation row, Clight AST and VST file. Test sources are exempt.
 - **Kernel shape:** a verified kernel is a pure state machine on a caller-owned struct
   (`init`/`step`/`result`) or a function over tabulated arrays — no `malloc`, no libm call, no
   function pointer. Callback convenience wrappers (`src/bisection.c`, `src/euler.c`,
