@@ -72,10 +72,10 @@ a job reads, extend the matching list.
 
 ## Verify
 
-- `verify_frama_c`: every goal of every row of `verification/frama-c/expectation.txt` (413 across
-  the five kernels) is proved locally with Frama-C 33.0 and Alt-Ergo 2.6.4; the CI
-  image is 32.1 until a 33 tag exists. If 32.1 behaves differently, pin the image forward rather
-  than re-adding `allow_failure`.
+- `verify_frama_c`: every goal of every row of `verification/frama-c/expectation.txt` is proved
+  with Frama-C 32.1 and Alt-Ergo 2.6.4, the image `framac/frama-c:32.1` in CI and the same
+  version pinned in the local opam switch (`CONTRIBUTING.md`), so the goal counts agree. Move the
+  image and the pin together rather than re-adding `allow_failure`.
 - `verify_lean` runs `script/check_spec.py --run --strict --prover lean --no-report` with the
   image's system `python3` (3.11 on Debian bookworm), not with `uv`, so ruff checks `script/`
   against Python 3.11 (`per-file-target-version` in `pyproject.toml`). The script exits non-zero
