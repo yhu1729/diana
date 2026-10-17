@@ -148,5 +148,5 @@ range limit follows from the order: `h·s` can overflow when `h·S/3` would not 
 | SIMPSON-A2 | proved | proved | – |
 | SIMPSON-B1 | – | proved | – |
 | SIMPSON-B2 | – | proved | – |
-| SIMPSON-C1 | – | – | 58/58 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
+| SIMPSON-C1 | – | – | 58/58 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
 | SIMPSON-C2 | – | proved | – |

@@ -150,5 +150,5 @@ finiteness and the exact values together.
 | EULER-A2 | proved | proved | – |
 | EULER-B1 | – | proved | – |
 | EULER-B2 | – | proved | – |
-| EULER-C1 | – | – | 49/49 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
+| EULER-C1 | – | – | 49/49 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
 | EULER-C2 | – | proved | – |

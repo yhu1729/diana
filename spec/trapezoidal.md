@@ -156,5 +156,5 @@ C assignment. The value claim is TRAPEZOIDAL-C2 (VST), on the same Flocq model a
 | TRAPEZOIDAL-A2 | proved | proved | – |
 | TRAPEZOIDAL-B1 | – | proved | – |
 | TRAPEZOIDAL-B2 | – | proved | – |
-| TRAPEZOIDAL-C1 | – | – | 41/41 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
+| TRAPEZOIDAL-C1 | – | – | 41/41 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
 | TRAPEZOIDAL-C2 | – | proved | – |

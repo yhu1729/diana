@@ -134,7 +134,7 @@ operation are NaN is the IEEE choice of the target, which the VST models fix to 
 |---|---|---|---|
 | RK4-UNCHECKED-B1 | – | proved | – |
 | RK4-UNCHECKED-B2 | – | proved | – |
-| RK4-UNCHECKED-C1 | – | – | 21/21 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
-| RK4-UNCHECKED-C2 | – | – | 22/22 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
+| RK4-UNCHECKED-C1 | – | – | 21/21 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
+| RK4-UNCHECKED-C2 | – | – | 22/22 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
 | RK4-UNCHECKED-C3 | – | proved | – |
 | RK4-UNCHECKED-C4 | – | proved | – |

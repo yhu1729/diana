@@ -278,9 +278,9 @@ a root in reals and within `tol/2 + 1 ulp` in binary64.
 | BISECTION-B3 | – | proved | – |
 | BISECTION-B4 | – | proved | – |
 | BISECTION-C1 | – | proved | – |
-| BISECTION-C2 | – | – | 84/84 goals (Frama-C 33.0, Alt-Ergo 2.6.4), diana_bisection_mid assumed |
-| BISECTION-C3 | – | – | 71/71 goals (Frama-C 33.0, Alt-Ergo 2.6.4), diana_bisection_mid assumed |
-| BISECTION-C4 | – | – | 19/19 goals (Frama-C 33.0, Alt-Ergo 2.6.4), diana_bisection_mid assumed |
+| BISECTION-C2 | – | – | 84/84 goals (Frama-C 32.1, Alt-Ergo 2.6.4), diana_bisection_mid assumed |
+| BISECTION-C3 | – | – | 71/71 goals (Frama-C 32.1, Alt-Ergo 2.6.4), diana_bisection_mid assumed |
+| BISECTION-C4 | – | – | 19/19 goals (Frama-C 32.1, Alt-Ergo 2.6.4), diana_bisection_mid assumed |
 | BISECTION-C5 | – | proved | – |
 | BISECTION-C6 | – | proved | – |
 | BISECTION-C7 | – | proved | – |

@@ -92,5 +92,5 @@ CompCert's `Float.add`/`Float.mul`; the compiler comparison found no difference 
 | ID | Lean | Rocq | Frama-C |
 |---|---|---|---|
 | EULER-UNCHECKED-B1 | – | proved | – |
-| EULER-UNCHECKED-C1 | – | – | 19/19 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
+| EULER-UNCHECKED-C1 | – | – | 19/19 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
 | EULER-UNCHECKED-C2 | – | proved | – |

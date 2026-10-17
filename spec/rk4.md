@@ -322,8 +322,8 @@ is an error even when `h·s/6` would be finite. The opt-in one-pass variants wit
 | RK4-B3 | – | proved | – |
 | RK4-B4 | – | proved | – |
 | RK4-B5 | – | proved | – |
-| RK4-C1 | – | – | 53/53 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
-| RK4-C2 | – | – | 57/57 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
+| RK4-C1 | – | – | 53/53 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
+| RK4-C2 | – | – | 57/57 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
 | RK4-C3 | – | proved | – |
 | RK4-C4 | – | proved | – |
 | RK4-C5 | – | proved | – |

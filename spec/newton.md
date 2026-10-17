@@ -202,9 +202,9 @@ in binary64 round-to-nearest-even, and checks each for finiteness.
 | NEWTON-B1 | – | proved | – |
 | NEWTON-B2 | – | proved | – |
 | NEWTON-B3 | – | proved | – |
-| NEWTON-C1 | – | – | 36/36 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
-| NEWTON-C2 | – | – | 66/66 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
-| NEWTON-C3 | – | – | 13/13 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
+| NEWTON-C1 | – | – | 36/36 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
+| NEWTON-C2 | – | – | 66/66 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
+| NEWTON-C3 | – | – | 13/13 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
 | NEWTON-C4 | – | proved | – |
 | NEWTON-C5 | – | proved | – |
 | NEWTON-C6 | – | proved | – |
