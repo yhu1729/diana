@@ -130,8 +130,31 @@ All notable changes to this project are documented here. The format follows
   RK4 step, alone and inside a whole step with the right-hand side `y' = -y/2`, for `d` = 64, 1024
   and 16384. `doc/development/benchmark.md` records the run behind the figures in the API pages
   and in this file.
+- `note/`, technical notes for AI agents and reviewers: one fact, rule, procedure or rationale per
+  file, named by a stable ID (`note/wp/WP-002.md`), with YAML front matter (`id`, `title`,
+  `kind`, `path`, `related`). `note/README.md` explains the format and carries a generated index
+  by topic and by source path, so the notes that govern a file can be looked up before editing
+  it.
+- `script/check_doc.py` checks the note front matter, regenerates (`--write`) or checks the note
+  index, resolves every note ID cited in Markdown, and checks every relative link and heading
+  anchor in `README.md`, `CONTRIBUTING.md`, `CLAUDE.md`, `doc/`, `note/` and `spec/`.
+  `script/dev.sh test` and the `style_python` CI job run it, and `test/python/test_check_doc.py`
+  tests it.
 
 ### Changed
+
+- `doc/` is rewritten for human readers: each page explains what a method or tool does and why,
+  with its examples, and ends with links to the notes that hold the exact detail it no longer
+  repeats (evaluation and check order, theorem coverage and bounds, tool behaviour, CI internals).
+  The per-method test-value pages of `doc/test/` became `test/` notes, `doc/test/overview.md`
+  became `doc/development/test.md`, and `doc/verification/fp.md` became `fp/` notes. The rewrite
+  corrects statements that no longer matched the code: Newton's step checks finiteness before
+  `f(x) = 0` (so a zero `f(x)` with a NaN `f′(x)` is `DIANA_ERR_ARG`, also in `spec/newton.md`);
+  after `DIANA_OK` the bisection state's `x` need not be the midpoint; a failed call writes nothing
+  only for `DIANA_ERR_ARG`, `DIANA_ERR_BRACKET` and `DIANA_ERR_SINGULAR`; `diana_status_str` and
+  `diana_version` return strings; `style_name` rejects six fixed names; the release job is gated
+  on the test and verify jobs only; the allowed Rocq axioms include `Classical_Prop.classic`; and
+  the third-party list gains Hierarchy Builder, PyYAML and twine.
 
 - `script/run_frama_c.sh` gives each WP row its own `verification/frama-c/session/<row>` and
   `verification/frama-c/cache/<row>` (`<row>` is the basename of the first source), created
