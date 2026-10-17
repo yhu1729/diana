@@ -1,3 +1,5 @@
+#include <limits.h>
+
 #include "module.h"
 
 int diana_py_convert_uint(PyObject *obj, void *out) {
