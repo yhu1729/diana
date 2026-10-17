@@ -48,15 +48,32 @@ currently `src/bisection_init.c 84`, `src/bisection_result.c 19`, `src/bisection
 one WP runs on and the one an ACSL theorem names in its `acsl` field. `script/check_frama_c.sh
 report.txt [source]` fails unless every goal in the report is proved and, when a source is given,
 the goal count matches its row: a drop means a contract or RTE guard silently disappeared.
-`script/verify_frama_c.sh` runs WP and this check for every row, appending each WP output under a
-`==> <source> <==` header to the single `verification/frama-c/report.txt` (CI uploads that one
-file); `script/dev.sh verify` and the `verify_frama_c` CI job both call it, so CI and the local
-workflow check the same files. The count also moves with the statement structure, not only with the
-annotations: WP checks an `assigns` clause in one part per write path, so adding braces to the then
-single `src/bisection.c` merged 12 `assigns_normal_part` goals (172 to 160) with every other goal
-unchanged. Splitting `src/bisection.c`, `src/newton.c` and `src/rk4.c` into one file per function
-raised their totals from 162, 103 and 98 to 174, 115 and 110 with no property kind lost: WP proves
-the `static inline` helpers of `src/fp.h` in every source that includes them, so their goals now
-appear once per file. Before changing `verification/frama-c/expectation.txt`, compare the goal lists
-of the old and new source (`-wp-report-json`) and update the count only when no property kind
-disappeared.
+`script/verify_frama_c.sh` runs WP and this check for every row, writing each WP output under a
+`==> <source> <==` header to the single `verification/frama-c/report.txt`, in the order of the
+rows (CI uploads that one file); `script/dev.sh verify` and the `verify_frama_c` CI job both call
+it, so CI and the local workflow check the same files. It runs `DIANA_JOBS` rows at a time
+(`script/job_count.sh`: the variable, else the CPU count; `1` is the sequential loop), the rows
+with the most goals first, and gives each row `-wp-par ceil(4 / DIANA_JOBS)` provers so that about
+the default four Alt-Ergo processes of one row are in flight over all the rows; each goal's
+verdict is independent of this scheduling, and `why3server` enforces the 30 s limit as CPU time
+(`setrlimit`), so sharing a core cannot turn a proved goal into a timeout. The rows finish in any
+order, so the `<source>: [wp] Proved goals` lines and the checks come after the last row, every
+row is checked even when an earlier one failed, and the exit status is the conjunction.
+
+## Session and cache per row
+
+`script/run_frama_c.sh` names a row after its first source file (`bisection_init` for
+`src/bisection_init.c`), creates `verification/frama-c/session/<row>` and
+`verification/frama-c/cache/<row>` and passes them as `-wp-session` and `-wp-cache-dir`
+(`-wp-cache update`), so rows running at once share no WP directory, and a row's cache stays warm
+across runs because the same source always maps to the same directory (both trees are ignored by
+git). WP's own creation of a missing cache directory is not safe between processes: when
+`verification/frama-c/cache` did not exist and several rows started together, goals in every row
+failed with `[Why3 Error] anomaly: Sys_error("No such file or directory")`, and WP 32.1 stores
+that `Failed` verdict in the cache like any other, so the next run replayed it as `(Cached)`
+failures until the row's cache directory was deleted. The `mkdir -p` in the script makes every
+directory before its WP process starts, which is what removed the failure; with it, the
+fourteen rows started ten at a time prove every goal from an empty cache. A `Failed` goal whose message is a Why3 anomaly rather than a
+prover answer is therefore an environment problem: remove `verification/frama-c/cache/<row>` and
+rerun the row alone. The goals of one source are never those of another (the `src/fp.h` helpers
+are proved once per file, under each file's own cache), so the per-row caches lose no hits.
