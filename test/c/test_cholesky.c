@@ -122,9 +122,13 @@ static void test_exact(void) {
   check_ok(a, 4u, lo4);
   for (j = 0; j < DIM; ++j) {
     for (i = 0; i < DIM; ++i) {
-      lo[i + j * DIM] =
-          i < j ? 0.0
-                : (i == j ? (double)(1u + i % 3u) : (double)(i + j) - 19.0);
+      if (i < j) {
+        lo[i + j * DIM] = 0.0;
+      } else if (i == j) {
+        lo[i + j * DIM] = (double)(1u + i % 3u);
+      } else {
+        lo[i + j * DIM] = (double)(i + j) - 19.0;
+      }
     }
   }
   gram(lo, DIM, a);
