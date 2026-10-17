@@ -1,34 +1,27 @@
 # API overview
 
-What every kernel shares. Each method has its own page, with its C functions, its callback wrapper
-if any, and its Python functions: [bisection](bisection.md),
+Diana has a C API (`include/diana/`) and a Python package (`import diana`) over the same C
+kernels. This page covers what every method shares. Each method has its own page:
+[bisection](bisection.md), [Newton's method](newton.md),
 [composite trapezoidal rule](trapezoidal.md), [composite Simpson rule](simpson.md),
-[explicit Euler step](euler.md), [classical Runge–Kutta step](rk4.md), and
-[Newton's method](newton.md).
+[explicit Euler step](euler.md) and [classical Runge–Kutta step](rk4.md).
 
 ## Floating-point environment
 
-For both the C and Python APIs, the numerical guarantees require IEEE binary64 arithmetic with
-round-to-nearest, ties-to-even (`FE_TONEAREST` in C), gradual underflow (no flush-to-zero or
-denormals-are-zero mode), and floating-point traps disabled. These are runtime requirements on
-each calling thread, in addition to the [compiler settings](../development/build.md).
-
-Diana does not check or change the floating-point environment. Callers must establish these
-settings before calling a numerical method, and callbacks must preserve them. The verified
-error bounds and stopping guarantees do not apply under other settings; enabled traps can
-interrupt a call before it returns an error status.
+The guarantees assume IEEE binary64 arithmetic with round-to-nearest-even, gradual underflow (no
+flush-to-zero or denormals-are-zero mode) and floating-point traps disabled, on every thread that
+calls Diana. A process starts that way on Linux and macOS, but other code in it can change them: on
+x86-64, for example, objects linked by GCC with `-ffast-math` turn on flush-to-zero. Diana neither
+checks nor changes these settings, so a program that changes them, or a callback that does, voids
+the guarantees.
 
 ## C
 
-Every public function returns `diana_status` and is declared in `include/diana/`; `diana/diana.h`
-is the umbrella header.
+### Headers and linking
 
-### Linking
-
-After `cmake --install build --prefix <prefix>`, a CMake project links the library with
-`find_package(diana)` and the target `diana::diana` (`-DCMAKE_PREFIX_PATH=<prefix>`). Before 1.0,
-a version request matches only the same minor version. A complete consumer is two files.
-`CMakeLists.txt`:
+`#include <diana/diana.h>` declares everything; each method also has its own header, such as
+`<diana/bisection.h>`. After `cmake --install build --prefix <prefix>`, a CMake project links the
+target `diana::diana`. A complete consumer is two files. `CMakeLists.txt`:
 
 ```cmake
 cmake_minimum_required(VERSION 3.25)
@@ -72,23 +65,28 @@ cmake --build build
 area 5.5
 ```
 
-### Status
+`find_package` accepts any release with the same major and minor version.
 
-`diana/status.h`:
+### Status codes
+
+Every function returns a `diana_status` (`diana/status.h`), except `diana_status_str` and
+`diana_version`, which return strings.
 
 | Code | Value | Meaning |
 |---|---|---|
-| `DIANA_OK` | 0 | converged or completed |
-| `DIANA_CONTINUE` | 1 | reverse communication: evaluate at the requested point and call `step` again |
-| `DIANA_ERR_ARG` | -1 | invalid argument: NULL, NaN, infinite, out of range |
-| `DIANA_ERR_BRACKET` | -2 | `f(a)` and `f(b)` have the same strict sign |
-| `DIANA_ERR_MAXITER` | -3 | iteration limit reached before the tolerance was met |
-| `DIANA_ERR_SINGULAR` | -4 | the derivative (Newton) is zero, so the step is undefined; the state is unchanged |
+| `DIANA_OK` | 0 | finished |
+| `DIANA_CONTINUE` | 1 | evaluate the function at the requested point and call `step` again |
+| `DIANA_ERR_ARG` | -1 | invalid argument, or a result that would not be finite |
+| `DIANA_ERR_BRACKET` | -2 | bisection: `f(a)` and `f(b)` have the same sign |
+| `DIANA_ERR_MAXITER` | -3 | iteration limit reached before convergence |
+| `DIANA_ERR_SINGULAR` | -4 | Newton's method: zero derivative |
 
-`diana_status_str(s)` returns a static, human-readable name for a status code and never returns
-NULL. `diana_version()` returns `DIANA_VERSION_STRING` of the linked library.
+`diana_status_str(st)` returns a short message for a code, and `diana_version()` the version of
+the linked library (the header defines `DIANA_VERSION_STRING` and its parts).
 
-Check every status; a failed call writes no output:
+A call that fails with `DIANA_ERR_ARG`, `DIANA_ERR_BRACKET` or `DIANA_ERR_SINGULAR` changes no
+output and no state. After `DIANA_ERR_MAXITER` the state holds the progress made so far. Check
+every status:
 
 ```c
 const double y[] = {1.0}; /* one sample: no panel */
@@ -103,30 +101,30 @@ if (st != DIANA_OK) {
 invalid argument
 ```
 
-### Callback wrapper
+### Kernels and callback wrappers
 
-The wrappers, each declared in its method's header (the ODE callback type `diana_ode_fn` in
-`diana/ode.h`), loop over the verified reverse-communication kernels and are not verified (neither
-VST nor Frama-C); the callback is a trust boundary. Each is described with its
-kernel: `diana_bisection` under [bisection](bisection.md), `diana_euler` under
-[explicit Euler step](euler.md), `diana_rk4` under [classical Runge–Kutta step](rk4.md),
-`diana_newton` under [Newton's method](newton.md).
+The verified kernels never call your code. The iterative methods (bisection, Newton) are state
+machines: you evaluate the function at the point the state asks for and pass the value back,
+which leaves you free to log, stop early, or evaluate the function elsewhere. The ODE steps take
+slopes you have computed. All take caller-owned memory and allocate nothing.
+
+For convenience, each iterative and ODE method also has a wrapper that runs the loop over a C
+callback with a `void *ctx` argument for its parameters: `diana_bisection`, `diana_newton`,
+`diana_euler` and `diana_rk4`. The wrappers are tested but not formally verified.
 
 ## Python
 
-The package `diana` exposes each iterative kernel as a reverse-communication state object
-(`diana.Bisection`, `diana.Newton`) and, for convenience, as a function taking a Python callable
-(`diana.bisection`, `diana.newton`). The callable loop runs in Python and is not part of the
-verified code.
-Docstrings are available through `help()`.
+The package mirrors the C API:
 
-`diana.__version__` is the version string of the linked C library, the same value `diana.version()`
-returns.
+- `diana.Bisection` and `diana.Newton` are the state machines, and `diana.bisection` and
+  `diana.newton` run them over a Python callable.
+- `diana.trapezoidal`, `diana.simpson`, `diana.euler_step`, `diana.rk4_stage` and
+  `diana.rk4_step` call the array kernels, and `diana.euler` and `diana.rk4` loop over a
+  callable.
+- `diana.version()` (also `diana.__version__`), `diana.status_str` and the constants `diana.OK`,
+  `CONTINUE`, `ERR_ARG`, `ERR_BRACKET`, `ERR_MAXITER` and `ERR_SINGULAR`.
 
-The status constants `diana.OK`, `CONTINUE`, `ERR_ARG`, `ERR_BRACKET`, `ERR_MAXITER` and
-`ERR_SINGULAR` are the Python spellings of the `DIANA_*` codes above, as returned by
-`diana.Bisection.step` and `diana.Newton.step`; `status_str` raises `OverflowError` for a code
-outside the C `int` range.
+Every function has a docstring (`help(diana.bisection)`).
 
 ```python
 >>> import diana
@@ -136,10 +134,16 @@ outside the C `int` range.
 'no sign change in bracket'
 ```
 
-A C error status becomes an exception: `DIANA_ERR_ARG` raises `ValueError`, `DIANA_ERR_BRACKET`
-raises `diana.BracketError` (a `ValueError`), `DIANA_ERR_SINGULAR` raises `diana.SingularError`
-(a `ValueError`), and `DIANA_ERR_MAXITER` in `diana.bisection` and `diana.newton` raises
-`diana.MaxIterError` (a `RuntimeError`).
+### Exceptions
+
+An error status becomes an exception:
+
+| C status | Python exception |
+|---|---|
+| `DIANA_ERR_ARG` | `ValueError` (`TypeError` for an argument of the wrong type) |
+| `DIANA_ERR_BRACKET` | `diana.BracketError`, a `ValueError` |
+| `DIANA_ERR_SINGULAR` | `diana.SingularError`, a `ValueError` |
+| `DIANA_ERR_MAXITER` | `diana.MaxIterError`, a `RuntimeError`, raised by `diana.bisection` and `diana.newton` |
 
 ```python
 >>> try:
@@ -149,18 +153,11 @@ raises `diana.BracketError` (a `ValueError`), `DIANA_ERR_SINGULAR` raises `diana
 trapezoidal result is not finite
 ```
 
-### Array argument
+### Array arguments
 
-An array argument (`y` of `diana.trapezoidal` and `diana.simpson`, `y` and `f` of
-`diana.euler_step`, the vectors of `diana.rk4_stage` and `diana.rk4_step`) that supports the buffer protocol (a NumPy `float64` array, `array.array("d")`,
-a `memoryview`, a ctypes `c_double` array) is read in place, without a copy, and must hold
-native-endian float64 (format `d`, optionally prefixed by `@`, `=`, or the native byte-order
-character) in one dimension, C-contiguous and aligned for `double`. The checks run in this order:
-another element type raises `TypeError`; another dimension, fewer samples than the function needs,
-a non-contiguous view, or a misaligned start raise `ValueError`. Any other iterable of numbers is
-first copied into an `array.array("d")`, which converts each element through `__float__` (or
-`__index__`, rounding an integer to the nearest double) and raises its own `TypeError` or
-`OverflowError`.
+An array argument accepts any iterable of numbers. A buffer of native `float64` values — a NumPy
+array, an `array.array("d")`, a `memoryview` — that is one-dimensional and contiguous is read in
+place without a copy; anything else iterable is copied first.
 
 ```python
 >>> import array
@@ -174,7 +171,8 @@ first copied into an `array.array("d")`, which converts each element through `__
 5.5
 ```
 
-A buffer of another element type or layout is rejected rather than converted; convert it first:
+A buffer of another element type or layout is rejected rather than silently converted; convert
+it first:
 
 ```python
 >>> x = np.arange(5, dtype=np.float32)
@@ -193,9 +191,18 @@ ValueError: y must be C-contiguous
 4.0
 ```
 
-### Extension
+The extension module has no NumPy dependency, and it supports one interpreter per process (no
+subinterpreters).
 
-The CPython extension `diana._diana` is hand-written and has no NumPy dependency; array kernels
-use the buffer protocol. It uses single-phase module initialisation: the multi-phase slot table
-stores a function pointer in a `void *`, which is not strict ISO C and fails `-Wpedantic -Werror` on
-gcc.
+## Technical notes
+
+[API-001](../../note/api/API-001.md) floating-point environment,
+[API-002](../../note/api/API-002.md) status codes,
+[API-003](../../note/api/API-003.md) what a failed call writes,
+[API-004](../../note/api/API-004.md) output pointers and overlap,
+[API-005](../../note/api/API-005.md) CMake package,
+[API-006](../../note/api/API-006.md) callback wrappers,
+[API-020](../../note/api/API-020.md) array arguments,
+[API-021](../../note/api/API-021.md) scalar arguments,
+[API-022](../../note/api/API-022.md) exceptions,
+[PYTHON-003](../../note/python/PYTHON-003.md) one interpreter per process.
