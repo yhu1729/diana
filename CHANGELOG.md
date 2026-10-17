@@ -55,15 +55,15 @@ All notable changes to this project are documented here. The format follows
 #### Python binding
 
 - `diana.rk4_stage(y, k, h, stage)` and `diana.rk4_step(y, k1, k2, k3, k4, h)` return a new
-  `array.array("d")` from the kernels, reading float64 buffers in place and copying other
-  iterables (module `diana._rk4`; extension functions `diana._diana.rk4_stage` and `rk4_step`
-  with an explicit `out` that must not overlap an input). `diana.rk4(f, t0, y0, h, nstep)` loops
-  in Python with a callable `f(t, y)`, at the same times as `diana_rk4`, copying each slope so
-  `f` may reuse its output buffer. A stage other than 2, 3 or 4, a length mismatch and a
-  non-finite component raise `ValueError`. `test/python/test_rk4.py` covers the binding (the
-  driver and `python/ext/rk4.c` at 100% line and branch coverage), including bitwise agreement
-  with Python float arithmetic, RK4-B3 and RK4-B5 against exact rationals, and fourth-order
-  convergence on the rotation.
+  `array.array("d")` from the kernels, reading float64 buffers in place and copying other iterables
+  (module `diana._rk4`; extension functions `diana._diana.rk4_stage` and `rk4_step` with an explicit
+  `out` that must not overlap an input). `diana.rk4(f, t0, y0, h, nstep)` loops in Python with a
+  callable `f(t, y)`, at the same times as `diana_rk4`, copying each slope so `f` may reuse its
+  output buffer. A stage other than 2, 3 or 4, a length mismatch and a non-finite component raise
+  `ValueError`. `test/python/test_rk4.py` covers the binding (the driver and
+  `python/ext/rk4_stage.c`, `rk4_step.c` and `rk4_exec.c` at 100% line and branch coverage),
+  including bitwise agreement with Python float arithmetic, RK4-B3 and RK4-B5 against exact
+  rationals, and fourth-order convergence on the rotation.
 
 #### Verification
 
@@ -143,6 +143,17 @@ All notable changes to this project are documented here. The format follows
   after its function, with its Frama-C row (49 goals), its Clight AST
   `verification/clight/euler_step_aarch64_macos.v` (only the recorded source path changes) and
   `spec/euler.md` following; `VST/Euler.v` proves it against the renamed AST.
+
+- `src/status.c` is split into `src/status_str.c` (`diana_status_str`) and `src/version.c`
+  (`diana_version`), and the CPython extension into one file per function: each method or module
+  function becomes an external `diana_py_<name>` in `python/ext/<name>.c` (`bisection_step.c`,
+  `rk4_stage.c`, `raise.c`, `get_samples.c`, …), each kernel's method and type tables move with its
+  registration function to `python/ext/<kernel>_exec.c`, the object structs to
+  `python/ext/bisection_object.h` and `newton_object.h`, and the buffer overlap test to the
+  `static inline` `diana_py_overlap` in `module.h`. Messages, docstrings and behaviour are
+  unchanged, and so is the extension's line and branch coverage. Every implementation file in
+  `src/` and `python/ext/` now defines one function, `static inline` helpers aside; `CLAUDE.md`
+  and `CONTRIBUTING.md` record this as a convention, with the tests exempt.
 
 ### Removed
 
