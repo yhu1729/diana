@@ -37,6 +37,13 @@ overlap each other. Each function checks every component before it writes any, s
 the last one leaves `y_out` as it was. Frama-C WP proves memory safety, termination, the status
 cases and that `y_out` is untouched on `DIANA_ERR_ARG` (RK4-C1).
 
+RK4 is of order 4 (Lean and Rocq). For `y′ = F(t, y)` with `F` L-Lipschitz in `y` in the max norm
+and the time-augmented field `(1, F)` three times differentiable, `k` exact steps of size `h`
+from `y(t₀)` are within `((M₅/120 + N₄/24)·h⁴/L)·(e^{L·k·h} − 1)` of `y(t₀ + k·h)` (RK4-A7), and
+one step is within `(M₅/120 + N₄/24)·h⁵` (RK4-A3). `M₅` bounds the fifth derivative of the solution
+and `N₄` the fourth derivative of the increment in the step size, each through the Lipschitz
+constant of the derivative below it (`spec/rk4.md`, H2 and H3).
+
 Whenever a computed component is finite, Flocq bounds its rounding error, with `u = 2⁻⁵³` and
 `η = 2⁻¹⁰⁷⁵`. A stage component is within `u·|y[i] + c·k[i]| + (1 + u)·(u·|c·k[i]| + η)` of the
 exact `y[i] + c·k[i]`, `c = h/2` or `h`, when `|h| ≥ 2⁻¹⁰²¹`; below that, rounding `h/2` (at most
