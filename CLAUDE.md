@@ -166,4 +166,5 @@ Unreleased (toward 1.0): the classical Runge–Kutta step RK4 in reverse communi
 `diana_rk4_step` (`y + h·((k₁ + k₄) + 2·(k₂ + k₃))/6`), both two-pass like Euler (C tests at 100%
 line and branch coverage); WP proves the ACSL contracts (98 goals, RK4-C1, `spec/rk4.md`), and
 Flocq its layer B (RK4-B1 to B5: finiteness, the `fl(h/2)` coefficient, stage and step error),
-and VST both functions against the Flocq models (RK4-C2 to C5, `rk4_aarch64_macos.v`).
+and VST both functions against the Flocq models (RK4-C2 to C5, `rk4_aarch64_macos.v`); the
+unverified wrapper `diana_rk4` (work `5d`) loops over them with a `diana_ode_fn`.
