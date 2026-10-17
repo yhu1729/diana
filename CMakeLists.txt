@@ -155,7 +155,11 @@ if(DIANA_BUILD_PYTHON)
         python/ext/bisection_result.c
         python/ext/bisection_step.c
         python/ext/euler.c
-        python/ext/newton.c
+        python/ext/newton_exec.c
+        python/ext/newton_init.c
+        python/ext/newton_new.c
+        python/ext/newton_result.c
+        python/ext/newton_step.c
         python/ext/rk4.c
         python/ext/simpson.c
         python/ext/trapezoidal.c)
