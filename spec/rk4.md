@@ -261,8 +261,9 @@ is an error even when `h·s/6` would be finite. The opt-in one-pass variants wit
   early return happens before the second loop, and the only write is `y_out[i]` in that loop, so
   `assigns y_out[0 .. d − 1]` and the error post-condition follow from the control flow; the loop
   invariants are only the index bounds.
-- **C3**: the Euler proof (EULER-C2) with the coefficient for the step. Five range checks
-  precede the loops (`stage < 2` and `stage > 4` are false under `2 ≤ stage ≤ 4`); the branch
+- **C3**: the Euler proof (EULER-C2) with the coefficient for the step. Six argument checks
+  precede the loops (three NULL pointers and `d = 0`, excluded by the precondition, and
+  `stage < 2` and `stage > 4`, false under `2 ≤ stage ≤ 4`); the branch
   on `stage == 4` sets `c` to `c_coef stage h`, and the two loops then carry exactly the
   invariants of `body_diana_euler_step` for `L = c_euler c ys ks`, reusing its list lemmas
   (`Znth_c_euler`, `forallb_sublist_succ`, `forallb_false`). Proof: `body_diana_rk4_stage` in

@@ -69,7 +69,8 @@ CompCert's `Float.add`/`Float.mul`; the compiler comparison found no difference 
 - **C1**: the `/*@ ... */` annotations in `src/euler_step_unchecked.c`. The only early return is
   the argument check, before the loop writes anything, so the status equivalence and the error
   post-condition follow from the control flow; the loop invariant is the index bound.
-- **C2**: three argument checks, then the write loop of EULER-C2 with the same invariant,
+- **C2**: four argument checks (three NULL pointers and `d = 0`, each false under the
+  precondition), then the write loop of EULER-C2 with the same invariant,
   `y_out = map Vfloat (sublist 0 i L) ++ sublist i d os` for `L = c_euler h ys fs`; each store
   is an `upd_Znth` that `list_solve` folds into the next prefix (`Znth_c_euler` of
   `Diana.VST.Euler` names the stored value). The loop ends with `y_out = map Vfloat L` and the

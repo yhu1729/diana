@@ -105,14 +105,16 @@ operation are NaN is the IEEE choice of the target, which the VST models fix to 
   `src/rk4_step_unchecked.c`. The only early return is the argument check, before the loop
   writes anything, so the status equivalence and the error post-condition follow from the
   control flow; the loop invariant is the index bound.
-- **C3**: five argument checks, the branch on `stage == 4` that sets `c` to `c_coef stage h`,
+- **C3**: six argument checks (three NULL pointers, `d = 0`, `stage < 2` and `stage > 4`, each
+  false under the precondition), the branch on `stage == 4` that sets `c` to `c_coef stage h`,
   then the write loop of RK4-C3 for `L = c_stage stage h ys ks`, with the invariant
   `y_out = map Vfloat (sublist 0 i L) ++ sublist i d os` and three statements per component;
   `Znth_c_euler` names the stored value. Proof: `body_diana_rk4_stage_unchecked` in
   `verification/rocq/theory/VST/RK4StageUnchecked.v`.
-- **C4**: six argument checks, then the write loop of RK4-C4 for `L = c_rk4 h ys k₁s k₂s k₃s k₄s`
-  with seven statements per component; `Znth_c_rk4` names the stored value. Proof:
-  `body_diana_rk4_step_unchecked` in `verification/rocq/theory/VST/RK4StepUnchecked.v`.
+- **C4**: seven argument checks (six NULL pointers and `d = 0`), then the write loop of RK4-C4 for
+  `L = c_rk4 h ys k₁s k₂s k₃s k₄s` with seven statements per component; `Znth_c_rk4` names the
+  stored value. Proof: `body_diana_rk4_step_unchecked` in
+  `verification/rocq/theory/VST/RK4StepUnchecked.v`.
 
 ## Model correspondence
 
