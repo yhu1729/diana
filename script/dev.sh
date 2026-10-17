@@ -26,7 +26,7 @@ environment:
   DIANA_BUILD_TYPE     CMAKE_BUILD_TYPE for config (default Debug)
   DIANA_SANITIZER      DIANA_SANITIZER for config (default ON)
   DIANA_OPAM_SWITCH    opam switch with Rocq, CompCert, VST, and Frama-C (default: current)
-  DIANA_JOBS           verify: Rocq jobs (capped by memory) and Frama-C rows at a time
+  DIANA_JOB            verify: Rocq jobs (capped by memory) and Frama-C rows at a time
                        (default: CPU count); 1 runs the stages one after another
   DIANA_CLIGHT_UPDATE  1: verify overwrites a Clight AST that differs instead of failing
   DIANA_COMPARE_CC     host compilers verify compares with ccomp (default: clang, gcc,
@@ -179,7 +179,7 @@ build_lean() {
 
 # Memory per VST proof: measured peak RSS of one rocq compile on the heaviest
 # theory/VST file, rounded up (doc/verification/local.md); the cap keeps
-# DIANA_JOBS such proofs resident at once within hw.memsize / MemTotal.
+# DIANA_JOB such proofs resident at once within hw.memsize / MemTotal.
 rocq_job_byte=2147483648
 
 rocq_jobs() {
@@ -217,8 +217,8 @@ run_stage() {
 dev_verify() {
     need_venv
     jobs=$(script/job_count.sh)
-    DIANA_JOBS=$jobs
-    export DIANA_JOBS
+    DIANA_JOB=$jobs
+    export DIANA_JOB
     check_clight
     if [ "$jobs" -eq 1 ]; then
         opam_run script/compare_compiler.sh
@@ -231,7 +231,7 @@ dev_verify() {
         rm -f "$verify_dir"/*.log "$verify_dir"/*.status
         rocq_jobs=$(rocq_jobs)
         echo "verify: compiler, lean, rocq (-j $rocq_jobs) and frama-c run at once" \
-            "with DIANA_JOBS=$jobs; logs in $verify_dir"
+            "with DIANA_JOB=$jobs; logs in $verify_dir"
         pids=
         run_stage compiler opam_run script/compare_compiler.sh &
         pids="$pids $!"

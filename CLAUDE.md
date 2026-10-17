@@ -143,7 +143,7 @@ doc/                  README index; api/, development/, test/, verification/ (tr
 - Everything below, in one script: `script/dev.sh config|build|test|verify` (`script/dev.sh help`; build
   directory `build`, Debug with sanitizers; `verify` needs the opam switch, runs the compiler
   comparison, the Lean build, the Rocq build and the WP rows at once after the Clight check with
-  logs in `build/verify/`, `DIANA_JOBS` jobs (default: the CPU count; `1` is the sequential path
+  logs in `build/verify/`, `DIANA_JOB` jobs (default: the CPU count; `1` is the sequential path
   for debugging; the Rocq job count is also capped by memory, `doc/verification/local.md`), then
   runs the spec gate with `--strict` so an unproved listed theorem fails it, and rewrites the report)
 - C: `cmake -S . -B build -DDIANA_BUILD_TEST=ON -DDIANA_WERROR=ON && cmake --build build && ctest --test-dir build`
@@ -168,7 +168,7 @@ doc/                  README index; api/, development/, test/, verification/ (tr
   steps in `doc/verification/local.md` before committing a change to `src/`,
   `include/`, `verification/`, or `spec/`
 - Frama-C: `script/verify_frama_c.sh` (runs `script/run_frama_c.sh` and `script/check_frama_c.sh`
-  for every `<source> <goal-count>` row of `verification/frama-c/expectation.txt`, `DIANA_JOBS`
+  for every `<source> <goal-count>` row of `verification/frama-c/expectation.txt`, `DIANA_JOB`
   rows at a time, each row in its own `verification/frama-c/session/<row>` and `cache/<row>`,
   one `report.txt` in row order; all goals must prove and each count must match;
   `script/dev.sh verify` and CI both call it)

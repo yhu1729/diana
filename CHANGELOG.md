@@ -138,7 +138,7 @@ All notable changes to this project are documented here. The format follows
   before WP starts, so rows run at the same time share no WP directory; WP's own creation of a
   missing cache directory raced between processes and left cached `Failed` verdicts
   (`doc/verification/frama-c.md`).
-- `script/verify_frama_c.sh` runs its rows concurrently, `DIANA_JOBS` at a time (default: the
+- `script/verify_frama_c.sh` runs its rows concurrently, `DIANA_JOB` at a time (default: the
   CPU count from the new `script/job_count.sh`; `1` is the previous sequential loop), the rows
   with the most goals first and `-wp-par` scaled so about four provers of one row are in flight
   overall; it still writes one `verification/frama-c/report.txt` in row order and now checks
@@ -147,8 +147,8 @@ All notable changes to this project are documented here. The format follows
   rows at once after the Clight check, each logging to `build/verify/<stage>.log` with a
   `.status` file, prints one line as each finishes and the logs in that fixed order, and fails
   if any stage failed; the spec gate still runs last. The Rocq build gets `make -j` with
-  `DIANA_JOBS` capped by memory (one job per 2 GiB, from the measured 1.13 GB peak of a VST
-  proof); `DIANA_JOBS=1` is the previous sequential run. Nothing checked changes: the same goals,
+  `DIANA_JOB` capped by memory (one job per 2 GiB, from the measured 1.13 GB peak of a VST
+  proof); `DIANA_JOB=1` is the previous sequential run. Nothing checked changes: the same goals,
   proofs and counts, and the report is byte-identical. On an Apple M4 a cold `verify` goes from
   588 s to 327 s and a warm one from 406 s to 252 s (`doc/development/workflow.md`).
 - `diana.MaxIterError` names its second attribute and argument `uncertainty` instead of `width`:
