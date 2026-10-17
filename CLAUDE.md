@@ -6,7 +6,8 @@ where integrals and derivatives are needed); floating-point bounds in Rocq (Floc
 correctness in Rocq (VST via CompCert `clightgen`) and Frama-C (WP).
 Documentation index: `doc/README.md`. Trust statement: `doc/verification/trust.md`; generated
 theorem report: `doc/verification/report.md`. API: `doc/api/`. Build and CI rationale:
-`doc/development/`; test values: `doc/test/`.
+`doc/development/`; test values: `doc/test/`. Future work: `doc/roadmap.md`, one line per idea,
+no design (a design is written only when an item is picked up).
 
 ## Convention
 
