@@ -50,7 +50,7 @@ Mathlib's pinned transitive dependencies, all Apache-2.0 except `Cli` (MIT):
 
 | Component | Version | License |
 |---|---|---|
-| Frama-C (WP, RTE) | 33.0 local, 32.1 in CI | LGPL-2.1-only |
+| Frama-C (WP, RTE) | 32.1 (local, pinned, and CI) | LGPL-2.1-only |
 | Why3 | 1.8.2 | LGPL-2.1-only |
 | Alt-Ergo | 2.6.4 | see the table above |
 
