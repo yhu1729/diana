@@ -15,6 +15,14 @@ Expected values in `test/c/test_euler.c`:
 - Overflow cases have finite inputs and overflow in exactly one operation, the product or the sum.
 - Two failing cases, one in the last component and one in the first, check that `y_out` keeps its
   sentinel values: the first pass rejects before the second pass writes.
+- Every successful case also runs `diana_euler_step_unchecked` and requires the same bits in all
+  100 output slots, so both write only `y_out[0 .. d-1]`; each argument error is checked for
+  both functions.
+- On inputs the checked step rejects, the unchecked step returns `DIANA_OK` and writes the IEEE
+  results: `0 + 2·DBL_MAX = +∞`, `DBL_MAX + DBL_MAX = +∞` and their negatives, `∞ − ∞` and
+  `1 + 0·∞` NaN, NaN or ±∞ in `y`, `f` or `h` propagated, and the finite components beside a
+  non-finite one written as well (`(1, 2, DBL_MAX) + (1, 1, DBL_MAX)` gives `(2, 3, +∞)`). A
+  NaN result is checked with `isnan`, not by its bits.
 - The wrapper cases keep every iterate exact: `y' = -y` with `h = 1/2` halves the state each step,
   the rotation `y' = (y2, -y1)` with `h = 1` stays on integers (`(1, 0)` to `(-2, -2)` in three
   steps), and `y' = t` from `t0 = 1` with `h = 1/4` records the times `1, 1.25, 1.5, 1.75` and ends
