@@ -747,6 +747,206 @@ static void test_euler(void) {
   }
 }
 
+static void rk4_stage_case(const char *label, const double *y, const double *k,
+                           size_t d, double h, int stage) {
+  static double out[CAPACITY];
+  size_t i;
+  diana_status st;
+
+  for (i = 0u; i < CAPACITY; ++i) {
+    out[i] = SENTINEL;
+  }
+  st = diana_rk4_stage(y, k, d, h, stage, out);
+  put_head("rk4_stage", label);
+  put_double(h);
+  printf(" %d", stage);
+  put_array(y, y == (const double *)0 ? 0u : d);
+  put_array(k, k == (const double *)0 ? 0u : d);
+  put_status(st);
+  put_array(out, d < CAPACITY ? d : CAPACITY);
+  printf("\n");
+}
+
+static void rk4_step_case(const char *label, const double *y, const double *k1,
+                          const double *k2, const double *k3, const double *k4,
+                          size_t d, double h) {
+  static double out[CAPACITY];
+  size_t i;
+  diana_status st;
+
+  for (i = 0u; i < CAPACITY; ++i) {
+    out[i] = SENTINEL;
+  }
+  st = diana_rk4_step(y, k1, k2, k3, k4, d, h, out);
+  put_head("rk4_step", label);
+  put_double(h);
+  put_array(y, y == (const double *)0 ? 0u : d);
+  put_array(k1, k1 == (const double *)0 ? 0u : d);
+  put_array(k2, k2 == (const double *)0 ? 0u : d);
+  put_array(k3, k3 == (const double *)0 ? 0u : d);
+  put_array(k4, k4 == (const double *)0 ? 0u : d);
+  put_status(st);
+  put_array(out, d < CAPACITY ? d : CAPACITY);
+  printf("\n");
+}
+
+static void test_rk4(void) {
+  static const double y4[4] = {1.0, -2.0, 0.5, 0.0};
+  static const double a4[4] = {0.5, 0.25, -1.0, 3.0};
+  static const double b4[4] = {-1.5, 2.0, 0.75, -0.125};
+  static const double c4[4] = {3.0, -0.5, 1.25, 2.0};
+  static const double e4[4] = {0.25, 1.0, -2.0, -3.0};
+  static const double fma_y[1] = {-1.0};
+  static const double fma_k[1] = {0x1.ffffffffffffep-1};
+  static const double zeros[4] = {0.0, -0.0, 0.0, -0.0};
+  static const double signed_zero[4] = {-0.0, -0.0, 0.0, 0.0};
+  static const double zero1[1] = {0.0};
+  static const double one1[1] = {1.0};
+  static const double max1[1] = {VAL_MAX};
+  static const double half_max1[1] = {VAL_HALF_MAX};
+  static const double neg_max1[1] = {-VAL_MAX};
+  static const double big1[1] = {0x1p1020};
+  static const double k1024[1] = {1024.0};
+  static const double eps_half[1] = {0x1p-53};
+  static const double eps_quarter[1] = {0x1p-54};
+  static const double fail_last_y[3] = {1.0, 2.0, VAL_MAX};
+  static const double fail_last_k[3] = {1.0, 1.0, VAL_MAX};
+  static const double fail_first_y[3] = {VAL_MAX, 2.0, 3.0};
+  static const double fail_first_k[3] = {VAL_MAX, 1.0, 1.0};
+  static double y[CAPACITY];
+  static double k[4][CAPACITY];
+  static double out[1] = {SENTINEL};
+  diana_status st;
+  unsigned n;
+  size_t i;
+  size_t j;
+  int stage;
+
+  rk4_stage_case("null_y", (const double *)0, a4, 4u, 1.0, 2);
+  rk4_stage_case("null_k", y4, (const double *)0, 4u, 1.0, 2);
+  st = diana_rk4_stage(y4, a4, 4u, 1.0, 2, (double *)0);
+  put_head("rk4_stage", "null_out");
+  put_status(st);
+  printf("\n");
+  rk4_stage_case("empty", y4, a4, 0u, 1.0, 2);
+  rk4_stage_case("stage_1", y4, a4, 4u, 1.0, 1);
+  rk4_stage_case("stage_5", y4, a4, 4u, 1.0, 5);
+  rk4_stage_case("stage_negative", y4, a4, 4u, 1.0, -2);
+  st = diana_rk4_stage((const double *)0, (const double *)0, 0u, 1.0, 0, out);
+  put_head("rk4_stage", "all_null");
+  put_status(st);
+  put_double(out[0]);
+  printf("\n");
+  for (stage = 2; stage <= 4; ++stage) {
+    rk4_stage_case("exact", y4, a4, 4u, 0.5, stage);
+    rk4_stage_case("third", y4, a4, 4u, 1.0 / 3.0, stage);
+    rk4_stage_case("h_zero", signed_zero, zeros, 4u, 0.0, stage);
+    rk4_stage_case("h_negative_zero", signed_zero, a4, 4u, -0.0, stage);
+    rk4_stage_case("coefficient_tie", zero1, k1024, 1u, 3.0 * VAL_TRUE_MIN,
+                   stage);
+    rk4_stage_case("h_max", zero1, one1, 1u, VAL_MAX, stage);
+    rk4_stage_case("product_over", zero1, max1, 1u, 4.0, stage);
+    rk4_stage_case("sum_over", max1, max1, 1u, 2.0, stage);
+    rk4_stage_case("max_plus_one", max1, one1, 1u, 2.0, stage);
+    rk4_stage_case("cancel", max1, max1, 1u, -2.0, stage);
+    rk4_stage_case("fail_last", fail_last_y, fail_last_k, 3u, 2.0, stage);
+    rk4_stage_case("fail_first", fail_first_y, fail_first_k, 3u, 2.0, stage);
+    rk4_stage_case("h_nan", y4, a4, 4u, VAL_QNAN, stage);
+    rk4_stage_case("h_snan", y4, a4, 4u, VAL_SNAN, stage);
+    rk4_stage_case("h_inf", y4, a4, 4u, VAL_INF, stage);
+    rk4_stage_case("h_inf_zero", y4, zeros, 4u, -VAL_INF, stage);
+  }
+  rk4_stage_case("fma", fma_y, fma_k, 1u, 0x1.0000000000001p0, 4);
+  rk4_stage_case("fma_half", fma_y, fma_k, 1u, 0x1.0000000000001p1, 2);
+  for (i = 0u; i < 4u; ++i) {
+    memcpy(y, y4, sizeof y4);
+    memcpy(k[0], a4, sizeof a4);
+    y[i] = VAL_QNAN;
+    rk4_stage_case("y_nan", y, k[0], 4u, 1.0, 2);
+    y[i] = VAL_INF;
+    rk4_stage_case("y_inf", y, k[0], 4u, 1.0, 3);
+    y[i] = y4[i];
+    k[0][i] = VAL_SNAN;
+    rk4_stage_case("k_snan", y, k[0], 4u, 1.0, 4);
+    k[0][i] = -VAL_INF;
+    rk4_stage_case("k_inf", y, k[0], 4u, 0.0, 2);
+  }
+
+  rk4_step_case("null_y", (const double *)0, a4, b4, c4, e4, 4u, 1.0);
+  rk4_step_case("null_k1", y4, (const double *)0, b4, c4, e4, 4u, 1.0);
+  rk4_step_case("null_k2", y4, a4, (const double *)0, c4, e4, 4u, 1.0);
+  rk4_step_case("null_k3", y4, a4, b4, (const double *)0, e4, 4u, 1.0);
+  rk4_step_case("null_k4", y4, a4, b4, c4, (const double *)0, 4u, 1.0);
+  st = diana_rk4_step(y4, a4, b4, c4, e4, 4u, 1.0, (double *)0);
+  put_head("rk4_step", "null_out");
+  put_status(st);
+  printf("\n");
+  rk4_step_case("empty", y4, a4, b4, c4, e4, 0u, 1.0);
+  rk4_step_case("exact", y4, a4, b4, c4, e4, 4u, 0.75);
+  rk4_step_case("third", y4, a4, b4, c4, e4, 4u, 1.0 / 3.0);
+  rk4_step_case("weight", zeros, one1, zero1, zero1, zero1, 1u, 6.0);
+  rk4_step_case("sum_order", zero1, one1, eps_quarter, eps_quarter, eps_half,
+                1u, 6.0);
+  rk4_step_case("h_zero", signed_zero, a4, b4, c4, e4, 4u, 0.0);
+  rk4_step_case("h_negative_zero", signed_zero, a4, b4, c4, e4, 4u, -0.0);
+  rk4_step_case("zero_slope", signed_zero, zeros, zeros, zeros, zeros, 4u, 1.0);
+  rk4_step_case("underflow", zero1, one1, zero1, zero1, zero1, 1u,
+                VAL_TRUE_MIN);
+  rk4_step_case("subnormal", zero1, one1, one1, one1, one1, 1u,
+                5.0 * VAL_TRUE_MIN);
+  rk4_step_case("k23_over", zero1, zero1, max1, max1, zero1, 1u, 1.0);
+  rk4_step_case("double_over", zero1, zero1, max1, zero1, zero1, 1u, 1.0);
+  rk4_step_case("slope_over", zero1, max1, half_max1, zero1, zero1, 1u, 1.0);
+  rk4_step_case("product_over", zero1, max1, zero1, zero1, zero1, 1u, 2.0);
+  rk4_step_case("sum_over", max1, big1, zero1, zero1, zero1, 1u, 6.0);
+  rk4_step_case("cancel_k14", zero1, max1, zero1, zero1, neg_max1, 1u, 1.0);
+  rk4_step_case("cancel_k23", zero1, zero1, max1, neg_max1, zero1, 1u, 1.0);
+  rk4_step_case("max_plus_one", max1, one1, zero1, zero1, zero1, 1u, 6.0);
+  rk4_step_case("fail_last", fail_last_y, fail_last_k, fail_last_k, fail_last_k,
+                fail_last_k, 3u, 1.0);
+  rk4_step_case("fail_first", fail_first_y, fail_first_k, fail_first_k,
+                fail_first_k, fail_first_k, 3u, 1.0);
+  rk4_step_case("h_nan", y4, a4, b4, c4, e4, 4u, VAL_QNAN);
+  rk4_step_case("h_snan", y4, a4, b4, c4, e4, 4u, VAL_SNAN);
+  rk4_step_case("h_inf", y4, a4, b4, c4, e4, 4u, VAL_INF);
+  rk4_step_case("h_inf_zero", y4, zeros, zeros, zeros, zeros, 4u, -VAL_INF);
+  for (i = 0u; i < 4u; ++i) {
+    memcpy(y, y4, sizeof y4);
+    memcpy(k[0], a4, sizeof a4);
+    memcpy(k[1], b4, sizeof b4);
+    memcpy(k[2], c4, sizeof c4);
+    memcpy(k[3], e4, sizeof e4);
+    y[i] = VAL_QNAN;
+    rk4_step_case("y_nan", y, k[0], k[1], k[2], k[3], 4u, 1.0);
+    y[i] = -VAL_INF;
+    rk4_step_case("y_inf", y, k[0], k[1], k[2], k[3], 4u, 1.0);
+    y[i] = y4[i];
+    for (j = 0u; j < 4u; ++j) {
+      double saved = k[j][i];
+      k[j][i] = VAL_SNAN;
+      rk4_step_case("k_snan", y, k[0], k[1], k[2], k[3], 4u, 1.0);
+      k[j][i] = VAL_INF;
+      rk4_step_case("k_inf", y, k[0], k[1], k[2], k[3], 4u, 0.0);
+      k[j][i] = saved;
+    }
+  }
+
+  for (n = 0u; n < RANDOM_ARRAY; ++n) {
+    int mixed = (int)(n % 2u);
+    size_t d = 1u + (size_t)rng_below(32u);
+    double h = random_value(mixed);
+    stage = 2 + (int)rng_below(3u);
+    for (i = 0u; i < d; ++i) {
+      y[i] = random_value(mixed);
+      for (j = 0u; j < 4u; ++j) {
+        k[j][i] = random_value(mixed);
+      }
+    }
+    rk4_stage_case("random", y, k[0], d, h, stage);
+    rk4_step_case("random", y, k[0], k[1], k[2], k[3], d, h);
+  }
+}
+
 typedef double (*newton_fn)(double x, double c, double *dfx);
 
 static double g_linear(double x, double c, double *dfx) {
@@ -1006,6 +1206,7 @@ int main(void) {
   test_trapezoidal();
   test_simpson();
   test_euler();
+  test_rk4();
   test_newton();
   printf("end %u\n", case_count);
   if (fflush(stdout) != 0 || ferror(stdout)) {
