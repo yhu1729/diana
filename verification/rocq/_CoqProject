@@ -22,8 +22,15 @@ theory/Float/RK4.v
 theory/Float/RK4Unchecked.v
 theory/Float/Simpson.v
 theory/Float/Trapezoidal.v
-../clight/bisection_aarch64_macos.v
 theory/VST/Bisection.v
+../clight/bisection_init_aarch64_macos.v
+theory/VST/BisectionInit.v
+../clight/bisection_mid_aarch64_macos.v
+theory/VST/BisectionMid.v
+../clight/bisection_result_aarch64_macos.v
+theory/VST/BisectionResult.v
+../clight/bisection_step_aarch64_macos.v
+theory/VST/BisectionStep.v
 ../clight/euler_aarch64_macos.v
 theory/VST/Euler.v
 ../clight/euler_step_unchecked_aarch64_macos.v
