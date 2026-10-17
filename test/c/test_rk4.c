@@ -1,12 +1,28 @@
 #include <float.h>
 #include <math.h>
 #include <stddef.h>
+#include <stdint.h>
+#include <string.h>
 
 #include "check.h"
 #include "diana/diana.h"
 
 #define SENTINEL 42.0
 #define DIM 100u
+
+typedef diana_status (*stage_fn)(const double *y, const double *k, size_t d,
+                                 double h, int stage, double *y_out);
+typedef diana_status (*step_fn)(const double *y, const double *k1,
+                                const double *k2, const double *k3,
+                                const double *k4, size_t d, double h,
+                                double *y_out);
+
+static uint64_t bits(double x) {
+  uint64_t u;
+
+  memcpy(&u, &x, sizeof u);
+  return u;
+}
 
 static void check_same(const double *out, const double *want, size_t d) {
   size_t i;
@@ -33,59 +49,132 @@ static void check_untouched(const double *out) {
   }
 }
 
+/* The checked and unchecked results agree bit for bit in every slot, and
+   only out[0 .. d-1] is written. */
+static void check_agree(const double *out, const double *raw, size_t d) {
+  size_t i;
+
+  for (i = 0; i < DIM; ++i) {
+    CHECK(bits(raw[i]) == bits(out[i]));
+  }
+  for (i = d; i < DIM; ++i) {
+    CHECK(out[i] == SENTINEL);
+  }
+}
+
+/* An unchecked result written as computed; want[i] NaN accepts any NaN. */
+static void check_raw(const double *out, const double *want, size_t d) {
+  size_t i;
+
+  for (i = 0; i < d; ++i) {
+    if (isnan(want[i])) {
+      CHECK(isnan(out[i]));
+    } else {
+      CHECK(out[i] == want[i]);
+      CHECK(!signbit(out[i]) == !signbit(want[i]));
+    }
+  }
+  for (i = d; i < DIM; ++i) {
+    CHECK(out[i] == SENTINEL);
+  }
+}
+
 static void stage_ok(const double *y, const double *k, size_t d, double h,
                      int stage, const double *want) {
   double out[DIM];
+  double raw[DIM];
 
   fill(out);
+  fill(raw);
   CHECK_EQ_STATUS(diana_rk4_stage(y, k, d, h, stage, out), DIANA_OK);
+  CHECK_EQ_STATUS(diana_rk4_stage_unchecked(y, k, d, h, stage, raw), DIANA_OK);
   check_same(out, want, d);
+  check_agree(out, raw, d);
+}
+
+static void stage_reject(stage_fn fn, const double *y, const double *k,
+                         size_t d, double h, int stage) {
+  double out[DIM];
+
+  fill(out);
+  CHECK_EQ_STATUS(fn(y, k, d, h, stage, out), DIANA_ERR_ARG);
+  check_untouched(out);
 }
 
 static void stage_arg(const double *y, const double *k, size_t d, double h,
                       int stage) {
+  stage_reject(diana_rk4_stage, y, k, d, h, stage);
+}
+
+static void stage_raw(const double *y, const double *k, size_t d, double h,
+                      int stage, const double *want) {
   double out[DIM];
 
   fill(out);
-  CHECK_EQ_STATUS(diana_rk4_stage(y, k, d, h, stage, out), DIANA_ERR_ARG);
-  check_untouched(out);
+  CHECK_EQ_STATUS(diana_rk4_stage_unchecked(y, k, d, h, stage, out), DIANA_OK);
+  check_raw(out, want, d);
 }
 
 static void step_ok(const double *y, const double *k1, const double *k2,
                     const double *k3, const double *k4, size_t d, double h,
                     const double *want) {
   double out[DIM];
+  double raw[DIM];
 
   fill(out);
+  fill(raw);
   CHECK_EQ_STATUS(diana_rk4_step(y, k1, k2, k3, k4, d, h, out), DIANA_OK);
+  CHECK_EQ_STATUS(diana_rk4_step_unchecked(y, k1, k2, k3, k4, d, h, raw),
+                  DIANA_OK);
   check_same(out, want, d);
+  check_agree(out, raw, d);
+}
+
+static void step_reject(step_fn fn, const double *y, const double *k1,
+                        const double *k2, const double *k3, const double *k4,
+                        size_t d, double h) {
+  double out[DIM];
+
+  fill(out);
+  CHECK_EQ_STATUS(fn(y, k1, k2, k3, k4, d, h, out), DIANA_ERR_ARG);
+  check_untouched(out);
 }
 
 static void step_arg(const double *y, const double *k1, const double *k2,
                      const double *k3, const double *k4, size_t d, double h) {
+  step_reject(diana_rk4_step, y, k1, k2, k3, k4, d, h);
+}
+
+static void step_raw(const double *y, const double *k1, const double *k2,
+                     const double *k3, const double *k4, size_t d, double h,
+                     const double *want) {
   double out[DIM];
 
   fill(out);
-  CHECK_EQ_STATUS(diana_rk4_step(y, k1, k2, k3, k4, d, h, out), DIANA_ERR_ARG);
-  check_untouched(out);
+  CHECK_EQ_STATUS(diana_rk4_step_unchecked(y, k1, k2, k3, k4, d, h, out),
+                  DIANA_OK);
+  check_raw(out, want, d);
 }
 
 static void test_stage_argument(void) {
+  static const stage_fn fn[2] = {diana_rk4_stage, diana_rk4_stage_unchecked};
   const double y[2] = {1.0, 2.0};
   const double k[2] = {3.0, 4.0};
+  size_t n;
 
-  stage_arg((const double *)0, k, 2u, 1.0, 2);
-  stage_arg(y, (const double *)0, 2u, 1.0, 2);
-  stage_arg(y, k, 0u, 1.0, 2);
-  stage_arg(y, k, 2u, 1.0, 1);
-  stage_arg(y, k, 2u, 1.0, 5);
-  stage_arg(y, k, 2u, 1.0, 0);
-  stage_arg(y, k, 2u, 1.0, -3);
-  CHECK_EQ_STATUS(diana_rk4_stage(y, k, 2u, 1.0, 2, (double *)0),
-                  DIANA_ERR_ARG);
-  CHECK_EQ_STATUS(diana_rk4_stage((const double *)0, (const double *)0, 0u, 1.0,
-                                  0, (double *)0),
-                  DIANA_ERR_ARG);
+  for (n = 0; n < 2u; ++n) {
+    stage_reject(fn[n], (const double *)0, k, 2u, 1.0, 2);
+    stage_reject(fn[n], y, (const double *)0, 2u, 1.0, 2);
+    stage_reject(fn[n], y, k, 0u, 1.0, 2);
+    stage_reject(fn[n], y, k, 2u, 1.0, 1);
+    stage_reject(fn[n], y, k, 2u, 1.0, 5);
+    stage_reject(fn[n], y, k, 2u, 1.0, 0);
+    stage_reject(fn[n], y, k, 2u, 1.0, -3);
+    CHECK_EQ_STATUS(fn[n](y, k, 2u, 1.0, 2, (double *)0), DIANA_ERR_ARG);
+    CHECK_EQ_STATUS(
+        fn[n]((const double *)0, (const double *)0, 0u, 1.0, 0, (double *)0),
+        DIANA_ERR_ARG);
+  }
 }
 
 /* Samples and h with few significant bits: the coefficient, the product and
@@ -197,20 +286,23 @@ static void test_stage_failure_keeps_output(void) {
 }
 
 static void test_step_argument(void) {
+  static const step_fn fn[2] = {diana_rk4_step, diana_rk4_step_unchecked};
   const double v[2] = {1.0, 2.0};
   const double *const z = (const double *)0;
   double out[2] = {SENTINEL, SENTINEL};
+  size_t n;
 
-  step_arg(z, v, v, v, v, 2u, 1.0);
-  step_arg(v, z, v, v, v, 2u, 1.0);
-  step_arg(v, v, z, v, v, 2u, 1.0);
-  step_arg(v, v, v, z, v, 2u, 1.0);
-  step_arg(v, v, v, v, z, 2u, 1.0);
-  step_arg(v, v, v, v, v, 0u, 1.0);
-  CHECK_EQ_STATUS(diana_rk4_step(v, v, v, v, v, 2u, 1.0, (double *)0),
-                  DIANA_ERR_ARG);
-  CHECK_EQ_STATUS(diana_rk4_step(z, z, z, z, z, 0u, 1.0, out), DIANA_ERR_ARG);
-  CHECK(out[0] == SENTINEL && out[1] == SENTINEL);
+  for (n = 0; n < 2u; ++n) {
+    step_reject(fn[n], z, v, v, v, v, 2u, 1.0);
+    step_reject(fn[n], v, z, v, v, v, 2u, 1.0);
+    step_reject(fn[n], v, v, z, v, v, 2u, 1.0);
+    step_reject(fn[n], v, v, v, z, v, 2u, 1.0);
+    step_reject(fn[n], v, v, v, v, z, 2u, 1.0);
+    step_reject(fn[n], v, v, v, v, v, 0u, 1.0);
+    CHECK_EQ_STATUS(fn[n](v, v, v, v, v, 2u, 1.0, (double *)0), DIANA_ERR_ARG);
+    CHECK_EQ_STATUS(fn[n](z, z, z, z, z, 0u, 1.0, out), DIANA_ERR_ARG);
+    CHECK(out[0] == SENTINEL && out[1] == SENTINEL);
+  }
 }
 
 /* With h = 3/4, h * s / 6 = s / 8 is exact for small integer s. */
@@ -350,6 +442,76 @@ static void test_step_failure_keeps_output(void) {
 
   step_arg(y, k, k, k, k, 3u, 1.0);
   step_arg(g, e, e, e, e, 3u, 1.0);
+}
+
+/* Inputs the checked stage rejects: the unchecked stage writes the IEEE
+   result of each operation, finite components included. */
+static void test_stage_unchecked_nonfinite(void) {
+  const double zero[1] = {0.0};
+  const double one[1] = {1.0};
+  const double four[1] = {4.0};
+  const double max[1] = {DBL_MAX};
+  const double neg[1] = {-DBL_MAX};
+  const double inf[1] = {HUGE_VAL};
+  const double ninf[1] = {-HUGE_VAL};
+  const double nan1[1] = {(double)NAN};
+  const double y[3] = {1.0, 2.0, DBL_MAX};
+  const double k[3] = {1.0, 1.0, DBL_MAX};
+  const double partial[3] = {3.0, 4.0, HUGE_VAL};
+  const double g[3] = {-1.0, (double)NAN, 0.5};
+  const double e[3] = {2.0, 1.0, -HUGE_VAL};
+  const double mixed[3] = {1.0, (double)NAN, -HUGE_VAL};
+  const double one3[3] = {1.0, 1.0, 1.0};
+  const double nan3[3] = {(double)NAN, (double)NAN, (double)NAN};
+  const double inf3[3] = {HUGE_VAL, HUGE_VAL, HUGE_VAL};
+
+  /* overflow in the product (c = h, then c = h/2), then in the sum */
+  stage_raw(zero, max, 1u, 2.0, 4, inf);
+  stage_raw(zero, four, 1u, DBL_MAX, 2, inf);
+  stage_raw(max, max, 1u, 2.0, 3, inf);
+  stage_raw(neg, max, 1u, -2.0, 4, ninf);
+  /* inf - inf is NaN; 0 * inf is NaN */
+  stage_raw(inf, ninf, 1u, 2.0, 2, nan1);
+  stage_raw(one, inf, 1u, 0.0, 4, nan1);
+  stage_raw(y, k, 3u, 2.0, 4, partial);
+  stage_raw(g, e, 3u, 1.0, 4, mixed);
+  stage_raw(one3, one3, 3u, (double)NAN, 3, nan3);
+  stage_raw(one3, one3, 3u, HUGE_VAL, 2, inf3);
+}
+
+/* Inputs the checked step rejects, as for the stage. */
+static void test_step_unchecked_nonfinite(void) {
+  const double zero[1] = {0.0};
+  const double max[1] = {DBL_MAX};
+  const double half[1] = {DBL_MAX / 2.0};
+  const double nmax[1] = {-DBL_MAX};
+  const double big[1] = {0x1p1020};
+  const double inf[1] = {HUGE_VAL};
+  const double ninf[1] = {-HUGE_VAL};
+  const double nan1[1] = {(double)NAN};
+  const double y[3] = {1.0, 2.0, DBL_MAX};
+  const double k[3] = {1.0, 1.0, DBL_MAX};
+  const double partial[3] = {2.0, 3.0, HUGE_VAL};
+  const double g[3] = {-1.0, (double)NAN, 0.5};
+  const double e[3] = {6.0, 0.0, -HUGE_VAL};
+  const double mixed[3] = {5.0, (double)NAN, -HUGE_VAL};
+  const double one3[3] = {1.0, 1.0, 1.0};
+  const double nan3[3] = {(double)NAN, (double)NAN, (double)NAN};
+
+  /* overflow in k2 + k3, the doubling, the slope sum, h * s, the sum */
+  step_raw(zero, zero, max, max, zero, 1u, 1.0, inf);
+  step_raw(zero, zero, max, zero, zero, 1u, 1.0, inf);
+  step_raw(zero, max, half, zero, zero, 1u, 1.0, inf);
+  step_raw(zero, max, zero, zero, zero, 1u, 2.0, inf);
+  step_raw(max, big, zero, zero, zero, 1u, 6.0, inf);
+  step_raw(zero, nmax, zero, zero, zero, 1u, 2.0, ninf);
+  /* inf - inf in k1 + k4 and in k2 + k3; 0 * inf */
+  step_raw(zero, inf, zero, zero, ninf, 1u, 1.0, nan1);
+  step_raw(zero, zero, inf, ninf, zero, 1u, 1.0, nan1);
+  step_raw(zero, inf, zero, zero, zero, 1u, 0.0, nan1);
+  step_raw(y, k, k, k, k, 3u, 1.0, partial);
+  step_raw(g, e, e, e, e, 3u, 1.0, mixed);
+  step_raw(one3, one3, one3, one3, one3, 3u, (double)NAN, nan3);
 }
 
 /* Callback wrapper. Each right-hand side below keeps every stage and iterate
@@ -523,6 +685,8 @@ int main(void) {
   test_step_overflow();
   test_step_nonfinite();
   test_step_failure_keeps_output();
+  test_stage_unchecked_nonfinite();
+  test_step_unchecked_nonfinite();
   test_wrapper_integrate();
   test_wrapper_no_step();
   test_wrapper_argument();
