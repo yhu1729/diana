@@ -44,7 +44,7 @@ theorem:
     layer: B
     informal: >
       stagnation: for finite x and dx with fl(x − dx) finite, fl(x − dx) = x implies
-      |dx| ≤ ulp(x)/2, so the kernel's "iterate unchanged" stop means the correction is below
+      |dx| ≤ ulp(x)/2, so the kernel's "iterate unchanged" stop means the correction is at most
       half an ulp of the iterate (parameterised by the NaN-payload functions so it instantiates
       to CompCert's Float.sub/Float.div).
     rocq: Diana.Float.Newton.stagnation
