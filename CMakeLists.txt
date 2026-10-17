@@ -165,6 +165,7 @@ if(DIANA_BUILD_PYTHON)
         python/ext/rk4_stage.c
         python/ext/rk4_step.c
         python/ext/simpson.c
+        python/ext/simpson_exec.c
         python/ext/trapezoidal.c)
     target_link_libraries(_diana PRIVATE diana::diana)
     diana_set_strict_flag(_diana)
