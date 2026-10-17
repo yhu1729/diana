@@ -30,8 +30,8 @@ switch of `CONTRIBUTING.md`, and a green pipeline says nothing about it. After a
    loop cannot silently omit it. The fresh WP run and report check remain step 4; an expectation
    count alone is not proof evidence. As of v0.3.0 every theorem listed in `spec/` is proved, so it
    exits 0. Note that this is a gate on the listed theorems, not a claim beyond them: the callback
-   wrappers in `src/wrapper/` have no proof, and the VST funspecs leave the NULL and other
-   argument-error paths to Frama-C.
+   wrappers (`src/bisection.c`, `src/euler.c`, `src/newton.c`, `src/rk4.c`) have no proof, and the
+   VST funspecs leave the NULL and other argument-error paths to Frama-C.
 
 ## Clight AST per target
 
