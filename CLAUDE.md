@@ -164,4 +164,5 @@ read-only state fields and positional-only `step` arguments.
 Unreleased (toward 1.0): the classical Runge–Kutta step RK4 in reverse communication,
 `diana_rk4_stage` (the point of stage 2, 3 or 4: `y + (h/2)·k` or `y + h·k`) and
 `diana_rk4_step` (`y + h·((k₁ + k₄) + 2·(k₂ + k₃))/6`), both two-pass like Euler (C tests at 100%
-line and branch coverage); WP proves the ACSL contracts (98 goals, RK4-C1, `spec/rk4.md`).
+line and branch coverage); WP proves the ACSL contracts (98 goals, RK4-C1, `spec/rk4.md`), and
+Flocq its layer B (RK4-B1 to B5: finiteness, the `fl(h/2)` coefficient, stage and step error).
