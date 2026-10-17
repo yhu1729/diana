@@ -202,8 +202,8 @@ status, and the fields of the C state are read-only attributes:
 
 `diana.bisection` raises `diana.BracketError` when `f(a)` and `f(b)` do not bracket a root, and
 `diana.MaxIterError` when `max_iter` is reached first; the latter carries the attributes
-`estimate`, `width` and `iter` (also its `args`, so it survives pickling across a process
-boundary).
+`estimate`, `uncertainty` (the bracket width) and `iter` (also its `args`, so it survives pickling
+across a process boundary).
 
 ```python
 >>> diana.bisection(lambda x: x * x + 1, -1, 1)
@@ -213,6 +213,6 @@ diana._diana.BracketError: no sign change in bracket
 >>> try:
 ...     diana.bisection(lambda x: x * x - 2, 0, 2, max_iter=10)
 ... except diana.MaxIterError as e:
-...     print(e.estimate, e.width, e.iter)
+...     print(e.estimate, e.uncertainty, e.iter)
 1.4150390625 0.001953125 10
 ```

@@ -201,7 +201,7 @@ A zero `f′(x)` raises `diana.SingularError` (a `ValueError`; `DIANA_ERR_SINGUL
 non-finite `f(x)` or `f′(x)` or a correction or iterate that overflows raises `ValueError`
 (`DIANA_ERR_ARG`); either leaves the state at the last iterate. `diana.newton` raises
 `diana.MaxIterError` when `max_iter` is reached first, with the attributes `estimate` (the current
-iterate), `width` (the last `|dx|`) and `iter`:
+iterate), `uncertainty` (the last `|dx|`) and `iter`:
 
 ```python
 >>> diana.newton(lambda x: (x * x + 1, 2 * x), 0.0, 1e-12)
@@ -211,7 +211,7 @@ diana._diana.SingularError: f'(x) is zero
 >>> try:
 ...     diana.newton(lambda x: (x * x - 2, 2 * x), 2.0, 1e-12, max_iter=2)
 ... except diana.MaxIterError as e:
-...     print(e.estimate, e.width, e.iter)
+...     print(e.estimate, e.uncertainty, e.iter)
 1.4166666666666667 0.08333333333333333 2
 >>> try:
 ...     diana.newton(lambda x: (x * x - 2, 2 * x), 2.0, 0.0)
