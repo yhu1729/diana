@@ -137,7 +137,8 @@ y(1) = (0.841470478, 0.540302967)
 
 ## Callback wrapper
 
-`diana/wrapper.h`; not verified, see [callback wrapper](overview.md#callback-wrapper).
+`diana/rk4.h` (callback type `diana_ode_fn` from `diana/ode.h`); not verified, see
+[callback wrapper](overview.md#callback-wrapper).
 
 - `diana_rk4(fn, ctx, t0, h, nstep, y, d, work, done)` takes `nstep` RK4 steps of size `h` from
   `y(t0) = y[0 .. d-1]`, in place, with `fn` of type `diana_ode_fn`: `fn(t, y, dy, d, ctx)` must
@@ -158,7 +159,7 @@ Each component is multiplied by `R(−0.1)¹⁰ = 0.367879774`, with
 ```c
 #include <stdio.h>
 
-#include <diana/wrapper.h>
+#include <diana/rk4.h>
 
 #define D 3
 
