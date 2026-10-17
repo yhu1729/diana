@@ -25,6 +25,7 @@ theory/VST/Euler.v
 ../clight/newton_aarch64_macos.v
 theory/VST/Newton.v
 ../clight/rk4_aarch64_macos.v
+theory/VST/RK4.v
 ../clight/simpson_aarch64_macos.v
 theory/VST/Simpson.v
 ../clight/trapezoidal_aarch64_macos.v
