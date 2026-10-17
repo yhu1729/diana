@@ -27,10 +27,11 @@ Python calls the kernel as `diana.euler_step` and loops as `diana.euler` (see [P
 
 `diana_euler_step` is the default. Use the unchecked step only where the caller checks the state
 itself, or does not need to stop at the first non-finite component, and the step is a measured
-cost: with one pass and no branch the compiler vectorizes the loop. On an Apple Silicon Mac
-(Release build, clang and gcc 15) the checked step takes about 0.44 to 0.67 ns per component and
-the unchecked one 0.10 to 0.29, a factor of 2.4 to 4.9 on the kernel; with a right-hand side as
-cheap as `dy[i] = -0.5 * y[i]` the whole step is 1.6 to 3.3 times faster. The difference is
+cost: with one pass and no branch the compiler vectorizes the loop. On an Apple M4 Mac (Release
+build, Apple clang 21 and GCC 15.3, `d` from 64 to 16384; [benchmark](../development/benchmark.md))
+the checked step takes about 0.44 to 0.52 ns per component and the unchecked one 0.10 to 0.19, a
+factor of 2.8 to 4.8 on the kernel; with a right-hand side as cheap as `dy[i] = -0.5 * y[i]` the
+whole step is 1.7 to 3.3 times faster. The difference is
 0.3 to 0.4 ns per component, so it is small next to a right-hand side that costs a few
 nanoseconds per component.
 
