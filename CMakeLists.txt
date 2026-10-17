@@ -51,6 +51,7 @@ else()
 endif()
 add_library(diana ${diana_library_type}
     src/status.c
+    src/bisection.c
     src/bisection_init.c
     src/bisection_mid.c
     src/bisection_result.c
@@ -66,7 +67,6 @@ add_library(diana ${diana_library_type}
     src/rk4_step_unchecked.c
     src/simpson.c
     src/trapezoidal.c
-    src/wrapper/bisection.c
     src/wrapper/euler.c
     src/wrapper/newton.c
     src/wrapper/rk4.c)

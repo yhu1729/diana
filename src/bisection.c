@@ -1,5 +1,4 @@
 #include "diana/bisection.h"
-#include "diana/wrapper.h"
 
 diana_status diana_bisection(diana_bisection_fn f, void *ctx, double a,
                              double b, double tol, unsigned max_iter,
