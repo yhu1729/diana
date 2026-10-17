@@ -4,10 +4,12 @@ Formally verified numerical method library in C11 with a hand-written CPython ex
 mathematical specification is proven in both Lean 4 (Mathlib) and Rocq (Stdlib reals; Coquelicot
 where integrals and derivatives are needed); floating-point bounds in Rocq (Flocq); C-code
 correctness in Rocq (VST via CompCert `clightgen`) and Frama-C (WP).
-Documentation index: `doc/README.md`. Trust statement: `doc/verification/trust.md`; generated
-theorem report: `doc/verification/report.md`. API: `doc/api/`. Build and CI rationale:
-`doc/development/`; test values: `doc/test/`. Future work: `doc/roadmap.md`, one line per idea,
-no design (a design is written only when an item is picked up).
+Human documentation: `doc/README.md` (API `doc/api/`, development `doc/development/`, trust
+statement `doc/verification/trust.md`, generated theorem report `doc/verification/report.md`).
+**Technical notes for agents: `note/README.md`** — one fact, rule, procedure or rationale per
+file (`note/<topic>/<PREFIX>-<NNN>.md`), indexed by topic and **by path**: before editing a file,
+read the notes its "By path" row lists (`grep -rl '<path>' note`). Future work: `doc/roadmap.md`,
+one line per idea, no design (a design is written only when an item is picked up).
 
 ## Convention
 
@@ -35,16 +37,18 @@ no design (a design is written only when an item is picked up).
   - **Check:** `script/check_commit.sh` enforces every rule above except size and wording beyond
     articles; the `pre-push` hook runs it on unpushed commits and the `style_git` CI job on the
     commits since the branch's previous pipeline. Link both hooks once per clone (`CONTRIBUTING.md`).
-- **Living document:** update `CHANGELOG.md` (`Unreleased` section, Keep a Changelog) and this file in the
-  same commit as any change that affects them.
+- **Living document:** update `CHANGELOG.md` (`Unreleased` section, Keep a Changelog), this file,
+  the affected `doc/` page and the affected notes in the same commit as any change that affects them.
 - **Python:** `uv` manages the interpreter and environment (`uv sync` at the repo root; `.python-version`
   and `uv.lock` are committed). Never `pip` directly, never the system Python.
-- **C:** C11, `-Wall -Wextra -Wconversion -Wshadow -Wvla -pedantic -Werror` (`-Werror` is the CMake option
+- **C:** C11, the strict warning set of `cmake/warning.cmake` (`-Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wvla`
+  and more, note CMAKE-001) with `-Werror` (`-Werror` is the CMake option
   `DIANA_WERROR`, OFF by default so end-user builds survive new compiler warnings; CI and `script/dev.sh`
   turn it ON); no `malloc` and **no libm
   call** in a verified kernel (use `src/fp.h`: `diana_fp_finite`, `diana_fp_abs`; every external call
   would need an axiom in VST and Frama-C, and clightgen cannot parse macOS `<math.h>`); caller-owned
-  buffer; every public function returns `diana_status`; prefix `diana_`; `-ffp-contract=off`, no
+  buffer; every public function returns `diana_status` (except the string functions `diana_status_str`
+  and `diana_version`); prefix `diana_`; `-ffp-contract=off`, no
   `-ffast-math`/`-Ofast` (the verified semantics are strict IEEE binary64). Format with `clang-format`
   (LLVM style, `.clang-format`; use the version pinned in the uv `lint` group, CI `style_c` checks it).
 - **Floating-point environment:** every numerical call requires nearest-even rounding, gradual
@@ -57,12 +61,12 @@ no design (a design is written only when an item is picked up).
   `static inline` `diana_py_overlap` in `module.h`, object structs in `bisection_object.h` and
   `newton_object.h`); pure-Python package in `python/src/diana/`
   with one private driver module per kernel (`_bisection.py`, `_newton.py`) re-exported by `__init__.py`, and
-  `_convert.py` (`real`, the scalar check the drivers share: a string is rejected as the C `d`
-  converter rejects it).
+  `_convert.py` (`real`, the scalar check the bisection, Euler and RK4 drivers apply: a string is
+  rejected as the C `d` converter rejects it; `diana.newton` passes its scalars to `Newton` directly).
   `Bisection` and `Newton` start with status `ERR_ARG` until initialization succeeds; `step` and `result` reject
   uninitialized objects, and a failed reinitialization preserves the previous state. `Newton` takes `tol`
   without a default (no parameter-free stopping rule; `tol = 0` commonly ends in a two-cycle of adjacent doubles).
-  An array kernel reads a buffer in place (`PyBUF_RECORDS_RO`; native float64, one-dimensional,
+  An array kernel reads a buffer in place (`PyBUF_RECORDS_RO`, the extension's `out` buffer `PyBUF_RECORDS`; native float64, one-dimensional,
   C-contiguous, aligned, checked in the extension by `diana_py_get_array` in `python/ext/get_array.c`) and its driver copies any non-buffer iterable
   into `array.array("d")`; no NumPy in the package, only in tests.
 - **ACSL:** arithmetic on doubles is exact real arithmetic, write rounded values with casts
@@ -94,11 +98,17 @@ no design (a design is written only when an item is picked up).
   `kernel` lists its source files. A variant of a method, such as the `_unchecked` kernels, gets its
   own verification artifacts: those per source file, its own Flocq file, and its own
   `spec/<method>_unchecked.md` (IDs `<METHOD>-UNCHECKED-…`).
-- **Comment:** keep in-code comments to a minimum. Rationale, API description, and proof notes go
-  in `doc/` (`api/`, `development/`, `test/`, `verification/`, indexed by `doc/README.md`) or
-  `spec/<method>.md`. A method has its own `doc/api/<method>.md` and `doc/test/<method>.md`;
+- **Comment and documentation:** keep in-code comments to a minimum. `doc/` is prose for human
+  developers (what and why, short, with examples), indexed by `doc/README.md`; every exact
+  technical detail (evaluation and check order, theorem coverage, tool quirks, CI internals,
+  test-value derivations) is a note in `note/<topic>/` (format and rules in `note/README.md`);
+  theorem lists and proof notes are in `spec/<method>.md`. Each `doc/` page ends with links to
+  its notes. A method has its own `doc/api/<method>.md`; its test values are `test/` notes.
   `test/doc/` runs the `doc/api/` examples: a `c` block is a clang-format clean program followed
   by a `text` block of its output, a `python` block is a doctest session.
+  `script/check_doc.py` checks note front matter, the generated note index (`--write` rewrites
+  it), note ID references and every relative Markdown link; `script/dev.sh test` and CI
+  `style_python` run it.
   ACSL `/*@ ... */` annotations are code, not comments. Python docstrings and CPython
   `tp_doc`/`ml_doc` strings stay (they are runtime API).
 - **Spec:** one `spec/<method>.md` per method with YAML front matter listing theorem IDs prefixed with the method in capitals,
@@ -135,7 +145,8 @@ verification/lean/    Lake project              verification/rocq/  Real/ Float/
 verification/clight/  committed clightgen out  test/benchmark/      timing driver
 verification/frama-c/ WP goal count/session/cache
 script/               check_spec, dev, frama_c   ci/docker/          prover image
-doc/                  README index; api/, development/, test/, verification/ (trust, report)
+doc/                  human docs: api/, development/, verification/ (trust, report)
+note/                 technical notes per topic, index by topic and by path (README.md)
 ```
 
 ## How to run
@@ -180,6 +191,7 @@ doc/                  README index; api/, development/, test/, verification/ (tr
   On macOS it sets an unset `MACOSX_DEPLOYMENT_TARGET` from `sw_vers` (GCC 13 cannot build without it).
   Keep the driver's arrays static: CompCert 3.17 on AArch64 macOS misaligns `sp` in a `main`
   frame over about 500 bytes (`SIGBUS`), and inlining moves callee locals into `main`
+- Doc check: `uv run script/check_doc.py` (`--write` regenerates the index of `note/README.md`)
 - Spec gate: `uv run script/check_spec.py --run --strict` (runs both provers' check files, `--prover lean|rocq` to select one; a run of both provers rewrites the generated report `doc/verification/report.md`, a partial or structural run leaves it alone; commit it, CI does not regenerate it; `--no-report` to leave it alone on a full run)
   The default full strict gate also requires a unique positive Frama-C expectation count for the
   `acsl` file of each ACSL theorem; fresh WP execution and report checking remain in `script/dev.sh verify`.
