@@ -4,7 +4,9 @@
 A real / B float / C code, informal statement, and the fully qualified constant per prover) and
 
 1. validates the front matter and the referenced C targets; a theorem ID is the method in
-   capitals, the layer letter, and a number (`BISECTION-A1` in `spec/bisection.md`);
+   capitals with `_` written as `-`, the layer letter, and a number (`BISECTION-A1` in
+   `spec/bisection.md`, `EULER-UNCHECKED-C1` in `spec/euler_unchecked.md`), and `kernel` names
+   one source file or a list of them;
 2. writes `verification/lean/CheckSpec.lean` and `verification/rocq/CheckSpec.v`, which print the
    axioms of every listed constant. A constant not declared in its module file is marked `missing`
    and left out, so one absent constant does not abort the prover run for all others; the prover
