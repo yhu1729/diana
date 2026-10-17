@@ -39,6 +39,7 @@ theory/VST/Euler.v
 theory/VST/EulerStep.v
 ../clight/euler_step_unchecked_aarch64_macos.v
 theory/VST/EulerStepUnchecked.v
+../clight/fp_sqrt_aarch64_macos.v
 theory/VST/Newton.v
 ../clight/newton_init_aarch64_macos.v
 theory/VST/NewtonInit.v
