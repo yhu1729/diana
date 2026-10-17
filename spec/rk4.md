@@ -64,6 +64,38 @@ theorem:
       stage), and y_out untouched on DIANA_ERR_ARG. No assumed contract; that y_out is finite on
       DIANA_OK is left to VST.
     acsl: src/rk4.c
+  - id: RK4-C2
+    layer: C
+    informal: >
+      diana_rk4_stage computes the binary64 model (VST, AArch64 macOS Clight AST): for y and k
+      pointing to d ≥ 1 readable doubles, y_out to d writable doubles, the three disjoint, and
+      2 ≤ stage ≤ 4, it returns DIANA_OK and writes the model values when every component is
+      finite, and returns DIANA_ERR_ARG leaving y_out unchanged otherwise. The NULL, d = 0 and
+      out-of-range stage paths are RK4-C1.
+    rocq: Diana.VST.RK4.body_diana_rk4_stage
+  - id: RK4-C3
+    layer: C
+    informal: >
+      diana_rk4_step computes the binary64 model (VST, AArch64 macOS Clight AST): for y and the
+      four slopes pointing to d ≥ 1 readable doubles and y_out to d writable doubles, the six
+      disjoint, it returns DIANA_OK and writes the model values when every component is finite,
+      and returns DIANA_ERR_ARG leaving y_out unchanged otherwise. The NULL and d = 0 paths are
+      RK4-C1.
+    rocq: Diana.VST.RK4.body_diana_rk4_step
+  - id: RK4-C4
+    layer: C
+    informal: >
+      the C-order stage model c_stage (CompCert's Float.add and Float.mul, the coefficient
+      Float.mul 0.5 h or h) is the Flocq model frk4_stage, so RK4-B1 to B3 apply to every
+      component diana_rk4_stage writes.
+    rocq: Diana.VST.RK4.c_stage_model
+  - id: RK4-C5
+    layer: C
+    informal: >
+      the C-order step model c_rk4 (CompCert's Float.add, Float.mul and Float.div with the
+      constants 2 and 6) is the Flocq model frk4_step, so RK4-B4 and B5 apply to every component
+      diana_rk4_step writes.
+    rocq: Diana.VST.RK4.c_rk4_model
 ---
 # rk4
 
@@ -122,6 +154,18 @@ is an error even when `h·s/6` would be finite.
   early return happens before the second loop, and the only write is `y_out[i]` in that loop, so
   `assigns y_out[0 .. d − 1]` and the error post-condition follow from the control flow; the loop
   invariants are only the index bounds.
+- **C2**: the Euler proof (EULER-C2) with the coefficient for the step. Five range checks
+  precede the loops (`stage < 2` and `stage > 4` are false under `2 ≤ stage ≤ 4`); the branch
+  on `stage == 4` sets `c` to `c_coef stage h`, and the two loops then carry exactly the
+  invariants of `body_diana_euler_step` for `L = c_euler c ys ks`, reusing its list lemmas
+  (`Znth_c_euler`, `forallb_sublist_succ`, `forallb_false`). Proof: `body_diana_rk4_stage` in
+  `verification/rocq/theory/VST/RK4.v`.
+- **C3**: the same two loops over `L = c_rk4 h ys k₁s k₂s k₃s k₄s`, with seven reads and
+  assignments per component in place of three; `Znth_c_rk4` names the stored value. Proof:
+  `body_diana_rk4_step`.
+- **C4, C5**: the constants `0.5`, `2` and `6` of the Clight AST (`Float.of_bits`) equal the
+  Flocq constants by computation (`vm_compute` on `B2FF`), after which the models agree
+  structurally (`c_euler_model` for the stage). Proofs: `c_stage_model`, `c_rk4_model`.
 
 ## Model correspondence
 
@@ -133,6 +177,12 @@ is an error even when `h·s/6` would be finite.
   the C's operation order, and `frk4_step` maps it over five lists. `fadd`, `fmul` and `fdiv` are
   the `Bplus`, `Bmult` and `Bdiv` of `Diana.Float.Sum`, parameterised by the NaN-payload
   functions. B1 to B5 are per component; a max-norm form follows by taking the maximum over `i`.
+- **Layer C, VST** (`verification/rocq/theory/VST/RK4.v`, against the Clight AST
+  `verification/clight/rk4_aarch64_macos.v`, CompCert target AArch64 macOS): `c_coef stage h`
+  and `c_stage = c_euler (c_coef stage h)` are the stage in CompCert's `Float` operations, and
+  `c_step`/`c_rk4` the step; C4 and C5 identify them with `frk4_stage` and `frk4_step`. Each
+  funspec holds separate `data_at` for every array, so overlapping inputs, which the C allows
+  because they are only read, are outside the theorems; WP (C1) covers them for memory safety.
 
 ## Status
 
@@ -144,3 +194,7 @@ is an error even when `h·s/6` would be finite.
 | RK4-B4 | – | proved | – |
 | RK4-B5 | – | proved | – |
 | RK4-C1 | – | – | 98/98 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
+| RK4-C2 | – | proved | – |
+| RK4-C3 | – | proved | – |
+| RK4-C4 | – | proved | – |
+| RK4-C5 | – | proved | – |
