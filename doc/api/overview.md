@@ -4,7 +4,8 @@ Diana has a C API (`include/diana/`) and a Python package (`import diana`) over 
 kernels. This page covers what every method shares. Each method has its own page:
 [bisection](bisection.md), [Newton's method](newton.md),
 [composite trapezoidal rule](trapezoidal.md), [composite Simpson rule](simpson.md),
-[explicit Euler step](euler.md) and [classical Runge–Kutta step](rk4.md).
+[explicit Euler step](euler.md), [classical Runge–Kutta step](rk4.md) and
+[Cholesky factorization](cholesky.md).
 
 ## Floating-point environment
 
@@ -79,14 +80,15 @@ Every function returns a `diana_status` (`diana/status.h`), except `diana_status
 | `DIANA_ERR_ARG` | -1 | invalid argument, or a result that would not be finite |
 | `DIANA_ERR_BRACKET` | -2 | bisection: `f(a)` and `f(b)` have the same sign |
 | `DIANA_ERR_MAXITER` | -3 | iteration limit reached before convergence |
-| `DIANA_ERR_SINGULAR` | -4 | Newton's method: zero derivative |
+| `DIANA_ERR_SINGULAR` | -4 | Newton's method: zero derivative; Cholesky: a pivot that is not positive |
 
 `diana_status_str(st)` returns a short message for a code, and `diana_version()` the version of
 the linked library (the header defines `DIANA_VERSION_STRING` and its parts).
 
 A call that fails with `DIANA_ERR_ARG`, `DIANA_ERR_BRACKET` or `DIANA_ERR_SINGULAR` changes no
-output and no state. After `DIANA_ERR_MAXITER` the state holds the progress made so far. Check
-every status:
+output and no state, with one exception: the Cholesky factorization has already written part of its
+output when it finds a pivot that is not positive. After `DIANA_ERR_MAXITER` the state holds the
+progress made so far. Check every status:
 
 ```c
 const double y[] = {1.0}; /* one sample: no panel */
