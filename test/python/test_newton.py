@@ -68,7 +68,7 @@ def test_two_cycle_at_zero_tol():
         diana.newton(sq, 2.0, 0.0)
     assert info.value.iter == 100
     assert abs(info.value.estimate - math.sqrt(2.0)) <= math.ulp(math.sqrt(2.0))
-    assert 0.0 < info.value.width < math.ulp(1.0)
+    assert 0.0 < info.value.uncertainty < math.ulp(1.0)
 
 
 def test_double_root():
@@ -84,7 +84,7 @@ def test_max_iter():
         diana.newton(sq, 2.0, 1e-12, max_iter=3)
     assert info.value.iter == 3
     assert info.value.estimate == 1.4142156862745099
-    assert 0.0 < info.value.width < 0.003
+    assert 0.0 < info.value.uncertainty < 0.003
 
 
 def test_default_max_iter():

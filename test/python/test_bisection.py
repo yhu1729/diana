@@ -141,8 +141,8 @@ def test_max_iter_error_pickle():
     err = diana.MaxIterError(1.5, 0.25, 7)
     restored = pickle.loads(pickle.dumps(err))
     assert type(restored) is diana.MaxIterError
-    assert (restored.estimate, restored.width, restored.iter) == (1.5, 0.25, 7)
-    assert str(restored) == str(err) == "iteration limit 7 reached; estimate 1.5, width 0.25"
+    assert (restored.estimate, restored.uncertainty, restored.iter) == (1.5, 0.25, 7)
+    assert str(restored) == str(err) == "iteration limit 7 reached; estimate 1.5, uncertainty 0.25"
 
 
 def test_step_after_finish():
