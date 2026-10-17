@@ -1,5 +1,4 @@
 #include "diana/newton.h"
-#include "diana/wrapper.h"
 
 diana_status diana_newton(diana_newton_fn f, void *ctx, double x0, double tol,
                           unsigned max_iter, double *root, unsigned *iter) {

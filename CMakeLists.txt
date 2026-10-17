@@ -58,6 +58,7 @@ add_library(diana ${diana_library_type}
     src/bisection_step.c
     src/euler_step.c
     src/euler_step_unchecked.c
+    src/newton.c
     src/newton_init.c
     src/newton_result.c
     src/newton_step.c
@@ -68,7 +69,6 @@ add_library(diana ${diana_library_type}
     src/simpson.c
     src/trapezoidal.c
     src/wrapper/euler.c
-    src/wrapper/newton.c
     src/wrapper/rk4.c)
 add_library(diana::diana ALIAS diana)
 target_include_directories(diana PUBLIC
