@@ -21,7 +21,7 @@ All notable changes to this project are documented here. The format follows
   `test/c/test_rk4.c` covers both functions at 100% line and branch coverage, and the
   compiler-comparison corpus has 544 RK4 cases; every gcc and clang build matches CompCert
   bitwise.
-- Callback wrapper `diana_rk4(fn, ctx, t0, h, nstep, y, d, work, done)` in `diana/wrapper.h`, with
+- Callback wrapper `diana_rk4(fn, ctx, t0, h, nstep, y, d, work, done)` in `diana/rk4.h`, with
   the `diana_ode_fn` of `diana_euler` and a `work` of `5 d` doubles. Step `k` evaluates `fn` at
   `t0 + k h`, `t0 + (k + 0.5) h` (twice) and `t0 + (k + 1) h`, each computed from `k`. A failing
   stage or step returns `DIANA_ERR_ARG` with `y` at the last good state. Unverified, like
@@ -98,8 +98,8 @@ All notable changes to this project are documented here. The format follows
   check of the output after the call rejects exactly what the checked kernel rejects. Each
   unchecked function has its own Frama-C expectation row, Clight AST
   (`<source>_aarch64_macos.v`) and VST file (`verification/rocq/theory/VST/EulerStepUnchecked.v`,
-  `RK4StageUnchecked.v`, `RK4StepUnchecked.v`); `src/euler.c` and its proofs are back to the
-  checked step alone (49 WP goals).
+  `RK4StageUnchecked.v`, `RK4StepUnchecked.v`); the checked step's source and proofs are back to
+  the checked step alone (49 WP goals).
 - The spec gate accepts a method name with `_`, written `-` in its theorem IDs
   (`EULER-UNCHECKED-C1` in `spec/euler_unchecked.md`), and a list of source files as `kernel`.
 
@@ -132,6 +132,22 @@ All notable changes to this project are documented here. The format follows
 - `script/run_frama_c.sh` passes a `SKIP` entry to `-wp-skip-fct` only for a source that defines
   it (a line starting in column 0 with the return type), since WP rejects a function without a
   body; its default source is `src/bisection_init.c`.
+
+- The callback wrappers move from `src/wrapper/` to `src/bisection.c`, `src/euler.c`,
+  `src/newton.c` and `src/rk4.c`, and their declarations from `diana/wrapper.h` to the header of
+  their method: `diana_bisection_fn` and `diana_bisection` in `diana/bisection.h`,
+  `diana_newton_fn` and `diana_newton` in `diana/newton.h`, `diana_euler` in `diana/euler.h` and
+  `diana_rk4` in `diana/rk4.h`. The callback type `diana_ode_fn` they share is in the new public
+  header `diana/ode.h`, which both include; `diana/diana.h` includes every header as before.
+- The verified Euler step `diana_euler_step` moves from `src/euler.c` to `src/euler_step.c`, named
+  after its function, with its Frama-C row (49 goals), its Clight AST
+  `verification/clight/euler_step_aarch64_macos.v` (only the recorded source path changes) and
+  `spec/euler.md` following; `VST/Euler.v` proves it against the renamed AST.
+
+### Removed
+
+- `diana/wrapper.h`. Code that includes it directly includes `diana/diana.h` or the header of the
+  method instead.
 
 ## [0.3.0] - 2026-10-16
 
