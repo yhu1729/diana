@@ -31,6 +31,7 @@ theory/VST/EulerStepUnchecked.v
 theory/VST/Newton.v
 ../clight/rk4_aarch64_macos.v
 theory/VST/RK4.v
+../clight/rk4_stage_unchecked_aarch64_macos.v
 ../clight/simpson_aarch64_macos.v
 theory/VST/Simpson.v
 ../clight/trapezoidal_aarch64_macos.v
