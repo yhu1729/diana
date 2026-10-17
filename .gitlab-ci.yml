@@ -101,6 +101,7 @@ stages:
   - script/run_frama_c.sh
   - script/check_frama_c.sh
   - script/verify_frama_c.sh
+  - script/job_count.sh
 
 .change_lean: &change_lean
   - .gitlab-ci.yml

@@ -247,6 +247,11 @@ All notable changes to this project are documented here. The format follows
 - `diana/wrapper.h`. Code that includes it directly includes `diana/diana.h` or the header of the
   method instead.
 
+### Fixed
+
+- `.change_frama_c` lists `script/job_count.sh`, which `script/verify_frama_c.sh` calls, so a
+  change to it runs `verify_frama_c`.
+
 ## [0.3.0] - 2026-10-16
 
 ### Added
