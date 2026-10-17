@@ -63,8 +63,10 @@ nothing to `*s`; so does `step` returning `DIANA_ERR_SINGULAR`.
   `DIANA_ERR_ARG` and writes nothing. Otherwise it stores `dx` and the new `x`, increments
   `iter`, and returns
   `DIANA_OK` when `|dx| <= tol` or when the new iterate equals the old one (the correction is
-  below half an ulp of `x`: no closer double exists, NEWTON-B3), `DIANA_ERR_MAXITER` when `iter`
-  has reached `max_iter`, and `DIANA_CONTINUE` otherwise. A NaN or infinite `fx` or `dfx` is
+  at most half an ulp of `x` under the required
+  [floating-point environment](overview.md#floating-point-environment), NEWTON-B3),
+  `DIANA_ERR_MAXITER` when `iter` has reached `max_iter`, and `DIANA_CONTINUE` otherwise.
+  A NaN or infinite `fx` or `dfx` is
   `DIANA_ERR_ARG`, state unchanged.
 - `diana_newton_result(s, root, dx)` reports the current iterate `*root = s->x` and the last
   correction `*dx = s->dx`. Either output may be NULL; a non-NULL output must not alias the state
