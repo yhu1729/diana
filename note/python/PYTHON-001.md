@@ -30,4 +30,4 @@ each named after its function without `diana_py_` (STYLE-002); all are listed in
   `simpson.c`, `euler_step.c`, `rk4_stage.c` and `rk4_step.c`.
 
 The extension is ordinary tested code, not verified; it may use libm (`newton_step.c` calls
-`isfinite`) and is compiled with the strict flags (CMAKE-001).
+`isfinite`) and is compiled with the strict flags (BUILD-001).

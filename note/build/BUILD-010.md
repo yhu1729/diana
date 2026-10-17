@@ -1,12 +1,12 @@
 ---
-id: CMAKE-010
+id: BUILD-010
 title: Linux and macOS only
 kind: rule
 path:
   - CMakeLists.txt
   - script/check_wheel.py
   - script/dev.sh
-related: [CMAKE-004, FP-004]
+related: [BUILD-004, FP-004]
 ---
 Diana supports Linux and macOS with gcc or clang; no file may add a Windows or MSVC branch.
 

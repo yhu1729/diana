@@ -5,7 +5,7 @@ kind: rule
 path:
   - CMakeLists.txt
   - cmake/warning.cmake
-related: [FP-001, FP-004, KERNEL-001, CMAKE-002, API-002]
+related: [FP-001, FP-004, KERNEL-001, BUILD-002, API-002]
 ---
 The library is C11: `CMAKE_C_STANDARD 11` with `CMAKE_C_STANDARD_REQUIRED ON` and
 `CMAKE_C_EXTENSIONS OFF`, so `-std=c11`, not a GNU dialect. Code must stay clean under the

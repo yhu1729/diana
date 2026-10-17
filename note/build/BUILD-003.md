@@ -1,11 +1,11 @@
 ---
-id: CMAKE-003
+id: BUILD-003
 title: Why DIANA_BUILD_PYTHON is ON by default
 kind: rationale
 path:
   - CMakeLists.txt
   - script/dev.sh
-related: [CMAKE-002, PYTHON-005]
+related: [BUILD-002, PYTHON-005]
 ---
 `DIANA_BUILD_PYTHON` is ON by default so that a plain configure describes `python/ext/` in
 `compile_commands.json`. Without those entries clang-tidy parses the extension with a guessed

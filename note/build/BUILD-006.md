@@ -1,5 +1,5 @@
 ---
-id: CMAKE-006
+id: BUILD-006
 title: Version numbers are checked against each other
 kind: fact
 path:
@@ -8,7 +8,7 @@ path:
   - pyproject.toml
   - test/python/test_status.py
   - test/install/main.c
-related: [CMAKE-009]
+related: [BUILD-009]
 ---
 The version is written in several places, and two checks tie the main ones together.
 
@@ -23,4 +23,4 @@ The version is written in several places, and two checks tie the main ones toget
 
 Not checked: `version` in `verification/lean/lakefile.toml`, and the `find_package(diana 0.3 ...)`
 requests in `test/install/CMakeLists.txt` and the `doc/api/` example, which follow the minor
-version because the installed package is `SameMinorVersion`-compatible (CMAKE-009).
+version because the installed package is `SameMinorVersion`-compatible (BUILD-009).

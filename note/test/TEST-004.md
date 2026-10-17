@@ -5,7 +5,7 @@ kind: fact
 path:
   - script/check_wheel.py
   - .gitlab-ci.yml
-related: [TEST-001, CMAKE-002]
+related: [TEST-001, BUILD-002]
 ---
 `uv run script/check_wheel.py` builds a static and a shared wheel, checks their contents, and
 imports each from a fresh virtual environment outside the checkout. CI `test_python` runs it after

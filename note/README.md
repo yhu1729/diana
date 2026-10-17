@@ -26,7 +26,7 @@ theorems; `CLAUDE.md` is the condensed convention sheet.
 | `proof/` | what the theorems of each method establish, with their IDs and bounds |
 | `python/` | the CPython extension and the pure-Python package: layout and internals |
 | `fp/` | floating-point semantics: compiler settings, `src/fp.h`, verified versus shipped binary |
-| `cmake/` | CMake options, install and wheel layout, source distribution, platform |
+| `build/` | CMake options, install and wheel layout, source distribution, platform |
 | `test/` | test suites, the doc example check, and why each expected value is what it is |
 | `benchmark/` | `script/benchmark.sh` and its recorded output |
 | `wp/` | Frama-C WP and ACSL: conventions, the `SKIP` trust boundary, goal counts, sessions |
@@ -124,6 +124,22 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [BENCHMARK-004](benchmark/BENCHMARK-004.md) | rule | Quoted performance figures come from the recorded benchmark run |
 | [BENCHMARK-005](benchmark/BENCHMARK-005.md) | fact | Only script/benchmark.sh compiles the benchmark driver |
 
+### build
+
+| ID | Kind | Title |
+|---|---|---|
+| [BUILD-001](build/BUILD-001.md) | fact | Strict warning set of diana_set_strict_flag |
+| [BUILD-002](build/BUILD-002.md) | fact | CMake options and their defaults |
+| [BUILD-003](build/BUILD-003.md) | rationale | Why DIANA_BUILD_PYTHON is ON by default |
+| [BUILD-004](build/BUILD-004.md) | fact | Wheel layout, static and shared |
+| [BUILD-005](build/BUILD-005.md) | rationale | DIANA_BUILD_SHARED_LIB instead of BUILD_SHARED_LIBS |
+| [BUILD-006](build/BUILD-006.md) | fact | Version numbers are checked against each other |
+| [BUILD-007](build/BUILD-007.md) | rationale | DIANA_WERROR is OFF by default and ON in CI and dev.sh |
+| [BUILD-008](build/BUILD-008.md) | fact | DIANA_SANITIZER placement and exported link options |
+| [BUILD-009](build/BUILD-009.md) | fact | Installed CMake package layout |
+| [BUILD-010](build/BUILD-010.md) | rule | Linux and macOS only |
+| [BUILD-011](build/BUILD-011.md) | fact | Source distribution contents |
+
 ### ci
 
 | ID | Kind | Title |
@@ -143,22 +159,6 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [CI-013](ci/CI-013.md) | fact | verify_rocq compiles layer A only, with Coquelicot on the MathComp image |
 | [CI-014](ci/CI-014.md) | fact | release runs on a version tag once every test and verify job passes |
 | [CI-015](ci/CI-015.md) | procedure | Build the Lean CI image from ci/docker/lean.Dockerfile |
-
-### cmake
-
-| ID | Kind | Title |
-|---|---|---|
-| [CMAKE-001](cmake/CMAKE-001.md) | fact | Strict warning set of diana_set_strict_flag |
-| [CMAKE-002](cmake/CMAKE-002.md) | fact | CMake options and their defaults |
-| [CMAKE-003](cmake/CMAKE-003.md) | rationale | Why DIANA_BUILD_PYTHON is ON by default |
-| [CMAKE-004](cmake/CMAKE-004.md) | fact | Wheel layout, static and shared |
-| [CMAKE-005](cmake/CMAKE-005.md) | rationale | DIANA_BUILD_SHARED_LIB instead of BUILD_SHARED_LIBS |
-| [CMAKE-006](cmake/CMAKE-006.md) | fact | Version numbers are checked against each other |
-| [CMAKE-007](cmake/CMAKE-007.md) | rationale | DIANA_WERROR is OFF by default and ON in CI and dev.sh |
-| [CMAKE-008](cmake/CMAKE-008.md) | fact | DIANA_SANITIZER placement and exported link options |
-| [CMAKE-009](cmake/CMAKE-009.md) | fact | Installed CMake package layout |
-| [CMAKE-010](cmake/CMAKE-010.md) | rule | Linux and macOS only |
-| [CMAKE-011](cmake/CMAKE-011.md) | fact | Source distribution contents |
 
 ### compiler
 
@@ -362,15 +362,15 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `.editorconfig` | STYLE-006 |
 | `.git-hooks/commit-msg` | GIT-001, GIT-006 |
 | `.git-hooks/pre-push` | GIT-006 |
-| `.gitignore` | CMAKE-011, VERIFY-005, WP-009 |
-| `.gitlab-ci.yml` | BENCHMARK-005, CI-001, CI-002, CI-003, CI-004, CI-005, CI-006, CI-007, CI-008, CI-009, CI-010, CI-011, CI-012, CI-013, CI-014, CMAKE-007, COMPILER-004, GATE-007, PROVER-001, PROVER-005, PROVER-006, TEST-004, TEST-006, VERIFY-001 |
+| `.gitignore` | BUILD-011, VERIFY-005, WP-009 |
+| `.gitlab-ci.yml` | BENCHMARK-005, BUILD-007, CI-001, CI-002, CI-003, CI-004, CI-005, CI-006, CI-007, CI-008, CI-009, CI-010, CI-011, CI-012, CI-013, CI-014, COMPILER-004, GATE-007, PROVER-001, PROVER-005, PROVER-006, TEST-004, TEST-006, VERIFY-001 |
 | `CHANGELOG.md` | BENCHMARK-004, CI-014, STYLE-004 |
 | `CLAUDE.md` | PROVER-001, STYLE-004 |
-| `CMakeLists.txt` | API-005, CI-003, CI-008, CMAKE-002, CMAKE-003, CMAKE-004, CMAKE-005, CMAKE-006, CMAKE-007, CMAKE-008, CMAKE-009, CMAKE-010, FP-004, KERNEL-006, PYTHON-007, STYLE-008, STYLE-010, TEST-002 |
+| `CMakeLists.txt` | API-005, BUILD-002, BUILD-003, BUILD-004, BUILD-005, BUILD-006, BUILD-007, BUILD-008, BUILD-009, BUILD-010, CI-003, CI-008, FP-004, KERNEL-006, PYTHON-007, STYLE-008, STYLE-010, TEST-002 |
 | `CONTRIBUTING.md` | GIT-008, PROVER-002, PROVER-003, PROVER-005, VERIFY-001 |
 | `ci/docker/lean.Dockerfile` | CI-015 |
-| `cmake/dianaConfig.cmake.in` | API-005, CMAKE-009, TEST-002 |
-| `cmake/warning.cmake` | CI-008, CMAKE-001, CMAKE-007, COMPILER-001, FP-004, FP-005, STYLE-010, TEST-003 |
+| `cmake/dianaConfig.cmake.in` | API-005, BUILD-009, TEST-002 |
+| `cmake/warning.cmake` | BUILD-001, BUILD-007, CI-008, COMPILER-001, FP-004, FP-005, STYLE-010, TEST-003 |
 | `doc/README.md` | STYLE-003 |
 | `doc/api/*.md` | TEST-003 |
 | `doc/api/euler.md` | BENCHMARK-004 |
@@ -379,7 +379,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `doc/verification/report.md` | GATE-006 |
 | `include/diana/*.h` | KERNEL-001 |
 | `include/diana/bisection.h` | API-007 |
-| `include/diana/diana.h` | API-001, API-002, CMAKE-006, KERNEL-006 |
+| `include/diana/diana.h` | API-001, API-002, BUILD-006, KERNEL-006 |
 | `include/diana/euler.h` | API-015, API-018 |
 | `include/diana/newton.h` | API-010 |
 | `include/diana/ode.h` | API-006, API-017, KERNEL-004 |
@@ -388,7 +388,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `include/diana/status.h` | API-002 |
 | `include/diana/trapezoidal.h` | API-013 |
 | `note/README.md` | STYLE-003 |
-| `pyproject.toml` | CI-012, CMAKE-002, CMAKE-004, CMAKE-006, CMAKE-011, PROVER-006, PYTHON-005, PYTHON-006, STYLE-005, STYLE-009, TEST-001 |
+| `pyproject.toml` | BUILD-002, BUILD-004, BUILD-006, BUILD-011, CI-012, PROVER-006, PYTHON-005, PYTHON-006, STYLE-005, STYLE-009, TEST-001 |
 | `python/ext/*.c` | PYTHON-001, PYTHON-006, STYLE-002 |
 | `python/ext/*.h` | PYTHON-001 |
 | `python/ext/.clang-tidy` | STYLE-007 |
@@ -433,9 +433,9 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `script/check_doc.py` | CI-007, STYLE-003 |
 | `script/check_frama_c.sh` | WP-007, WP-010 |
 | `script/check_spec.py` | CI-007, CI-012, GATE-001, GATE-002, GATE-003, GATE-004, GATE-006, GATE-007, GATE-008, TEST-005, VERIFY-005 |
-| `script/check_wheel.py` | CI-003, CI-009, CMAKE-004, CMAKE-007, CMAKE-010, TEST-004 |
+| `script/check_wheel.py` | BUILD-004, BUILD-007, BUILD-010, CI-003, CI-009, TEST-004 |
 | `script/compare_compiler.sh` | COMPILER-001, COMPILER-002, COMPILER-003, COMPILER-004, COMPILER-008, COMPILER-011, FP-004, FP-005 |
-| `script/dev.sh` | BENCHMARK-005, CMAKE-002, CMAKE-003, CMAKE-007, CMAKE-010, COMPILER-002, COMPILER-004, GATE-007, PROVER-003, PROVER-008, PYTHON-005, STYLE-008, TEST-001, VERIFY-001, VERIFY-002, VERIFY-003, VERIFY-004, VST-001, VST-002, VST-003 |
+| `script/dev.sh` | BENCHMARK-005, BUILD-002, BUILD-003, BUILD-007, BUILD-010, COMPILER-002, COMPILER-004, GATE-007, PROVER-003, PROVER-008, PYTHON-005, STYLE-008, TEST-001, VERIFY-001, VERIFY-002, VERIFY-003, VERIFY-004, VST-001, VST-002, VST-003 |
 | `script/job_count.sh` | CI-011, VERIFY-003, WP-008 |
 | `script/run_frama_c.sh` | PROVER-004, WP-003, WP-004, WP-007, WP-009, WP-010 |
 | `script/verify_frama_c.sh` | CI-011, WP-008 |
@@ -480,7 +480,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `src/version.c` | API-002 |
 | `test/benchmark/unchecked.c` | API-019, BENCHMARK-001, BENCHMARK-002, BENCHMARK-003, BENCHMARK-005 |
 | `test/c/.clang-tidy` | STYLE-007 |
-| `test/c/CMakeLists.txt` | CMAKE-001, COMPILER-010, KERNEL-006, TEST-001 |
+| `test/c/CMakeLists.txt` | BUILD-001, COMPILER-010, KERNEL-006, TEST-001 |
 | `test/c/check.h` | TEST-001 |
 | `test/c/test_*.c` | TEST-006 |
 | `test/c/test_bisection.c` | API-009, API-024, TEST-007, TEST-008, TEST-009 |
@@ -492,15 +492,15 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `test/c/test_trapezoidal.c` | TEST-010, TEST-011 |
 | `test/doc/test_example.py` | CI-009, TEST-003 |
 | `test/install/.clang-tidy` | STYLE-007 |
-| `test/install/CMakeLists.txt` | API-005, CI-009, CMAKE-009, TEST-002 |
-| `test/install/main.c` | API-005, CMAKE-006, CMAKE-009, TEST-002 |
+| `test/install/CMakeLists.txt` | API-005, BUILD-009, CI-009, TEST-002 |
+| `test/install/main.c` | API-005, BUILD-006, BUILD-009, TEST-002 |
 | `test/python/test_bisection.py` | API-024, TEST-007, TEST-008, TEST-009 |
 | `test/python/test_check_spec.py` | TEST-005 |
 | `test/python/test_euler.py` | TEST-016, TEST-017, TEST-019, TEST-020 |
 | `test/python/test_newton.py` | API-025, TEST-027, TEST-028, TEST-029, TEST-030, TEST-031 |
 | `test/python/test_rk4.py` | TEST-022, TEST-023, TEST-025, TEST-026 |
 | `test/python/test_simpson.py` | TEST-013, TEST-014, TEST-015 |
-| `test/python/test_status.py` | API-027, CMAKE-006 |
+| `test/python/test_status.py` | API-027, BUILD-006 |
 | `test/python/test_trapezoidal.py` | TEST-010, TEST-011, TEST-012 |
 | `verification/clight/*.v` | PROVER-006, VST-001, VST-002, VST-003, VST-006 |
 | `verification/frama-c/expectation.txt` | CI-011, GATE-006, KERNEL-006, PROVER-005, WP-005, WP-007, WP-008 |

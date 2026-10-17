@@ -1,11 +1,11 @@
 ---
-id: CMAKE-011
+id: BUILD-011
 title: Source distribution contents
 kind: fact
 path:
   - pyproject.toml
   - .gitignore
-related: [CMAKE-004, PYTHON-006]
+related: [BUILD-004, PYTHON-006]
 ---
 The sdist excludes `verification/**`, `ci/**` and `build/**` (`sdist.exclude` in
 `pyproject.toml`), so the committed `clightgen` output `verification/clight/*.v`, the only files

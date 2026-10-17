@@ -1,10 +1,10 @@
 ---
-id: CMAKE-008
+id: BUILD-008
 title: DIANA_SANITIZER placement and exported link options
 kind: fact
 path:
   - CMakeLists.txt
-related: [CMAKE-002, CMAKE-009]
+related: [BUILD-002, BUILD-009]
 ---
 With `DIANA_SANITIZER=ON` and a `GNU`, `Clang` or `AppleClang` compiler, `CMakeLists.txt` calls
 `add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)` before

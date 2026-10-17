@@ -7,7 +7,7 @@ path:
   - test/install/CMakeLists.txt
   - test/install/main.c
   - cmake/dianaConfig.cmake.in
-related: [TEST-001, TEST-003, CMAKE-002]
+related: [TEST-001, TEST-003, BUILD-002]
 ---
 With `DIANA_BUILD_TEST=ON` outside scikit-build, ctest installs the build and then builds and runs
 the separate project `test/install/` against the installed package, so the exported CMake package

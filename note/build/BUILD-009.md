@@ -1,5 +1,5 @@
 ---
-id: CMAKE-009
+id: BUILD-009
 title: Installed CMake package layout
 kind: fact
 path:
@@ -7,7 +7,7 @@ path:
   - cmake/dianaConfig.cmake.in
   - test/install/CMakeLists.txt
   - test/install/main.c
-related: [CMAKE-006, CMAKE-008, CMAKE-004]
+related: [BUILD-006, BUILD-008, BUILD-004]
 ---
 Outside scikit-build, `cmake --install` installs the library, the headers and a CMake package
 whose paths all follow `GNUInstallDirs`.

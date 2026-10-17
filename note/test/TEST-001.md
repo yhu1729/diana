@@ -7,7 +7,7 @@ path:
   - test/c/check.h
   - pyproject.toml
   - script/dev.sh
-related: [TEST-002, TEST-003, TEST-004, TEST-005, COMPILER-010, CMAKE-002]
+related: [TEST-002, TEST-003, TEST-004, TEST-005, COMPILER-010, BUILD-002]
 ---
 The C tests are ctest executables in `test/c/`; the Python tests are pytest modules in
 `test/python/` and `test/doc/`. `script/dev.sh test` runs both, then the lint checks.

@@ -1,5 +1,5 @@
 ---
-id: CMAKE-007
+id: BUILD-007
 title: DIANA_WERROR is OFF by default and ON in CI and dev.sh
 kind: rationale
 path:
@@ -8,7 +8,7 @@ path:
   - script/dev.sh
   - script/check_wheel.py
   - .gitlab-ci.yml
-related: [CMAKE-001, CMAKE-002]
+related: [BUILD-001, BUILD-002]
 ---
 `-Werror` is the option `DIANA_WERROR`, OFF by default, so that an end user who builds from the
 sdist with a newer compiler that adds a warning still gets a library. Every build the project

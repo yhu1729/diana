@@ -1,12 +1,12 @@
 ---
-id: CMAKE-004
+id: BUILD-004
 title: Wheel layout, static and shared
 kind: fact
 path:
   - CMakeLists.txt
   - pyproject.toml
   - script/check_wheel.py
-related: [CMAKE-002, CMAKE-005, CMAKE-011, PYTHON-006]
+related: [BUILD-002, BUILD-005, BUILD-011, PYTHON-006]
 ---
 scikit-build-core (`>= 0.11`) builds the wheel from the root `CMakeLists.txt` and defines
 `SKBUILD`, which forces `DIANA_BUILD_PYTHON=ON`. The wheel holds the package directory

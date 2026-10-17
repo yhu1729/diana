@@ -7,14 +7,14 @@ path:
   - python/ext/status_exec.c
   - python/ext/bisection_exec.c
   - python/ext/newton_exec.c
-related: [PYTHON-001, CMAKE-001]
+related: [PYTHON-001, BUILD-001]
 ---
 The extension uses single-phase initialization: `PyModule_Create` on a `PyModuleDef` with
 `m_size = -1`, static `PyTypeObject`s for `Bisection` and `Newton`, and the process-global
 exception pointers `diana_py_bracket_error` and `diana_py_singular_error`. Multi-phase
 initialization is not used because its slot table (`PyModuleDef_Slot`) stores the exec function
 in a `void *` member: converting a function pointer to an object pointer is not ISO C, and gcc
-rejects it under `-Wpedantic -Werror` even with an explicit `(void *)` cast (CMAKE-001).
+rejects it under `-Wpedantic -Werror` even with an explicit `(void *)` cast (BUILD-001).
 
 Consequences, observed with CPython 3.13 (`.python-version`):
 - One interpreter per process. An isolated subinterpreter (`_interpreters.create()`) refuses the
