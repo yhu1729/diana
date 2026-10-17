@@ -29,6 +29,10 @@ All notable changes to this project are documented here. The format follows
   within the EULER-B2 bound of the exact `y + c k`, plus `(1 + u)^2 |fl(h/2) - h/2| |k|` (RK4-B3);
   and a step component is within `u |T| + (1 + u)(gamma_4 |h| A / 6 + (1 + u) eta / 6 + eta)` of
   the exact `T = y + h (k1 + 2 k2 + 2 k3 + k4) / 6`, `A = |k1 + k4| + 2 |k2 + k3|` (RK4-B5).
+- VST proves `diana_rk4_stage` and `diana_rk4_step` against the committed AArch64 macOS Clight
+  AST `verification/clight/rk4_aarch64_macos.v` (RK4-C2, RK4-C3): each returns `DIANA_OK` and
+  writes the C-order model exactly when every component is finite, and leaves `y_out` unchanged
+  otherwise; the C-order models are the Flocq models (RK4-C4, RK4-C5).
 
 ## [0.3.0] - 2026-10-16
 
