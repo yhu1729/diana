@@ -51,6 +51,12 @@ theorem:
       DIANA_OK and writes the model value when that value is finite, and returns DIANA_ERR_ARG
       leaving *result unchanged otherwise. The NULL and n < 2 paths are TRAPEZOIDAL-C1.
     rocq: Diana.VST.Trapezoidal.body_diana_trapezoidal
+  - id: TRAPEZOIDAL-C3
+    layer: C
+    informal: >
+      the copy of diana_fp_finite in the Clight AST of trapezoidal implements its IEEE
+      semantics, as BISECTION-C5 for the copy in bisection_init (VST, AArch64 macOS Clight AST).
+    rocq: Diana.VST.Trapezoidal.body_diana_fp_finite
 ---
 # trapezoidal
 
@@ -158,3 +164,4 @@ C assignment. The value claim is TRAPEZOIDAL-C2 (VST), on the same Flocq model a
 | TRAPEZOIDAL-B2 | – | proved | – |
 | TRAPEZOIDAL-C1 | – | – | 41/41 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
 | TRAPEZOIDAL-C2 | – | proved | – |
+| TRAPEZOIDAL-C3 | – | proved | – |

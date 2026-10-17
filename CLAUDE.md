@@ -220,7 +220,10 @@ Clight AST and VST file (`VST/BisectionInit.v`, …); `VST/Bisection.v`, `VST/Ne
 now the external `diana_bisection_mid` (still the only `SKIP` entry, no WP row of its own), and the
 `init`, `step` and `result` proofs take its funspec from `VST/BisectionMid.v`. The C layers are
 renumbered with one ACSL theorem per source file: BISECTION-C1 to C12, NEWTON-C1 to C7, RK4-C1 to
-C6. `src/fp.h` asserts `FLT_EVAL_METHOD == 0` at compile time.
+C6. Every copy of a `src/fp.h` helper that `clightgen` emits into a kernel's AST is a listed VST
+theorem of that kernel's spec (BISECTION-C13, NEWTON-C8 to C10, EULER-C3, RK4-C7/C8,
+TRAPEZOIDAL-C3, SIMPSON-C3), since a caller's `semax_body` would not reveal an admitted copy.
+`src/fp.h` also asserts `FLT_EVAL_METHOD == 0` at compile time.
 
 Unreleased file structure: the callback wrappers moved from `src/wrapper/` to `src/bisection.c`,
 `src/euler.c`, `src/newton.c` and `src/rk4.c`, their declarations from the removed `diana/wrapper.h`

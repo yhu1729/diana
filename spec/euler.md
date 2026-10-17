@@ -52,6 +52,12 @@ theorem:
       returns DIANA_OK and writes the model values when every component is finite, and returns
       DIANA_ERR_ARG leaving y_out unchanged otherwise. The NULL and d = 0 paths are EULER-C1.
     rocq: Diana.VST.EulerStep.body_diana_euler_step
+  - id: EULER-C3
+    layer: C
+    informal: >
+      the copy of diana_fp_finite in the Clight AST of euler_step implements its IEEE
+      semantics, as BISECTION-C5 for the copy in bisection_init (VST, AArch64 macOS Clight AST).
+    rocq: Diana.VST.EulerStep.body_diana_fp_finite
 ---
 # euler
 
@@ -152,3 +158,4 @@ finiteness and the exact values together.
 | EULER-B2 | – | proved | – |
 | EULER-C1 | – | – | 49/49 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
 | EULER-C2 | – | proved | – |
+| EULER-C3 | – | proved | – |

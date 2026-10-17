@@ -106,6 +106,25 @@ theorem:
       dx = fdiv fx dfx at CompCert's NaN-payload functions, so by NEWTON-C6 the iterate
       diana_newton_step writes is the layer-B fstep and NEWTON-B2/B3 apply to it.
     rocq: Diana.VST.Newton.c_step_fstep
+  - id: NEWTON-C8
+    layer: C
+    informal: >
+      the copy of diana_fp_finite in the Clight AST of newton_init implements its IEEE
+      semantics, as BISECTION-C5 for the copy in bisection_init (VST, AArch64 macOS Clight AST).
+    rocq: Diana.VST.NewtonInit.body_diana_fp_finite
+  - id: NEWTON-C9
+    layer: C
+    informal: >
+      the copy of diana_fp_finite in the Clight AST of newton_step implements its IEEE
+      semantics, as BISECTION-C5 for the copy in bisection_init (VST, AArch64 macOS Clight AST).
+    rocq: Diana.VST.NewtonStep.body_diana_fp_finite
+  - id: NEWTON-C10
+    layer: C
+    informal: >
+      the copy of diana_fp_abs in the Clight AST of newton_step returns, for finite input, the
+      conditional negation the C performs, as BISECTION-C6 for the copy in bisection_init (VST,
+      AArch64 macOS Clight AST).
+    rocq: Diana.VST.NewtonStep.body_diana_fp_abs
 ---
 # newton
 
@@ -209,3 +228,6 @@ in binary64 round-to-nearest-even, and checks each for finiteness.
 | NEWTON-C5 | – | proved | – |
 | NEWTON-C6 | – | proved | – |
 | NEWTON-C7 | – | proved | – |
+| NEWTON-C8 | – | proved | – |
+| NEWTON-C9 | – | proved | – |
+| NEWTON-C10 | – | proved | – |

@@ -136,6 +136,12 @@ theorem:
       c_step that returns DIANA_CONTINUE writes a state satisfying Bracket and Next with
       iter < max_iter, so BISECTION-B2 applies again to the next step.
     rocq: Diana.VST.Bisection.c_step_next
+  - id: BISECTION-C13
+    layer: C
+    informal: >
+      the copy of diana_fp_finite in the Clight AST of bisection_step implements its IEEE
+      semantics, as BISECTION-C5 for the copy in bisection_init (VST, AArch64 macOS Clight AST).
+    rocq: Diana.VST.BisectionStep.body_diana_fp_finite
 ---
 # bisection
 
@@ -193,7 +199,10 @@ replaces the midpoint by `0.5 * (a + b)` in binary64 round-to-nearest-even.
 - **C5/C6**: the `src/fp.h` helpers. `clightgen` does not inline them despite `static inline`, so
   each is a real Clight function with its own funspec in the AST of every source that calls it
   (`bisection_init`: both, `bisection_step`: `diana_fp_finite`), and each VST file proves the
-  copies in its AST; the spec cites the `BisectionInit` proofs. `diana_fp_finite` is
+  copies in its AST. A caller's `semax_body` depends on the helper's funspec, not on its body
+  lemma, so every copy is a listed theorem of its own: C5/C6 for `bisection_init`, C13 for
+  `bisection_step`, and NEWTON-C8 to C10, EULER-C3, RK4-C7/C8, TRAPEZOIDAL-C3 and SIMPSON-C3 for
+  the other kernels, so that the spec gate sees an admitted copy. `diana_fp_finite` is
   `x == x && x - x == 0`: `x == x` tests only non-NaN (`+inf == +inf` is true), and `x - x == 0` is
   what excludes the infinities, so the two together characterise finiteness (`cmp_eq_self`,
   `cmp_sub_self_zero`). `diana_fp_abs` is specified as the conditional negation the C performs, not
@@ -289,3 +298,4 @@ a root in reals and within `tol/2 + 1 ulp` in binary64.
 | BISECTION-C10 | – | proved | – |
 | BISECTION-C11 | – | proved | – |
 | BISECTION-C12 | – | proved | – |
+| BISECTION-C13 | – | proved | – |

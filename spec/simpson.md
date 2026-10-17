@@ -55,6 +55,12 @@ theorem:
       DIANA_OK and writes the model value when that value is finite, and returns DIANA_ERR_ARG
       leaving *result unchanged otherwise. The NULL, n < 3 and even-n paths are SIMPSON-C1.
     rocq: Diana.VST.Simpson.body_diana_simpson
+  - id: SIMPSON-C3
+    layer: C
+    informal: >
+      the copy of diana_fp_finite in the Clight AST of simpson implements its IEEE
+      semantics, as BISECTION-C5 for the copy in bisection_init (VST, AArch64 macOS Clight AST).
+    rocq: Diana.VST.Simpson.body_diana_fp_finite
 ---
 # simpson
 
@@ -150,3 +156,4 @@ range limit follows from the order: `h·s` can overflow when `h·S/3` would not 
 | SIMPSON-B2 | – | proved | – |
 | SIMPSON-C1 | – | – | 58/58 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
 | SIMPSON-C2 | – | proved | – |
+| SIMPSON-C3 | – | proved | – |

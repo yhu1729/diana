@@ -167,6 +167,18 @@ theorem:
       constants 2 and 6) is the Flocq model frk4_step, so RK4-B4 and B5 apply to every component
       diana_rk4_step writes.
     rocq: Diana.VST.RK4.c_rk4_model
+  - id: RK4-C7
+    layer: C
+    informal: >
+      the copy of diana_fp_finite in the Clight AST of rk4_stage implements its IEEE
+      semantics, as BISECTION-C5 for the copy in bisection_init (VST, AArch64 macOS Clight AST).
+    rocq: Diana.VST.RK4Stage.body_diana_fp_finite
+  - id: RK4-C8
+    layer: C
+    informal: >
+      the copy of diana_fp_finite in the Clight AST of rk4_step implements its IEEE
+      semantics, as BISECTION-C5 for the copy in bisection_init (VST, AArch64 macOS Clight AST).
+    rocq: Diana.VST.RK4Step.body_diana_fp_finite
 ---
 # rk4
 
@@ -328,3 +340,5 @@ is an error even when `h·s/6` would be finite. The opt-in one-pass variants wit
 | RK4-C4 | – | proved | – |
 | RK4-C5 | – | proved | – |
 | RK4-C6 | – | proved | – |
+| RK4-C7 | – | proved | – |
+| RK4-C8 | – | proved | – |

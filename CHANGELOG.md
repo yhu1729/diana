@@ -110,6 +110,15 @@ All notable changes to this project are documented here. The format follows
   the checked step alone (49 WP goals).
 - The spec gate accepts a method name with `_`, written `-` in its theorem IDs
   (`EULER-UNCHECKED-C1` in `spec/euler_unchecked.md`), and a list of source files as `kernel`.
+- Every copy of a `src/fp.h` helper in a kernel's Clight AST is a listed theorem of its spec:
+  BISECTION-C13 (`bisection_step`), NEWTON-C8 to C10 (`newton_init`, `newton_step`, and
+  `diana_fp_abs` in `newton_step`), EULER-C3, RK4-C7 and C8 (`rk4_stage`, `rk4_step`),
+  TRAPEZOIDAL-C3 and SIMPSON-C3. `clightgen` emits the `static inline` helpers once per AST and
+  each VST file proves its own copies, but a caller's `semax_body` depends only on the helper's
+  funspec, so the spec gate could not have noticed an admitted copy outside `BisectionInit`
+  (BISECTION-C5/C6). `doc/verification/trust.md` records this, says that for bisection layer B
+  relates no float model to the real one (its theorems are invariants of the float model), and
+  `doc/verification/report.md` says what its Frama-C and statement columns do and do not check.
 - `script/run_frama_c.sh` also fails when a called function has neither a body nor a contract
   ("Undefined and unspecified functions" of the metrics plugin), the case WP would otherwise
   cover with a generated contract; `SKIP` cannot allow it.
