@@ -13,7 +13,8 @@ usage: script/dev.sh config [cmake option...]
 
   config  configure CMake in the build directory and sync the uv environment
   build   build the C library and tests, rebuild the Python extension
-  test    run ctest and pytest, then the ruff, clang-format and clang-tidy checks
+  test    run ctest and pytest, then the ruff, clang-format, clang-tidy and
+          documentation checks
   verify  check the Clight ASTs, then at once compare the ccomp build of the
           kernels with gcc/clang builds bitwise, build the Lean and Rocq proofs
           and run Frama-C WP (logs in the build directory under verify/), then
@@ -89,6 +90,7 @@ dev_test() {
     find include src test/c test/install python/ext -name '*.[ch]' -print0 |
         xargs -0 uv run --no-sync clang-format --dry-run --Werror
     run_tidy
+    uv run --no-sync script/check_doc.py
 }
 
 tidy_bin() {
@@ -111,7 +113,7 @@ tidy_bin() {
 run_tidy() {
     tidy=$(tidy_bin) || {
         echo "clang-tidy: not found; check skipped" \
-            "(set DIANA_CLANG_TIDY or install LLVM, see doc/development/style.md)"
+            "(set DIANA_CLANG_TIDY or install LLVM, see note STYLE-008)"
         return 0
     }
     [ -f "$build_dir/compile_commands.json" ] ||
@@ -178,7 +180,7 @@ build_lean() {
 }
 
 # Memory per VST proof: measured peak RSS of one rocq compile on the heaviest
-# theory/VST file, rounded up (doc/verification/local.md); the cap keeps
+# theory/VST file, rounded up (note PROVER-008); the cap keeps
 # DIANA_JOB such proofs resident at once within hw.memsize / MemTotal.
 rocq_job_byte=2147483648
 
