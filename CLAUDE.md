@@ -66,8 +66,9 @@ no design (a design is written only when an item is picked up).
   C-contiguous, aligned, checked in the extension by `diana_py_get_array` in `python/ext/get_array.c`) and its driver copies any non-buffer iterable
   into `array.array("d")`; no NumPy in the package, only in tests.
 - **ACSL:** arithmetic on doubles is exact real arithmetic, write rounded values with casts
-  `(double)(...)`; no hexadecimal float literal anywhere in ACSL (WP 33.0 rejects them in lemmas and
-  mistranslates them in predicates), use exact integer expressions such as `((1 << 53) - 1) << 970`;
+  `(double)(...)`; no hexadecimal float literal anywhere in ACSL (WP 32.1 and 33.0 reject them in
+  lemmas and mistranslate them in predicates), use exact integer expressions such as
+  `((1 << 53) - 1) << 970`;
   a float fact that WP cannot prove goes into a small helper in its own source file
   (`src/bisection_mid.c`), with its contract on the declaration in a private header
   (`src/bisection_mid.h`), listed in `SKIP` of `script/run_frama_c.sh` and proved in Flocq. That
@@ -113,7 +114,7 @@ no design (a design is written only when an item is picked up).
 | VST | 2.17 | with CompCert 3.18 (its `clightgen` reports 3.17) |
 | Flocq | 4.2.2 | |
 | Coquelicot | 3.4.5 | also in CI: `verify_rocq` opam-installs it on `mathcomp/mathcomp:2.6.0-rocq-prover-9.2` |
-| Frama-C | 33.0 local (opam), 32.1 in CI (`framac/frama-c:32.1`, no 33 image yet) | WP with `-wp-rte -wp-model +float`; Alt-Ergo 2.6.4 |
+| Frama-C | 32.1 | local opam switch pinned (`opam pin add frama-c 32.1`) to match CI (`framac/frama-c:32.1`); WP with `-wp-rte -wp-model +float`; Alt-Ergo 2.6.4 |
 | CMake | ≥ 3.25 | |
 | Python | managed by `uv` (`.python-version`) | |
 | clang-format | 23.1.3 | PyPI wheel in the uv `lint` group |
