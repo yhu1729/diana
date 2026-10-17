@@ -1,14 +1,14 @@
 #!/bin/sh
-SKIP=bisection_mid
+SKIP=diana_bisection_mid
 set -eu
 cd "$(dirname "$0")/.."
 if [ "$#" -eq 0 ]; then
-    set -- src/bisection.c
+    set -- src/bisection_init.c
 fi
 skip=
 for name in $SKIP; do
     for arg in "$@"; do
-        if [ -f "$arg" ] && grep -Eq "(^|[^A-Za-z0-9_])$name[[:space:]]*\(" "$arg"; then
+        if [ -f "$arg" ] && grep -Eq "^[A-Za-z_][A-Za-z0-9_ *]*[^A-Za-z0-9_]$name[[:space:]]*\(" "$arg"; then
             skip="${skip:+$skip,}$name"
             break
         fi
