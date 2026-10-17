@@ -149,7 +149,11 @@ if(DIANA_BUILD_PYTHON)
         python/ext/raise.c
         python/ext/status_exec.c
         python/ext/status_str.c
-        python/ext/bisection.c
+        python/ext/bisection_exec.c
+        python/ext/bisection_init.c
+        python/ext/bisection_new.c
+        python/ext/bisection_result.c
+        python/ext/bisection_step.c
         python/ext/euler.c
         python/ext/newton.c
         python/ext/rk4.c
