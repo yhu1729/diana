@@ -14,6 +14,7 @@
 #include "diana/rk4.h"
 #include "diana/simpson.h"
 #include "diana/status.h"
+#include "diana/substitution.h"
 #include "diana/trapezoidal.h"
 
 #ifdef __cplusplus
