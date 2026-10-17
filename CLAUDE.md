@@ -42,7 +42,7 @@ one line per idea, no design (a design is written only when an item is picked up
 - **Python:** `uv` manages the interpreter and environment (`uv sync` at the repo root; `.python-version`
   and `uv.lock` are committed). Never `pip` directly, never the system Python.
 - **C:** C11, the strict warning set of `cmake/warning.cmake` (`-Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wvla`
-  and more, note CMAKE-001) with `-Werror` (`-Werror` is the CMake option
+  and more, note BUILD-001) with `-Werror` (`-Werror` is the CMake option
   `DIANA_WERROR`, OFF by default so end-user builds survive new compiler warnings; CI and `script/dev.sh`
   turn it ON); no `malloc` and **no libm
   call** in a verified kernel (use `src/fp.h`: `diana_fp_finite`, `diana_fp_abs`; every external call
