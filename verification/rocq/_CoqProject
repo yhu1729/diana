@@ -35,12 +35,14 @@ theory/VST/BisectionResult.v
 ../clight/bisection_step_aarch64_macos.v
 theory/VST/BisectionStep.v
 ../clight/cholesky_aarch64_macos.v
+theory/VST/Cholesky.v
 ../clight/euler_step_aarch64_macos.v
 theory/VST/Euler.v
 theory/VST/EulerStep.v
 ../clight/euler_step_unchecked_aarch64_macos.v
 theory/VST/EulerStepUnchecked.v
 ../clight/fp_sqrt_aarch64_macos.v
+theory/VST/FpSqrt.v
 theory/VST/Newton.v
 ../clight/newton_init_aarch64_macos.v
 theory/VST/NewtonInit.v
