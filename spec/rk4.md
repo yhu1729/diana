@@ -257,7 +257,7 @@ is an error even when `h·s/6` would be finite. The opt-in one-pass variants wit
   the bound as in EULER-B2. On 200 000 random components (half with normal, half with subnormal
   slopes) the error reaches 99.93 % of the bound. Proof: `step_error`.
 - **C1, C2**: the `/*@ ... */` annotations in `src/rk4_stage.c` and `src/rk4_step.c`, one WP run
-  per file, as for `src/euler.c` (EULER-C1): every
+  per file, as for `src/euler_step.c` (EULER-C1): every
   early return happens before the second loop, and the only write is `y_out[i]` in that loop, so
   `assigns y_out[0 .. d − 1]` and the error post-condition follow from the control flow; the loop
   invariants are only the index bounds.
