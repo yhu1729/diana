@@ -10,7 +10,7 @@ come from the installed target. On macOS, the consumer inherits the configured a
 list, SDK, and deployment target, including universal builds.
 
 `test/doc/test_example.py` (pytest) checks the examples in `doc/api/`. Each fenced `c` block is
-compiled with the host C compiler (`CC`, else `cc`) together with `src/*.c` and `src/wrapper/*.c`,
+compiled with the host C compiler (`CC`, else `cc`) together with `src/*.c`,
 with `-std=c11 -pedantic -Werror` and the warning and floating-point flags of `cmake/warning.cmake`,
 then run; its stdout and stderr, merged, must equal the next `text` block, which must come before
 the next `c` block. A block without `main` is wrapped in one that includes `<stdio.h>` and
