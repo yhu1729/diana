@@ -1,6 +1,6 @@
 ---
 method: rk4
-kernel: src/rk4.c
+kernel: [src/rk4_stage.c, src/rk4_step.c]
 model: >
   The classical fourth-order Runge–Kutta step, split into four slope evaluations by the caller and
   two kernel functions. rk4_stage y k h s : ℝ^d with y_out_i = y_i + c·k_i, c = h/2 for stage
@@ -120,14 +120,22 @@ theorem:
   - id: RK4-C1
     layer: C
     informal: >
-      ACSL contracts in src/rk4.c, Frama-C WP float model with RTE: for diana_rk4_stage and
-      diana_rk4_step, memory safety (only y[0 .. d−1] and the slope arrays are read, only
-      y_out[0 .. d−1] is written, y_out separate from every input), no UB, termination of both
-      loops of each, DIANA_OK only for non-NULL pointers with d ≥ 1 (and 2 ≤ stage ≤ 4 for the
-      stage), and y_out untouched on DIANA_ERR_ARG. No assumed contract; that y_out is finite on
-      DIANA_OK is left to VST.
-    acsl: src/rk4.c
+      ACSL contract in src/rk4_stage.c, Frama-C WP float model with RTE: memory safety (only
+      y[0 .. d−1] and k[0 .. d−1] are read, only y_out[0 .. d−1] is written, y_out separate from
+      both), no UB, termination of both loops, DIANA_OK only for non-NULL pointers with d ≥ 1 and
+      2 ≤ stage ≤ 4, and y_out untouched on DIANA_ERR_ARG. No assumed contract; that y_out is
+      finite on DIANA_OK is left to VST.
+    acsl: src/rk4_stage.c
   - id: RK4-C2
+    layer: C
+    informal: >
+      ACSL contract in src/rk4_step.c, Frama-C WP float model with RTE: memory safety (only
+      y[0 .. d−1] and the four slope arrays are read, only y_out[0 .. d−1] is written, y_out
+      separate from every input), no UB, termination of both loops, DIANA_OK only for non-NULL
+      pointers with d ≥ 1, and y_out untouched on DIANA_ERR_ARG. No assumed contract; that y_out
+      is finite on DIANA_OK is left to VST.
+    acsl: src/rk4_step.c
+  - id: RK4-C3
     layer: C
     informal: >
       diana_rk4_stage computes the binary64 model (VST, AArch64 macOS Clight AST): for y and k
@@ -135,24 +143,24 @@ theorem:
       2 ≤ stage ≤ 4, it returns DIANA_OK and writes the model values when every component is
       finite, and returns DIANA_ERR_ARG leaving y_out unchanged otherwise. The NULL, d = 0 and
       out-of-range stage paths are RK4-C1.
-    rocq: Diana.VST.RK4.body_diana_rk4_stage
-  - id: RK4-C3
+    rocq: Diana.VST.RK4Stage.body_diana_rk4_stage
+  - id: RK4-C4
     layer: C
     informal: >
       diana_rk4_step computes the binary64 model (VST, AArch64 macOS Clight AST): for y and the
       four slopes pointing to d ≥ 1 readable doubles and y_out to d writable doubles, the six
       disjoint, it returns DIANA_OK and writes the model values when every component is finite,
       and returns DIANA_ERR_ARG leaving y_out unchanged otherwise. The NULL and d = 0 paths are
-      RK4-C1.
-    rocq: Diana.VST.RK4.body_diana_rk4_step
-  - id: RK4-C4
+      RK4-C2.
+    rocq: Diana.VST.RK4Step.body_diana_rk4_step
+  - id: RK4-C5
     layer: C
     informal: >
       the C-order stage model c_stage (CompCert's Float.add and Float.mul, the coefficient
       Float.mul 0.5 h or h) is the Flocq model frk4_stage, so RK4-B1 to B3 apply to every
       component diana_rk4_stage writes.
     rocq: Diana.VST.RK4.c_stage_model
-  - id: RK4-C5
+  - id: RK4-C6
     layer: C
     informal: >
       the C-order step model c_rk4 (CompCert's Float.add, Float.mul and Float.div with the
@@ -248,22 +256,24 @@ is an error even when `h·s/6` would be finite. The opt-in one-pass variants wit
   `|q − h·S/6| ≤ γ₄·|h|·A/6 + (1 + u)·η/6 + η`. The final sum is `(y + q)·(1 + e)`, which gives
   the bound as in EULER-B2. On 200 000 random components (half with normal, half with subnormal
   slopes) the error reaches 99.93 % of the bound. Proof: `step_error`.
-- **C1**: the `/*@ ... */` annotations in `src/rk4.c`, as for `src/euler.c` (EULER-C1): every
+- **C1, C2**: the `/*@ ... */` annotations in `src/rk4_stage.c` and `src/rk4_step.c`, one WP run
+  per file, as for `src/euler.c` (EULER-C1): every
   early return happens before the second loop, and the only write is `y_out[i]` in that loop, so
   `assigns y_out[0 .. d − 1]` and the error post-condition follow from the control flow; the loop
   invariants are only the index bounds.
-- **C2**: the Euler proof (EULER-C2) with the coefficient for the step. Five range checks
+- **C3**: the Euler proof (EULER-C2) with the coefficient for the step. Five range checks
   precede the loops (`stage < 2` and `stage > 4` are false under `2 ≤ stage ≤ 4`); the branch
   on `stage == 4` sets `c` to `c_coef stage h`, and the two loops then carry exactly the
   invariants of `body_diana_euler_step` for `L = c_euler c ys ks`, reusing its list lemmas
   (`Znth_c_euler`, `forallb_sublist_succ`, `forallb_false`). Proof: `body_diana_rk4_stage` in
-  `verification/rocq/theory/VST/RK4.v`.
-- **C3**: the same two loops over `L = c_rk4 h ys k₁s k₂s k₃s k₄s`, with seven reads and
+  `verification/rocq/theory/VST/RK4Stage.v`.
+- **C4**: the same two loops over `L = c_rk4 h ys k₁s k₂s k₃s k₄s`, with seven reads and
   assignments per component in place of three; `Znth_c_rk4` names the stored value. Proof:
-  `body_diana_rk4_step`.
-- **C4, C5**: the constants `0.5`, `2` and `6` of the Clight AST (`Float.of_bits`) equal the
+  `body_diana_rk4_step` in `verification/rocq/theory/VST/RK4Step.v`.
+- **C5, C6**: the constants `0.5`, `2` and `6` of the Clight AST (`Float.of_bits`) equal the
   Flocq constants by computation (`vm_compute` on `B2FF`), after which the models agree
-  structurally (`c_euler_model` for the stage). Proofs: `c_stage_model`, `c_rk4_model`.
+  structurally (`c_euler_model` for the stage). Proofs: `c_stage_model`, `c_rk4_model` in
+  `verification/rocq/theory/VST/RK4.v`, which holds the models both VST files share.
 
 ## Model correspondence
 
@@ -286,12 +296,14 @@ is an error even when `h·s/6` would be finite. The opt-in one-pass variants wit
   the C's operation order, and `frk4_step` maps it over five lists. `fadd`, `fmul` and `fdiv` are
   the `Bplus`, `Bmult` and `Bdiv` of `Diana.Float.Sum`, parameterised by the NaN-payload
   functions. B1 to B5 are per component; a max-norm form follows by taking the maximum over `i`.
-- **Layer C, VST** (`verification/rocq/theory/VST/RK4.v`, against the Clight AST
-  `verification/clight/rk4_aarch64_macos.v`, CompCert target AArch64 macOS): `c_coef stage h`
+- **Layer C, VST** (`verification/rocq/theory/VST/RK4Stage.v` and `RK4Step.v`, against the Clight
+  ASTs `verification/clight/rk4_stage_aarch64_macos.v` and `rk4_step_aarch64_macos.v`, CompCert
+  target AArch64 macOS; the models are in `VST/RK4.v`): `c_coef stage h`
   and `c_stage = c_euler (c_coef stage h)` are the stage in CompCert's `Float` operations, and
-  `c_step`/`c_rk4` the step; C4 and C5 identify them with `frk4_stage` and `frk4_step`. Each
+  `c_step`/`c_rk4` the step; C5 and C6 identify them with `frk4_stage` and `frk4_step`. Each
   funspec holds separate `data_at` for every array, so overlapping inputs, which the C allows
-  because they are only read, are outside the theorems; WP (C1) covers them for memory safety.
+  because they are only read, are outside the theorems; WP (C1, C2) covers them for memory
+  safety.
 
 ## Status
 
@@ -309,8 +321,9 @@ is an error even when `h·s/6` would be finite. The opt-in one-pass variants wit
 | RK4-B3 | – | proved | – |
 | RK4-B4 | – | proved | – |
 | RK4-B5 | – | proved | – |
-| RK4-C1 | – | – | 98/98 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
-| RK4-C2 | – | proved | – |
+| RK4-C1 | – | – | 53/53 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
+| RK4-C2 | – | – | 57/57 goals (Frama-C 33.0, Alt-Ergo 2.6.4), no assumed contract |
 | RK4-C3 | – | proved | – |
 | RK4-C4 | – | proved | – |
 | RK4-C5 | – | proved | – |
+| RK4-C6 | – | proved | – |
