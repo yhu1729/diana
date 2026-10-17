@@ -21,14 +21,17 @@ contract, update the count in the same commit. The output is collected in
 - Predicates shared by a kernel's functions go in its private header, such as
   `src/bisection_acsl.h`.
 - A floating-point fact beyond WP's reach goes into a small helper function of its own whose
-  contract WP assumes, and Flocq and VST prove instead. The bisection midpoint is the only such
-  helper; the script fails if WP would assume any other contract.
+  contract WP assumes, and Flocq and VST prove instead: the bisection midpoint and the square
+  root of the Cholesky factorization; the script fails if WP would assume any other contract.
+- A nonlinear index bound such as `i + j*n < n*n` needs a lemma in the factored form Alt-Ergo can
+  prove and an assertion that instantiates it in each loop.
 
 ## Technical notes
 
 [WP-001](../../note/wp/WP-001.md) ACSL arithmetic,
 [WP-002](../../note/wp/WP-002.md) no hexadecimal literal,
 [WP-003](../../note/wp/WP-003.md) the `SKIP` trust boundary,
+[WP-011](../../note/wp/WP-011.md) nonlinear index bounds,
 [WP-004](../../note/wp/WP-004.md) how it is enforced,
 [WP-007](../../note/wp/WP-007.md) goal counts,
 [WP-008](../../note/wp/WP-008.md) parallel rows,

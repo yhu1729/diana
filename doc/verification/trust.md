@@ -27,9 +27,15 @@ component is finite exactly when the checked kernel would have accepted it.
   CompCert's Clight semantics. The [spec gate](spec-gate.md) checks that each listed theorem uses
   only allowed axioms: Lean's three standard ones, and in Rocq classical logic, the classical reals
   and functional and propositional extensionality (`script/axiom_allow.yaml`).
-- **Frama-C, Why3 and Alt-Ergo** as the prover of the WP layer. WP assumes the contract of one
-  function it cannot prove, the bisection midpoint `diana_bisection_mid`; Flocq and VST prove
-  that function instead, and the WP script fails if any other contract would be assumed.
+- **Frama-C, Why3 and Alt-Ergo** as the prover of the WP layer. WP assumes the contracts of two
+  functions it cannot prove, the bisection midpoint `diana_bisection_mid` and the square root
+  `diana_fp_sqrt`; Flocq and VST prove those functions instead, and the WP script fails if any
+  other contract would be assumed.
+- **CompCert's semantics of `__builtin_sqrt`.** `diana_fp_sqrt` calls the compiler builtin, and
+  VST has no rule for a builtin call, so its VST proof assumes the funspec "returns
+  `Float.sqrt x`", the semantics CompCert gives the builtin. It is the one funspec no VST proof
+  discharges. The Flocq contract of `Float.sqrt` (correctly rounded) is proved, and the compiler
+  comparison checks gcc and clang against CompCert bit for bit.
 - **`clightgen`**, which translates the C source into the Clight AST the VST proofs are about. The
   ASTs are generated on AArch64 macOS and committed.
 - **The compiler** of the shipped library; see below.
@@ -47,8 +53,8 @@ component is finite exactly when the checked kernel would have accepted it.
 | `ccomp` against gcc/clang | – | `script/compare_compiler.sh` |
 
 No CI image carries Flocq, CompCert or VST, so a green pipeline does not establish layers B and
-C-VST, and the CI Frama-C run relies on the midpoint contract that only the local Flocq build
-discharges. The [report](report.md) shows the last local run that was committed.
+C-VST, and the CI Frama-C run relies on the midpoint and square-root contracts that only the
+local Flocq build discharges. The [report](report.md) shows the last local run that was committed.
 
 ## Verified code versus shipped library
 
@@ -70,6 +76,8 @@ corpus, so far run only on AArch64 macOS.
 - That Newton's method converges in binary64 from a given start; `max_iter` is the only bound.
 - A numeric bound on the number of bisection steps; the worst case of 2098 is measured.
 - A bound on the rounding error accumulated over many ODE steps.
+- A forward error bound on the Cholesky factor, and that a positive definite binary64 matrix
+  factors without `DIANA_ERR_SINGULAR`; the backward error is proved.
 
 ## Technical notes
 
@@ -78,5 +86,6 @@ corpus, so far run only on AArch64 macOS.
 [VST-005](../../note/vst/VST-005.md) per-function proofs,
 [VST-007](../../note/vst/VST-007.md) argument-error paths,
 [FP-005](../../note/fp/FP-005.md) verified versus shipped binary,
+[FP-006](../../note/fp/FP-006.md) the square-root builtin,
 [GATE-005](../../note/gate/GATE-005.md) allowed axioms,
 [GATE-008](../../note/gate/GATE-008.md) what the gate does not check.
