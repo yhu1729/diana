@@ -1,13 +1,27 @@
 # Newton's method
 
-Status codes, linking, and the Python conventions shared by every kernel are in the
-[API overview](overview.md); the theorems cited below are listed in `spec/newton.md`.
+Newton's method finds a root of a differentiable function `f` from a starting point `x₀` by the
+iteration `x ← x − f(x)/f′(x)`. Near a simple root it converges quadratically, roughly doubling
+the number of correct digits per step, but it may diverge from a poor start. Shared conventions are
+in the [API overview](overview.md).
 
-## C (`diana/newton.h`)
+## C
 
-Reverse-communication form, like [bisection](bisection.md): the kernel uses no function pointer,
-and the caller evaluates `f` and `f′` at `s.x` between calls. Finding `√2` as the root of `x² − 2`
-from `x₀ = 2`:
+`#include <diana/newton.h>`. Like [bisection](bisection.md), the kernel is a state machine: you
+evaluate `f` and `f′` at `s.x` and pass both values back.
+
+- `diana_newton_init(&s, x0, tol, max_iter)` starts at `x0` and returns `DIANA_CONTINUE`.
+- `diana_newton_step(&s, f(s.x), f′(s.x))` applies the correction `dx = f(x)/f′(x)`. It returns
+  `DIANA_CONTINUE` with the new iterate in `s.x`; `DIANA_OK` when `|dx| <= tol`, when `f(x)` is
+  exactly zero, or when the correction no longer changes `x`; `DIANA_ERR_MAXITER` after
+  `max_iter` steps; and `DIANA_ERR_SINGULAR` when `f′(x)` is zero and `f(x)` is not.
+- `diana_newton_result(&s, &root, &dx)` gives the current iterate and the last correction.
+  Either output may be `NULL`.
+
+`init` returns `DIANA_ERR_ARG` for a `NULL` state, a NaN or infinite `x0` or `tol`, `tol < 0` or
+`max_iter == 0`; `step` returns it for a NaN or infinite `f(x)` or `f′(x)` and for a correction or
+iterate that overflows. A step that fails with `DIANA_ERR_ARG` or `DIANA_ERR_SINGULAR` leaves the
+state unchanged. Finding `√2` as the root of `x² − 2` from `x₀ = 2`:
 
 ```c
 #include <stdio.h>
@@ -37,47 +51,15 @@ root 1.4142135623730949, dx 1.57e-16, 6 steps
 
 | Field | Meaning |
 |---|---|
-| `x` | current iterate, and the point at which the caller must evaluate `f` and `f′` next |
-| `dx` | last correction `f(x)/f′(x)` applied to `x`, `0` before the first step |
-| `tol` | stop when `|dx| <= tol`, `tol >= 0` |
-| `iter` | steps performed so far |
-| `max_iter` | step limit |
+| `x` | current iterate, where `f` and `f′` are evaluated next |
+| `dx` | last correction applied to `x` (0 before the first step) |
+| `tol` | stop once `|dx| <= tol` |
+| `iter`, `max_iter` | steps taken so far, and the limit |
 
-Invariant kept by every call (Frama-C WP, NEWTON-C1 to C3 in `spec/newton.md`): `x`, `dx` and `tol`
-finite and `tol >= 0`. VST proves that every function computes its model: `init` and `step` with
-every status and every field of the state (NEWTON-C5/C6), and `diana_newton_result` (NEWTON-C4);
-the correction and the iterate `step` writes are the Flocq `fstep` (NEWTON-C7), so the layer-B
-bounds apply to them. A rejected call leaves the state unchanged (NEWTON-C1/C2, and C5/C6 for a
-non-NULL `s`): `init` returning `DIANA_ERR_ARG`, and `step` returning `DIANA_ERR_ARG`, write
-nothing to `*s`; so does `step` returning `DIANA_ERR_SINGULAR`.
-
-- `diana_newton_init(s, x0, tol, max_iter)` initialises the state at `x0` and returns
-  `DIANA_CONTINUE`; `DIANA_ERR_ARG` on NULL, NaN or infinite `x0` or `tol`, `tol < 0`, or
-  `max_iter == 0`. Unlike bisection, `init` sees no function value, so it never reports
-  convergence itself.
-- `diana_newton_step(s, fx, dfx)` consumes `fx = f(s->x)` and `dfx = f′(s->x)`. When `fx == 0`
-  it returns `DIANA_OK` with `dx = 0` and `x` unchanged, whatever `dfx`. When `dfx == 0` (either
-  sign of zero) the step is undefined: `DIANA_ERR_SINGULAR`, nothing written. Otherwise it
-  computes the correction `dx = fx / dfx` and the iterate `x − dx`, each rounded to binary64; if
-  either is not finite (a subnormal `dfx` against a large `fx`, an overflow), it returns
-  `DIANA_ERR_ARG` and writes nothing. Otherwise it stores `dx` and the new `x`, increments
-  `iter`, and returns
-  `DIANA_OK` when `|dx| <= tol` or when the new iterate equals the old one (the correction is
-  at most half an ulp of `x` under the required
-  [floating-point environment](overview.md#floating-point-environment), NEWTON-B3),
-  `DIANA_ERR_MAXITER` when `iter` has reached `max_iter`, and `DIANA_CONTINUE` otherwise.
-  A NaN or infinite `fx` or `dfx` is
-  `DIANA_ERR_ARG`, state unchanged.
-- `diana_newton_result(s, root, dx)` reports the current iterate `*root = s->x` and the last
-  correction `*dx = s->dx`. Either output may be NULL; a non-NULL output must not alias the state
-  or the other output.
-
-`tol = 0` asks for a fixed point of the binary64 Newton map. Near a simple root the computed
-`f(x)` is usually not zero and the iterate alternates between the two doubles around the root, a
-two-cycle that only `max_iter` ends: from `x₀ = 2`, `x² − 2` reaches `1.4142135623730951`, the
-correctly rounded `√2`, at step 5, and then alternates with its lower neighbour. Pass a tolerance.
-A step that returns `DIANA_ERR_MAXITER` has still updated the state, so `diana_newton_result`
-reports the estimate reached so far:
+Always pass a positive tolerance. With `tol = 0` the iteration usually never stops by itself: in
+binary64 the computed `f(x)` at the double nearest the root is rarely exactly zero, and the
+iterate alternates between the two doubles around the root until `max_iter`. A step that returns
+`DIANA_ERR_MAXITER` has still updated the state, so `diana_newton_result` reports the estimate:
 
 ```c
 #include <stdio.h>
@@ -113,17 +95,11 @@ iteration limit reached after 8 steps: root 1.4142135623730949, dx 1.57e-16
 
 ## Callback wrapper
 
-`diana/newton.h`; not verified, see [callback wrapper](overview.md#callback-wrapper).
-
-- `diana_newton(f, ctx, x0, tol, max_iter, root, iter)` runs Newton's method from `x0`, with `f`
-  of type `diana_newton_fn`: `f(x, &dfx, ctx)` returns `f(x)` and must write `f′(x)` to `*dfx`.
-  It evaluates `f` once per step. On `DIANA_OK` or `DIANA_ERR_MAXITER`, `*root` holds the current
-  iterate; on any other status it is not written. `*iter` (optional) receives the number of
-  completed steps on every return (0 when the arguments are rejected). `*dfx` is set to `0` before
-  each call, so a callback that never writes it fails with `DIANA_ERR_SINGULAR` on the first step
-  instead of reading an indeterminate value.
-
-The cube root of 10 as the root of `x³ − c` with `c` in `ctx`:
+`diana_newton(f, ctx, x0, tol, max_iter, &root, &iter)` runs the loop over a callback
+`double f(double x, double *dfx, void *ctx)` (`diana_newton_fn`) that returns `f(x)` and writes
+`f′(x)` to `*dfx`. `root` receives the iterate on `DIANA_OK` and `DIANA_ERR_MAXITER`; `iter` (may
+be `NULL`) receives the number of steps. The cube root of 10 as the root of `x³ − c` with `c` in
+`ctx`:
 
 ```c
 #include <stdio.h>
@@ -161,15 +137,8 @@ cube root of 10: 2.15443469003188 (5 steps)
 
 ## Python
 
-`diana.Newton` is the reverse-communication state object and `diana.newton` the function taking
-a Python callable `f(x)` that returns the pair `(f(x), f′(x))`.
-
-`tol` is a required argument of both: Newton's method has no parameter-free stopping rule, and
-with `tol = 0` the iteration commonly ends in the two-cycle described above. The default
-`max_iter` is 100, a safety limit and not a convergence guarantee; `max_iter` must be an integer
-that fits a C `unsigned int` (`OverflowError` otherwise, `ValueError` for 0). `x0`, `tol` and
-the values `f` returns must be real numbers (`__float__` or `__index__`; a string is not
-converted), `TypeError` otherwise.
+`diana.newton(f, x0, tol, max_iter=100)` returns a root of the callable `f`, which returns the
+pair `(f(x), f′(x))`. `tol` is required, for the reason above.
 
 ```python
 >>> import math
@@ -180,8 +149,8 @@ converted), `TypeError` otherwise.
 0.7390851332151607
 ```
 
-The state object runs the same loop with the caller in control, as in C; `step` returns the new
-status, and the fields of the C state are read-only attributes:
+`diana.Newton(x0, tol, max_iter=100)` is the state machine, with the C fields as read-only
+attributes, `status`, `step(fx, dfx)` (returns the new status) and `result()`:
 
 ```python
 >>> s = diana.Newton(2.0, 1e-6)
@@ -193,15 +162,10 @@ status, and the fields of the C state are read-only attributes:
 (1.4142135623730951, 1.5947429102833119e-12)
 ```
 
-A `diana.Newton` allocated directly with `__new__` has status `ERR_ARG` until `__init__` succeeds;
-`step()` and `result()` raise `RuntimeError` before that. A failed `__init__` leaves the existing
-state and status unchanged, so a previously initialized object remains usable.
-
-A zero `f′(x)` raises `diana.SingularError` (a `ValueError`; `DIANA_ERR_SINGULAR` in C), and a
-non-finite `f(x)` or `f′(x)` or a correction or iterate that overflows raises `ValueError`
-(`DIANA_ERR_ARG`); either leaves the state at the last iterate. `diana.newton` raises
-`diana.MaxIterError` when `max_iter` is reached first, with the attributes `estimate` (the current
-iterate), `uncertainty` (the last `|dx|`) and `iter`:
+A zero derivative where `f(x)` is not zero raises `diana.SingularError`, and a non-finite value or
+an overflowing step raises `ValueError`; either leaves the state at the last iterate.
+`diana.newton` raises `diana.MaxIterError` when `max_iter` is reached first, with the `estimate`
+(the current iterate), its `uncertainty` (the last `|dx|`) and `iter`:
 
 ```python
 >>> diana.newton(lambda x: (x * x + 1, 2 * x), 0.0, 1e-12)
@@ -219,3 +183,23 @@ diana._diana.SingularError: f'(x) is zero
 ...     print(e.iter, abs(e.estimate - math.sqrt(2)) <= math.ulp(math.sqrt(2)))
 100 True
 ```
+
+## Guarantees
+
+Proved in Lean and Rocq, in exact arithmetic: each step near a simple root squares the error up to
+a constant, and the iteration converges from a start close enough to the root. Proved in Rocq
+with Flocq: the binary64 step stays within a rounding bound of the exact step, and a step that
+leaves `x` unchanged has a correction of at most half an ulp. Proved of the C code: VST shows that
+each function computes that binary64 model, and Frama-C that it is memory-safe and free of
+undefined behaviour. Not proved: that the binary64 iteration converges from a given `x₀`;
+`max_iter` is the only bound on the number of steps. Theorems: `spec/newton.md`; status: the
+[verification report](../verification/report.md).
+
+## Technical notes
+
+[API-010](../../note/api/API-010.md) step exits in check order,
+[API-011](../../note/api/API-011.md) the `tol = 0` two-cycle,
+[API-012](../../note/api/API-012.md) callback wrapper,
+[API-023](../../note/api/API-023.md) Python state objects,
+[API-025](../../note/api/API-025.md) Python defaults,
+[PROOF-002](../../note/proof/PROOF-002.md) what is proved.
