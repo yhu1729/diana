@@ -13,14 +13,19 @@ mistranslates them in predicates.
 The midpoint-in-bracket fact is beyond the SMT float model, so the kernel computes the midpoint in
 the helper `diana_bisection_mid`, alone in `src/bisection_mid.c`, with its contract (including
 `terminates \true` and `exits \false`, which Frama-C would otherwise generate with a warning for a
-function without a body) on the declaration in `src/bisection_mid.h`. `script/run_frama_c.sh` passes
-it to `-wp-skip-fct` (variable `SKIP`) for the source that defines it, matched by a line that starts
-with the return type in column 0, because WP rejects a function without a body there; the sources
-that call it see only the declaration, so WP assumes its contract at every call, and
-`src/bisection_mid.c` has no goal and no expectation row. Flocq proves it as BISECTION-B1
-(`mid_in_bracket` in `verification/rocq/theory/Float/Bisection.v`), and VST proves the C body
-against that model (BISECTION-C1). `SKIP` is the explicit trust boundary between layer C-WP and
-layer B: every entry needs a layer-B theorem.
+function without a body) on the declaration in `src/bisection_mid.h`. The sources that call it see
+only the declaration, so WP assumes its contract at every call, and `src/bisection_mid.c` has no
+goal and no expectation row. Flocq proves it as BISECTION-B1 (`mid_in_bracket` in
+`verification/rocq/theory/Float/Bisection.v`), and VST proves the C body against that model
+(BISECTION-C1).
+
+`SKIP` in `script/run_frama_c.sh` lists the functions whose contracts WP may assume this way, and
+the script enforces it: before WP it runs Frama-C's metrics plugin on the same sources and fails if
+a called function with a contract but no body ("Specified-only functions") is not in `SKIP`. It
+also passes a `SKIP` entry to `-wp-skip-fct` for a source that defines it, matched by a line that
+starts with the return type in column 0, since WP rejects that option for a function without a
+body. `SKIP` is the explicit trust boundary between layer C-WP and layer B: every entry needs a
+layer-B theorem, and no other contract can be assumed without failing the run.
 
 ## Bracket predicate
 
