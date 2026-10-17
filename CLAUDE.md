@@ -141,8 +141,11 @@ doc/                  README index; api/, development/, test/, verification/ (tr
 ## How to run
 
 - Everything below, in one script: `script/dev.sh config|build|test|verify` (`script/dev.sh help`; build
-  directory `build`, Debug with sanitizers; `verify` needs the opam switch, runs the spec gate with
-  `--strict` so an unproved listed theorem fails it, and rewrites the report)
+  directory `build`, Debug with sanitizers; `verify` needs the opam switch, runs the compiler
+  comparison, the Lean build, the Rocq build and the WP rows at once after the Clight check with
+  logs in `build/verify/`, `DIANA_JOBS` jobs (default: the CPU count; `1` is the sequential path
+  for debugging; the Rocq job count is also capped by memory, `doc/verification/local.md`), then
+  runs the spec gate with `--strict` so an unproved listed theorem fails it, and rewrites the report)
 - C: `cmake -S . -B build -DDIANA_BUILD_TEST=ON -DDIANA_WERROR=ON && cmake --build build && ctest --test-dir build`
   (`DIANA_BUILD_PYTHON` is ON by default and needs Python `Development.Module`; add
   `-DDIANA_BUILD_PYTHON=OFF` for a C-only build, as the C-only CI jobs do)
@@ -159,7 +162,8 @@ doc/                  README index; api/, development/, test/, verification/ (tr
   (`doc/development/benchmark.md`), so re-run it and update them together
 - Coverage: `uv sync --group test --group coverage && uv run pytest --cov=diana`; C and extension coverage via gcovr as in the `coverage_c`/`coverage_python` CI jobs
 - Lean: `cd verification/lean && lake exe cache get && lake build` (Mathlib pinned by `lake-manifest.json`)
-- Rocq: `cd verification/rocq && make && make check` (inside the opam switch, see `CONTRIBUTING.md`).
+- Rocq: `cd verification/rocq && make -j4 && make check` (inside the opam switch, see `CONTRIBUTING.md`;
+  `-j` is passed through to the generated makefile, `make real` stays sequential).
   Layers B and C-VST, the Rocq axiom gate, and the Clight AST are checked **only locally**; run the
   steps in `doc/verification/local.md` before committing a change to `src/`,
   `include/`, `verification/`, or `spec/`

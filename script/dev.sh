@@ -14,10 +14,11 @@ usage: script/dev.sh config [cmake option...]
   config  configure CMake in the build directory and sync the uv environment
   build   build the C library and tests, rebuild the Python extension
   test    run ctest and pytest, then the ruff, clang-format and clang-tidy checks
-  verify  check the Clight ASTs, compare the ccomp build of the kernels with
-          gcc/clang builds bitwise, build the Lean and Rocq proofs, run Frama-C
-          WP, and run the spec gate in strict mode, which fails on a theorem that
-          is listed in spec/ but not proved (rewrites the report in
+  verify  check the Clight ASTs, then at once compare the ccomp build of the
+          kernels with gcc/clang builds bitwise, build the Lean and Rocq proofs
+          and run Frama-C WP (logs in the build directory under verify/), then
+          run the spec gate in strict mode, which fails on a theorem that is
+          listed in spec/ but not proved (rewrites the report in
           doc/verification/report.md)
 
 environment:
@@ -25,6 +26,8 @@ environment:
   DIANA_BUILD_TYPE     CMAKE_BUILD_TYPE for config (default Debug)
   DIANA_SANITIZER      DIANA_SANITIZER for config (default ON)
   DIANA_OPAM_SWITCH    opam switch with Rocq, CompCert, VST, and Frama-C (default: current)
+  DIANA_JOBS           verify: Rocq jobs (capped by memory) and Frama-C rows at a time
+                       (default: CPU count); 1 runs the stages one after another
   DIANA_CLIGHT_UPDATE  1: verify overwrites a Clight AST that differs instead of failing
   DIANA_COMPARE_CC     host compilers verify compares with ccomp (default: clang, gcc,
                        cc, gcc-N, clang-N, every Homebrew LLVM keg; duplicates dropped)
@@ -170,13 +173,91 @@ check_clight() {
     [ "$stale" -eq 0 ] || fail "after a source change, rerun with DIANA_CLIGHT_UPDATE=1"
 }
 
+build_lean() {
+    (cd verification/lean && lake exe cache get && lake build)
+}
+
+# Memory per VST proof: measured peak RSS of one rocq compile on the heaviest
+# theory/VST file, rounded up (doc/verification/local.md); the cap keeps
+# DIANA_JOBS such proofs resident at once within hw.memsize / MemTotal.
+rocq_job_byte=2147483648
+
+rocq_jobs() {
+    if mem=$(sysctl -n hw.memsize 2>/dev/null); then
+        :
+    elif [ -r /proc/meminfo ]; then
+        mem=$(awk '/^MemTotal:/ { print $2 * 1024 }' /proc/meminfo)
+    else
+        echo "$jobs"
+        return 0
+    fi
+    cap=$((mem / rocq_job_byte))
+    [ "$cap" -ge 1 ] || cap=1
+    if [ "$jobs" -le "$cap" ]; then
+        echo "$jobs"
+    else
+        echo "$cap"
+    fi
+}
+
+run_stage() {
+    name=$1
+    shift
+    start=$(date +%s)
+    status=0
+    "$@" >"$verify_dir/$name.log" 2>&1 </dev/null || status=$?
+    echo "$status $(($(date +%s) - start))" >"$verify_dir/$name.status"
+    if [ "$status" -eq 0 ]; then
+        echo "verify: $name passed ($(($(date +%s) - start)) s)"
+    else
+        echo "verify: $name FAILED with status $status ($(($(date +%s) - start)) s)"
+    fi
+}
+
 dev_verify() {
     need_venv
+    jobs=$(script/job_count.sh)
+    DIANA_JOBS=$jobs
+    export DIANA_JOBS
     check_clight
-    opam_run script/compare_compiler.sh
-    (cd verification/lean && lake exe cache get && lake build)
-    opam_run make -C verification/rocq
-    opam_run script/verify_frama_c.sh
+    if [ "$jobs" -eq 1 ]; then
+        opam_run script/compare_compiler.sh
+        build_lean
+        opam_run make -C verification/rocq
+        opam_run script/verify_frama_c.sh
+    else
+        verify_dir="$build_dir/verify"
+        mkdir -p "$verify_dir"
+        rm -f "$verify_dir"/*.log "$verify_dir"/*.status
+        rocq_jobs=$(rocq_jobs)
+        echo "verify: compiler, lean, rocq (-j $rocq_jobs) and frama-c run at once" \
+            "with DIANA_JOBS=$jobs; logs in $verify_dir"
+        pids=
+        run_stage compiler opam_run script/compare_compiler.sh &
+        pids="$pids $!"
+        run_stage lean build_lean &
+        pids="$pids $!"
+        run_stage rocq opam_run make -C verification/rocq -j "$rocq_jobs" &
+        pids="$pids $!"
+        run_stage frama_c opam_run script/verify_frama_c.sh &
+        pids="$pids $!"
+        trap 'kill $pids 2>/dev/null; wait; exit 130' INT TERM
+        for pid in $pids; do
+            wait "$pid" || true
+        done
+        trap - INT TERM
+        failed=
+        for name in compiler lean rocq frama_c; do
+            status=none
+            elapsed=0
+            read -r status elapsed <"$verify_dir/$name.status" || status=none
+            echo "==> $name: status $status, $elapsed s <=="
+            cat "$verify_dir/$name.log"
+            echo
+            [ "$status" = 0 ] || failed="$failed $name"
+        done
+        [ -z "$failed" ] || fail "verify stage failed:$failed (logs in $verify_dir)"
+    fi
     opam_run uv run --no-sync script/check_spec.py --run --strict
 }
 

@@ -143,6 +143,14 @@ All notable changes to this project are documented here. The format follows
   with the most goals first and `-wp-par` scaled so about four provers of one row are in flight
   overall; it still writes one `verification/frama-c/report.txt` in row order and now checks
   every row before failing.
+- `script/dev.sh verify` runs the compiler comparison, the Lean build, the Rocq build and the WP
+  rows at once after the Clight check, each logging to `build/verify/<stage>.log` with a
+  `.status` file, prints one line as each finishes and the logs in that fixed order, and fails
+  if any stage failed; the spec gate still runs last. The Rocq build gets `make -j` with
+  `DIANA_JOBS` capped by memory (one job per 2 GiB, from the measured 1.13 GB peak of a VST
+  proof); `DIANA_JOBS=1` is the previous sequential run. Nothing checked changes: the same goals,
+  proofs and counts, and the report is byte-identical. On an Apple M4 a cold `verify` goes from
+  588 s to 327 s and a warm one from 406 s to 252 s (`doc/development/workflow.md`).
 - `diana.MaxIterError` names its second attribute and argument `uncertainty` instead of `width`:
   the bracket width for `diana.bisection`, the last `|dx|` for `diana.newton`, which the old name
   did not fit. `estimate`, `iter`, the positional order and the pickled `args` are unchanged; the
