@@ -20,6 +20,7 @@ int diana_py_status_exec(PyObject *m);
 int diana_py_bisection_exec(PyObject *m);
 int diana_py_euler_exec(PyObject *m);
 int diana_py_newton_exec(PyObject *m);
+int diana_py_rk4_exec(PyObject *m);
 int diana_py_simpson_exec(PyObject *m);
 int diana_py_trapezoidal_exec(PyObject *m);
 
