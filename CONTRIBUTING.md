@@ -2,9 +2,11 @@
 
 Diana is a C11 library whose specification is machine-checked, so a change rarely stands alone: a
 kernel comes with its test, its ACSL contract, and the proof layers that still have to hold.
-This file is the setup and workflow guide. `doc/README.md` indexes the rest: `doc/development/`
-explains why each tool is configured the way it is, `doc/api/` describes the API, and
-`doc/verification/trust.md` states what is proven and what is merely assumed.
+This file is the setup and workflow guide. `doc/README.md` indexes the rest: `doc/api/` describes
+the API, `doc/development/` the build, tests and tools, and `doc/verification/trust.md` states what
+is proven and what is merely assumed. The exact technical detail behind those pages, and every rule
+below in full, is in short notes under `note/`; look up the file you are about to change in the
+"By path" index of `note/README.md`.
 
 ## Quick start
 
@@ -18,24 +20,27 @@ script/dev.sh test
 
 That covers everything except the proofs, which need the opam switch below. `script/dev.sh help`
 lists the commands and the environment variables that steer them (build directory, build type,
-sanitizer, opam switch, `clang-tidy` binary).
+sanitizer, opam switch, job count, Clight update, compilers to compare, `clang-tidy` binary).
 
 ## Convention
 
 - **Name:** single-form noun and base-form verb, in directory, identifier, CI job, and Python API
   alike: `test/`, `diana_bisection_init`, `diana.bisection`. No plural, no `-ing`/`-s` verb form.
-  The `style_name` CI job rejects a plural directory. In prose the project is `Diana`; lowercase
+  The `style_name` CI job rejects the common plural directory names (`tests`, `docs`, `scripts`,
+  `proofs`, `wrappers`, `tools`). In prose the project is `Diana`; lowercase
   `diana` is only for identifiers (package, CMake target, library file, URL).
 - **Format:** `clang-format` (LLVM style plus the additions in `.clang-format`) for C, `ruff` for
-  Python; `.editorconfig` carries the indent rules per file type. Both are checked in CI and by
-  `script/dev.sh test`, with the `clang-format` version pinned in the uv `lint` group so local runs
-  and CI agree.
-- **Comment:** keep in-code comments to a minimum. Rationale belongs in `doc/`, API description in
-  `doc/api/`, proof notes in `spec/<method>.md`. ACSL `/*@ ... */` annotations are code, not
-  comments, and so are Python docstrings and CPython `tp_doc` strings, which are part of the
-  runtime API.
+  Python; `.editorconfig` carries the indent rules per file type for editors. `clang-format` and
+  `ruff` are checked in CI and by `script/dev.sh test`, with the `clang-format` version pinned in
+  the uv `lint` group so local runs and CI agree.
+- **Comment and documentation:** keep in-code comments to a minimum. Explanations for people
+  reading about the library go in `doc/` (API description in `doc/api/`); each exact technical
+  detail or rule goes in a note under `note/` (format in `note/README.md`); theorem lists and
+  proof notes go in `spec/<method>.md`. ACSL `/*@ ... */` annotations are code, not comments, and
+  so are Python docstrings and CPython `tp_doc` strings, which are part of the runtime API.
+  `uv run script/check_doc.py --write` regenerates the note index and checks every link.
 - **Living document:** update `CHANGELOG.md` (`Unreleased`, Keep a Changelog) and, when a change
-  alters a fact recorded there, `CLAUDE.md`.
+  alters a fact recorded there, `CLAUDE.md`, the affected `doc/` page and the affected notes.
 - **One function per file:** each implementation file in `src/` and `python/ext/` defines one
   function, named after it without the `diana_` or `diana_py_` prefix (`diana_bisection_init` in
   `src/bisection_init.c`, `diana_py_bisection_step` in `python/ext/bisection_step.c`);
@@ -59,7 +64,7 @@ CMake ≥ 3.25 and gcc or clang. For a debug build with ASan/UBSan and warnings 
 runs it:
 
 ```
-cmake -S . -B build -DDIANA_BUILD_TEST=ON -DDIANA_SANITIZER=ON -DDIANA_WERROR=ON
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DDIANA_BUILD_TEST=ON -DDIANA_SANITIZER=ON -DDIANA_WERROR=ON
 cmake --build build
 ctest --test-dir build
 ```
@@ -114,16 +119,16 @@ changes no other package.
 Two version traps are worth stating outright. Rocq stays at 9.2 because the CompCert 3.18 opam
 package caps `coq < 9.3~`, so a Homebrew `rocq` 9.3 on `PATH` is unused — `script/dev.sh verify`
 runs every prover through `opam exec` to keep it out. And Why3 1.8.2 detects Alt-Ergo 2.6.x but
-not Homebrew Z3 5.1, which the project therefore does not use.
+not Homebrew Z3 5.x (it accepts Z3 only up to 4.13), which the project therefore does not use.
 
 CompCert is under the INRIA non-commercial license: it is a research-only dependency, lives only
 in a local opam switch, and is never shipped or baked into a CI image. `doc/third-party.md` lists
 every tool with its version and license.
 
 Build the proofs with `cd verification/rocq && make`. `make check` prints the axioms of the listed
-theorems, but it compiles the generated, uncommitted `CheckSpec.v`, so run
-`uv run script/check_spec.py --run --prover rocq` — or just `script/dev.sh verify`, which orders
-the steps — at least once before it.
+theorems, but it compiles the generated, uncommitted `CheckSpec.v`, which any run of
+`uv run script/check_spec.py` writes; run that once first, or just `script/dev.sh verify`, which
+orders the steps.
 
 ## Before you commit
 
@@ -133,7 +138,7 @@ Clight AST, because no CI image carries Flocq, CompCert, or VST. A green pipelin
 about those, so they are your responsibility before the commit lands.
 
 - Always: `script/dev.sh test` (ctest including the installed-consumer tests, pytest, ruff,
-  `clang-format`, `clang-tidy`).
+  `clang-format`, `clang-tidy`, and the documentation check `script/check_doc.py`).
 - After a change to `src/`, `include/`, `verification/`, or `spec/`: `script/dev.sh verify`, and
   commit the report it rewrites, `doc/verification/report.md`. It runs the spec gate with
   `--strict`, so a theorem listed in `spec/` that no prover proves fails it, as does an ACSL
@@ -148,7 +153,8 @@ about those, so they are your responsibility before the commit lands.
   `BISECTION-A1`, with `_` in the method written as `-`, such as `EULER-UNCHECKED-C1`), layer,
   informal statement, and per-prover constant name. `script/check_spec.py`
   is the gate — every listed constant must exist, use only an allowed axiom, and contain no `sorry`
-  or `Admitted`.
+  or `Admitted`. Note KERNEL-006 (`note/kernel/KERNEL-006.md`) lists every file a new method
+  touches.
 
 ## Commit
 
@@ -186,7 +192,7 @@ The rest is convention:
 
 - Name the thing, not the reason:
   `feat: add bisection header`, not `feat: add the bisection reverse-communication header`.
-  Rationale goes in `doc/` or `spec/`, never in the log.
+  Rationale goes in `doc/`, `note/` or `spec/`, never in the log.
 - One logical step per commit, usually a single file. Group files only when they are meaningless
   apart, such as a kernel and the `CMakeLists.txt` line that builds it. A change spanning the
   library, its test, and its documentation is three commits.
