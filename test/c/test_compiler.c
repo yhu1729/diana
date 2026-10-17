@@ -642,8 +642,11 @@ static void test_simpson(void) {
   test_quadrature_random(1);
 }
 
-static void euler_case(const char *label, const double *y, const double *f,
-                       size_t d, double h) {
+typedef diana_status (*euler_fn)(const double *y, const double *f, size_t d,
+                                 double h, double *y_out);
+
+static void euler_run(const char *kernel, const char *label, euler_fn step,
+                      const double *y, const double *f, size_t d, double h) {
   static double out[CAPACITY];
   size_t i;
   diana_status st;
@@ -651,14 +654,20 @@ static void euler_case(const char *label, const double *y, const double *f,
   for (i = 0u; i < CAPACITY; ++i) {
     out[i] = SENTINEL;
   }
-  st = diana_euler_step(y, f, d, h, out);
-  put_head("euler", label);
+  st = step(y, f, d, h, out);
+  put_head(kernel, label);
   put_double(h);
   put_array(y, y == (const double *)0 ? 0u : d);
   put_array(f, f == (const double *)0 ? 0u : d);
   put_status(st);
   put_array(out, d < CAPACITY ? d : CAPACITY);
   printf("\n");
+}
+
+static void euler_case(const char *label, const double *y, const double *f,
+                       size_t d, double h) {
+  euler_run("euler", label, diana_euler_step, y, f, d, h);
+  euler_run("euler_unchecked", label, diana_euler_step_unchecked, y, f, d, h);
 }
 
 static void test_euler(void) {
@@ -693,6 +702,16 @@ static void test_euler(void) {
   euler_case("empty", y4, f4, 0u, 1.0);
   st = diana_euler_step((const double *)0, (const double *)0, 0u, 1.0, out);
   put_head("euler", "all_null");
+  put_status(st);
+  put_double(out[0]);
+  printf("\n");
+  st = diana_euler_step_unchecked(y4, f4, 4u, 1.0, (double *)0);
+  put_head("euler_unchecked", "null_out");
+  put_status(st);
+  printf("\n");
+  st = diana_euler_step_unchecked((const double *)0, (const double *)0, 0u, 1.0,
+                                  out);
+  put_head("euler_unchecked", "all_null");
   put_status(st);
   put_double(out[0]);
   printf("\n");
