@@ -8,8 +8,8 @@ How the binding's sources are laid out; what it exposes is in the [API overview]
   `diana_py_overlap`), `version.c` and `status_str.c` (the module functions `version` and
   `status_str`), `status_exec.c` (status constants, `BracketError`, `SingularError`), `raise.c`
   (`diana_py_raise`, which maps a `diana_status` to a Python exception), `convert_uint.c` (the
-  `PyArg_Parse*` `O&` converter for `unsigned int`) and `get_samples.c` (the buffer check
-  `diana_py_get_samples`). Each kernel has `<kernel>_exec.c`, `diana_py_<kernel>_exec(PyObject *m)`
+  `PyArg_Parse*` `O&` converter for `unsigned int`) and `get_array.c` (the buffer check
+  `diana_py_get_array`). Each kernel has `<kernel>_exec.c`, `diana_py_<kernel>_exec(PyObject *m)`
   with the method, member and type tables it registers, and one file per method or function: the
   `Bisection` type in `bisection_new.c`, `bisection_init.c`, `bisection_step.c` and
   `bisection_result.c` with its object struct in `bisection_object.h`, likewise `Newton` with
