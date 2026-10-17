@@ -19,7 +19,8 @@ shipped, so the conditions are met; they still have to be stated.
 
 The `verification/clight/<source>_<target>.v` files (today `bisection_init_aarch64_macos.v`,
 `bisection_mid_aarch64_macos.v`, `bisection_result_aarch64_macos.v`,
-`bisection_step_aarch64_macos.v`, `euler_aarch64_macos.v`, `euler_step_unchecked_aarch64_macos.v`,
+`bisection_step_aarch64_macos.v`, `euler_step_aarch64_macos.v`,
+`euler_step_unchecked_aarch64_macos.v`,
 `newton_init_aarch64_macos.v`, `newton_result_aarch64_macos.v`, `newton_step_aarch64_macos.v`,
 `rk4_stage_aarch64_macos.v`, `rk4_stage_unchecked_aarch64_macos.v`, `rk4_step_aarch64_macos.v`,
 `rk4_step_unchecked_aarch64_macos.v`, `simpson_aarch64_macos.v` and
