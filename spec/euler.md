@@ -51,7 +51,7 @@ theorem:
       pointing to d ≥ 1 readable doubles and y_out to d writable doubles, the three disjoint, it
       returns DIANA_OK and writes the model values when every component is finite, and returns
       DIANA_ERR_ARG leaving y_out unchanged otherwise. The NULL and d = 0 paths are EULER-C1.
-    rocq: Diana.VST.Euler.body_diana_euler_step
+    rocq: Diana.VST.EulerStep.body_diana_euler_step
 ---
 # euler
 
@@ -103,7 +103,7 @@ without the check, `diana_euler_step_unchecked`, has its own spec, `spec/euler_u
   `y_out = map Vfloat (sublist 0 i L) ++ sublist i d os`, and each store is an `upd_Znth`
   that `list_solve` folds into the next prefix (`Znth_c_euler` names the stored value). The
   first VST proof in Diana that writes an array and calls a function inside a loop.
-  Proof: `body_diana_euler_step` in `verification/rocq/theory/VST/Euler.v`.
+  Proof: `body_diana_euler_step` in `verification/rocq/theory/VST/EulerStep.v`.
 
 ## Why finiteness on success is not in ACSL
 
@@ -134,10 +134,11 @@ finiteness and the exact values together.
   functions so that they instantiate to CompCert's `Float.add`/`Float.mul`. B1 and B2 are per
   component, because the kernel's components are independent; a max-norm form follows by taking
   the maximum over `i`.
-- **Layer C, VST** (`verification/rocq/theory/VST/Euler.v`, against the Clight AST
-  `verification/clight/euler_step_aarch64_macos.v`, CompCert target AArch64 macOS): `c_euler h ys fs`
-  is the C computation with CompCert's `Float.add`/`Float.mul`, componentwise over the two
-  arrays, and `c_euler_model` identifies it with `feuler`. The funspec holds three separate
+- **Layer C, VST** (`verification/rocq/theory/VST/EulerStep.v`, against the Clight AST
+  `verification/clight/euler_step_aarch64_macos.v`, CompCert target AArch64 macOS):
+  `c_euler h ys fs`, in the AST-free `verification/rocq/theory/VST/Euler.v`, is the C computation
+  with CompCert's `Float.add`/`Float.mul`, componentwise over the two arrays, and `c_euler_model`
+  identifies it with `feuler`. The funspec holds three separate
   `data_at`, so overlapping `y` and `f`, which the C allows because both are only read, is
   outside the theorem; WP (C1) covers it for memory safety.
 
