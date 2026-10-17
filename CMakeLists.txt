@@ -50,7 +50,7 @@ else()
     set(diana_library_type STATIC)
 endif()
 add_library(diana ${diana_library_type}
-    src/status.c
+    src/status_str.c
     src/bisection.c
     src/bisection_init.c
     src/bisection_mid.c
@@ -69,7 +69,8 @@ add_library(diana ${diana_library_type}
     src/rk4_step.c
     src/rk4_step_unchecked.c
     src/simpson.c
-    src/trapezoidal.c)
+    src/trapezoidal.c
+    src/version.c)
 add_library(diana::diana ALIAS diana)
 target_include_directories(diana PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

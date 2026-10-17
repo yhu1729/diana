@@ -1,4 +1,4 @@
-#include "diana/diana.h"
+#include "diana/status.h"
 
 const char *diana_status_str(diana_status s) {
   switch (s) {
@@ -17,5 +17,3 @@ const char *diana_status_str(diana_status s) {
   }
   return "unknown status";
 }
-
-const char *diana_version(void) { return DIANA_VERSION_STRING; }
