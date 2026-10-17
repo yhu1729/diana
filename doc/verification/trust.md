@@ -63,7 +63,7 @@ This equivalence is an argument, not a theorem. A bitwise differential test back
 once with `ccomp` and with each available gcc and clang at `-O0`, `-O2` and `-O3` under the flags
 above, and fails unless every host build prints exactly the bytes the `ccomp` build prints. The
 driver prints every status and every double as its bit pattern, so the sign of zero counts, for
-1128 cases: every argument error, NaN and ±∞ inputs, `h = ±0`, subnormals, overflow in each
+1672 cases: every argument error, NaN and ±∞ inputs, `h = ±0`, subnormals, overflow in each
 operation, the operation-order cases of the ctest suites, the 2098-step bisection worst case step
 by step, the Newton two-cycle, and seeded random inputs ([compiler comparison](compiler.md)). On
 AArch64 macOS,

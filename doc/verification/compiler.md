@@ -34,7 +34,7 @@ carries CompCert.
 
 The driver prints one line per case with every status as `s` plus 8 hex digits and every double as
 its 16 hex-digit bit pattern, inputs included, so the sign of zero and any change to the corpus
-itself show up in the diff. The corpus (1128 cases, 6118 lines) covers:
+itself show up in the diff. The corpus (1672 cases, 6662 lines) covers:
 
 - bisection: every `init` argument error (NaN, signalling NaN, ±∞ in each argument, `a > b`,
   `tol < 0`, `max_iter == 0`, `|a|` or `|b|` past `DBL_MAX / 2`), both bracket errors, each
@@ -50,6 +50,11 @@ itself show up in the diff. The corpus (1128 cases, 6118 lines) covers:
   rounding, `h = ±0` with signed-zero components, underflow ties, `DBL_MAX + 1`, overflow in the
   product and in the sum, failures in the first and last component (the output keeps its
   sentinels), and non-finite `y`, `f` and `h`;
+- the RK4 stage and step: every argument error (each NULL pointer, `d = 0`, stages 1, 5 and
+  -2), each stage with exact and inexact `h`, `h = ±0`, the coefficient tie at `h = 3·2⁻¹⁰⁷⁴`,
+  `h = DBL_MAX`, the fused multiply-add case, the slope-sum order case, overflow in each operation
+  of both functions, cancellation, failures in the first and last component, and non-finite
+  values in every position and in `h`;
 - Newton: every `init` argument error, `step` with NaN, signalling NaN and ±∞ in `f` and `f′`, a
   zero or negative-zero `f′`, an exact zero `f` (with a zero or NaN `f′`), corrections that
   underflow, that are a rounding tie, that overflow, and an iterate that overflows; full runs
@@ -58,7 +63,7 @@ itself show up in the diff. The corpus (1128 cases, 6118 lines) covers:
   genuine two-cycle of `x³ − 2x + 2` from 0, a flat `f`, a step limit of one, a root at `1e300`,
   an overflowing square and a function without a real root; `result` with each output pointer
   omitted;
-- seeded random inputs: 200 arrays per array kernel, 96 bisection runs and 96 Newton runs
+- seeded random inputs: 200 arrays per array kernel (for RK4, one stage and one step per draw), 96 bisection runs and 96 Newton runs
   (linear, square and cubic `f` with random coefficient, start and tolerance), half drawn from all of
   binary64 (special values, subnormals, both ends of the exponent range) and half from moderate
   exponents. The generator is splitmix64 on integers and builds each double from its bits, so the
