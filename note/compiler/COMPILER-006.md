@@ -8,7 +8,8 @@ related: [COMPILER-005, COMPILER-007, TEST-008, TEST-022]
 ---
 Besides seeded random inputs (COMPILER-007), the corpus runs every public kernel function on the
 cases below. Current case lines: `bisection_*` 161, `trapezoidal` 283, `simpson` 284, `euler`
-and `euler_unchecked` 248 each, `rk4_stage*` 274 each, `rk4_step*` 270 each, `newton_*` 152.
+and `euler_unchecked` 248 each, `rk4_stage*` 274 each, `rk4_step*` 270 each, `newton_*` 152,
+`cholesky` 248.
 
 - Bisection `init`: NULL state; NaN and an infinity in each argument, a signalling NaN `fa`;
   `a > b`; negative `tol`; `max_iter = 0`; `|a|` or `|b|` one ulp past `DBL_MAX/2` and
@@ -36,3 +37,9 @@ and `euler_unchecked` 248 each, `rk4_stage*` 274 each, `rk4_step*` 270 each, `ne
   linear roots, the cube root of 10, the double root of `x^2` (digest only, 539 steps), the
   two-cycle of `x^3 - 2x + 2` from 0, a flat `f`, `max_iter = 1`, a root at `1e300`, an
   overflowing square, and `x^2 + 1`, which has no real root.
+- Cholesky: every argument error (NULL pointers, `n = 0`, `n = 2^32` and `SIZE_MAX`, whose `n * n`
+  overflows), exact factors, NaN and infinities above the diagonal, a signed-zero diagonal, the
+  FMA, subtraction-order and division pins, a subnormal pivot, `DBL_MAX` entries, each kind of
+  non-positive pivot (zero, `-0`, negative, indefinite, semidefinite, last, overflow to `-inf`,
+  NaN), and NaN, sNaN and `±inf` at each lower-triangle position of a 3×3 matrix; the random
+  matrices (`n` from 1 to 8) alternate raw entries with diagonally dominant ones, which succeed.

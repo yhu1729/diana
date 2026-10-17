@@ -1258,6 +1258,137 @@ static void test_newton(void) {
   }
 }
 
+#define MATRIX 8u
+
+static void cholesky_case(const char *label, const double *a, size_t n) {
+  static double l[MATRIX * MATRIX + 1u];
+  size_t m = n <= MATRIX ? n * n : 0u;
+  size_t i;
+  diana_status st;
+
+  for (i = 0u; i < MATRIX * MATRIX + 1u; ++i) {
+    l[i] = SENTINEL;
+  }
+  st = diana_cholesky(a, n, l);
+  put_head("cholesky", label);
+  printf(" %llu", (unsigned long long)n);
+  put_array(a, a == (const double *)0 ? 0u : m);
+  put_status(st);
+  put_array(l, m + 1u);
+  printf("\n");
+}
+
+static double magnitude(double v) { return from_bits(to_bits(v) & ~SIGN_BIT); }
+
+static void test_cholesky(void) {
+  static const double one[1] = {4.0};
+  static const double two[1] = {2.0};
+  static const double exact3[9] = {4.0, 2.0,  -2.0, 2.0, 10.0,
+                                   5.0, -2.0, 5.0,  21.0};
+  static double upper_bad[9];
+  static const double diagonal[9] = {4.0,  0.0, 0.0, 0.0, 9.0,
+                                     -0.0, 0.0, 0.0, 0.25};
+  static const double fma[4] = {1.0, 0x1.0000000000001p0, 0.0,
+                                0x1.0000000000003p0};
+  static const double order[9] = {1.0,     0.0, 0x1p-27, 0.0, 1.0,
+                                  0x1p-27, 0.0, 0.0,     1.0};
+  static const double division[4] = {9.0, 5.0, 0.0, 100.0};
+  static const double subnormal[4] = {VAL_TRUE_MIN, 0.0, 0.0, 0x1p-1072};
+  static const double big[4] = {VAL_MAX, VAL_HALF_MAX, 0.0, VAL_MAX};
+  static const double zero[4] = {0.0, 0.0, 0.0, 0.0};
+  static const double negative_zero[1] = {-0.0};
+  static const double negative[1] = {-1.0};
+  static const double indefinite[4] = {1.0, 2.0, 2.0, 1.0};
+  static const double semidefinite[4] = {1.0, 1.0, 1.0, 1.0};
+  static const double last[9] = {4.0, 2.0, 0.0, 0.0, 2.0, 1.0, 0.0, 0.0, 0.5};
+  static const double overflow[4] = {VAL_TRUE_MIN, 1e300, 0.0, 1.0};
+  static const double nan_pivot[9] = {VAL_TRUE_MIN, 0.0, 1e300, 0.0, 1.0,
+                                      1.0,          0.0, 0.0,   1.0};
+  static double a[MATRIX * MATRIX];
+  static double out[1] = {SENTINEL};
+  diana_status st;
+  unsigned k;
+  size_t n;
+  size_t i;
+  size_t j;
+
+  cholesky_case("null_a", (const double *)0, 2u);
+  st = diana_cholesky(exact3, 3u, (double *)0);
+  put_head("cholesky", "null_l");
+  put_status(st);
+  printf("\n");
+  cholesky_case("empty", exact3, 0u);
+  st = diana_cholesky((const double *)0, 0u, out);
+  put_head("cholesky", "all_null");
+  put_status(st);
+  put_double(out[0]);
+  printf("\n");
+  cholesky_case("size_overflow", exact3, (size_t)1 << 32);
+  cholesky_case("size_max", exact3, (size_t)-1);
+  cholesky_case("one", one, 1u);
+  cholesky_case("sqrt2", two, 1u);
+  cholesky_case("exact", exact3, 3u);
+  memcpy(upper_bad, exact3, sizeof exact3);
+  upper_bad[3] = VAL_QNAN;
+  upper_bad[6] = VAL_INF;
+  upper_bad[7] = -VAL_INF;
+  cholesky_case("upper_ignored", upper_bad, 3u);
+  cholesky_case("diagonal", diagonal, 3u);
+  cholesky_case("fma", fma, 2u);
+  cholesky_case("order", order, 3u);
+  cholesky_case("division", division, 2u);
+  cholesky_case("subnormal", subnormal, 2u);
+  cholesky_case("big", big, 2u);
+  cholesky_case("zero", zero, 2u);
+  cholesky_case("negative_zero", negative_zero, 1u);
+  cholesky_case("negative", negative, 1u);
+  cholesky_case("indefinite", indefinite, 2u);
+  cholesky_case("semidefinite", semidefinite, 2u);
+  cholesky_case("last", last, 3u);
+  cholesky_case("overflow", overflow, 2u);
+  cholesky_case("nan_pivot", nan_pivot, 3u);
+  for (j = 0u; j < 3u; ++j) {
+    for (i = j; i < 3u; ++i) {
+      memcpy(a, exact3, sizeof exact3);
+      a[i + 3u * j] = VAL_QNAN;
+      cholesky_case("nan", a, 3u);
+      a[i + 3u * j] = VAL_SNAN;
+      cholesky_case("snan", a, 3u);
+      a[i + 3u * j] = VAL_INF;
+      cholesky_case("inf", a, 3u);
+      a[i + 3u * j] = -VAL_INF;
+      cholesky_case("negative_inf", a, 3u);
+    }
+  }
+
+  for (k = 0u; k < RANDOM_ARRAY; ++k) {
+    int mixed = (int)(k % 2u);
+    n = 1u + (size_t)rng_below(MATRIX);
+    for (i = 0u; i < n * n; ++i) {
+      a[i] = random_value(mixed);
+    }
+    if (k % 4u >= 2u) {
+      for (j = 0u; j < n; ++j) {
+        for (i = j + 1u; i < n; ++i) {
+          a[i + n * j] = a[j + n * i] = random_value(0);
+        }
+      }
+      for (j = 0u; j < n; ++j) {
+        double s = 1.0;
+        for (i = 0u; i < n; ++i) {
+          if (i != j) {
+            s = s + magnitude(a[i + n * j]);
+          }
+        }
+        a[j + n * j] = s;
+      }
+      cholesky_case("dominant", a, n);
+    } else {
+      cholesky_case("random", a, n);
+    }
+  }
+}
+
 int main(void) {
   test_bisection();
   test_trapezoidal();
@@ -1265,6 +1396,7 @@ int main(void) {
   test_euler();
   test_rk4();
   test_newton();
+  test_cholesky();
   printf("end %u\n", case_count);
   if (fflush(stdout) != 0 || ferror(stdout)) {
     return 1;
