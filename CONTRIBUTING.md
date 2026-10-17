@@ -127,7 +127,7 @@ about those, so they are your responsibility before the commit lands.
   of the kernels prints the same bits as gcc/clang builds on a fixed corpus
   (`script/compare_compiler.sh`). The individual steps are in `doc/verification/local.md`.
 - After a change to a verified kernel or a header it includes, the Clight AST has to be
-  regenerated, and only on the CompCert target it is named for (`bisection_aarch64_macos.v` is
+  regenerated, and only on the CompCert target it is named for (`bisection_init_aarch64_macos.v` is
   AArch64 macOS). `script/dev.sh verify` checks the AST of the current target and fails on a stale
   one; `DIANA_CLIGHT_UPDATE=1` makes it overwrite instead. Nothing in CI notices staleness.
 - Adding a method: give it a `spec/<method>.md` with its theorem IDs (`<METHOD>-<layer><n>`, such as

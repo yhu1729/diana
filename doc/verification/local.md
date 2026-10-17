@@ -35,15 +35,15 @@ switch of `CONTRIBUTING.md`, and a green pipeline says nothing about it. After a
 
 ## Clight AST per target
 
-`clightgen` output depends on the target CompCert was configured for (the `Info` module records
-the architecture and ABI, and the builtin list differs between AArch64 and x86-64), so each AST is
-named after its target, `<arch>[_<model>]_<system>` from `compcert.config`
-(`bisection_aarch64_macos.v`; an x86-64 Linux one would be `bisection_x86_64_linux.v`), and the VST
-proofs import that module by name. Regenerate an AST only on its own target, and commit it only
-together with the source change that caused it and a passing `make`. On another target the Rocq
-build is expected to compile the proofs against the committed AST (not yet checked on a non-macOS
-target), but cannot regenerate it. A second target needs its own CompCert switch and a second
-committed AST.
+`clightgen` output depends on the target CompCert was configured for (the `Info` module records the
+architecture and ABI, and the builtin list differs between AArch64 and x86-64), so each AST is named
+after its target, `<arch>[_<model>]_<system>` from `compcert.config`
+(`bisection_init_aarch64_macos.v`; an x86-64 Linux one would be `bisection_init_x86_64_linux.v`),
+and the VST proofs import that module by name. Regenerate an AST only on its own target, and commit
+it only together with the source change that caused it and a passing `make`. On another target the
+Rocq build is expected to compile the proofs against the committed AST (not yet checked on a
+non-macOS target), but cannot regenerate it. A second target needs its own CompCert switch and a
+second committed AST.
 
 ## Rocq build
 
