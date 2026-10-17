@@ -27,6 +27,11 @@ How the binding's sources are laid out; what it exposes is in the [API overview]
   `_diana.pyi` is the type stub of the extension, so the `py.typed` package is typed throughout.
   Driver modules are private so that a module name never shadows the function of the same name.
 - The extension sources live outside the package directory so the wheel does not ship them.
+- The extension uses single-phase initialization (`m_size = -1`), static type objects and
+  module-level exception pointers, so it supports one interpreter per process: it is not
+  subinterpreter-safe, and re-importing it after removing it from `sys.modules` creates new
+  `BracketError` and `SingularError` objects and leaks the old ones. Multi-phase initialization
+  with module state would lift this and is not planned before 1.0.
 - `Bisection.__new__` and `Newton.__new__` allocate an uninitialized state with status `ERR_ARG`.
   `step` and `result` reject it until `__init__` succeeds; a rejected reinitialization preserves a
   prior valid state.
