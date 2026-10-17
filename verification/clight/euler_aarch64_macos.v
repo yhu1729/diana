@@ -75,7 +75,6 @@ Definition ___compcert_va_int32 : ident := $"__compcert_va_int32".
 Definition ___compcert_va_int64 : ident := $"__compcert_va_int64".
 Definition _d : ident := $"d".
 Definition _diana_euler_step : ident := $"diana_euler_step".
-Definition _diana_euler_step_unchecked : ident := $"diana_euler_step_unchecked".
 Definition _diana_fp_finite : ident := $"diana_fp_finite".
 Definition _f : ident := $"f".
 Definition _h : ident := $"h".
@@ -221,77 +220,6 @@ Definition f_diana_euler_step := {|
             (Ebinop Oadd (Etempvar _i tulong) (Econst_int (Int.repr 1) tint)
               tulong))))
       (Sreturn (Some (Econst_int (Int.repr 0) tint))))))
-|}.
-
-Definition f_diana_euler_step_unchecked := {|
-  fn_return := tint;
-  fn_callconv := cc_default;
-  fn_params := ((_y, (tptr tdouble)) :: (_f, (tptr tdouble)) ::
-                (_d, tulong) :: (_h, tdouble) :: (_y_out, (tptr tdouble)) ::
-                nil);
-  fn_vars := nil;
-  fn_temps := ((_i, tulong) :: (_t'3, tint) :: (_t'2, tint) ::
-               (_t'1, tint) :: (_t'5, tdouble) :: (_t'4, tdouble) :: nil);
-  fn_body :=
-(Ssequence
-  (Ssequence
-    (Ssequence
-      (Ssequence
-        (Sifthenelse (Ebinop Oeq (Etempvar _y (tptr tdouble))
-                       (Ecast (Econst_int (Int.repr 0) tint) (tptr tdouble))
-                       tint)
-          (Sset _t'1 (Econst_int (Int.repr 1) tint))
-          (Sset _t'1
-            (Ecast
-              (Ebinop Oeq (Etempvar _f (tptr tdouble))
-                (Ecast (Econst_int (Int.repr 0) tint) (tptr tdouble)) tint)
-              tbool)))
-        (Sifthenelse (Etempvar _t'1 tint)
-          (Sset _t'2 (Econst_int (Int.repr 1) tint))
-          (Sset _t'2
-            (Ecast
-              (Ebinop Oeq (Etempvar _y_out (tptr tdouble))
-                (Ecast (Econst_int (Int.repr 0) tint) (tptr tdouble)) tint)
-              tbool))))
-      (Sifthenelse (Etempvar _t'2 tint)
-        (Sset _t'3 (Econst_int (Int.repr 1) tint))
-        (Sset _t'3
-          (Ecast
-            (Ebinop Oeq (Etempvar _d tulong) (Econst_int (Int.repr 0) tuint)
-              tint) tbool))))
-    (Sifthenelse (Etempvar _t'3 tint)
-      (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
-      Sskip))
-  (Ssequence
-    (Ssequence
-      (Sset _i (Ecast (Econst_int (Int.repr 0) tuint) tulong))
-      (Sloop
-        (Ssequence
-          (Sifthenelse (Ebinop Olt (Etempvar _i tulong) (Etempvar _d tulong)
-                         tint)
-            Sskip
-            Sbreak)
-          (Ssequence
-            (Sset _t'4
-              (Ederef
-                (Ebinop Oadd (Etempvar _y (tptr tdouble))
-                  (Etempvar _i tulong) (tptr tdouble)) tdouble))
-            (Ssequence
-              (Sset _t'5
-                (Ederef
-                  (Ebinop Oadd (Etempvar _f (tptr tdouble))
-                    (Etempvar _i tulong) (tptr tdouble)) tdouble))
-              (Sassign
-                (Ederef
-                  (Ebinop Oadd (Etempvar _y_out (tptr tdouble))
-                    (Etempvar _i tulong) (tptr tdouble)) tdouble)
-                (Ebinop Oadd (Etempvar _t'4 tdouble)
-                  (Ebinop Omul (Etempvar _h tdouble) (Etempvar _t'5 tdouble)
-                    tdouble) tdouble)))))
-        (Sset _i
-          (Ebinop Oadd (Etempvar _i tulong) (Econst_int (Int.repr 1) tint)
-            tulong))))
-    (Sreturn (Some (Econst_int (Int.repr 0) tint)))))
 |}.
 
 Definition composites : list composite_definition :=
@@ -542,30 +470,28 @@ Definition global_definitions : list (ident * globdef fundef type) :=
      (tint :: nil) tvoid
      {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|})) ::
  (_diana_fp_finite, Gfun(Internal f_diana_fp_finite)) ::
- (_diana_euler_step, Gfun(Internal f_diana_euler_step)) ::
- (_diana_euler_step_unchecked, Gfun(Internal f_diana_euler_step_unchecked)) ::
- nil).
+ (_diana_euler_step, Gfun(Internal f_diana_euler_step)) :: nil).
 
 Definition public_idents : list ident :=
-(_diana_euler_step_unchecked :: _diana_euler_step :: ___builtin_debug ::
- ___builtin_fmin :: ___builtin_fmax :: ___builtin_fnmsub ::
- ___builtin_fnmadd :: ___builtin_fmsub :: ___builtin_fmadd ::
- ___builtin_clsll :: ___builtin_clsl :: ___builtin_cls ::
- ___builtin_expect :: ___builtin_unreachable :: ___builtin_va_end ::
- ___builtin_va_copy :: ___builtin_va_arg :: ___builtin_va_start ::
- ___builtin_membar :: ___builtin_annot_intval :: ___builtin_annot ::
- ___builtin_sel :: ___builtin_memcpy_aligned :: ___builtin_sqrt ::
- ___builtin_fsqrt :: ___builtin_fabsf :: ___builtin_fabs ::
- ___builtin_ctzll :: ___builtin_ctzl :: ___builtin_ctz :: ___builtin_clzll ::
- ___builtin_clzl :: ___builtin_clz :: ___builtin_bswap16 ::
- ___builtin_bswap32 :: ___builtin_bswap :: ___builtin_bswap64 ::
- ___compcert_i64_umulh :: ___compcert_i64_smulh :: ___compcert_i64_sar ::
- ___compcert_i64_shr :: ___compcert_i64_shl :: ___compcert_i64_umod ::
- ___compcert_i64_smod :: ___compcert_i64_udiv :: ___compcert_i64_sdiv ::
- ___compcert_i64_utof :: ___compcert_i64_stof :: ___compcert_i64_utod ::
- ___compcert_i64_stod :: ___compcert_i64_dtou :: ___compcert_i64_dtos ::
- ___compcert_va_composite :: ___compcert_va_float64 ::
- ___compcert_va_int64 :: ___compcert_va_int32 :: nil).
+(_diana_euler_step :: ___builtin_debug :: ___builtin_fmin ::
+ ___builtin_fmax :: ___builtin_fnmsub :: ___builtin_fnmadd ::
+ ___builtin_fmsub :: ___builtin_fmadd :: ___builtin_clsll ::
+ ___builtin_clsl :: ___builtin_cls :: ___builtin_expect ::
+ ___builtin_unreachable :: ___builtin_va_end :: ___builtin_va_copy ::
+ ___builtin_va_arg :: ___builtin_va_start :: ___builtin_membar ::
+ ___builtin_annot_intval :: ___builtin_annot :: ___builtin_sel ::
+ ___builtin_memcpy_aligned :: ___builtin_sqrt :: ___builtin_fsqrt ::
+ ___builtin_fabsf :: ___builtin_fabs :: ___builtin_ctzll ::
+ ___builtin_ctzl :: ___builtin_ctz :: ___builtin_clzll :: ___builtin_clzl ::
+ ___builtin_clz :: ___builtin_bswap16 :: ___builtin_bswap32 ::
+ ___builtin_bswap :: ___builtin_bswap64 :: ___compcert_i64_umulh ::
+ ___compcert_i64_smulh :: ___compcert_i64_sar :: ___compcert_i64_shr ::
+ ___compcert_i64_shl :: ___compcert_i64_umod :: ___compcert_i64_smod ::
+ ___compcert_i64_udiv :: ___compcert_i64_sdiv :: ___compcert_i64_utof ::
+ ___compcert_i64_stof :: ___compcert_i64_utod :: ___compcert_i64_stod ::
+ ___compcert_i64_dtou :: ___compcert_i64_dtos :: ___compcert_va_composite ::
+ ___compcert_va_float64 :: ___compcert_va_int64 :: ___compcert_va_int32 ::
+ nil).
 
 Definition prog : Clight.program := 
   mkprogram composites global_definitions public_idents _main Logic.I.
