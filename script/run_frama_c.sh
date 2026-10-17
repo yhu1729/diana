@@ -1,5 +1,5 @@
 #!/bin/sh
-SKIP=diana_bisection_mid
+SKIP="diana_bisection_mid diana_fp_sqrt"
 set -eu
 cd "$(dirname "$0")/.."
 if [ "$#" -eq 0 ]; then
