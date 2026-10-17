@@ -151,7 +151,7 @@ trapezoidal result is not finite
 ### Array argument
 
 An array argument (`y` of `diana.trapezoidal` and `diana.simpson`, `y` and `f` of
-`diana.euler_step`) that supports the buffer protocol (a NumPy `float64` array, `array.array("d")`,
+`diana.euler_step`, the vectors of `diana.rk4_stage` and `diana.rk4_step`) that supports the buffer protocol (a NumPy `float64` array, `array.array("d")`,
 a `memoryview`, a ctypes `c_double` array) is read in place, without a copy, and must hold
 native-endian float64 (format `d`, optionally prefixed by `@`, `=`, or the native byte-order
 character) in one dimension, C-contiguous and aligned for `double`. The checks run in this order:

@@ -157,3 +157,51 @@ int main(void) {
 ```text
 y(0.5) = (0.367879774, 0.735759549, 1.471519098)
 ```
+
+## Python
+
+`diana.rk4_stage(y, k, h, stage)` and `diana.rk4_step(y, k1, k2, k3, k4, h)` return one call of
+`diana_rk4_stage` and `diana_rk4_step` as a new `array.array("d")`, with the same operation
+order. Every vector is an [array argument](overview.md#array-argument), each with its own name in
+the messages and at least one sample; a `stage` other than 2, 3 or 4, a length mismatch, then a
+non-finite component, raise `ValueError` (`stage` must be an integer: `TypeError` otherwise). The
+output is a fresh array, so it never overlaps the inputs, and the inputs are never modified.
+`diana.rk4(f, t0, y0, h, nstep)` copies `y0` element by element into an `array.array("d")` (a
+`bytes` object is a sequence of integers, not raw float64 data) and takes `nstep` steps, calling
+`f(t, y)` at `t0 + n*h`, `t0 + (n + 0.5)*h` (twice) and `t0 + (n + 1)*h` for step `n` and copying
+each result element by element, so `f` may return the same buffer every time; the loop runs in
+Python, like `diana.euler`, and `f` must not modify `y`. It raises `ValueError` for an empty `y0`
+or a negative `nstep`, `TypeError` for a non-integer `nstep` or a `t0` or `h` that is not a real
+number (a string is not converted), and lets the errors of `rk4_stage` and `rk4_step` through.
+
+```python
+>>> import diana
+>>> diana.rk4_stage([1.0, -2.0], [3.0, 4.0], 0.5, 2)  # y + (h/2) k
+array('d', [1.75, -1.0])
+>>> diana.rk4_step([1.0], [1.0], [2.0], [2.0], [1.0], 0.75)  # 1 + 0.75 * 10 / 6
+array('d', [2.25])
+>>> y = diana.rk4(lambda t, y: [y[1], -y[0]], 0.0, [0.0, 1.0], 0.1, 10)
+>>> [round(v, 9) for v in y]  # exact: sin 1, cos 1 = 0.841470985, 0.540302306
+[0.841470478, 0.540302967]
+>>> diana.rk4_stage([1.0], [1.0], 1.0, 1)
+Traceback (most recent call last):
+  ...
+ValueError: stage must be 2, 3 or 4
+```
+
+For `y′ = g(t)` a step is Simpson's rule on `[t, t + h]`, so `y′ = t` from `t0 = 1` is integrated
+exactly: two steps of `1/4` give `(1.5² − 1)/2`:
+
+```python
+>>> diana.rk4(lambda t, y: [t], 1.0, [0.0], 0.25, 2)
+array('d', [0.625])
+```
+
+`f` may return a NumPy array; `np.asarray` views the state without a copy:
+
+```python
+>>> import numpy as np
+>>> y = diana.rk4(lambda t, y: -2.0 * np.asarray(y), 0.0, [1.0, 2.0, 4.0], 0.05, 10)
+>>> np.asarray(y)
+array([0.36787977, 0.73575955, 1.4715191 ])
+```
