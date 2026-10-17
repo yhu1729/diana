@@ -1,5 +1,5 @@
 From VST.floyd Require Import proofauto.
-From Diana.Clight Require Import euler_aarch64_macos.
+From Diana.Clight Require Import euler_step_aarch64_macos.
 From Diana.Float Require Euler.
 From Diana.VST Require Bisection.
 

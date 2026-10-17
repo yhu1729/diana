@@ -15,7 +15,7 @@ Module Info.
   Definition abi := "apple".
   Definition bitsize := 64.
   Definition big_endian := false.
-  Definition source_file := "src/euler.c".
+  Definition source_file := "src/euler_step.c".
   Definition normalized := true.
 End Info.
 
