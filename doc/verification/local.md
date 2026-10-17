@@ -3,7 +3,8 @@
 CI checks the C code (build, ctest, pytest, Frama-C WP), layer A in Lean with its axiom gate, and
 that layer A compiles in Rocq. Everything that needs Flocq, CompCert, or VST runs only in the opam
 switch of `CONTRIBUTING.md`, and a green pipeline says nothing about it. After a change to `src/`,
-`include/`, `verification/`, or `spec/` (`script/dev.sh verify` runs all five):
+`include/`, `verification/`, or `spec/` (`script/dev.sh verify` runs all five, steps 2 to 4 at
+once; see [parallel run](#parallel-run)):
 
 1. If a verified kernel or a header it includes changed, regenerate its Clight AST with the
    `clightgen` command in `CLAUDE.md`. Nothing in CI notices a stale AST. `script/dev.sh verify`
@@ -15,13 +16,16 @@ switch of `CONTRIBUTING.md`, and a green pipeline says nothing about it. After a
 2. `script/compare_compiler.sh` checks that the `ccomp` build of the kernels and gcc/clang builds
    print the same bits on the corpus of `test/c/test_compiler.c`; see
    [compiler comparison](compiler.md). Without `ccomp` it skips the check.
-3. `cd verification/rocq && make && make check` builds layers A, B, and C-VST and prints their
-   axioms. `make check` needs the generated `CheckSpec.v`, which step 5 writes; on a fresh clone
-   run step 5 first, or just use `script/dev.sh verify`, which orders them.
+3. `cd verification/rocq && make -j4 && make check` builds layers A, B, and C-VST and prints
+   their axioms (`-j` as the [Rocq build](#rocq-build) explains). `make check` needs the
+   generated `CheckSpec.v`, which step 5 writes; on a fresh clone run step 5 first, or just use
+   `script/dev.sh verify`, which orders them.
 4. `script/verify_frama_c.sh` runs `script/run_frama_c.sh` and `script/check_frama_c.sh` for
-   each `<source> <goal-count>` row of `verification/frama-c/expectation.txt`, with reports in
-   one consolidated `verification/frama-c/report.txt`, one `==> <source> <==` section per row
-   (CI runs the same script with Frama-C 32.1 and uploads that single file).
+   each `<source> <goal-count>` row of `verification/frama-c/expectation.txt`, `DIANA_JOBS` rows
+   at a time, each in its own WP session and cache directory, with reports in one consolidated
+   `verification/frama-c/report.txt`, one `==> <source> <==` section per row in row order
+   (CI runs the same script with Frama-C 32.1 and uploads that single file; details in
+   [Frama-C and Flocq boundary](frama-c.md#goal-count)).
 5. `uv run script/check_spec.py --run --strict` runs both provers' axiom gates and rewrites the
    [report](report.md); commit the report. `--strict` is what
    `script/dev.sh verify` passes, so `verify` fails on a theorem that is listed in `spec/` but not
@@ -54,3 +58,27 @@ at least once first, because that file is generated and not committed. `make rea
 only (Stdlib and Coquelicot), which is what the `verify_rocq` image can build; it calls
 `rocq compile` directly because the generated makefile scans the dependencies of every file in
 `_CoqProject` and warns that Flocq, CompCert, and VST are missing.
+
+`make` runs the generated makefile with the job count it is given (`make -j4`); the proofs are
+independent files, so they build in parallel up to the dependency order of `_CoqProject`.
+`script/dev.sh verify` passes `-j` with `DIANA_JOBS` capped by memory: the peak resident set of
+one `rocq compile` on a `theory/VST` file is 1.13 GB (`BisectionInit.v`; every other file is
+under 1.05 GB; `/usr/bin/time -l`, Rocq 9.2.0, VST 2.17, Apple M4), so `verify` allows one job
+per 2 GiB of `hw.memsize` (`MemTotal` on Linux), which keeps that many VST proofs resident at
+once with room for the other stages; on a machine whose memory it cannot read it uses
+`DIANA_JOBS` as given. `make real` stays sequential.
+
+## Parallel run
+
+`script/dev.sh verify` runs the Clight check first, then the compiler comparison, the Lean build,
+the Rocq build and the WP rows at once, each writing to its own log under `build/verify/`
+(`compiler.log`, `lean.log`, `rocq.log`, `frama_c.log`, with a `.status` file holding the exit
+status and the seconds taken), prints one line as each finishes, then prints the four logs in
+that fixed order and fails if any stage failed; the spec gate runs last because it reads the Lean
+and Rocq builds. `DIANA_JOBS` (default: the CPU count from `nproc`, `sysctl -n hw.ncpu` or
+`getconf _NPROCESSORS_ONLN`, read by `script/job_count.sh`) is the number of WP rows in flight
+and, capped as above, the Rocq job count; `DIANA_JOBS=1 script/dev.sh verify` runs the stages one
+after another with their output on the terminal, as before, for debugging. The stages share no
+files: the comparison builds in a temporary directory, Lean writes `.lake/`, Rocq writes next to
+its sources and under `verification/clight/`, and WP writes under `verification/frama-c/`.
+The timings are in [local workflow](../development/workflow.md#verify-timing).
