@@ -17,9 +17,10 @@ All notable changes to this project are documented here. The format follows
   h, y_out)` writes `y + h ((k1 + k4) + 2 (k2 + k3)) / 6` in that operation order. Both check
   every component before writing any, so `y_out` is untouched on `DIANA_ERR_ARG` (a NULL pointer,
   `d == 0`, a stage outside 2 to 4, a non-finite input or an overflow in any operation). Frama-C
-  WP proves the ACSL contracts (98 goals, RK4-C1, `spec/rk4.md`). `test/c/test_rk4.c` covers both
-  functions at 100% line and branch coverage, and the compiler-comparison corpus has 544 RK4
-  cases; every gcc and clang build matches CompCert bitwise.
+  WP proves the ACSL contracts (53 and 57 goals, RK4-C1 and C2, `spec/rk4.md`).
+  `test/c/test_rk4.c` covers both functions at 100% line and branch coverage, and the
+  compiler-comparison corpus has 544 RK4 cases; every gcc and clang build matches CompCert
+  bitwise.
 - Callback wrapper `diana_rk4(fn, ctx, t0, h, nstep, y, d, work, done)` in `diana/wrapper.h`, with
   the `diana_ode_fn` of `diana_euler` and a `work` of `5 d` doubles. Step `k` evaluates `fn` at
   `t0 + k h`, `t0 + (k + 0.5) h` (twice) and `t0 + (k + 1) h`, each computed from `k`. A failing
@@ -85,9 +86,10 @@ All notable changes to this project are documented here. The format follows
   and a step component is within `u |T| + (1 + u)(gamma_4 |h| A / 6 + (1 + u) eta / 6 + eta)` of
   the exact `T = y + h (k1 + 2 k2 + 2 k3 + k4) / 6`, `A = |k1 + k4| + 2 |k2 + k3|` (RK4-B5).
 - VST proves `diana_rk4_stage` and `diana_rk4_step` against the committed AArch64 macOS Clight
-  AST `verification/clight/rk4_aarch64_macos.v` (RK4-C2, RK4-C3): each returns `DIANA_OK` and
-  writes the C-order model exactly when every component is finite, and leaves `y_out` unchanged
-  otherwise; the C-order models are the Flocq models (RK4-C4, RK4-C5).
+  ASTs `verification/clight/rk4_stage_aarch64_macos.v` and `rk4_step_aarch64_macos.v` (RK4-C3,
+  RK4-C4): each returns `DIANA_OK` and writes the C-order model exactly when every component is
+  finite, and leaves `y_out` unchanged otherwise; the C-order models are the Flocq models (RK4-C5,
+  RK4-C6).
 - Flocq proves that a component written by an unchecked kernel is finite exactly when its inputs
   are finite and none of its operations overflows, each correctly rounded exact result staying
   below `2^1024` in magnitude (EULER-UNCHECKED-B1, RK4-UNCHECKED-B1 and B2, in
@@ -100,6 +102,36 @@ All notable changes to this project are documented here. The format follows
   checked step alone (49 WP goals).
 - The spec gate accepts a method name with `_`, written `-` in its theorem IDs
   (`EULER-UNCHECKED-C1` in `spec/euler_unchecked.md`), and a list of source files as `kernel`.
+
+### Changed
+
+- One function per source file for every verified kernel: `src/bisection.c` is split into
+  `src/bisection_mid.c`, `src/bisection_init.c`, `src/bisection_step.c` and
+  `src/bisection_result.c`, `src/newton.c` into `src/newton_init.c`, `src/newton_step.c` and
+  `src/newton_result.c`, and `src/rk4.c` into `src/rk4_stage.c` and `src/rk4_step.c`, with the
+  function bodies and contracts unchanged. The midpoint helper `bisection_mid` is now the
+  external `diana_bisection_mid`, declared with its ACSL contract in the private header
+  `src/bisection_mid.h` and exported from the library under the `diana_` prefix but absent from
+  the public headers; the ACSL predicates the functions share are in `src/bisection_acsl.h` and
+  `src/newton_acsl.h`.
+- Each new source file has its own Frama-C expectation row (bisection 84, 71 and 19 goals, Newton
+  36, 66 and 13, RK4 53 and 57), Clight AST (`verification/clight/<source>_aarch64_macos.v`) and
+  VST file (`verification/rocq/theory/VST/BisectionMid.v`, `BisectionInit.v`, `BisectionStep.v`,
+  `BisectionResult.v`, `NewtonInit.v`, `NewtonStep.v`, `NewtonResult.v`, `RK4Stage.v`,
+  `RK4Step.v`); `VST/Bisection.v`, `VST/Newton.v` and `VST/RK4.v` keep the C-order models, the
+  model theorems and the lemmas other proofs import, without an AST. The totals rise from 162, 103
+  and 98 goals to 174, 115 and 110 because WP proves the `src/fp.h` helpers once per source that
+  includes them; no property kind is lost. `src/bisection_mid.c` has no row: its only function is
+  the `SKIP` entry, and the callers' proofs assume its contract (WP) and take its funspec from
+  `VST/BisectionMid.v` (VST).
+- The C-layer theorem IDs are renumbered with one ACSL theorem per source file. Bisection:
+  C2 to C4 are the ACSL contracts of `init`, `step` and `result` (formerly C2), and the former C3
+  to C10 are C5 to C12. Newton: C1 to C3 are the ACSL contracts of `init`, `step` and `result`
+  (formerly C1), and the former C2 to C5 are C4 to C7. RK4: C1 and C2 are the ACSL contracts of
+  the stage and the step (formerly C1), and the former C2 to C5 are C3 to C6.
+- `script/run_frama_c.sh` passes a `SKIP` entry to `-wp-skip-fct` only for a source that defines
+  it (a line starting in column 0 with the return type), since WP rejects a function without a
+  body; its default source is `src/bisection_init.c`.
 
 ## [0.3.0] - 2026-10-16
 
