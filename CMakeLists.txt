@@ -143,7 +143,8 @@ if(DIANA_BUILD_PYTHON)
     find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
     Python_add_library(_diana MODULE WITH_SOABI
         python/ext/module.c
-        python/ext/convert.c
+        python/ext/convert_uint.c
+        python/ext/get_samples.c
         python/ext/raise.c
         python/ext/status_exec.c
         python/ext/status_str.c
