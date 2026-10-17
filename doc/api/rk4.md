@@ -1,87 +1,33 @@
 # Classical Runge–Kutta step (RK4)
 
-Status codes, linking, and the Python conventions shared by every kernel are in the
-[API overview](overview.md); the theorems cited below are listed in `spec/rk4.md` and, for the
-unchecked variants, `spec/rk4_unchecked.md`.
+The classical fourth-order Runge–Kutta method solves `y′ = F(t, y)` for a vector `y` of dimension
+`d`. Each step evaluates four slopes and combines them; halving `h` divides the error by about
+16. As with the [Euler step](euler.md), the kernels take slopes you have computed: one function
+builds the points where the slopes are evaluated, another combines them. `diana_rk4` runs the
+whole loop over a callback. Shared conventions are in the [API overview](overview.md).
 
-## C (`diana/rk4.h`)
+## C
 
-One step of the classical fourth-order Runge–Kutta method on a vector of dimension `d`, in
-reverse communication: the caller evaluates the four slopes and the kernel builds the stage
-points and combines the slopes. For `y′ = F(t, y)` and a step `h` from `(t, y)`:
+`#include <diana/rk4.h>`. One step of size `h` from `(t, y)`:
 
-| slope | evaluated at | stage point |
+| Slope | Evaluated at | Stage point |
 |---|---|---|
 | `k1 = F(t, y)` | `t` | `y` |
 | `k2 = F(t + h/2, Y2)` | `t + h/2` | `Y2 = y + (h/2)·k1`, `diana_rk4_stage(y, k1, d, h, 2, Y2)` |
 | `k3 = F(t + h/2, Y3)` | `t + h/2` | `Y3 = y + (h/2)·k2`, `diana_rk4_stage(y, k2, d, h, 3, Y3)` |
 | `k4 = F(t + h, Y4)` | `t + h` | `Y4 = y + h·k3`, `diana_rk4_stage(y, k3, d, h, 4, Y4)` |
 
-and `diana_rk4_step(y, k1, k2, k3, k4, d, h, y_out)` writes `y + h·(k1 + 2·k2 + 2·k3 + k4)/6`.
+and then `diana_rk4_step(y, k1, k2, k3, k4, d, h, y_out)` writes
+`y + h·(k1 + 2·k2 + 2·k3 + k4)/6`.
 
-- `diana_rk4_stage(y, k, d, h, stage, y_out)` writes the point of stage `stage` (2, 3 or 4),
-  `y_out[i] = y[i] + c * k[i]` with `c = 0.5 * h` for stages 2 and 3 and `c = h` for stage 4, the
-  coefficient computed once and the product rounded before the sum (no fused multiply-add).
-  `0.5 * h` is exact unless `|h| < 2^-1021`. Returns `DIANA_OK` when every component is finite.
-  Returns `DIANA_ERR_ARG`, without writing `y_out`, for a NULL `y`, `k` or `y_out`, for `d == 0`,
-  for a `stage` other than 2, 3 or 4, and when any component is not finite: a NaN or infinite
-  `y[i]`, `k[i]` or `h`, or an overflow in the product or the sum.
-- `diana_rk4_step(y, k1, k2, k3, k4, d, h, y_out)` writes
-  `y_out[i] = y[i] + h * s / 6` with `s = (k1[i] + k4[i]) + 2 * (k2[i] + k3[i])`, each operation
-  rounded in that order: the product `h * s` is divided by 6, then added. Returns `DIANA_OK` when
-  every component is finite. Returns `DIANA_ERR_ARG`, without writing `y_out`, for a NULL `y`,
-  slope or `y_out`, for `d == 0`, and when any component is not finite: a NaN or infinite input,
-  or an overflow in any operation, including `h * s` when `h * s / 6` would be finite.
+- `diana_rk4_stage(y, k, d, h, stage, y_out)` writes the stage point for `stage` 2, 3 or 4.
+- `diana_rk4_step(y, k1, k2, k3, k4, d, h, y_out)` writes the new state.
 
-`y_out[0 .. d-1]` must not overlap `y[0 .. d-1]` or a slope; the inputs are only read and may
-overlap each other. Each function checks every component before it writes any, so a failure in
-the last one leaves `y_out` as it was. Frama-C WP proves memory safety, termination, the status
-cases and that `y_out` is untouched on `DIANA_ERR_ARG` (RK4-C1, C2).
-
-- `diana_rk4_stage_unchecked(y, k, d, h, stage, y_out)` and
-  `diana_rk4_step_unchecked(y, k1, k2, k3, k4, d, h, y_out)` are the same stage and step without
-  the finiteness check, chosen explicitly by the caller. Each returns `DIANA_ERR_ARG`, without
-  writing `y_out`, for a NULL pointer, for `d == 0` and, for the stage, for a `stage` other than
-  2, 3 or 4, and otherwise writes every component in one pass, in the same operation order, and
-  returns `DIANA_OK`. A non-finite component (NaN or ±∞, from a non-finite input or an overflow)
-  is written as computed, and the components before and after it are written too: `DIANA_OK`
-  says nothing about finiteness. Whenever the checked function returns `DIANA_OK`, the two write
-  the same bits.
-
-The checked functions are the default, and `diana_rk4` uses them. Use the unchecked ones only
-where the caller checks the state itself, or does not need to stop at the first non-finite
-component, and the kernel is a measured cost: with one pass and no branch the compiler
-vectorizes the loop. On an Apple M4 Mac (Release build, Apple clang 21 and GCC 15.3, `d` from 64
-to 16384; [benchmark](../development/benchmark.md)) the checked stage takes about 0.44 to 0.56 ns
-per component and the unchecked one 0.10 to 0.17, a factor of 2.9 to 4.8; the checked step takes
-0.86 to 1.26 ns and the unchecked one 0.25 to 0.37, a factor of 2.6 to 4.5. A whole RK4 step with
-the right-hand side `dy[i] = -0.5 * y[i]` takes 2.8 to 3.7 ns per component checked and 0.8 to
-2.0 unchecked, a saving of 1.3 to 2.0 ns, small next to four evaluations of a right-hand side that
-costs a few nanoseconds per component.
-
-RK4 is of order 4 (Lean and Rocq). For `y′ = F(t, y)` with `F` L-Lipschitz in `y` in the max norm
-and the time-augmented field `(1, F)` three times differentiable, `k` exact steps of size `h`
-from `y(t₀)` are within `((M₅/120 + N₄/24)·h⁴/L)·(e^{L·k·h} − 1)` of `y(t₀ + k·h)` (RK4-A7), and
-one step is within `(M₅/120 + N₄/24)·h⁵` (RK4-A3). `M₅` bounds the fifth derivative of the solution
-and `N₄` the fourth derivative of the increment in the step size, each through the Lipschitz
-constant of the derivative below it (`spec/rk4.md`, H2 and H3).
-
-Whenever a computed component is finite, Flocq bounds its rounding error, with `u = 2⁻⁵³` and
-`η = 2⁻¹⁰⁷⁵`. A stage component is within `u·|y[i] + c·k[i]| + (1 + u)·(u·|c·k[i]| + η)` of the
-exact `y[i] + c·k[i]`, `c = h/2` or `h`, when `|h| ≥ 2⁻¹⁰²¹`; below that, rounding `h/2` (at most
-`η`) adds `(1 + u)²·η·|k[i]|` (RK4-B2, RK4-B3). A step component is within
-`u·|T| + (1 + u)·(γ₄·|h|·A/6 + (1 + u)·η/6 + η)` of the exact
-`T = y[i] + h·(k1[i] + 2·k2[i] + 2·k3[i] + k4[i])/6`, with
-`A = |k1[i] + k4[i]| + 2·|k2[i] + k3[i]|` and `γ₄ = 4u/(1 − 4u)` (RK4-B5).
-VST proves that each function writes exactly these binary64 values and returns `DIANA_OK` exactly
-when all of them are finite, leaving `y_out` unchanged otherwise (RK4-C3 to C6, for non-NULL,
-disjoint arrays with `d >= 1` and, for the stage, `2 <= stage <= 4`). For the unchecked
-functions, WP proves the same memory safety, termination and argument cases
-(RK4-UNCHECKED-C1, C2), and VST that they always write these binary64 values and return
-`DIANA_OK` (RK4-UNCHECKED-C3, C4), so the bounds above hold for each component they write that
-is finite. Flocq proves that a written component is finite exactly when its inputs are finite
-and no operation overflows (RK4-UNCHECKED-B1, B2): checking `y_out` for finiteness after the
-call rejects exactly the inputs the checked function rejects.
+Both return `DIANA_OK`, or `DIANA_ERR_ARG` without writing `y_out` for a `NULL` pointer,
+`d == 0`, a `stage` other than 2, 3 or 4, or a component that is not finite: a NaN or infinite
+input or `h`, or an overflow. Each checks every component before writing any. Every operation is
+rounded to binary64 in a fixed order, with no fused multiply-add. `y_out` must not overlap any
+input; the inputs may overlap each other.
 
 The rotation `y′ = (y₂, −y₁)` from `(0, 1)` has the solution `(sin t, cos t)`,
 `(0.841470985, 0.540302306)` at `t = 1`. `F` does not depend on `t`, so the stage times are not
@@ -136,26 +82,31 @@ int main(void) {
 y(1) = (0.841470478, 0.540302967)
 ```
 
+### Unchecked stage and step
+
+`diana_rk4_stage_unchecked` and `diana_rk4_step_unchecked` take the same arguments and skip the
+finiteness check. They reject only a `NULL` pointer, `d == 0` or a bad `stage`; otherwise they
+write every component in one pass and return `DIANA_OK`, even when a component is NaN or
+infinite. Where the checked function succeeds, both write the same bits, and checking `y_out` for
+finiteness afterwards rejects exactly what the checked function rejects. `diana_rk4` uses the
+checked functions.
+
+Use them only when the kernel itself is a measured cost and you check the state yourself: in the
+project's [benchmark](../development/benchmark.md) the unchecked stage ran 2.9 to 4.8 times and
+the unchecked step 2.6 to 4.5 times faster, saving 1.3 to 2.0 ns per component on a whole RK4
+step. That saving is small next to four evaluations of a right-hand side that costs a few
+nanoseconds per component.
+
 ## Callback wrapper
 
-`diana/rk4.h` (callback type `diana_ode_fn` from `diana/ode.h`); not verified, see
-[callback wrapper](overview.md#callback-wrapper).
-
-- `diana_rk4(fn, ctx, t0, h, nstep, y, d, work, done)` takes `nstep` RK4 steps of size `h` from
-  `y(t0) = y[0 .. d-1]`, in place, with `fn` of type `diana_ode_fn`: `fn(t, y, dy, d, ctx)` must
-  write `F(t, y)` to `dy[0 .. d-1]`. Step `k` evaluates `fn` at `t0 + k * h`,
-  `t0 + (k + 0.5) * h` (twice) and `t0 + (k + 1) * h`, each computed from `k` rather than
-  accumulated, building the stage points with `diana_rk4_stage` and the new state with
-  `diana_rk4_step`. `work` holds `5 * d` doubles (the four slopes and the stage point) and must
-  not overlap `y`. It returns `DIANA_ERR_ARG` for a NULL `fn`, `y` or `work`, for `d == 0`, and
-  when a stage or step fails (a non-finite slope or result); `y` then holds the state after the
-  last successful step. `*done` (optional) receives the number of completed steps on every
-  return (0 when the arguments are rejected). `nstep == 0` leaves `y` unchanged and returns
-  `DIANA_OK`.
-
-Exponential decay `y′ = −r·y` with the rate `r` in `ctx`, three components, 10 steps of `0.05`.
-Each component is multiplied by `R(−0.1)¹⁰ = 0.367879774`, with
-`R(z) = 1 + z + z²/2 + z³/6 + z⁴/24`, against the exact `e⁻¹ = 0.367879441`:
+`diana_rk4(fn, ctx, t0, h, nstep, y, d, work, &done)` takes `nstep` RK4 steps from `y(t0) = y`,
+in place, with the callback type `diana_ode_fn` of the [Euler wrapper](euler.md#callback-wrapper).
+Step `k` evaluates `fn` at `t0 + k·h`, twice at `t0 + (k + ½)·h`, and at `t0 + (k + 1)·h`. `work`
+holds `5·d` doubles and must not overlap `y`; `done` (may be `NULL`) receives the number of
+completed steps. When a stage or step fails, it returns `DIANA_ERR_ARG` with `y` at the last
+successful step. Exponential decay `y′ = −r·y` with the rate in `ctx`: each component is
+multiplied by `R(−0.1)¹⁰ = 0.367879774`, with `R(z) = 1 + z + z²/2 + z³/6 + z⁴/24`, against the
+exact `e⁻¹ = 0.367879441`:
 
 ```c
 #include <stdio.h>
@@ -196,19 +147,15 @@ y(0.5) = (0.367879774, 0.735759549, 1.471519098)
 
 ## Python
 
-`diana.rk4_stage(y, k, h, stage)` and `diana.rk4_step(y, k1, k2, k3, k4, h)` return one call of
-`diana_rk4_stage` and `diana_rk4_step` as a new `array.array("d")`, with the same operation
-order. Every vector is an [array argument](overview.md#array-argument), each with its own name in
-the messages and at least one sample; a `stage` other than 2, 3 or 4, a length mismatch, then a
-non-finite component, raise `ValueError` (`stage` must be an integer: `TypeError` otherwise). The
-output is a fresh array, so it never overlaps the inputs, and the inputs are never modified.
-`diana.rk4(f, t0, y0, h, nstep)` copies `y0` element by element into an `array.array("d")` (a
-`bytes` object is a sequence of integers, not raw float64 data) and takes `nstep` steps, calling
-`f(t, y)` at `t0 + n*h`, `t0 + (n + 0.5)*h` (twice) and `t0 + (n + 1)*h` for step `n` and copying
-each result element by element, so `f` may return the same buffer every time; the loop runs in
-Python, like `diana.euler`, and `f` must not modify `y`. It raises `ValueError` for an empty `y0`
-or a negative `nstep`, `TypeError` for a non-integer `nstep` or a `t0` or `h` that is not a real
-number (a string is not converted), and lets the errors of `rk4_stage` and `rk4_step` through.
+- `diana.rk4_stage(y, k, h, stage)` and `diana.rk4_step(y, k1, k2, k3, k4, h)` return one checked
+  call as a new `array.array("d")`. Every vector is an
+  [array argument](overview.md#array-arguments), all of the same length; a bad `stage` or a
+  non-finite component raises `ValueError`.
+- `diana.rk4(f, t0, y0, h, nstep)` takes `nstep` steps from a copy of `y0`, calling `f(t, y)` at
+  the four stage times of each step, and returns the final state. Each result of `f` is copied,
+  so `f` may return the same buffer every time; `f` must not modify `y`.
+
+The unchecked functions have no Python binding.
 
 ```python
 >>> import diana
@@ -233,7 +180,7 @@ exactly: two steps of `1/4` give `(1.5² − 1)/2`:
 array('d', [0.625])
 ```
 
-`f` may return a NumPy array; `np.asarray` views the state without a copy:
+`f` may return a NumPy array, and `np.asarray` views the state without a copy:
 
 ```python
 >>> import numpy as np
@@ -241,3 +188,25 @@ array('d', [0.625])
 >>> np.asarray(y)
 array([0.36787977, 0.73575955, 1.4715191 ])
 ```
+
+## Guarantees
+
+Proved in Lean and Rocq: RK4 has order 4. For `F` Lipschitz in `y` with constant `L` and smooth
+enough, one exact step is within `C·h⁵` of the solution and `k` steps within
+`(C·h⁴/L)·(e^{L·k·h} − 1)`, where `C = M₅/120 + N₄/24` comes from bounds on higher derivatives.
+Proved in Rocq with Flocq: each computed stage and step component is within a few roundings
+(`u = 2⁻⁵³` relative) of its exact value. Proved of the C code: VST shows that all four functions
+compute exactly those binary64 values, and Frama-C that they are memory-safe and free of
+undefined behaviour. Not proved: a bound on the rounding error accumulated over many steps, and
+anything about the wrapper. Theorems: `spec/rk4.md` and `spec/rk4_unchecked.md`; status: the
+[verification report](../verification/report.md).
+
+## Technical notes
+
+[API-016](../../note/api/API-016.md) evaluation order and exits,
+[API-017](../../note/api/API-017.md) ODE wrappers,
+[API-018](../../note/api/API-018.md) unchecked kernels,
+[API-019](../../note/api/API-019.md) when to use them,
+[API-026](../../note/api/API-026.md) Python drivers,
+[PROOF-006](../../note/proof/PROOF-006.md) and [PROOF-008](../../note/proof/PROOF-008.md) what is
+proved, with the exact bounds and hypotheses.
