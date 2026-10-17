@@ -25,6 +25,17 @@ All notable changes to this project are documented here. The format follows
   `t0 + k h`, `t0 + (k + 0.5) h` (twice) and `t0 + (k + 1) h`, each computed from `k`. A failing
   stage or step returns `DIANA_ERR_ARG` with `y` at the last good state. Unverified, like
   `diana_euler`.
+- `diana_euler_step_unchecked(y, f, d, h, y_out)` in `diana/euler.h`, an opt-in explicit Euler
+  step without the finiteness check: it rejects NULL pointers and `d == 0` like
+  `diana_euler_step`, then writes every component in one pass in the same operation order, NaN
+  and ±∞ included, and returns `DIANA_OK`. Where the checked step succeeds the two write the same
+  bits; `diana_euler_step` and the `diana_euler` wrapper are unchanged. Frama-C WP proves its
+  ACSL contract (EULER-C3; 68 goals for `src/euler.c`) and VST that it writes the binary64 model
+  unconditionally (EULER-C4). `test/c/test_euler.c` keeps `src/euler.c` at 100% line and branch
+  coverage, and the compiler corpus runs both steps on every Euler case (1920 cases in all, every
+  gcc and clang build matching CompCert bitwise, NaN results included). On an Apple Silicon Mac
+  the unchecked kernel is 2.4 to 4.9 times faster (about 0.1 to 0.3 ns per component against
+  0.44 to 0.67).
 
 #### Python binding
 
