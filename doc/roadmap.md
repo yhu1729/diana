@@ -10,7 +10,6 @@ value or far from the current proof tooling.
 
 ## Toward 1.0
 
-- `high` Classical Runge–Kutta (RK4)
 - `high` Cholesky factorization
 - `high` LU factorization with partial pivoting
 
@@ -78,6 +77,7 @@ Interpolation and approximation:
 - `medium` Perturbed-Newton theorem combining layers A and B
 - `medium` Explicit worst-case iteration count for bisection
 - `medium` Global floating-point error bound for the ODE methods
+- `medium` RK4 local-error constants `M₅`, `N₄` from bounds on the derivatives of `F`
 - `low` VST proof of the callback wrappers
 - `high` Second Clight target (x86-64 Linux)
 
