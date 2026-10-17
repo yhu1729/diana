@@ -19,6 +19,7 @@ theory/Float/Euler.v
 theory/Float/EulerUnchecked.v
 theory/Float/Newton.v
 theory/Float/RK4.v
+theory/Float/RK4Unchecked.v
 theory/Float/Simpson.v
 theory/Float/Trapezoidal.v
 ../clight/bisection_aarch64_macos.v
