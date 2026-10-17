@@ -2,6 +2,7 @@ From VST.floyd Require Import proofauto.
 From Diana.Clight Require Import simpson_aarch64_macos.
 From Diana.Float Require Simpson.
 From Diana.VST Require Bisection.
+From Diana.VST Require Import Tactic.
 
 #[export] Instance CompSpecs : compspecs. make_compspecs prog. Defined.
 Definition Vprog : varspecs. mk_varspecs prog. Defined.
@@ -127,22 +128,13 @@ Proof.
   { pose proof (Z.div_mod (Zlength ys) 2 ltac:(lia)) as Hdm.
     assert (Hodd : Z.odd (Zlength ys) = true) by assumption.
     rewrite Zmod_odd, Hodd in Hdm. lia. }
-  forward_if (PROP () LOCAL (temp _t'1 (Vint Int.zero); temp _y y;
-      temp _n (Vlong (Int64.repr (Zlength ys))); temp _h (Vfloat h); temp _result res)
-    SEP (data_at sh (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
-         data_at shr tdouble r0 res)).
+  join_zero _t'1.
   { subst y. contradiction. }
   { forward. entailer!. destruct res; try contradiction. reflexivity. }
-  forward_if (PROP () LOCAL (temp _t'2 (Vint Int.zero); temp _y y;
-      temp _n (Vlong (Int64.repr (Zlength ys))); temp _h (Vfloat h); temp _result res)
-    SEP (data_at sh (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
-         data_at shr tdouble r0 res)).
+  join_zero _t'2.
   { contradiction. }
   { forward. entailer!. destruct (zlt (Zlength ys) 3); [lia | reflexivity]. }
-  forward_if (PROP () LOCAL (temp _t'3 (Vint Int.zero); temp _y y;
-      temp _n (Vlong (Int64.repr (Zlength ys))); temp _h (Vfloat h); temp _result res)
-    SEP (data_at sh (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
-         data_at shr tdouble r0 res)).
+  join_zero _t'3.
   { contradiction. }
   { forward. entailer!. unfold Int64.modu.
     rewrite !Int64.unsigned_repr by rep_lia. rewrite Zmod_odd, H0. reflexivity. }

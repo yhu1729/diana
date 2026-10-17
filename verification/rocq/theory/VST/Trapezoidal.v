@@ -2,6 +2,7 @@ From VST.floyd Require Import proofauto.
 From Diana.Clight Require Import trapezoidal_aarch64_macos.
 From Diana.Float Require Trapezoidal.
 From Diana.VST Require Bisection.
+From Diana.VST Require Import Tactic.
 
 #[export] Instance CompSpecs : compspecs. make_compspecs prog. Defined.
 Definition Vprog : varspecs. mk_varspecs prog. Defined.
@@ -98,16 +99,10 @@ Proof.
   start_function.
   assert_PROP (isptr y /\ isptr res) as Hptr by entailer!.
   destruct Hptr as [Hy Hres].
-  forward_if (PROP () LOCAL (temp _t'1 (Vint Int.zero); temp _y y;
-      temp _n (Vlong (Int64.repr (Zlength ys))); temp _h (Vfloat h); temp _result res)
-    SEP (data_at sh (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
-         data_at shr tdouble r0 res)).
+  join_zero _t'1.
   { subst y. contradiction. }
   { forward. entailer!. destruct res; try contradiction. reflexivity. }
-  forward_if (PROP () LOCAL (temp _t'2 (Vint Int.zero); temp _y y;
-      temp _n (Vlong (Int64.repr (Zlength ys))); temp _h (Vfloat h); temp _result res)
-    SEP (data_at sh (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
-         data_at shr tdouble r0 res)).
+  join_zero _t'2.
   { contradiction. }
   { forward. entailer!. destruct (zlt (Zlength ys) 2); [lia | reflexivity]. }
   forward_if.
