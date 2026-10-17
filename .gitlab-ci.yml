@@ -49,6 +49,10 @@ stages:
   - .python-version
   - pyproject.toml
   - uv.lock
+  - README.md
+  - CONTRIBUTING.md
+  - doc/**/*
+  - note/**/*
   - include/**/*
   - src/**/*
   - python/**/*
@@ -230,6 +234,7 @@ style_python:
     - uv run ruff check python test/python test/doc script
     - uv run ruff format --check python test/python test/doc script
     - uv run script/check_spec.py --no-report
+    - uv run script/check_doc.py
 
 build_gcc_debug:
   extends: [.gcc, .debug_config, .build]
