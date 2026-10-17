@@ -24,6 +24,9 @@
   are the supported platforms; there is no Windows or MSVC branch.
 - `GNUInstallDirs` is loaded before configuring the target's installed include directory, so
   `CMAKE_INSTALL_INCLUDEDIR` controls both header installation and the exported include path.
+- `CMakeLists.txt` fails to configure unless `DIANA_VERSION_STRING` and the three
+  `DIANA_VERSION_MAJOR`/`MINOR`/`PATCH` macros of `include/diana/diana.h` equal the project
+  version, so the four cannot drift apart.
 - `DIANA_WERROR` (`-Werror`) is OFF by default, so building from the sdist with a newer compiler
   that adds a warning does not fail for an end user. CI turns it ON in every job that compiles (CMake
   `-DDIANA_WERROR=ON`, and `SKBUILD_CMAKE_DEFINE` for the uv jobs that build the extension), and so
