@@ -107,7 +107,7 @@ iteration limit reached after 4 steps: root 1.4375, width 0.125
 
 ## Callback wrapper
 
-`diana/wrapper.h`; not verified, see [callback wrapper](overview.md#callback-wrapper).
+`diana/bisection.h`; not verified, see [callback wrapper](overview.md#callback-wrapper).
 
 - `diana_bisection(f, ctx, a, b, tol, max_iter, root, iter)` finds a root of `f` in `[a, b]` by
   bisection, with `f` of type `diana_bisection_fn`. It evaluates `f(a)`, then `f(b)`, then `f` once
@@ -122,7 +122,7 @@ iteration limit reached after 4 steps: root 1.4375, width 0.125
 ```c
 #include <stdio.h>
 
-#include <diana/wrapper.h>
+#include <diana/bisection.h>
 
 struct cubic {
   double c;
