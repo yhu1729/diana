@@ -44,6 +44,9 @@ exact `y[i] + c·k[i]`, `c = h/2` or `h`, when `|h| ≥ 2⁻¹⁰²¹`; below th
 `u·|T| + (1 + u)·(γ₄·|h|·A/6 + (1 + u)·η/6 + η)` of the exact
 `T = y[i] + h·(k1[i] + 2·k2[i] + 2·k3[i] + k4[i])/6`, with
 `A = |k1[i] + k4[i]| + 2·|k2[i] + k3[i]|` and `γ₄ = 4u/(1 − 4u)` (RK4-B5).
+VST proves that each function writes exactly these binary64 values and returns `DIANA_OK` exactly
+when all of them are finite, leaving `y_out` unchanged otherwise (RK4-C2 to C5, for non-NULL,
+disjoint arrays with `d >= 1` and, for the stage, `2 <= stage <= 4`).
 
 The rotation `y′ = (y₂, −y₁)` from `(0, 1)` has the solution `(sin t, cos t)`,
 `(0.841470985, 0.540302306)` at `t = 1`. `F` does not depend on `t`, so the stage times are not
