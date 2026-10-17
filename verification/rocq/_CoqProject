@@ -9,6 +9,8 @@ theory/Real/Vector.v
 theory/Real/OneStep.v
 theory/Real/Euler.v
 theory/Real/Newton.v
+theory/Real/Taylor.v
+theory/Real/RK4.v
 theory/Real/Simpson.v
 theory/Real/Trapezoidal.v
 theory/Float/Bisection.v
