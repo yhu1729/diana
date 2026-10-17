@@ -191,7 +191,9 @@ product by 6 matches `(h·s)/3` in the Simpson rule. Both functions make two pas
 second recomputes each component, bit for bit the same, and writes it. A NaN or infinite input,
 or an overflow in any operation, is an error, since no operation turns an infinity or NaN into a
 finite value (the only divisor is the constant 6); underflow is not an error. An overflow of `h·s`
-is an error even when `h·s/6` would be finite.
+is an error even when `h·s/6` would be finite. The opt-in one-pass variants without the check,
+`diana_rk4_stage_unchecked` and `diana_rk4_step_unchecked`, have their own spec,
+`spec/rk4_unchecked.md`.
 
 ## Proof sketch
 
