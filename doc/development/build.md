@@ -2,7 +2,8 @@
 
 - `cmake/warning.cmake` (`diana_set_strict_flag`) applies the strict warning set and compiler
   settings for IEEE binary64 arithmetic to every Diana target. The verified semantics assume no
-  FMA contraction, no fast-math, and SSE2 or AArch64 arithmetic. Callers must also maintain the
+  FMA contraction, no fast-math, and SSE2 or AArch64 arithmetic; `src/fp.h` makes the last one a
+  compile-time check (`_Static_assert(FLT_EVAL_METHOD == 0)`). Callers must also maintain the
   [runtime floating-point environment](../api/overview.md#floating-point-environment); these
   compiler settings do not select the runtime rounding mode, underflow handling, or trap state.
 - `DIANA_BUILD_PYTHON` is ON by default, so a plain `cmake -S . -B build` describes `python/ext/`

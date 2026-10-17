@@ -60,7 +60,8 @@ committed.
 The VST proof is about CompCert's Clight semantics, so it carries to a `ccomp`-compiled binary. The
 shipped library is built with gcc or clang with `-std=c11 -ffp-contract=off -fno-fast-math` (and
 `-fexcess-precision=standard` on gcc) on x86-64 SSE2 or AArch64: no x87 excess precision and no FMA
-contraction. The model also assumes the calling thread uses round-to-nearest, ties-to-even,
+contraction. `src/fp.h` asserts `FLT_EVAL_METHOD == 0` at compile time, so a build whose `double`
+expressions would be evaluated in a wider format fails instead of silently double-rounding. The model also assumes the calling thread uses round-to-nearest, ties-to-even,
 gradual underflow (no flush-to-zero or denormals-are-zero mode), and disabled floating-point
 traps. Compiler flags do not establish these runtime settings. Diana neither checks nor changes
 them; callers, including callbacks, must maintain the
