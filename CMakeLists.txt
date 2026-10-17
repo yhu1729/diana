@@ -32,6 +32,13 @@ string(REGEX REPLACE ".*\"([0-9.]+)\".*" "\\1" diana_header_version "${diana_hea
 if(NOT diana_header_version STREQUAL PROJECT_VERSION)
     message(FATAL_ERROR "include/diana/diana.h declares version ${diana_header_version}, CMakeLists.txt ${PROJECT_VERSION}")
 endif()
+foreach(part MAJOR MINOR PATCH)
+    file(STRINGS include/diana/diana.h diana_header_${part} REGEX "^#define DIANA_VERSION_${part} ")
+    string(REGEX REPLACE ".* ([0-9]+)$" "\\1" diana_header_${part} "${diana_header_${part}}")
+    if(NOT diana_header_${part} STREQUAL PROJECT_VERSION_${part})
+        message(FATAL_ERROR "include/diana/diana.h declares DIANA_VERSION_${part} ${diana_header_${part}}, CMakeLists.txt ${PROJECT_VERSION_${part}}")
+    endif()
+endforeach()
 
 include(cmake/warning.cmake)
 include(GNUInstallDirs)

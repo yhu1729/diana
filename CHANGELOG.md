@@ -70,6 +70,8 @@ All notable changes to this project are documented here. The format follows
   `python/ext/rk4_stage.c`, `rk4_step.c` and `rk4_exec.c` at 100% line and branch coverage),
   including bitwise agreement with Python float arithmetic, RK4-B3 and RK4-B5 against exact
   rationals, and fourth-order convergence on the rotation.
+- `CMakeLists.txt` also checks `DIANA_VERSION_MAJOR`, `DIANA_VERSION_MINOR` and
+  `DIANA_VERSION_PATCH` against the project version, not only `DIANA_VERSION_STRING`.
 
 #### Verification
 
