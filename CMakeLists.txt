@@ -161,7 +161,9 @@ if(DIANA_BUILD_PYTHON)
         python/ext/newton_new.c
         python/ext/newton_result.c
         python/ext/newton_step.c
-        python/ext/rk4.c
+        python/ext/rk4_exec.c
+        python/ext/rk4_stage.c
+        python/ext/rk4_step.c
         python/ext/simpson.c
         python/ext/trapezoidal.c)
     target_link_libraries(_diana PRIVATE diana::diana)
