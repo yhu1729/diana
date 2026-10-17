@@ -37,6 +37,14 @@ overlap each other. Each function checks every component before it writes any, s
 the last one leaves `y_out` as it was. Frama-C WP proves memory safety, termination, the status
 cases and that `y_out` is untouched on `DIANA_ERR_ARG` (RK4-C1).
 
+Whenever a computed component is finite, Flocq bounds its rounding error, with `u = 2⁻⁵³` and
+`η = 2⁻¹⁰⁷⁵`. A stage component is within `u·|y[i] + c·k[i]| + (1 + u)·(u·|c·k[i]| + η)` of the
+exact `y[i] + c·k[i]`, `c = h/2` or `h`, when `|h| ≥ 2⁻¹⁰²¹`; below that, rounding `h/2` (at most
+`η`) adds `(1 + u)²·η·|k[i]|` (RK4-B2, RK4-B3). A step component is within
+`u·|T| + (1 + u)·(γ₄·|h|·A/6 + (1 + u)·η/6 + η)` of the exact
+`T = y[i] + h·(k1[i] + 2·k2[i] + 2·k3[i] + k4[i])/6`, with
+`A = |k1[i] + k4[i]| + 2·|k2[i] + k3[i]|` and `γ₄ = 4u/(1 − 4u)` (RK4-B5).
+
 The rotation `y′ = (y₂, −y₁)` from `(0, 1)` has the solution `(sin t, cos t)`,
 `(0.841470985, 0.540302306)` at `t = 1`. `F` does not depend on `t`, so the stage times are not
 needed; ten steps of `h = 1/10` are within `7e-7`:
