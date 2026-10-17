@@ -7,6 +7,7 @@
 #define DIANA_VERSION_STRING "0.3.0"
 
 #include "diana/bisection.h"
+#include "diana/cholesky.h"
 #include "diana/euler.h"
 #include "diana/newton.h"
 #include "diana/ode.h"
