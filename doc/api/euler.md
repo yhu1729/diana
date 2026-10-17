@@ -1,7 +1,8 @@
 # Explicit Euler step
 
 Status codes, linking, and the Python conventions shared by every kernel are in the
-[API overview](overview.md); the theorems cited below are listed in `spec/euler.md`.
+[API overview](overview.md); the theorems cited below are listed in `spec/euler.md` and, for the
+unchecked step, `spec/euler_unchecked.md`.
 
 ## C (`diana/euler.h`)
 
@@ -42,8 +43,11 @@ Each computed component is within `u·|y[i] + h·f[i]| + (1 + u)·(u·|h·f[i]| 
 VST proves that the C writes exactly these binary64 values and returns `DIANA_OK` exactly when all
 of them are finite, leaving `y_out` unchanged otherwise (EULER-C2, for non-NULL, disjoint `y`, `f`
 and `y_out` with `d >= 1`). For the unchecked step, WP proves the same memory safety, termination
-and argument cases (EULER-C3), and VST that it always writes these binary64 values and returns
-`DIANA_OK` (EULER-C4), so EULER-B2 holds for each component it writes that is finite.
+and argument cases (EULER-UNCHECKED-C1), and VST that it always writes these binary64 values and
+returns `DIANA_OK` (EULER-UNCHECKED-C2), so EULER-B2 holds for each component it writes that is
+finite. Flocq proves that a written component is finite exactly when `y[i]`, `f[i]` and `h` are
+finite and neither operation overflows (EULER-UNCHECKED-B1): checking `y_out` for finiteness after
+the call rejects exactly the inputs `diana_euler_step` rejects.
 
 `y_out` must not overlap `y`, so a loop alternates two buffers. The rotation `y′ = (y₂, −y₁)` from
 `(0, 1)` has the solution `(sin t, cos t)`, `(0.841471, 0.540302)` at `t = 1`; with `h = 1/1000`
