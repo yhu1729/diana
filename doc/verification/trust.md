@@ -9,7 +9,7 @@ checked. The status of every theorem is in the generated [report](report.md).
 |---|---|---|---|
 | A | real-number model of the algorithm | Lean 4 + Mathlib **and** Rocq (Stdlib reals, Coquelicot) | convergence, invariants, error bounds over ℝ |
 | B | binary64 model of the C arithmetic | Rocq + Flocq | rounding facts the C code relies on (finiteness, bracket containment, forward error) |
-| C-VST | the C source (Clight AST) | Rocq + VST, via CompCert `clightgen` | a C function returns / updates exactly the layer-B model value (every function of the verified kernels: `bisection_mid`, `diana_bisection_init`, `diana_bisection_step`, `diana_bisection_result`, `diana_trapezoidal`, `diana_simpson`, `diana_euler_step`, `diana_euler_step_unchecked`, `diana_rk4_stage`, `diana_rk4_stage_unchecked`, `diana_rk4_step`, `diana_rk4_step_unchecked`, `diana_newton_init`, `diana_newton_step`, `diana_newton_result`, and the `src/fp.h` helpers) |
+| C-VST | the C source (Clight AST) | Rocq + VST, via CompCert `clightgen` | a C function returns / updates exactly the layer-B model value (every function of the verified kernels: `diana_bisection_mid`, `diana_bisection_init`, `diana_bisection_step`, `diana_bisection_result`, `diana_trapezoidal`, `diana_simpson`, `diana_euler_step`, `diana_euler_step_unchecked`, `diana_rk4_stage`, `diana_rk4_stage_unchecked`, `diana_rk4_step`, `diana_rk4_step_unchecked`, `diana_newton_init`, `diana_newton_step`, `diana_newton_result`, and the `src/fp.h` helpers) |
 | C-WP | the C source | Frama-C WP, float model, RTE plugin | memory safety, absence of undefined behaviour, separation, contract invariants |
 
 The three models of a kernel are: `rspec` (ℝ), `fmodel` (Flocq, same operation order as the C),
@@ -26,11 +26,17 @@ inside one Rocq development with no translation step.
   `script/axiom_allow.yaml`.
 - Frama-C 33.0 / Why3 1.8.2 / Alt-Ergo 2.6.4 as a proof oracle for layer C-WP. WP assumes the
   contracts of the functions listed in `SKIP` in `script/run_frama_c.sh`; each such contract is a
-  layer-B theorem (currently only `bisection_mid`, discharged by BISECTION-B1; see
+  layer-B theorem (currently only `diana_bisection_mid`, discharged by BISECTION-B1; see
   [Frama-C and Flocq boundary](frama-c.md)).
 - `clightgen` as the translation from C to Clight. The committed
-  `verification/clight/<kernel>_<target>.v` (today `bisection_aarch64_macos.v`,
-  `euler_aarch64_macos.v`, `euler_step_unchecked_aarch64_macos.v`, `newton_aarch64_macos.v`, `rk4_aarch64_macos.v`, `rk4_stage_unchecked_aarch64_macos.v`, `rk4_step_unchecked_aarch64_macos.v`, `simpson_aarch64_macos.v` and `trapezoidal_aarch64_macos.v`, CompCert configured for AArch64 macOS) is generated locally on that target and is the AST the VST proofs are about;
+  `verification/clight/<source>_<target>.v`, one per verified source file (today
+  `bisection_init_aarch64_macos.v`, `bisection_mid_aarch64_macos.v`,
+  `bisection_result_aarch64_macos.v`, `bisection_step_aarch64_macos.v`, `euler_aarch64_macos.v`,
+  `euler_step_unchecked_aarch64_macos.v`, `newton_init_aarch64_macos.v`,
+  `newton_result_aarch64_macos.v`, `newton_step_aarch64_macos.v`, `rk4_stage_aarch64_macos.v`,
+  `rk4_stage_unchecked_aarch64_macos.v`, `rk4_step_aarch64_macos.v`,
+  `rk4_step_unchecked_aarch64_macos.v`, `simpson_aarch64_macos.v` and
+  `trapezoidal_aarch64_macos.v`, CompCert configured for AArch64 macOS) is generated locally on that target and is the AST the VST proofs are about;
   CI neither regenerates nor re-proves it.
 
 ## Where each layer is checked
@@ -44,8 +50,9 @@ inside one Rocq development with no translation step.
 | `ccomp` build versus gcc/clang build | – (ctest `compiler` only runs the driver) | `script/compare_compiler.sh` |
 
 A green pipeline therefore does not establish layers B and C-VST, and the CI Frama-C result assumes
-the contract of `bisection_mid`, which only the local Flocq build (BISECTION-B1) discharges. The
-statuses in the [report](report.md) come from the last local `check_spec.py --run` that was committed.
+the contract of `diana_bisection_mid`, which only the local Flocq build (BISECTION-B1) discharges.
+The statuses in the [report](report.md) come from the last local `check_spec.py --run` that was
+committed.
 
 ## Verified artifact versus shipped binary
 
@@ -80,8 +87,15 @@ x86-64 build has been compared yet. CompCert is not in CI, so the test runs loca
 - The build system, the compilers, and the operating system.
 - Under VST, the argument-error paths a funspec excludes by its precondition: a NULL pointer in
   every kernel, `d = 0`, `n < 2`, `n < 3` or an even `n` in the array kernels, and an RK4 stage
-  outside 2 to 4. The Frama-C contracts cover them (BISECTION-C2, EULER-C1, EULER-UNCHECKED-C1,
-  NEWTON-C1, RK4-C1, RK4-UNCHECKED-C1, RK4-UNCHECKED-C2, SIMPSON-C1, TRAPEZOIDAL-C1).
+  outside 2 to 4. The Frama-C contracts cover them (BISECTION-C2 to C4, EULER-C1,
+  EULER-UNCHECKED-C1, NEWTON-C1 to C3, RK4-C1, RK4-C2, RK4-UNCHECKED-C1, RK4-UNCHECKED-C2,
+  SIMPSON-C1, TRAPEZOIDAL-C1).
+- The composition of the per-function VST proofs. Each `semax_body` assumes the funspecs of the
+  functions it calls, and no proof links them into a whole-program `semax_prog`. For the one call
+  across source files, from `diana_bisection_init`, `diana_bisection_step` and
+  `diana_bisection_result` to `diana_bisection_mid`, the callers use the funspec that BISECTION-C1
+  proves of the callee (`Diana.VST.BisectionMid.mid_spec`); the system linker, not CompCert, joins
+  the object files.
 - Termination of Newton's method: `max_iter` bounds the step count, and no theorem says the
   iteration converges from a given `x0` in binary64 (NEWTON-A2 is about exact arithmetic and a
   start within the basin it describes).
