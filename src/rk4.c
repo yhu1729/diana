@@ -1,7 +1,6 @@
 #include <stddef.h>
 
 #include "diana/rk4.h"
-#include "diana/wrapper.h"
 
 diana_status diana_rk4(diana_ode_fn fn, void *ctx, double t0, double h,
                        unsigned nstep, double *y, size_t d, double *work,
