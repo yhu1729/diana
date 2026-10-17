@@ -57,7 +57,9 @@ add_library(diana ${diana_library_type}
     src/bisection_step.c
     src/euler.c
     src/euler_step_unchecked.c
-    src/newton.c
+    src/newton_init.c
+    src/newton_result.c
+    src/newton_step.c
     src/rk4.c
     src/rk4_stage_unchecked.c
     src/rk4_step_unchecked.c
