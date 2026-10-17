@@ -18,14 +18,16 @@ states precisely what is proven, by which tool, and what is only tested.
 
 - Bisection, as a state machine the caller drives, and as a function taking a callback.
 - Composite trapezoidal and Simpson rules over tabulated samples.
+- Cholesky factorization of a symmetric positive definite matrix.
 - Explicit Euler step, with a loop over a callback.
 - Classical Runge–Kutta (RK4) step, with a loop over a callback.
 - Newton's method, as a state machine the caller drives, and as a function taking a callback.
 
 Each is available from C (`include/diana/`) and from Python (`import diana`). The C kernels
 allocate nothing, call no libm function, and use no function pointer; the convenience wrappers
-and the Python package drive those kernels and are tested rather than proven. Cholesky and LU
-with partial pivoting are planned for 1.0.
+and the Python package drive those kernels and are tested rather than proven. The one square
+root, in the Cholesky factorization, is a compiler builtin. LU with partial pivoting is planned
+for 1.0.
 
 ## Quick start
 
