@@ -32,6 +32,7 @@ what is verified and how, and the rationale that used to live in code comments.
 - [Build](development/build.md): CMake options and wheel layout
 - [Format and lint](development/style.md): `clang-format`, EditorConfig, `clang-tidy`
 - [Python binding](development/python.md): source layout of the extension and the package
+- [Benchmark](development/benchmark.md): `script/benchmark.sh`, checked against unchecked kernels
 - [Local workflow](development/workflow.md): `script/dev.sh`
 - [CI](development/ci.md): stages, platform (Linux only) and what it leaves untested, path
   filters, jobs, container image
