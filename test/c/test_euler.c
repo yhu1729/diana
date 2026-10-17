@@ -1,6 +1,8 @@
 #include <float.h>
 #include <math.h>
 #include <stddef.h>
+#include <stdint.h>
+#include <string.h>
 
 #include "check.h"
 #include "diana/diana.h"
@@ -8,46 +10,99 @@
 #define SENTINEL 42.0
 #define DIM 100u
 
+typedef diana_status (*step_fn)(const double *y, const double *f, size_t d,
+                                double h, double *y_out);
+
+static uint64_t bits(double x) {
+  uint64_t u;
+
+  memcpy(&u, &x, sizeof u);
+  return u;
+}
+
+/* Both steps succeed, agree bit for bit, and write only y_out[0 .. d-1]. */
 static void check_ok(const double *y, const double *f, size_t d, double h,
                      const double *want) {
   double out[DIM];
+  double raw[DIM];
   size_t i;
 
-  for (i = 0; i < d; ++i) {
+  for (i = 0; i < DIM; ++i) {
     out[i] = SENTINEL;
+    raw[i] = SENTINEL;
   }
   CHECK_EQ_STATUS(diana_euler_step(y, f, d, h, out), DIANA_OK);
+  CHECK_EQ_STATUS(diana_euler_step_unchecked(y, f, d, h, raw), DIANA_OK);
   for (i = 0; i < d; ++i) {
     CHECK(out[i] == want[i]);
     CHECK(!signbit(out[i]) == !signbit(want[i]));
   }
+  for (i = 0; i < DIM; ++i) {
+    CHECK(bits(raw[i]) == bits(out[i]));
+  }
+  for (i = d; i < DIM; ++i) {
+    CHECK(out[i] == SENTINEL);
+  }
 }
 
-static void check_arg(const double *y, const double *f, size_t d, double h) {
+static void check_reject(step_fn step, const double *y, const double *f,
+                         size_t d, double h) {
   double out[DIM];
   size_t i;
 
   for (i = 0; i < DIM; ++i) {
     out[i] = SENTINEL;
   }
-  CHECK_EQ_STATUS(diana_euler_step(y, f, d, h, out), DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(step(y, f, d, h, out), DIANA_ERR_ARG);
   for (i = 0; i < DIM; ++i) {
     CHECK(out[i] == SENTINEL);
   }
 }
 
+static void check_arg(const double *y, const double *f, size_t d, double h) {
+  check_reject(diana_euler_step, y, f, d, h);
+}
+
+/* The unchecked step returns DIANA_OK and writes each component as
+   computed; want[i] NaN accepts any NaN. */
+static void check_raw(const double *y, const double *f, size_t d, double h,
+                      const double *want) {
+  double out[DIM];
+  size_t i;
+
+  for (i = 0; i < DIM; ++i) {
+    out[i] = SENTINEL;
+  }
+  CHECK_EQ_STATUS(diana_euler_step_unchecked(y, f, d, h, out), DIANA_OK);
+  for (i = 0; i < d; ++i) {
+    if (isnan(want[i])) {
+      CHECK(isnan(out[i]));
+    } else {
+      CHECK(out[i] == want[i]);
+      CHECK(!signbit(out[i]) == !signbit(want[i]));
+    }
+  }
+  for (i = d; i < DIM; ++i) {
+    CHECK(out[i] == SENTINEL);
+  }
+}
+
 static void test_argument(void) {
+  static const step_fn step[2] = {diana_euler_step, diana_euler_step_unchecked};
   const double y[2] = {1.0, 2.0};
   const double f[2] = {3.0, 4.0};
+  size_t k;
 
-  check_arg((const double *)0, f, 2u, 1.0);
-  check_arg(y, (const double *)0, 2u, 1.0);
-  check_arg((const double *)0, (const double *)0, 2u, 1.0);
-  check_arg(y, f, 0u, 1.0);
-  CHECK_EQ_STATUS(diana_euler_step(y, f, 2u, 1.0, (double *)0), DIANA_ERR_ARG);
-  CHECK_EQ_STATUS(diana_euler_step((const double *)0, (const double *)0, 0u,
-                                   1.0, (double *)0),
-                  DIANA_ERR_ARG);
+  for (k = 0; k < 2u; ++k) {
+    check_reject(step[k], (const double *)0, f, 2u, 1.0);
+    check_reject(step[k], y, (const double *)0, 2u, 1.0);
+    check_reject(step[k], (const double *)0, (const double *)0, 2u, 1.0);
+    check_reject(step[k], y, f, 0u, 1.0);
+    CHECK_EQ_STATUS(step[k](y, f, 2u, 1.0, (double *)0), DIANA_ERR_ARG);
+    CHECK_EQ_STATUS(
+        step[k]((const double *)0, (const double *)0, 0u, 1.0, (double *)0),
+        DIANA_ERR_ARG);
+  }
 }
 
 /* Samples and h with few significant bits: the product and the sum are
@@ -150,6 +205,40 @@ static void test_failure_keeps_output(void) {
 
   check_arg(y, f, 3u, 1.0);
   check_arg(g, e, 3u, 1.0);
+}
+
+/* Inputs the checked step rejects: the unchecked step writes the IEEE
+   result of each operation, finite components included. */
+static void test_unchecked_nonfinite(void) {
+  const double zero[1] = {0.0};
+  const double max[1] = {DBL_MAX};
+  const double neg[1] = {-DBL_MAX};
+  const double inf[1] = {HUGE_VAL};
+  const double ninf[1] = {-HUGE_VAL};
+  const double nan1[1] = {(double)NAN};
+  const double y[3] = {1.0, 2.0, DBL_MAX};
+  const double f[3] = {1.0, 1.0, DBL_MAX};
+  const double partial[3] = {2.0, 3.0, HUGE_VAL};
+  const double g[3] = {-1.0, (double)NAN, 0.5};
+  const double e[3] = {2.0, 1.0, -HUGE_VAL};
+  const double mixed[3] = {1.0, (double)NAN, -HUGE_VAL};
+  const double nan3[3] = {(double)NAN, (double)NAN, (double)NAN};
+  const double inf3[3] = {HUGE_VAL, HUGE_VAL, HUGE_VAL};
+  const double one3[3] = {1.0, 1.0, 1.0};
+
+  /* overflow in the product, then in the sum */
+  check_raw(zero, max, 1u, 2.0, inf);
+  check_raw(zero, max, 1u, -2.0, ninf);
+  check_raw(max, max, 1u, 1.0, inf);
+  check_raw(neg, max, 1u, -1.0, ninf);
+  /* inf - inf is NaN; 0 * inf is NaN */
+  check_raw(inf, ninf, 1u, 1.0, nan1);
+  check_raw(one3, inf, 1u, 0.0, nan1);
+  check_raw(y, f, 3u, 1.0, partial);
+  check_raw(g, e, 3u, 1.0, mixed);
+  check_raw(one3, one3, 3u, (double)NAN, nan3);
+  check_raw(zero, one3, 1u, HUGE_VAL, inf);
+  check_raw(one3, one3, 3u, HUGE_VAL, inf3);
 }
 
 /* Callback wrapper. Each right-hand side below keeps every iterate exactly
@@ -292,6 +381,7 @@ int main(void) {
   test_overflow();
   test_nonfinite();
   test_failure_keeps_output();
+  test_unchecked_nonfinite();
   test_wrapper_integrate();
   test_wrapper_no_step();
   test_wrapper_argument();
