@@ -2,7 +2,7 @@ workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
     - if: $CI_PIPELINE_SOURCE == "schedule"
 
 stages:
@@ -438,7 +438,7 @@ release:
     - verify_lean
     - verify_rocq
   rules:
-    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
   script:
     - echo "release $CI_COMMIT_TAG"
   release:

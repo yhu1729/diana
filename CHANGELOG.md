@@ -251,6 +251,9 @@ All notable changes to this project are documented here. The format follows
 
 - `.change_frama_c` lists `script/job_count.sh`, which `script/verify_frama_c.sh` calls, so a
   change to it runs `verify_frama_c`.
+- The version tag pattern of `workflow:` and of the `release` job is anchored,
+  `^v\d+\.\d+\.\d+$`, so a pre-release tag such as `v1.0.0-rc1` starts no pipeline and no
+  release.
 
 ## [0.3.0] - 2026-10-16
 
