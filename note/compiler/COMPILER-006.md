@@ -1,0 +1,38 @@
+---
+id: COMPILER-006
+title: What the compiler corpus covers for each kernel
+kind: fact
+path:
+  - test/c/test_compiler.c
+related: [COMPILER-005, COMPILER-007, TEST-008, TEST-022]
+---
+Besides seeded random inputs (COMPILER-007), the corpus runs every public kernel function on the
+cases below. Current case lines: `bisection_*` 161, `trapezoidal` 283, `simpson` 284, `euler`
+and `euler_unchecked` 248 each, `rk4_stage*` 274 each, `rk4_step*` 270 each, `newton_*` 152.
+
+- Bisection `init`: NULL state; NaN and an infinity in each argument, a signalling NaN `fa`;
+  `a > b`; negative `tol`; `max_iter = 0`; `|a|` or `|b|` one ulp past `DBL_MAX/2` and
+  `b = DBL_MAX`; both bracket errors; `tol = -0`; each immediate convergence (`fa` or `fb` `±0`,
+  `tol >= b - a`, `a == b`, adjacent endpoints above and below 1, across a binade, among
+  subnormals, across 0). Runs printing every step: roots 0.5, `sqrt(2)`, 0.1 (rising and falling
+  `f`), a sign function returning `-0` at its root, the 2098-step worst case and its mirror,
+  `1e300`, subnormal roots, `ERR_MAXITER` at 5 and 1 steps plus one more `step`, endpoint values
+  that overflow. `step` gets NaN, sNaN, `±inf`, `±0`, `±DBL_TRUE_MIN`; `result` NULL pointers.
+- Trapezoidal and Simpson: NULL pointers, `n` from 0 to 5, exact and inexact `h`, `h = ±0`, `±0`
+  and subnormal samples and `h`, underflow, `DBL_MAX` samples anywhere, `h` up to `DBL_MAX`,
+  alternating `±DBL_MAX`, NaN, sNaN and `±inf` in each position and as `h`, the ctest order and
+  overflow cases, the 1001-sample affine and cubic cases.
+- Euler, checked and unchecked on the same inputs: every argument error, exact and inexact `h`,
+  the FMA case, `h = ±0` with signed-zero `y`, underflow ties, `DBL_MAX + 1`, product and sum
+  overflow, cancellation, first and last component failing, NaN, sNaN and infinities in each
+  position of `y` and `f` and in `h`.
+- RK4 stage and step, checked and unchecked: every argument error (stages 0, 1, 5, -2), stages 2
+  to 4 with exact and inexact `h`, `h = ±0`, the `h = 3 * 2^-1074` coefficient tie,
+  `h = DBL_MAX`, both FMA cases, the slope-sum order case, overflow in each operation,
+  cancellation, first and last component failing, non-finite values in every position.
+- Newton: every `init` error; `step` with NaN, sNaN, `±inf` `f` and `f'`, `±0` `f'`, `±0` `f`
+  (also with zero or NaN `f'`), tiny, underflowing, tie and overflowing corrections, an
+  overflowing iterate; runs for `sqrt(2)` (with `tol`, from 1, the `tol = 0` two-cycle), exact
+  linear roots, the cube root of 10, the double root of `x^2` (digest only, 539 steps), the
+  two-cycle of `x^3 - 2x + 2` from 0, a flat `f`, `max_iter = 1`, a root at `1e300`, an
+  overflowing square, and `x^2 + 1`, which has no real root.
