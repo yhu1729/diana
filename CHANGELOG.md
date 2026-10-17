@@ -26,6 +26,19 @@ All notable changes to this project are documented here. The format follows
   stage or step returns `DIANA_ERR_ARG` with `y` at the last good state. Unverified, like
   `diana_euler`.
 
+#### Python binding
+
+- `diana.rk4_stage(y, k, h, stage)` and `diana.rk4_step(y, k1, k2, k3, k4, h)` return a new
+  `array.array("d")` from the kernels, reading float64 buffers in place and copying other
+  iterables (module `diana._rk4`; extension functions `diana._diana.rk4_stage` and `rk4_step`
+  with an explicit `out` that must not overlap an input). `diana.rk4(f, t0, y0, h, nstep)` loops
+  in Python with a callable `f(t, y)`, at the same times as `diana_rk4`, copying each slope so
+  `f` may reuse its output buffer. A stage other than 2, 3 or 4, a length mismatch and a
+  non-finite component raise `ValueError`. `test/python/test_rk4.py` covers the binding (the
+  driver and `python/ext/rk4.c` at 100% line and branch coverage), including bitwise agreement
+  with Python float arithmetic, RK4-B3 and RK4-B5 against exact rationals, and fourth-order
+  convergence on the rotation.
+
 #### Verification
 
 - Flocq proves RK4 layer B (`verification/rocq/theory/Float/RK4.v`): a finite stage or step
