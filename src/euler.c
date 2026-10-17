@@ -1,7 +1,6 @@
 #include <stddef.h>
 
 #include "diana/euler.h"
-#include "diana/wrapper.h"
 
 diana_status diana_euler(diana_ode_fn fn, void *ctx, double t0, double h,
                          unsigned nstep, double *y, size_t d, double *work,
