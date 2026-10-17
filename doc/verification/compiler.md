@@ -7,12 +7,12 @@ carries CompCert.
 
 ## Build
 
-- It builds the library sources `src/*.c` (the kernels, `status.c` and the callback wrappers, which
-  the driver does not call) with the driver `test/c/test_compiler.c` once with `ccomp -std=c11` at
-  its default optimization, and with every host compiler at `-O0`, `-O2` and `-O3` using `-std=c11
-  -ffp-contract=off -fno-fast-math`, the warning set of `cmake/warning.cmake` with `-Werror`, and
-  `-fexcess-precision=standard` for gcc. It fails unless each host output is byte-identical to the
-  `ccomp` output, prints the first 20 lines of `diff`, and keeps the outputs.
+- It builds the library sources `src/*.c` (the kernels, `status_str.c`, `version.c` and the callback
+  wrappers, which the driver does not call) with the driver `test/c/test_compiler.c` once with
+  `ccomp -std=c11` at its default optimization, and with every host compiler at `-O0`, `-O2` and
+  `-O3` using `-std=c11 -ffp-contract=off -fno-fast-math`, the warning set of `cmake/warning.cmake`
+  with `-Werror`, and `-fexcess-precision=standard` for gcc. It fails unless each host output is
+  byte-identical to the `ccomp` output, prints the first 20 lines of `diff`, and keeps the outputs.
 - The host compilers are `DIANA_COMPARE_CC` when set, else `clang`, `gcc`, `cc`, every `gcc-N`
   and `clang-N` on `PATH`, and the `clang` of every Homebrew LLVM keg (`llvm` and each
   `llvm@N` under `/opt/homebrew/opt` or `/usr/local/opt`); candidates with the same first line of
