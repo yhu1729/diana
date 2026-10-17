@@ -10,7 +10,8 @@ related: [BUILD-007, FP-004]
 `diana_set_strict_flag(<target>)` in `cmake/warning.cmake` adds, as `PRIVATE` compile options:
 
 `-Wall -Wextra -Wconversion -Wshadow -Wvla -Wpedantic -Wstrict-prototypes -Wmissing-prototypes
--Wcast-qual -Wpointer-arith -Wundef -Wdouble-promotion -ffp-contract=off -fno-fast-math`,
+-Wcast-qual -Wpointer-arith -Wundef -Wdouble-promotion -ffp-contract=off -fno-fast-math
+-fno-math-errno`,
 plus `-fexcess-precision=standard` when the compiler ID is `GNU`, and `-Werror` when
 `DIANA_WERROR` is ON (BUILD-007).
 

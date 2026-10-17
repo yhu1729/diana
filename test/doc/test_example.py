@@ -31,6 +31,7 @@ CFLAGS = [
     "-Wdouble-promotion",
     "-ffp-contract=off",
     "-fno-fast-math",
+    "-fno-math-errno",
 ]
 FENCE = re.compile(r"```(\w*)")
 CLANG_FORMAT = shutil.which("clang-format", path=sysconfig.get_path("scripts"))

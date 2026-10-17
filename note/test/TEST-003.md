@@ -17,7 +17,8 @@ under pytest (CI `test_python`, `script/dev.sh test`).
   is neither), together with every `src/*.c` (not the built library), `-I include`, and
   `-std=c11 -pedantic -Werror` plus the warning and floating-point flags of `cmake/warning.cmake`
   (`-Wall -Wextra -Wconversion -Wshadow -Wvla -Wstrict-prototypes -Wmissing-prototypes
-  -Wcast-qual -Wpointer-arith -Wundef -Wdouble-promotion -ffp-contract=off -fno-fast-math`),
+  -Wcast-qual -Wpointer-arith -Wundef -Wdouble-promotion -ffp-contract=off -fno-fast-math
+  -fno-math-errno`),
   without its GCC-only `-fexcess-precision=standard`, at the default optimization level and
   without sanitizers.
 - A block that does not match `int main(` is wrapped in `int main(void) { ... return 0; }` after

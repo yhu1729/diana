@@ -18,7 +18,7 @@ the same bits on the corpus.
   must exit 0 and its last line must start with `end ` (a truncation check). The script prints
   `compiler: reference <ccomp -version>, <uname -m>, <n> lines`.
 - Host builds: each compiler at `-O0`, `-O2` and `-O3` with `-std=c11 -ffp-contract=off
-  -fno-fast-math`, the warning set of `cmake/warning.cmake` with `-Werror`, and
+  -fno-fast-math -fno-math-errno`, the warning set of `cmake/warning.cmake` with `-Werror`, and
   `-fexcess-precision=standard` when the compiler predefines `__GNUC__` but not `__clang__`. A
   build error aborts the script; a run that exits non-zero fails it.
 - The build includes `status_str.c`, `version.c` and the callback wrappers, which the driver does

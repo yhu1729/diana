@@ -3,7 +3,7 @@ set -eu
 cd "$(dirname "$0")/.."
 
 driver=test/c/test_compiler.c
-strict="-std=c11 -ffp-contract=off -fno-fast-math"
+strict="-std=c11 -ffp-contract=off -fno-fast-math -fno-math-errno"
 warning="-Wall -Wextra -Wconversion -Wshadow -Wvla -Wpedantic -Wstrict-prototypes
 -Wmissing-prototypes -Wcast-qual -Wpointer-arith -Wundef -Wdouble-promotion -Werror"
 level="-O0 -O2 -O3"
