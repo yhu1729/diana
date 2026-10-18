@@ -46,21 +46,26 @@ static void check_ok(const double *y, const double *f, size_t d, double h,
 }
 
 static void check_reject(step_fn step, const double *y, const double *f,
-                         size_t d, double h) {
+                         size_t d, double h, diana_status want) {
   double out[DIM];
   size_t i;
 
   for (i = 0; i < DIM; ++i) {
     out[i] = SENTINEL;
   }
-  CHECK_EQ_STATUS(step(y, f, d, h, out), DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(step(y, f, d, h, out), want);
   for (i = 0; i < DIM; ++i) {
     CHECK(out[i] == SENTINEL);
   }
 }
 
 static void check_arg(const double *y, const double *f, size_t d, double h) {
-  check_reject(diana_euler_step, y, f, d, h);
+  check_reject(diana_euler_step, y, f, d, h, DIANA_ERR_ARG);
+}
+
+static void check_overflow(const double *y, const double *f, size_t d,
+                           double h) {
+  check_reject(diana_euler_step, y, f, d, h, DIANA_ERR_OVERFLOW);
 }
 
 /* The unchecked step returns DIANA_OK and writes each component as
@@ -94,10 +99,11 @@ static void test_argument(void) {
   size_t k;
 
   for (k = 0; k < 2u; ++k) {
-    check_reject(step[k], (const double *)0, f, 2u, 1.0);
-    check_reject(step[k], y, (const double *)0, 2u, 1.0);
-    check_reject(step[k], (const double *)0, (const double *)0, 2u, 1.0);
-    check_reject(step[k], y, f, 0u, 1.0);
+    check_reject(step[k], (const double *)0, f, 2u, 1.0, DIANA_ERR_ARG);
+    check_reject(step[k], y, (const double *)0, 2u, 1.0, DIANA_ERR_ARG);
+    check_reject(step[k], (const double *)0, (const double *)0, 2u, 1.0,
+                 DIANA_ERR_ARG);
+    check_reject(step[k], y, f, 0u, 1.0, DIANA_ERR_ARG);
     CHECK_EQ_STATUS(step[k](y, f, 2u, 1.0, (double *)0), DIANA_ERR_ARG);
     CHECK_EQ_STATUS(
         step[k]((const double *)0, (const double *)0, 0u, 1.0, (double *)0),
@@ -158,12 +164,26 @@ static void test_overflow(void) {
   const double one[1] = {1.0};
   const double neg[1] = {-DBL_MAX};
 
-  check_arg(zero, max, 1u, 2.0);
-  check_arg(zero, max, 1u, -2.0);
-  check_arg(max, max, 1u, 1.0);
-  check_arg(neg, max, 1u, -1.0);
+  check_overflow(zero, max, 1u, 2.0);
+  check_overflow(zero, max, 1u, -2.0);
+  check_overflow(max, max, 1u, 1.0);
+  check_overflow(neg, max, 1u, -1.0);
   /* DBL_MAX + 1 rounds back to DBL_MAX */
   check_ok(max, one, 1u, 1.0, max);
+}
+
+/* An overflow is reported only when h and every component of y and f are
+   finite: a non-finite input after the overflowing component makes it an
+   argument error. */
+static void test_overflow_classify(void) {
+  const double y[3] = {DBL_MAX, 1.0, 1.0};
+  const double f[3] = {DBL_MAX, 1.0, 1.0};
+  const double y_nan[3] = {DBL_MAX, 1.0, (double)NAN};
+  const double f_inf[3] = {DBL_MAX, 1.0, -HUGE_VAL};
+
+  check_overflow(y, f, 3u, 1.0);
+  check_arg(y_nan, f, 3u, 1.0);
+  check_arg(y, f_inf, 3u, 1.0);
 }
 
 static void test_nonfinite(void) {
@@ -203,8 +223,8 @@ static void test_failure_keeps_output(void) {
   const double g[3] = {DBL_MAX, 2.0, 3.0};
   const double e[3] = {DBL_MAX, 1.0, 1.0};
 
-  check_arg(y, f, 3u, 1.0);
-  check_arg(g, e, 3u, 1.0);
+  check_overflow(y, f, 3u, 1.0);
+  check_overflow(g, e, 3u, 1.0);
 }
 
 /* Inputs the checked step rejects: the unchecked step writes the IEEE
@@ -368,7 +388,7 @@ static void test_wrapper_failure(void) {
   /* y' = -y with h = -2 overflows on the first step: y + 2y */
   CHECK_EQ_STATUS(
       diana_euler(decay, (void *)0, 0.0, -2.0, 3u, big, 1u, w, &done),
-      DIANA_ERR_ARG);
+      DIANA_ERR_OVERFLOW);
   CHECK(done == 0u && big[0] == DBL_MAX / 2.0);
 }
 
@@ -379,6 +399,7 @@ int main(void) {
   test_zero_step();
   test_underflow();
   test_overflow();
+  test_overflow_classify();
   test_nonfinite();
   test_failure_keeps_output();
   test_unchecked_nonfinite();

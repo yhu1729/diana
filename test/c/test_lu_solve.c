@@ -63,7 +63,7 @@ static void check_overflow(const double *lu, const size_t *piv, size_t n,
   size_t p;
 
   fill(x);
-  CHECK_EQ_STATUS(diana_lu_solve(lu, piv, n, b, x), DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(diana_lu_solve(lu, piv, n, b, x), DIANA_ERR_OVERFLOW);
   for (p = n; p < CAP; ++p) {
     CHECK(x[p] == SENTINEL);
   }
@@ -410,7 +410,7 @@ static void test_invalid(void) {
 
 /* A difference in the forward solve, or a quotient, a product or a
    difference in the back solve, that overflows makes an entry infinite or
-   NaN: an argument error found while x is written. */
+   NaN: an overflow found while x is written. */
 static void test_overflow(void) {
   static const size_t piv1[1] = {0u};
   static const size_t piv2[2] = {0u, 1u};

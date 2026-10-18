@@ -20,6 +20,12 @@ static void check_arg(const double *y, size_t n, double h) {
   CHECK(r == SENTINEL);
 }
 
+static void check_overflow(const double *y, size_t n, double h) {
+  double r = SENTINEL;
+  CHECK_EQ_STATUS(diana_trapezoidal(y, n, h, &r), DIANA_ERR_OVERFLOW);
+  CHECK(r == SENTINEL);
+}
+
 static void test_argument(void) {
   const double y[3] = {1.0, 2.0, 3.0};
 
@@ -103,14 +109,26 @@ static void test_overflow(void) {
   const double negative[3] = {-DBL_MAX, -DBL_MAX, 0.0};
 
   /* y[0] + y[n-1] overflows though h * (y[0] + y[1]) / 2 = DBL_MAX */
-  check_arg(endpoint, 2u, 1.0);
+  check_overflow(endpoint, 2u, 1.0);
   /* h = 0 does not hide it: 0 * inf is NaN */
-  check_arg(endpoint, 2u, 0.0);
-  check_arg(interior, 3u, 1.0);
-  check_arg(negative, 3u, 1.0);
-  check_arg(product, 2u, 4.0);
-  check_arg(product, 2u, -4.0);
+  check_overflow(endpoint, 2u, 0.0);
+  check_overflow(interior, 3u, 1.0);
+  check_overflow(negative, 3u, 1.0);
+  check_overflow(product, 2u, 4.0);
+  check_overflow(product, 2u, -4.0);
   check_ok(product, 2u, 2.0, DBL_MAX);
+}
+
+/* An overflow is reported only when h and every sample are finite: a
+   non-finite sample after those that overflow makes it an argument error. */
+static void test_overflow_classify(void) {
+  const double y[4] = {1.0, DBL_MAX, DBL_MAX, 1.0};
+  const double y_nan[4] = {1.0, DBL_MAX, DBL_MAX, (double)NAN};
+  const double y_inf[4] = {1.0, DBL_MAX, DBL_MAX, -HUGE_VAL};
+
+  check_overflow(y, 4u, 1.0);
+  check_arg(y_nan, 4u, 1.0);
+  check_arg(y_inf, 4u, 1.0);
 }
 
 static void test_nonfinite_sample(void) {
@@ -155,6 +173,7 @@ int main(void) {
   test_zero_step();
   test_underflow();
   test_overflow();
+  test_overflow_classify();
   test_nonfinite_sample();
   test_nonfinite_step();
   return check_report("trapezoidal");

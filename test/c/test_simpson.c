@@ -20,6 +20,12 @@ static void check_arg(const double *y, size_t n, double h) {
   CHECK(r == SENTINEL);
 }
 
+static void check_overflow(const double *y, size_t n, double h) {
+  double r = SENTINEL;
+  CHECK_EQ_STATUS(diana_simpson(y, n, h, &r), DIANA_ERR_OVERFLOW);
+  CHECK(r == SENTINEL);
+}
+
 static void test_argument(void) {
   const double y[5] = {1.0, 2.0, 3.0, 4.0, 5.0};
 
@@ -122,21 +128,33 @@ static void test_overflow(void) {
   const double one[3] = {1.0, 1.0, 1.0};
   const double max[3] = {DBL_MAX, 0.0, 0.0};
 
-  check_arg(endpoint, 3u, 1.0);
+  check_overflow(endpoint, 3u, 1.0);
   /* h = 0 does not hide it: 0 * inf is NaN */
-  check_arg(endpoint, 3u, 0.0);
+  check_overflow(endpoint, 3u, 0.0);
   /* 4 * y[1] overflows though h * 4 * y[1] / 3 = DBL_MAX / 3 */
-  check_arg(odd_scale, 3u, 0.25);
-  check_arg(odd_sum, 5u, 1.0);
-  check_arg(even_scale, 5u, 1.0);
-  check_arg(even_sum, 7u, 1.0);
-  check_arg(odd_add, 3u, 1.0);
-  check_arg(even_add, 5u, 1.0);
-  check_arg(negative, 3u, 1.0);
+  check_overflow(odd_scale, 3u, 0.25);
+  check_overflow(odd_sum, 5u, 1.0);
+  check_overflow(even_scale, 5u, 1.0);
+  check_overflow(even_sum, 7u, 1.0);
+  check_overflow(odd_add, 3u, 1.0);
+  check_overflow(even_add, 5u, 1.0);
+  check_overflow(negative, 3u, 1.0);
   /* h * s overflows though h * s / 3 = DBL_MAX / 2 */
-  check_arg(one, 3u, DBL_MAX / 4.0);
-  check_arg(one, 3u, -DBL_MAX / 4.0);
+  check_overflow(one, 3u, DBL_MAX / 4.0);
+  check_overflow(one, 3u, -DBL_MAX / 4.0);
   check_ok(max, 3u, 1.0, DBL_MAX / 3.0);
+}
+
+/* An overflow is reported only when h and every sample are finite: a
+   non-finite sample after those that overflow makes it an argument error. */
+static void test_overflow_classify(void) {
+  const double y[5] = {1.0, DBL_MAX, 1.0, DBL_MAX, 1.0};
+  const double y_nan[5] = {1.0, DBL_MAX, 1.0, DBL_MAX, (double)NAN};
+  const double y_inf[5] = {1.0, DBL_MAX, 1.0, DBL_MAX, HUGE_VAL};
+
+  check_overflow(y, 5u, 1.0);
+  check_arg(y_nan, 5u, 1.0);
+  check_arg(y_inf, 5u, 1.0);
 }
 
 static void test_nonfinite_sample(void) {
@@ -181,6 +199,7 @@ int main(void) {
   test_zero_step();
   test_underflow();
   test_overflow();
+  test_overflow_classify();
   test_nonfinite_sample();
   test_nonfinite_step();
   return check_report("simpson");

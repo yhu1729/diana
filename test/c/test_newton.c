@@ -43,6 +43,13 @@ static double nan_second(double x, double *dfx, void *ctx) {
   return *n == 2u ? (double)NAN : x - 0.25;
 }
 
+static double steep(double x, double *dfx, void *ctx) {
+  (void)x;
+  (void)ctx;
+  *dfx = 0.5;
+  return DBL_MAX;
+}
+
 static int same_state(const diana_newton_state *p,
                       const diana_newton_state *q) {
   return p->x == q->x && p->dx == q->dx && p->tol == q->tol &&
@@ -208,13 +215,13 @@ static void test_error(void) {
   CHECK_EQ_STATUS(diana_newton_step(&s, -1.0, -0.0), DIANA_ERR_SINGULAR);
   CHECK(same_state(&s, &before));
   /* the correction overflows against a subnormal derivative */
-  CHECK_EQ_STATUS(diana_newton_step(&s, DBL_MAX, 0.5), DIANA_ERR_ARG);
-  CHECK_EQ_STATUS(diana_newton_step(&s, 1.0, DBL_TRUE_MIN), DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(diana_newton_step(&s, DBL_MAX, 0.5), DIANA_ERR_OVERFLOW);
+  CHECK_EQ_STATUS(diana_newton_step(&s, 1.0, DBL_TRUE_MIN), DIANA_ERR_OVERFLOW);
   CHECK(same_state(&s, &before));
   /* the new iterate overflows though the correction is finite */
   CHECK_EQ_STATUS(diana_newton_init(&s, -DBL_MAX, 0.0, 10u), DIANA_CONTINUE);
   before = s;
-  CHECK_EQ_STATUS(diana_newton_step(&s, DBL_MAX, 1.0), DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(diana_newton_step(&s, DBL_MAX, 1.0), DIANA_ERR_OVERFLOW);
   CHECK(same_state(&s, &before));
   CHECK_EQ_STATUS(diana_newton_step(&s, -DBL_MAX, 2.0), DIANA_CONTINUE);
   CHECK(s.x == -DBL_MAX / 2.0 && s.dx == -DBL_MAX / 2.0 && s.iter == 1u);
@@ -307,6 +314,12 @@ static void test_wrapper_error(void) {
   CHECK_EQ_STATUS(diana_newton(nan_second, &n, 0.0, 0.0, 10u, &root, &iter),
                   DIANA_ERR_ARG);
   CHECK(iter == 1u && n == 2u && root == -1.0);
+
+  /* the first correction overflows: no step completed, root untouched */
+  iter = 99u;
+  CHECK_EQ_STATUS(diana_newton(steep, 0, 2.0, 1e-12, 10u, &root, &iter),
+                  DIANA_ERR_OVERFLOW);
+  CHECK(iter == 0u && root == -1.0);
 }
 
 int main(void) {

@@ -66,7 +66,7 @@ static void check_overflow(solve_fn solve, const double *l, size_t n,
   size_t p;
 
   fill(x, CAP);
-  CHECK_EQ_STATUS(solve(l, n, b, x), DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(solve(l, n, b, x), DIANA_ERR_OVERFLOW);
   for (p = n; p < CAP; ++p) {
     CHECK(x[p] == SENTINEL);
   }
@@ -328,7 +328,7 @@ static void test_nonfinite(solve_fn solve) {
 }
 
 /* A quotient, a product or a difference that overflows makes a component
-   infinite or NaN: an argument error found while x is written. */
+   infinite or NaN: an overflow found while x is written. */
 static void test_overflow(void) {
   static const double tiny[1] = {1e-300};
   static const double big[1] = {1e300};

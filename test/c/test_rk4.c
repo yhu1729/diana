@@ -93,17 +93,22 @@ static void stage_ok(const double *y, const double *k, size_t d, double h,
 }
 
 static void stage_reject(stage_fn fn, const double *y, const double *k,
-                         size_t d, double h, int stage) {
+                         size_t d, double h, int stage, diana_status want) {
   double out[DIM];
 
   fill(out);
-  CHECK_EQ_STATUS(fn(y, k, d, h, stage, out), DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(fn(y, k, d, h, stage, out), want);
   check_untouched(out);
 }
 
 static void stage_arg(const double *y, const double *k, size_t d, double h,
                       int stage) {
-  stage_reject(diana_rk4_stage, y, k, d, h, stage);
+  stage_reject(diana_rk4_stage, y, k, d, h, stage, DIANA_ERR_ARG);
+}
+
+static void stage_overflow(const double *y, const double *k, size_t d, double h,
+                           int stage) {
+  stage_reject(diana_rk4_stage, y, k, d, h, stage, DIANA_ERR_OVERFLOW);
 }
 
 static void stage_raw(const double *y, const double *k, size_t d, double h,
@@ -132,17 +137,23 @@ static void step_ok(const double *y, const double *k1, const double *k2,
 
 static void step_reject(step_fn fn, const double *y, const double *k1,
                         const double *k2, const double *k3, const double *k4,
-                        size_t d, double h) {
+                        size_t d, double h, diana_status want) {
   double out[DIM];
 
   fill(out);
-  CHECK_EQ_STATUS(fn(y, k1, k2, k3, k4, d, h, out), DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(fn(y, k1, k2, k3, k4, d, h, out), want);
   check_untouched(out);
 }
 
 static void step_arg(const double *y, const double *k1, const double *k2,
                      const double *k3, const double *k4, size_t d, double h) {
-  step_reject(diana_rk4_step, y, k1, k2, k3, k4, d, h);
+  step_reject(diana_rk4_step, y, k1, k2, k3, k4, d, h, DIANA_ERR_ARG);
+}
+
+static void step_overflow(const double *y, const double *k1, const double *k2,
+                          const double *k3, const double *k4, size_t d,
+                          double h) {
+  step_reject(diana_rk4_step, y, k1, k2, k3, k4, d, h, DIANA_ERR_OVERFLOW);
 }
 
 static void step_raw(const double *y, const double *k1, const double *k2,
@@ -163,13 +174,13 @@ static void test_stage_argument(void) {
   size_t n;
 
   for (n = 0; n < 2u; ++n) {
-    stage_reject(fn[n], (const double *)0, k, 2u, 1.0, 2);
-    stage_reject(fn[n], y, (const double *)0, 2u, 1.0, 2);
-    stage_reject(fn[n], y, k, 0u, 1.0, 2);
-    stage_reject(fn[n], y, k, 2u, 1.0, 1);
-    stage_reject(fn[n], y, k, 2u, 1.0, 5);
-    stage_reject(fn[n], y, k, 2u, 1.0, 0);
-    stage_reject(fn[n], y, k, 2u, 1.0, -3);
+    stage_reject(fn[n], (const double *)0, k, 2u, 1.0, 2, DIANA_ERR_ARG);
+    stage_reject(fn[n], y, (const double *)0, 2u, 1.0, 2, DIANA_ERR_ARG);
+    stage_reject(fn[n], y, k, 0u, 1.0, 2, DIANA_ERR_ARG);
+    stage_reject(fn[n], y, k, 2u, 1.0, 1, DIANA_ERR_ARG);
+    stage_reject(fn[n], y, k, 2u, 1.0, 5, DIANA_ERR_ARG);
+    stage_reject(fn[n], y, k, 2u, 1.0, 0, DIANA_ERR_ARG);
+    stage_reject(fn[n], y, k, 2u, 1.0, -3, DIANA_ERR_ARG);
     CHECK_EQ_STATUS(fn[n](y, k, 2u, 1.0, 2, (double *)0), DIANA_ERR_ARG);
     CHECK_EQ_STATUS(
         fn[n]((const double *)0, (const double *)0, 0u, 1.0, 0, (double *)0),
@@ -238,11 +249,25 @@ static void test_stage_overflow(void) {
   const double two[1] = {2.0};
   const double four[1] = {4.0};
 
-  stage_arg(zero, max, 1u, 2.0, 4);
-  stage_arg(zero, four, 1u, DBL_MAX, 2);
-  stage_arg(max, max, 1u, 2.0, 3);
+  stage_overflow(zero, max, 1u, 2.0, 4);
+  stage_overflow(zero, four, 1u, DBL_MAX, 2);
+  stage_overflow(max, max, 1u, 2.0, 3);
   /* (DBL_MAX/2) * 2 is DBL_MAX: the coefficient h/2 keeps it finite */
   stage_ok(zero, two, 1u, DBL_MAX, 2, max);
+}
+
+/* An overflow is reported only when h and every component of y and k are
+   finite: a non-finite input after the overflowing component makes it an
+   argument error. */
+static void test_stage_overflow_classify(void) {
+  const double y[3] = {DBL_MAX, 1.0, 1.0};
+  const double k[3] = {DBL_MAX, 1.0, 1.0};
+  const double y_nan[3] = {DBL_MAX, 1.0, (double)NAN};
+  const double k_inf[3] = {DBL_MAX, 1.0, HUGE_VAL};
+
+  stage_overflow(y, k, 3u, 2.0, 4);
+  stage_arg(y_nan, k, 3u, 2.0, 4);
+  stage_arg(y, k_inf, 3u, 2.0, 4);
 }
 
 static void test_stage_nonfinite(void) {
@@ -281,8 +306,8 @@ static void test_stage_failure_keeps_output(void) {
   const double g[3] = {DBL_MAX, 2.0, 3.0};
   const double e[3] = {DBL_MAX, 1.0, 1.0};
 
-  stage_arg(y, k, 3u, 2.0, 4);
-  stage_arg(g, e, 3u, 2.0, 4);
+  stage_overflow(y, k, 3u, 2.0, 4);
+  stage_overflow(g, e, 3u, 2.0, 4);
 }
 
 static void test_step_argument(void) {
@@ -293,12 +318,12 @@ static void test_step_argument(void) {
   size_t n;
 
   for (n = 0; n < 2u; ++n) {
-    step_reject(fn[n], z, v, v, v, v, 2u, 1.0);
-    step_reject(fn[n], v, z, v, v, v, 2u, 1.0);
-    step_reject(fn[n], v, v, z, v, v, 2u, 1.0);
-    step_reject(fn[n], v, v, v, z, v, 2u, 1.0);
-    step_reject(fn[n], v, v, v, v, z, 2u, 1.0);
-    step_reject(fn[n], v, v, v, v, v, 0u, 1.0);
+    step_reject(fn[n], z, v, v, v, v, 2u, 1.0, DIANA_ERR_ARG);
+    step_reject(fn[n], v, z, v, v, v, 2u, 1.0, DIANA_ERR_ARG);
+    step_reject(fn[n], v, v, z, v, v, 2u, 1.0, DIANA_ERR_ARG);
+    step_reject(fn[n], v, v, v, z, v, 2u, 1.0, DIANA_ERR_ARG);
+    step_reject(fn[n], v, v, v, v, z, 2u, 1.0, DIANA_ERR_ARG);
+    step_reject(fn[n], v, v, v, v, v, 0u, 1.0, DIANA_ERR_ARG);
     CHECK_EQ_STATUS(fn[n](v, v, v, v, v, 2u, 1.0, (double *)0), DIANA_ERR_ARG);
     CHECK_EQ_STATUS(fn[n](z, z, z, z, z, 0u, 1.0, out), DIANA_ERR_ARG);
     CHECK(out[0] == SENTINEL && out[1] == SENTINEL);
@@ -386,15 +411,36 @@ static void test_step_overflow(void) {
   const double nmax[1] = {-DBL_MAX};
   const double big[1] = {0x1p1020};
 
-  step_arg(zero, zero, max, max, zero, 1u, 1.0);
-  step_arg(zero, zero, max, zero, zero, 1u, 1.0);
-  step_arg(zero, max, half, zero, zero, 1u, 1.0);
-  step_arg(zero, max, zero, zero, zero, 1u, 2.0);
+  step_overflow(zero, zero, max, max, zero, 1u, 1.0);
+  step_overflow(zero, zero, max, zero, zero, 1u, 1.0);
+  step_overflow(zero, max, half, zero, zero, 1u, 1.0);
+  step_overflow(zero, max, zero, zero, zero, 1u, 2.0);
   /* h * s = 1.5 * 2^1022 is finite, y + 2^1020 is not */
-  step_arg(max, big, zero, zero, zero, 1u, 6.0);
+  step_overflow(max, big, zero, zero, zero, 1u, 6.0);
   /* k1 + k4 cancels, and DBL_MAX + 1 rounds back to DBL_MAX */
   step_ok(zero, max, zero, zero, nmax, 1u, 1.0, zero);
   step_ok(max, one, zero, zero, zero, 1u, 6.0, max);
+}
+
+/* An overflow is reported only when h and every component of y and the four
+   slopes are finite: a non-finite entry of any of them after the overflowing
+   component makes it an argument error. */
+static void test_step_overflow_classify(void) {
+  double v[5][3] = {{DBL_MAX, 1.0, 1.0},
+                    {DBL_MAX, 1.0, 1.0},
+                    {DBL_MAX, 1.0, 1.0},
+                    {DBL_MAX, 1.0, 1.0},
+                    {DBL_MAX, 1.0, 1.0}};
+  size_t a;
+
+  step_overflow(v[0], v[1], v[2], v[3], v[4], 3u, 1.0);
+  for (a = 0; a < 5u; ++a) {
+    v[a][2] = (double)NAN;
+    step_arg(v[0], v[1], v[2], v[3], v[4], 3u, 1.0);
+    v[a][2] = -HUGE_VAL;
+    step_arg(v[0], v[1], v[2], v[3], v[4], 3u, 1.0);
+    v[a][2] = 1.0;
+  }
 }
 
 static void test_step_nonfinite(void) {
@@ -440,8 +486,8 @@ static void test_step_failure_keeps_output(void) {
   const double g[3] = {DBL_MAX, 2.0, 3.0};
   const double e[3] = {DBL_MAX, 1.0, 1.0};
 
-  step_arg(y, k, k, k, k, 3u, 1.0);
-  step_arg(g, e, e, e, e, 3u, 1.0);
+  step_overflow(y, k, k, k, k, 3u, 1.0);
+  step_overflow(g, e, e, e, e, 3u, 1.0);
 }
 
 /* Inputs the checked stage rejects: the unchecked stage writes the IEEE
@@ -663,7 +709,7 @@ static void test_wrapper_failure(void) {
   /* y' = -y with h = -2 from DBL_MAX/2: Y2 = 2y = DBL_MAX, and
      Y3 = y + DBL_MAX overflows */
   CHECK_EQ_STATUS(diana_rk4(decay, (void *)0, 0.0, -2.0, 3u, big, 1u, w, &done),
-                  DIANA_ERR_ARG);
+                  DIANA_ERR_OVERFLOW);
   CHECK(done == 0u && big[0] == DBL_MAX / 2.0);
 }
 
@@ -674,6 +720,7 @@ int main(void) {
   test_stage_coefficient();
   test_stage_zero_step();
   test_stage_overflow();
+  test_stage_overflow_classify();
   test_stage_nonfinite();
   test_stage_failure_keeps_output();
   test_step_argument();
@@ -683,6 +730,7 @@ int main(void) {
   test_step_zero_step();
   test_step_underflow();
   test_step_overflow();
+  test_step_overflow_classify();
   test_step_nonfinite();
   test_step_failure_keeps_output();
   test_stage_unchecked_nonfinite();

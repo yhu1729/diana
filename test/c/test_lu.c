@@ -258,16 +258,16 @@ static void test_singular(void) {
   check_fail(last, 3u, DIANA_ERR_SINGULAR);
 }
 
-/* An update that overflows is an argument error found after lu is written:
-   DBL_MAX - 1 * (-DBL_MAX) is +inf. */
+/* An update that overflows from a finite a is DIANA_ERR_OVERFLOW, found after
+   lu is written: DBL_MAX - 1 * (-DBL_MAX) is +inf. */
 static void test_overflow(void) {
   static const double a2[4] = {1.0, 1.0, -DBL_MAX, DBL_MAX};
   /* step 0: three updates are finite and written, the fourth overflows */
   static const double a3[9] = {1.0,     0.5,      -1.0, 1.0,     1.0,
                                DBL_MAX, -DBL_MAX, 0.0,  -DBL_MAX};
 
-  check_fail(a2, 2u, DIANA_ERR_ARG);
-  check_fail(a3, 3u, DIANA_ERR_ARG);
+  check_fail(a2, 2u, DIANA_ERR_OVERFLOW);
+  check_fail(a3, 3u, DIANA_ERR_OVERFLOW);
 }
 
 /* A NaN or an infinity anywhere in a is an argument error found before lu or
