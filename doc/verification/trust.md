@@ -64,8 +64,8 @@ proof that it ran.
 ## Verified code versus shipped library
 
 VST reasons about CompCert's semantics, so its result carries directly to a library compiled with
-CompCert's `ccomp`. The shipped library is built with gcc or clang instead, with strict IEEE
-settings: no fused multiply-add contraction, no fast-math, and no evaluation of `double` in a wider
+CompCert's `ccomp`. The shipped library is built with gcc or clang instead (configuration refuses
+any other compiler), with strict IEEE settings: no fused multiply-add contraction, no fast-math, and no evaluation of `double` in a wider
 format (a compile-time check). With those settings, and the
 [runtime floating-point environment](../api/overview.md#floating-point-environment), both
 compilers perform the same sequence of IEEE binary64 operations. That equivalence is an argument,
@@ -99,6 +99,7 @@ corpus, so far run only on AArch64 macOS.
 [VST-005](../../note/vst/VST-005.md) per-function proofs,
 [VST-007](../../note/vst/VST-007.md) argument-error paths,
 [FP-005](../../note/fp/FP-005.md) verified versus shipped binary,
+[BUILD-013](../../note/build/BUILD-013.md) the compiler refusal,
 [FP-006](../../note/fp/FP-006.md) the square-root builtin,
 [GATE-005](../../note/gate/GATE-005.md) allowed axioms,
 [GATE-008](../../note/gate/GATE-008.md) what the gate does not check,

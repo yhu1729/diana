@@ -19,11 +19,16 @@ cmake --install build --prefix <prefix>
 | `DIANA_BUILD_SHARED_LIB` | OFF | build a shared instead of a static library (the generic `BUILD_SHARED_LIBS` is ignored) |
 | `DIANA_WERROR` | OFF | treat warnings as errors; CI and `script/dev.sh` turn it on |
 | `DIANA_SANITIZER` | OFF | build with AddressSanitizer and UndefinedBehaviorSanitizer |
+| `DIANA_ALLOW_UNKNOWN_COMPILER` | OFF | configure with a C compiler other than gcc or clang instead of failing; that build gets none of the strict settings below, so the verified semantics are not established for it |
 
 Every target is compiled with a strict warning set and the settings that keep the arithmetic
-strict IEEE binary64: no fused multiply-add contraction and no fast-math. Configuration fails if
-`CMAKE_C_FLAGS` asks for `-Ofast`, `-ffast-math` or `-funsafe-math-optimizations`, and the build
-fails on a compiler that would evaluate `double` in a wider format. These settings do not set the
+strict IEEE binary64: no fused multiply-add contraction and no fast-math. Only gcc and clang get
+these settings, so configuration stops on any other C compiler; Intel's `icx` and NVIDIA's `nvc`,
+for example, contract to fused multiply-add by default. Configuration also fails if
+`CMAKE_C_FLAGS`, or the variant for a build type, asks for fast-math or one of its parts
+(`-ffinite-math-only`, `-fassociative-math`, …), for contraction (`-ffp-contract=fast` or `on`)
+or for a fast floating-point model (`-ffp-model=fast`, `-fp-model fast`), and the build fails on
+a compiler that would evaluate `double` in a wider format. These settings do not set the
 runtime [floating-point environment](../api/overview.md#floating-point-environment), which stays
 the caller's responsibility.
 
@@ -52,4 +57,6 @@ installs both kinds of wheel and imports them from a clean environment.
 [BUILD-006](../../note/build/BUILD-006.md) version check,
 [BUILD-008](../../note/build/BUILD-008.md) sanitizer,
 [BUILD-011](../../note/build/BUILD-011.md) source distribution,
-[FP-004](../../note/fp/FP-004.md) strict IEEE flags.
+[BUILD-013](../../note/build/BUILD-013.md) compiler refusal,
+[FP-004](../../note/fp/FP-004.md) strict IEEE flags,
+[FP-007](../../note/fp/FP-007.md) rejected flags.

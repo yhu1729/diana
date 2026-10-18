@@ -4,7 +4,7 @@ Three suites cover the code, and every one runs in CI.
 
 | Suite | Location | Runs with |
 |---|---|---|
-| C | `test/c/`: one program per kernel, plus the status functions and the compiler-comparison driver | `ctest --test-dir build` (configure with `-DDIANA_BUILD_TEST=ON`) |
+| C | `test/c/`: one program per kernel, plus the status functions, the compiler-comparison driver, and a script that reconfigures the project to check that it refuses other compilers and fast-math flags | `ctest --test-dir build` (configure with `-DDIANA_BUILD_TEST=ON`) |
 | Python | `test/python/`: the package, including Hypothesis property tests, plus the spec gate and the doc check scripts | `uv run pytest` |
 | Documentation | `test/doc/`: every example in `doc/api/` | `uv run pytest` |
 
@@ -45,5 +45,6 @@ example and its output together.
 [TEST-002](../../note/test/TEST-002.md) installed-consumer tests,
 [TEST-003](../../note/test/TEST-003.md) documentation example check,
 [TEST-004](../../note/test/TEST-004.md) wheel check,
-[TEST-006](../../note/test/TEST-006.md) coverage. Expected values per method are under
+[TEST-006](../../note/test/TEST-006.md) coverage,
+[TEST-043](../../note/test/TEST-043.md) configuration test. Expected values per method are under
 [By topic: test](../../note/README.md#test) in the note index.
