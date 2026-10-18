@@ -26,5 +26,5 @@ are the same bits whatever compiler or optimization level builds the driver.
   `x0`, `tol` 0 or random, `max_iter` 100 or 1 to 60 with probability 1/8.
 - A random run prints its first line, then only `  end <steps> <digest>`: a 64-bit FNV-1a digest
   (offset `0xcbf29ce484222325`, prime `0x100000001b3`) over the bytes, least significant first,
-  of the returned status and every state field but `status` after each step, then the final
+  of the returned status and every state field, `status` last, after each step, then the final
   state and `result`.
