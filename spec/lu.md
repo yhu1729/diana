@@ -13,7 +13,7 @@ model: >
   quotient rounded to nearest-even (no fused multiply-add), the magnitude v < 0 ? −v : v and the
   comparison |v| > m of the C; the C stores A, L and U column-major, a[i + j·n] = A[i, j].
 hypothesis:
-  - "H1: A is a real n×n matrix given by its entries A i j; every entry is read. A2, A4 to A6 take the pivots of the exact factorization: A2 and A6 that the magnitude tested at every step k < n is nonzero, A5 that it is nonzero before step k and zero at step k"
+  - "H1: A is a real n×n matrix given by its entries A i j; every entry is read. A2 and A6 take the magnitude tested at every step k < n nonzero, A5 that magnitude nonzero before step k and zero at step k; A1 takes the unpivoted pivots nonzero; A3 and A4 take nothing"
   - "H2 (float layers): the entries are arbitrary binary64 values; the B theorems take the conditions of the C's DIANA_OK (fok): every entry of a finite, and at each step k < n a pivot magnitude that is not 0.0 and updates B[i, j], i, j > k, that are all finite; B3 and B4 take (number of terms)·u < 1, u = 2⁻⁵³"
 theorem:
   - id: LU-A1
