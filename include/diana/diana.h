@@ -9,6 +9,7 @@
 #include "diana/bisection.h"
 #include "diana/cholesky.h"
 #include "diana/euler.h"
+#include "diana/lu.h"
 #include "diana/newton.h"
 #include "diana/ode.h"
 #include "diana/rk4.h"
