@@ -156,7 +156,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 |---|---|---|
 | [CI-001](ci/CI-001.md) | fact | Pipeline sources, six stages and the needs DAG |
 | [CI-002](ci/CI-002.md) | rule | Path filters; extend the matching .change_* list when a job reads a new file |
-| [CI-003](ci/CI-003.md) | fact | CI runs only Linux x86-64 containers; macOS branches are checked only locally |
+| [CI-003](ci/CI-003.md) | fact | GitLab CI runs only Linux x86-64 containers; GitHub adds the macOS jobs |
 | [CI-004](ci/CI-004.md) | fact | style_c checks the C sources with the pinned clang-format |
 | [CI-005](ci/CI-005.md) | fact | style_git commit range from the GitLab variables |
 | [CI-006](ci/CI-006.md) | fact | style_name rejects six fixed plural directory names, two levels deep |
@@ -170,6 +170,15 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [CI-014](ci/CI-014.md) | fact | release runs on a version tag once every test and verify job passes |
 | [CI-015](ci/CI-015.md) | procedure | Build the Lean CI image from ci/docker/lean.Dockerfile |
 | [CI-016](ci/CI-016.md) | fact | verify_provenance checks the AST manifest, the report stamp and its status |
+| [CI-017](ci/CI-017.md) | fact | GitHub Actions mirror the GitLab jobs, one workflow per path list |
+| [CI-018](ci/CI-018.md) | rule | Keep each GitHub workflow's paths equal to its GitLab .change_* list |
+| [CI-019](ci/CI-019.md) | fact | GitHub style_git passes the push range to check_commit.sh as GitLab variables |
+| [CI-020](ci/CI-020.md) | fact | GitHub Linux jobs run GitLab's images, pinned by digest, and its commands |
+| [CI-021](ci/CI-021.md) | fact | GitHub runs the Frama-C and Rocq images with docker run, as their own users |
+| [CI-022](ci/CI-022.md) | fact | GitHub verify_lean installs elan on stock Debian and caches with actions/cache |
+| [CI-023](ci/CI-023.md) | fact | GitHub macOS jobs run the C and Python tests on AArch64 macOS |
+| [CI-024](ci/CI-024.md) | fact | GitHub test_python runs on Python 3.12, 3.13 and 3.14 |
+| [CI-025](ci/CI-025.md) | procedure | Update the pinned actions and image digests of the GitHub workflows |
 
 ### compiler
 
@@ -393,11 +402,22 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `.editorconfig` | STYLE-006 |
 | `.git-hooks/commit-msg` | GIT-001, GIT-006 |
 | `.git-hooks/pre-push` | GIT-006 |
+| `.github/workflows/*.yml` | CI-017, CI-018, CI-025 |
+| `.github/workflows/c.yml` | CI-020, CI-023 |
+| `.github/workflows/python.yml` | CI-020, CI-023, CI-024 |
+| `.github/workflows/style_c.yml` | CI-020 |
+| `.github/workflows/style_git.yml` | CI-019 |
+| `.github/workflows/style_name.yml` | CI-020 |
+| `.github/workflows/style_python.yml` | CI-020 |
+| `.github/workflows/verify_frama_c.yml` | CI-021 |
+| `.github/workflows/verify_lean.yml` | CI-022 |
+| `.github/workflows/verify_rocq.yml` | CI-021 |
 | `.gitignore` | BUILD-011, VERIFY-005, WP-009 |
-| `.gitlab-ci.yml` | BENCHMARK-005, BUILD-007, CI-001, CI-002, CI-003, CI-004, CI-005, CI-006, CI-007, CI-008, CI-009, CI-010, CI-011, CI-012, CI-013, CI-014, CI-016, COMPILER-004, GATE-007, PROVER-001, PROVER-005, PROVER-006, TEST-004, TEST-006, VERIFY-001 |
+| `.gitlab-ci.yml` | BENCHMARK-005, BUILD-007, CI-001, CI-002, CI-003, CI-004, CI-005, CI-006, CI-007, CI-008, CI-009, CI-010, CI-011, CI-012, CI-013, CI-014, CI-016, CI-018, COMPILER-004, GATE-007, PROVER-001, PROVER-005, PROVER-006, TEST-004, TEST-006, VERIFY-001 |
+| `.python-version` | CI-024 |
 | `CHANGELOG.md` | BENCHMARK-004, CI-014, STYLE-004 |
 | `CLAUDE.md` | PROVER-001, STYLE-004 |
-| `CMakeLists.txt` | API-005, BUILD-002, BUILD-003, BUILD-004, BUILD-005, BUILD-006, BUILD-007, BUILD-008, BUILD-009, BUILD-010, BUILD-012, CI-003, CI-008, FP-004, KERNEL-006, PYTHON-007, STYLE-008, STYLE-010, TEST-002 |
+| `CMakeLists.txt` | API-005, BUILD-002, BUILD-003, BUILD-004, BUILD-005, BUILD-006, BUILD-007, BUILD-008, BUILD-009, BUILD-010, BUILD-012, CI-003, CI-008, CI-023, FP-004, KERNEL-006, PYTHON-007, STYLE-008, STYLE-010, TEST-002 |
 | `CONTRIBUTING.md` | GIT-008, PROVER-002, PROVER-003, PROVER-005, VERIFY-001 |
 | `ci/docker/lean.Dockerfile` | CI-015 |
 | `cmake/check_symbol.cmake` | BUILD-012 |
@@ -426,7 +446,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `include/diana/substitution.h` | API-030 |
 | `include/diana/trapezoidal.h` | API-013 |
 | `note/README.md` | STYLE-003 |
-| `pyproject.toml` | BUILD-002, BUILD-004, BUILD-006, BUILD-011, CI-012, PROVER-006, PYTHON-005, PYTHON-006, STYLE-005, STYLE-009, TEST-001 |
+| `pyproject.toml` | BUILD-002, BUILD-004, BUILD-006, BUILD-011, CI-012, CI-024, PROVER-006, PYTHON-005, PYTHON-006, STYLE-005, STYLE-009, TEST-001 |
 | `python/ext/*.c` | PYTHON-001, PYTHON-006, STYLE-002 |
 | `python/ext/*.h` | PYTHON-001 |
 | `python/ext/.clang-tidy` | STYLE-007 |
@@ -481,12 +501,12 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `python/src/diana/py.typed` | PYTHON-002 |
 | `script/axiom_allow.yaml` | CI-012, GATE-005, GATE-009 |
 | `script/benchmark.sh` | BENCHMARK-001, BENCHMARK-002, BENCHMARK-003, BENCHMARK-004, BENCHMARK-005, COMPILER-003 |
-| `script/check_commit.sh` | CI-005, GIT-001, GIT-002, GIT-003, GIT-004, GIT-007 |
+| `script/check_commit.sh` | CI-005, CI-019, GIT-001, GIT-002, GIT-003, GIT-004, GIT-007 |
 | `script/check_doc.py` | CI-007, STYLE-003 |
 | `script/check_frama_c.sh` | WP-007, WP-010 |
 | `script/check_provenance.py` | CI-016, GATE-009, TEST-042, VST-009 |
 | `script/check_spec.py` | CI-007, CI-012, GATE-001, GATE-002, GATE-003, GATE-004, GATE-006, GATE-007, GATE-008, GATE-009, TEST-005, VERIFY-005 |
-| `script/check_wheel.py` | BUILD-004, BUILD-007, BUILD-010, CI-003, CI-009, TEST-004 |
+| `script/check_wheel.py` | BUILD-004, BUILD-007, BUILD-010, CI-003, CI-009, CI-023, TEST-004 |
 | `script/compare_compiler.sh` | COMPILER-001, COMPILER-002, COMPILER-003, COMPILER-004, COMPILER-008, COMPILER-011, FP-004, FP-005 |
 | `script/dev.sh` | BENCHMARK-005, BUILD-002, BUILD-003, BUILD-007, BUILD-010, COMPILER-002, COMPILER-004, GATE-007, PROVER-003, PROVER-008, PYTHON-005, STYLE-008, TEST-001, VERIFY-001, VERIFY-002, VERIFY-003, VERIFY-004, VST-001, VST-002, VST-003, VST-009 |
 | `script/job_count.sh` | CI-011, VERIFY-003, WP-008 |
@@ -585,9 +605,9 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `verification/lean/Diana/Real/LU.lean` | PROOF-011 |
 | `verification/lean/Diana/Real/LUSolve.lean` | PROOF-012 |
 | `verification/lean/Diana/Real/Substitution.lean` | PROOF-010 |
-| `verification/lean/lake-manifest.json` | CI-015, PROVER-001, PROVER-009 |
+| `verification/lean/lake-manifest.json` | CI-015, CI-022, PROVER-001, PROVER-009 |
 | `verification/lean/lakefile.toml` | CI-015, PROVER-001, PROVER-009 |
-| `verification/lean/lean-toolchain` | CI-012, CI-015, PROVER-001, PROVER-009 |
+| `verification/lean/lean-toolchain` | CI-012, CI-015, CI-022, PROVER-001, PROVER-009 |
 | `verification/rocq/Makefile` | CI-013, GATE-003, KERNEL-006, PROVER-007, PROVER-008, VERIFY-005 |
 | `verification/rocq/_CoqProject` | GATE-003, KERNEL-006, PROVER-007, VST-001, VST-002, VST-004 |
 | `verification/rocq/theory/Float/Cholesky.v` | PROOF-009 |

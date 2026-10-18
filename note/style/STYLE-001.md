@@ -18,4 +18,4 @@ an identifier: the Python package, the CMake target and `diana::` namespace, the
 
 Enforcement is partial. `style_name` rejects only six common plural directory names at depth two
 or less (CI-006), and nothing checks identifiers or file names; the tracked `.git-hooks/` is a
-plural directory no check catches.
+plural directory no check catches, and `.github/workflows/` one whose name GitHub fixes.
