@@ -51,10 +51,15 @@ component is finite exactly when the checked kernel would have accepted it.
 | B, C-VST, Clight AST | – | `script/dev.sh verify` |
 | C-WP | `verify_frama_c` | `script/verify_frama_c.sh` |
 | `ccomp` against gcc/clang | – | `script/compare_compiler.sh` |
+| Committed ASTs and report current | `verify_provenance`: hashes only | `script/dev.sh verify` writes them |
 
 No CI image carries Flocq, CompCert or VST, so a green pipeline does not establish layers B and
 C-VST, and the CI Frama-C run relies on the midpoint and square-root contracts that only the
-local Flocq build discharges. The [report](report.md) shows the last local run that was committed.
+local Flocq build discharges. The [report](report.md) shows the last local run that was committed,
+stamped with a hash of the sources it ran on; `verify_provenance` checks that the stamp and the
+hashes recorded for the Clight ASTs match the commit and that the report is green. That makes a
+forgotten local run visible, but the hashes are written on the developer's machine and are not a
+proof that it ran.
 
 ## Verified code versus shipped library
 
@@ -96,4 +101,5 @@ corpus, so far run only on AArch64 macOS.
 [FP-005](../../note/fp/FP-005.md) verified versus shipped binary,
 [FP-006](../../note/fp/FP-006.md) the square-root builtin,
 [GATE-005](../../note/gate/GATE-005.md) allowed axioms,
-[GATE-008](../../note/gate/GATE-008.md) what the gate does not check.
+[GATE-008](../../note/gate/GATE-008.md) what the gate does not check,
+[CI-016](../../note/ci/CI-016.md) the provenance check.

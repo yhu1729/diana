@@ -22,7 +22,10 @@ is not proved and when an ACSL theorem has no Frama-C goal count in
 what its informal text says.
 
 The report is rewritten only by a run of both provers, which needs the local opam switch, so it is
-regenerated locally and committed; CI never rewrites it.
+regenerated locally and committed; CI never rewrites it. Each rewrite stamps it with a hash of
+`include/`, `spec/`, `src/` and `verification/`, of the allowed axioms and of the Frama-C script
+with its `SKIP` list, and with the tool versions; CI's `verify_provenance` fails when the
+committed stamp no longer matches them.
 
 ## Technical notes
 
@@ -30,4 +33,5 @@ regenerated locally and committed; CI never rewrites it.
 [GATE-002](../../note/gate/GATE-002.md) theorem IDs,
 [GATE-004](../../note/gate/GATE-004.md) axiom parsing,
 [GATE-006](../../note/gate/GATE-006.md) report regeneration,
+[GATE-009](../../note/gate/GATE-009.md) the report stamp,
 [GATE-007](../../note/gate/GATE-007.md) strict mode.
