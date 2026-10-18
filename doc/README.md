@@ -16,7 +16,7 @@ listed in `spec/<method>.md`.
 - [Explicit Euler step](api/euler.md) and [classical Runge–Kutta step](api/rk4.md): ordinary
   differential equations
 - [Cholesky factorization](api/cholesky.md),
-  [forward and back substitution](api/substitution.md),
+  [forward and transpose substitution](api/substitution.md),
   [LU factorization with partial pivoting](api/lu.md) and [LU solve](api/lu_solve.md): linear
   algebra
 

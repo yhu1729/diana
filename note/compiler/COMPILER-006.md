@@ -9,7 +9,7 @@ related: [COMPILER-005, COMPILER-007, TEST-008, TEST-022]
 Besides seeded random inputs (COMPILER-007), the corpus runs every public kernel function on the
 cases below. Current case lines: `bisection_*` 161, `trapezoidal` 283, `simpson` 284, `euler`
 and `euler_unchecked` 248 each, `rk4_stage*` 274 each, `rk4_step*` 270 each, `newton_*` 152,
-`cholesky` 248, `forward_substitution` and `back_substitution` 270 each, `lu` 260,
+`cholesky` 248, `forward_substitution` and `transpose_substitution` 270 each, `lu` 260,
 `lu_solve` 292.
 
 - Bisection `init`: NULL state; NaN and an infinity in each argument, a signalling NaN `fa`;
@@ -44,7 +44,7 @@ and `euler_unchecked` 248 each, `rk4_stage*` 274 each, `rk4_step*` 270 each, `ne
   non-positive pivot (zero, `-0`, negative, indefinite, semidefinite, last, overflow to `-inf`,
   NaN), and NaN, sNaN and `±inf` at each lower-triangle position of a 3×3 matrix; the random
   matrices (`n` from 1 to 8) alternate raw entries with diagonally dominant ones, which succeed.
-- Forward and back substitution, both on the same inputs: every argument error (each NULL,
+- Forward and transpose substitution, both on the same inputs: every argument error (each NULL,
   `n = 0`, `n = 2^32`, `SIZE_MAX`), exact solutions for both kinds of right-hand side, NaN and
   infinities above the diagonal, signed-zero results, the FMA, subtraction-order and division
   pins of each kernel, an underflow tie and a subnormal result, `DBL_MAX` entries, each overflow

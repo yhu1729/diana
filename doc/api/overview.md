@@ -5,7 +5,7 @@ kernels. This page covers what every method shares. Each method has its own page
 [bisection](bisection.md), [Newton's method](newton.md),
 [composite trapezoidal rule](trapezoidal.md), [composite Simpson rule](simpson.md),
 [explicit Euler step](euler.md), [classical Runge–Kutta step](rk4.md),
-[Cholesky factorization](cholesky.md), [forward and back substitution](substitution.md),
+[Cholesky factorization](cholesky.md), [forward and transpose substitution](substitution.md),
 [LU factorization](lu.md) and [LU solve](lu_solve.md).
 
 ## Floating-point environment
@@ -92,10 +92,10 @@ the linked library (the header defines `DIANA_VERSION_STRING` and its parts).
 A call that fails with `DIANA_ERR_ARG`, `DIANA_ERR_BRACKET`, `DIANA_ERR_SINGULAR` or
 `DIANA_ERR_OVERFLOW` changes no output and no state, with four exceptions, where each output entry
 needs the ones before it: the Cholesky factorization has already written part of its output when it
-finds a pivot that is not positive, forward and back substitution and the LU solve when an entry of
-the solution overflows, and the LU factorization when it finds a zero pivot column or an overflowing
-update. `DIANA_ERR_ARG` never writes anything. After `DIANA_ERR_MAXITER` and `DIANA_ERR_CALLBACK`
-the state holds the progress made so far. Check every status:
+finds a pivot that is not positive, forward and transpose substitution and the LU solve when an
+entry of the solution overflows, and the LU factorization when it finds a zero pivot column or an
+overflowing update. `DIANA_ERR_ARG` never writes anything. After `DIANA_ERR_MAXITER` and
+`DIANA_ERR_CALLBACK` the state holds the progress made so far. Check every status:
 
 ```c
 const double y[] = {1.0}; /* one sample: no panel */

@@ -1,6 +1,6 @@
 ---
 method: substitution
-kernel: [src/forward_substitution.c, src/back_substitution.c]
+kernel: [src/forward_substitution.c, src/transpose_substitution.c]
 model: >
   fwd L b : ℝ^n, the solution of L·x = b for a lower-triangular L, row by row:
   xᵢ = (bᵢ − Σ_{k<i} L[i, k]·x_k) / L[i, i] for i = 0, …, n − 1, reading only L[i, k] with k ≤ i.
@@ -104,9 +104,9 @@ theorem:
   - id: SUBSTITUTION-C2
     layer: C
     informal: >
-      ACSL contract in src/back_substitution.c with the same clauses as C1, the solve loop
+      ACSL contract in src/transpose_substitution.c with the same clauses as C1, the solve loop
       running i = n − 1 down to 0 and k = n − 1 down to i + 1.
-    acsl: src/back_substitution.c
+    acsl: src/transpose_substitution.c
   - id: SUBSTITUTION-C3
     layer: C
     informal: >
@@ -123,11 +123,11 @@ theorem:
   - id: SUBSTITUTION-C4
     layer: C
     informal: >
-      diana_back_substitution computes the binary64 model (VST, AArch64 macOS Clight AST), with
+      diana_transpose_substitution computes the binary64 model (VST, AArch64 macOS Clight AST), with
       the statuses of C3; on the overflow exit x̂ᵢ₊₁, …, x̂ₙ₋₁ are written, x̂ᵢ the first entry
       from the bottom that is not finite, and x[0 .. i] is unchanged. The NULL, n = 0 and
       overflowing-n paths are C2.
-    rocq: Diana.VST.BackSubstitution.body_diana_back_substitution
+    rocq: Diana.VST.TransposeSubstitution.body_diana_transpose_substitution
   - id: SUBSTITUTION-C5
     layer: C
     informal: >
@@ -137,14 +137,14 @@ theorem:
   - id: SUBSTITUTION-C6
     layer: C
     informal: >
-      the copy of diana_fp_finite in the Clight AST of back_substitution implements its IEEE
+      the copy of diana_fp_finite in the Clight AST of transpose_substitution implements its IEEE
       semantics (VST, AArch64 macOS Clight AST).
-    rocq: Diana.VST.BackSubstitution.body_diana_fp_finite
+    rocq: Diana.VST.TransposeSubstitution.body_diana_fp_finite
 ---
 # substitution
 
 Forward and back substitution with a lower-triangular `n×n` matrix `L`: the kernel
-`diana_forward_substitution(l, n, b, x)` solves `L·x = b`, and `diana_back_substitution(l, n, b,
+`diana_forward_substitution(l, n, b, x)` solves `L·x = b`, and `diana_transpose_substitution(l, n, b,
 x)` solves `Lᵀ·x = b`. Both read `L` from one buffer of `n·n` doubles stored column-major
 (`l[i + k·n] = L[i, k]`), use only the entries on or below the diagonal, so the output of
 `diana_cholesky` goes in as it is, and write `x` to a separate buffer of `n` doubles. Solving
@@ -214,8 +214,8 @@ row, after the rows before it have been written.
 - **C4**: the same validation, then `forward_while` over the decreasing `i`, keeping `x` as
   `lsuf Y ox n i` (caller's prefix, written suffix) with `lsuf_step` and `lsuf_get`, and an inner
   `forward_for` over the decreasing `k` whose sum after `t` steps is `c_bdot … t`, `t = n − 1 − k`
-  (`c_bdot_succ`, `c_bwd_eq`). Proof: `body_diana_back_substitution` in
-  `verification/rocq/theory/VST/BackSubstitution.v`.
+  (`c_bdot_succ`, `c_bwd_eq`). Proof: `body_diana_transpose_substitution` in
+  `verification/rocq/theory/VST/TransposeSubstitution.v`.
 
 ## Model correspondence
 
@@ -229,8 +229,8 @@ row, after the rows before it have been written.
   and `Diana.Float.Sum`'s `fmul` and `fdiv`, in `mode_NE` and parameterised by the NaN-payload
   functions; `rmat` and `rvec` read the binary64 data as reals for B2 and B4.
 - **Layer C, VST** (`verification/rocq/theory/VST/ForwardSubstitution.v` and
-  `BackSubstitution.v` against `verification/clight/forward_substitution_aarch64_macos.v` and
-  `back_substitution_aarch64_macos.v`, CompCert target AArch64 macOS; models in the AST-free
+  `TransposeSubstitution.v` against `verification/clight/forward_substitution_aarch64_macos.v` and
+  `transpose_substitution_aarch64_macos.v`, CompCert target AArch64 macOS; models in the AST-free
   `verification/rocq/theory/VST/Substitution.v`): `c_fwd` and `c_bwd` are `ffwd` and `fbwd`
   instantiated with CompCert's `Float.binop_nan`, so `fsub`, `fmul` and `fdiv` are `Float.sub`,
   `Float.mul` and `Float.div` by conversion, at `L i k = Znth (i + k·n) ll` and `b i = Znth i bl`.

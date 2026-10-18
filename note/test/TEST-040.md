@@ -22,7 +22,7 @@ item.
   overflows"), and `test_nonfinite_lu` and `test_nonfinite_rhs` exactly `ValueError`
   ("non-finite").
 - For `n = 1` to 24 the solve equals `forward_substitution` with the unit lower factor on `P·b`
-  followed by `back_substitution` with the transposed upper factor, bit for bit.
+  followed by `transpose_substitution` with the transposed upper factor, bit for bit.
 - LU-SOLVE-B1 to B4 (PROOF-012) hold in exact `Fraction` arithmetic for `n = 1, 2, 5, 10, 20`,
   matrices and right-hand sides scaled by 1, `2⁻¹⁰⁰⁰` and `2¹⁰⁰⁰`, with `y` from the reference
   and `x` from the kernel.

@@ -21,8 +21,8 @@ private header `src/<method>_acsl.h` that the method's sources include.
   and `src/newton_step.c`.
 - `src/substitution_acsl.h`: the lemma `column_end` (WP-011) and `substitution_valid(l, n, b, x)`
   (`l[0 .. n*n-1]` and `b[0 .. n-1]` readable, `x[0 .. n-1]` writable and separate from both).
-  Included by `src/forward_substitution.c` and `src/back_substitution.c`. ACSL rejects `const` in
-  a predicate's parameter types, so the parameters are `double *`.
+  Included by `src/forward_substitution.c` and `src/transpose_substitution.c`. ACSL rejects `const`
+  in a predicate's parameter types, so the parameters are `double *`.
 
 The headers hold only `/*@ ... */` annotations and an include of the method's public header, so
 they change no Clight AST. A method of one source file keeps its annotations there:

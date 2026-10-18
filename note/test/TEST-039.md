@@ -23,7 +23,7 @@ related: [API-034, TEST-006, TEST-035, TEST-037, TEST-040]
   (forward subtracts `L[2,0]·y₀` first, back `U[0,2]·x₂`).
 - Agreement: for `n = 1` to 20, random factors (diagonal plus 4) and random `piv[k] < n`, the
   solve equals `diana_forward_substitution` with the unit lower factor on `P·b` followed by
-  `diana_back_substitution` with the transposed upper factor, bit for bit.
+  `diana_transpose_substitution` with the transposed upper factor, bit for bit.
 - `DIANA_ERR_SINGULAR` with `x` untouched: `+0` and `-0` at the first, middle and last diagonal
   position; a NaN in `b` or in `lu`, or `piv[1] = 3`, with a zero diagonal is `DIANA_ERR_ARG`.
 - `DIANA_ERR_ARG` with `x` untouched: each NULL, `n = 0`, `n = 2³²` and `SIZE_MAX`; NaN, `inf`,

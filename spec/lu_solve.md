@@ -131,7 +131,7 @@ The binary64 model, and every layer that follows it, is the order of the C:
    `x[i] = r`.
 
 The forward and back solves are `diana_forward_substitution` with the unit lower factor and
-`diana_back_substitution` with the transposed upper factor bit for bit, as the division by one
+`diana_transpose_substitution` with the transposed upper factor bit for bit, as the division by one
 the former performs is exact on a finite value. A finite `s` or `r` certifies its row, as in the
 substitution kernels, so every entry is finite on `DIANA_OK`.
 

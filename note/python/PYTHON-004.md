@@ -17,7 +17,7 @@ related: [PYTHON-002, KERNEL-002, API-004, API-020]
 ---
 `diana._diana.euler_step(y, f, h, out)`, `rk4_stage(y, k, h, stage, out)`,
 `rk4_step(y, k1, k2, k3, k4, h, out)`, `cholesky(a, out)`, `forward_substitution(lower, b, out)`,
-`back_substitution(lower, b, out)` and `lu_solve(lu, piv, b, out)` write the result into `out`
+`transpose_substitution(lower, b, out)` and `lu_solve(lu, piv, b, out)` write the result into `out`
 and return `None`, and
 `lu(a, out)` writes the factor into `out` and returns the pivot rows as a list, which `diana.lu`
 copies into an `array.array("q")` (API-033); the public

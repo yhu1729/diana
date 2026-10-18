@@ -10,7 +10,7 @@ path:
   - src/simpson.c
   - src/cholesky.c
   - src/forward_substitution.c
-  - src/back_substitution.c
+  - src/transpose_substitution.c
   - src/lu.c
   - src/lu_solve.c
 related: [KERNEL-003, API-003, API-036, FP-002]
@@ -30,11 +30,11 @@ below. The vector kernels do this in two passes without a scratch buffer.
   writing (so `DIANA_ERR_ARG` leaves `l` untouched), but column `j` needs columns `0` to `j - 1`,
   so it writes as it goes and a failing pivot (`DIANA_ERR_SINGULAR`) leaves `l` partly written
   (API-028). Keeping `l` untouched would take a second `n*n` buffer.
-- `diana_forward_substitution` and `diana_back_substitution` are the other exception: they check
-  their arguments, every input entry and the diagonal before writing (so `DIANA_ERR_ARG` and
-  `DIANA_ERR_SINGULAR` leave `x` untouched), but entry `i` needs the entries computed
-  before it, so an overflowing entry (`DIANA_ERR_OVERFLOW`) is found with `x` partly written
-  (API-030). Keeping `x` untouched would take a second `n`-vector.
+- `diana_forward_substitution` and `diana_transpose_substitution` are the other exception: they
+  check their arguments, every input entry and the diagonal before writing (so `DIANA_ERR_ARG` and
+  `DIANA_ERR_SINGULAR` leave `x` untouched), but entry `i` needs the entries computed before it, so
+  an overflowing entry (`DIANA_ERR_OVERFLOW`) is found with `x` partly written (API-030). Keeping
+  `x` untouched would take a second `n`-vector.
 - `diana_lu` checks its arguments and every entry of `a` before writing (so a non-finite entry
   leaves `lu` and `piv` untouched), but it factors in place in `lu` and each step needs the
   steps before it, so a zero pivot column (`DIANA_ERR_SINGULAR`) or an overflowing update

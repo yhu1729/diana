@@ -11,7 +11,7 @@ path:
   - src/trapezoidal.c
   - src/cholesky.c
   - src/forward_substitution.c
-  - src/back_substitution.c
+  - src/transpose_substitution.c
   - src/lu.c
   - src/lu_solve.c
   - src/fp_sqrt.c
@@ -20,9 +20,9 @@ related: [KERNEL-002, KERNEL-004, KERNEL-005, FP-001, STYLE-002]
 ---
 A verified kernel is a reverse-communication state machine on a caller-owned struct (`init` / `step`
 / `result`: bisection, Newton) or one function over caller-supplied arrays (trapezoidal, Simpson,
-Euler step, RK4 stage and step, Cholesky, forward and back substitution, LU, LU solve). It allocates
-nothing, calls no libm function, neither takes nor calls a function pointer, and every public
-function returns `diana_status`.
+Euler step, RK4 stage and step, Cholesky, forward and transpose substitution, LU, LU solve). It
+allocates nothing, calls no libm function, neither takes nor calls a function pointer, and every
+public function returns `diana_status`.
 
 - Reverse communication: the state names the next point (`s->x`); the caller evaluates the
   function there and passes the value(s) to `step`, which returns `DIANA_CONTINUE` while it needs

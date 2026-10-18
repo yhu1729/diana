@@ -9,7 +9,7 @@ All notable changes to this project are documented here. The format follows
 ## [1.0.0] - 2026-10-18
 
 The first stable release. The classical Runge–Kutta step joins the ODE methods, and linear algebra
-arrives: Cholesky factorization, forward and back substitution, LU factorization with partial
+arrives: Cholesky factorization, forward and transpose substitution, LU factorization with partial
 pivoting and the LU solve, each through every verification layer — Lean and Rocq over the reals,
 Flocq over binary64, Frama-C WP and VST on the C — with a Python binding. Opt-in unchecked Euler and
 RK4 kernels, one function per source file for every verified kernel, and the technical notes of
@@ -38,13 +38,13 @@ of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and Rem
   CHOLESKY-C1, `spec/cholesky.md`); `test/c/test_cholesky.c` covers it at 100% line and branch
   coverage, and the compiler corpus has 248 Cholesky cases, every gcc and clang build matching
   CompCert bitwise.
-- Forward and back substitution `diana_forward_substitution(l, n, b, x)` and
-  `diana_back_substitution(l, n, b, x)` in `diana/substitution.h`: `l` holds a lower-triangular
+- Forward and transpose substitution `diana_forward_substitution(l, n, b, x)` and
+  `diana_transpose_substitution(l, n, b, x)` in `diana/substitution.h`: `l` holds a lower-triangular
   `n×n` matrix `L` column-major, of which only the entries on or below the diagonal are read, so the
   output of `diana_cholesky` goes in as it is; the first solves `L x = b`, the second `L^T x = b`,
   and the two solve `A x = b` with the Cholesky factor of `A`. Row `i` subtracts the rounded
   products from `b[i]` in the order their unknowns were computed (`k = 0, ..., i - 1` forward, `k =
-  n - 1` down to `i + 1` back) and divides by `L[i,i]`, which makes back substitution forward
+  n - 1` down to `i + 1` back) and divides by `L[i,i]`, which makes transpose substitution forward
   substitution on the mirrored system bit for bit. A NULL pointer, `n == 0`, an overflowing `n n` or
   a NaN or infinite entry of `b` or of the lower triangle is `DIANA_ERR_ARG`, a zero diagonal entry
   `DIANA_ERR_SINGULAR`, both with `x` untouched; an entry of the solution that overflows is
@@ -74,7 +74,7 @@ of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and Rem
   interchanges `x[k]` and `x[piv[k]]` for `k = 0, ..., n - 1`, then solves with the unit
   lower-triangular `L` (no division) and the upper-triangular `U`, each row subtracting the rounded
   products in the order its unknowns were computed, so the two solves are
-  `diana_forward_substitution` with the unit lower factor and `diana_back_substitution` with the
+  `diana_forward_substitution` with the unit lower factor and `diana_transpose_substitution` with the
   transposed upper factor bit for bit. A NULL pointer, `n == 0`, an overflowing `n n`, a NaN or
   infinite entry of `lu` or `b`, or a pivot row `piv[k] >= n` is `DIANA_ERR_ARG` and a zero diagonal
   entry of `U` `DIANA_ERR_SINGULAR`, all with `x` untouched; an entry of either solve that overflows
@@ -145,10 +145,10 @@ of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and Rem
   `diana.SingularError`. `test/python/test_cholesky.py` checks bitwise agreement with the
   operations in Python floats, the CHOLESKY-B3 bound in exact rationals, and agreement with
   `numpy.linalg.cholesky`.
-- `diana.forward_substitution(lower, b)` and `diana.back_substitution(lower, b)` return the
+- `diana.forward_substitution(lower, b)` and `diana.transpose_substitution(lower, b)` return the
   solution as a new `array.array("d")`, with `lower` in the column-major layout of
   `diana.cholesky` and of length `len(b)**2` (module `diana._substitution`; extension functions
-  `diana._diana.forward_substitution(lower, b, out)` and `back_substitution`, sharing the argument
+  `diana._diana.forward_substitution(lower, b, out)` and `transpose_substitution`, sharing the argument
   checks of `python/ext/substitution.c`). The parameter is `lower` because ruff rejects the name
   `l`. A wrong length or a non-finite entry raises `ValueError`, an overflow
   `diana.FloatOverflowError`, a zero diagonal entry
@@ -202,7 +202,7 @@ of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and Rem
   AST's copy of `diana_fp_finite` (C4), on the committed ASTs `verification/clight/cholesky_aarch64_macos.v` and
   `fp_sqrt_aarch64_macos.v`. The VST proof of `diana_fp_sqrt` assumes CompCert's semantics of
   `__builtin_sqrt` as a funspec, a new item of `doc/verification/trust.md`.
-- Forward and back substitution through every layer (`spec/substitution.md`). Lean and Rocq prove
+- Forward and transpose substitution through every layer (`spec/substitution.md`). Lean and Rocq prove
   layer A: each solve satisfies its rows when the diagonal entry is nonzero (SUBSTITUTION-A1, A4),
   the solution is unique (A2, A5), residuals bounded by `rho` put an approximate solution within
   `M(L)^-1 rho` of it, `M(L)` the comparison matrix (A3, A6), and the two solves with the Cholesky
@@ -215,7 +215,7 @@ of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and Rem
   exactly when the model gives it, the model solution on `DIANA_OK`, and the written prefix or
   suffix on an overflow) and each AST's copy of `diana_fp_finite` (C5, C6), on the committed
   ASTs `verification/clight/forward_substitution_aarch64_macos.v` and
-  `back_substitution_aarch64_macos.v`. The prefix-buffer lemmas, `lower_finite`, `lt_of_ltu` and
+  `transpose_substitution_aarch64_macos.v`. The prefix-buffer lemmas, `lower_finite`, `lt_of_ltu` and
   `no_overflow` of the Cholesky VST proof moved to the AST-free `VST/Matrix.v`, which both methods
   import.
 - LU with partial pivoting through every layer (`spec/lu.md`). The model is one definition over a

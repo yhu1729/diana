@@ -1,7 +1,9 @@
-# Forward and back substitution
+# Forward and transpose substitution
 
 Forward substitution solves `L·x = b` for a lower-triangular `L`, one unknown at a time from the
-top; back substitution solves `Lᵀ·x = b` from the bottom. Together they turn the
+top; transpose substitution solves `Lᵀ·x = b` from the bottom, back substitution with the transpose
+of the same stored factor. The name leaves `back_substitution` free for a solve with an
+upper-triangular matrix stored as such. Together they turn the
 [Cholesky factorization](cholesky.md) `A = L·Lᵀ` into a solver for `A·x = b`: first `L·y = b`,
 then `Lᵀ·x = y`. Shared conventions are in the [API overview](overview.md).
 
@@ -10,7 +12,7 @@ then `Lᵀ·x = y`. Shared conventions are in the [API overview](overview.md).
 `#include <diana/substitution.h>`.
 
 - `diana_forward_substitution(l, n, b, x)` solves `L·x = b` and
-  `diana_back_substitution(l, n, b, x)` solves `Lᵀ·x = b`, with `L` stored column-major in `l`
+  `diana_transpose_substitution(l, n, b, x)` solves `Lᵀ·x = b`, with `L` stored column-major in `l`
   (`l[i + k·n] = L[i, k]`, `n·n` doubles), `b` and `x` of `n` doubles. Only the entries of `l` on
   or below the diagonal are read, so the output of `diana_cholesky` goes in as it is.
 - Both return `DIANA_OK`; `DIANA_ERR_ARG` without writing `x` for a `NULL` pointer, `n = 0`, an
@@ -46,7 +48,7 @@ int main(void) {
     st = diana_forward_substitution(l, N, b, y); /* L y = b */
   }
   if (st == DIANA_OK) {
-    st = diana_back_substitution(l, N, y, b); /* L^T x = y, x in b */
+    st = diana_transpose_substitution(l, N, y, b); /* L^T x = y, x in b */
   }
   if (st != DIANA_OK) {
     fprintf(stderr, "solve: %s\n", diana_status_str(st));
@@ -66,7 +68,7 @@ zero diagonal: zero derivative or pivot
 
 ## Python
 
-`diana.forward_substitution(lower, b)` and `diana.back_substitution(lower, b)` return `x` as a
+`diana.forward_substitution(lower, b)` and `diana.transpose_substitution(lower, b)` return `x` as a
 new `array.array("d")`. `lower` and `b` are [array arguments](overview.md#array-arguments), the
 length of `lower` the square of that of `b`; a wrong length or a NaN or infinite entry raises
 `ValueError`, an overflowing solution `diana.FloatOverflowError`, and a zero diagonal entry
@@ -79,13 +81,13 @@ length of `lower` the square of that of `b`; a wrong length or a NaN or infinite
 >>> y = diana.forward_substitution(lo, [-6.0, -3.0, 51.0])
 >>> list(y)
 [-3.0, 0.0, 12.0]
->>> list(diana.back_substitution(lo, y))
+>>> list(diana.transpose_substitution(lo, y))
 [1.0, -2.0, 3.0]
 >>> import numpy as np
 >>> L = np.array([[2.0, 0.0], [1.0, 4.0]])
 >>> list(diana.forward_substitution(L.ravel(order="F"), [2.0, 9.0]))
 [1.0, 2.0]
->>> diana.back_substitution([1.0, 0.0, 0.0, 0.0], [1.0, 1.0])
+>>> diana.transpose_substitution([1.0, 0.0, 0.0, 0.0], [1.0, 1.0])
 Traceback (most recent call last):
   ...
 diana._diana.SingularError: matrix is singular: a diagonal entry is zero

@@ -115,8 +115,8 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [API-027](api/API-027.md) | fact | Python version, status constants and status_str |
 | [API-028](api/API-028.md) | fact | Cholesky evaluation order, exits and what each exit writes |
 | [API-029](api/API-029.md) | fact | Python cholesky and the extension function cholesky(a, out) |
-| [API-030](api/API-030.md) | fact | Forward and back substitution evaluation order, exits and what each exit writes |
-| [API-031](api/API-031.md) | fact | Python forward_substitution, back_substitution and their extension functions |
+| [API-030](api/API-030.md) | fact | Forward and transpose substitution evaluation order, exits and writes |
+| [API-031](api/API-031.md) | fact | Python forward_substitution, transpose_substitution and extension functions |
 | [API-032](api/API-032.md) | fact | LU evaluation order, exits and what each exit writes |
 | [API-033](api/API-033.md) | fact | Python lu and the extension function lu(a, out) |
 | [API-034](api/API-034.md) | fact | LU solve evaluation order, exits and what each exit writes |
@@ -426,7 +426,6 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `python/ext/*.c` | PYTHON-001, PYTHON-006, STYLE-002 |
 | `python/ext/*.h` | PYTHON-001 |
 | `python/ext/.clang-tidy` | STYLE-007 |
-| `python/ext/back_substitution.c` | API-031 |
 | `python/ext/bisection_*.c` | API-023 |
 | `python/ext/bisection_exec.c` | PYTHON-003 |
 | `python/ext/bisection_init.c` | API-021, API-024, PYTHON-008, TEST-008, TEST-009 |
@@ -458,6 +457,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `python/ext/status_str.c` | API-021, API-027 |
 | `python/ext/substitution.c` | API-022, API-031, PYTHON-004 |
 | `python/ext/substitution_exec.c` | API-031 |
+| `python/ext/transpose_substitution.c` | API-031 |
 | `python/ext/version.c` | API-027 |
 | `python/src/diana/*.py` | PYTHON-002 |
 | `python/src/diana/__init__.py` | API-027, PYTHON-007 |
@@ -501,7 +501,6 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `spec/substitution.md` | PROOF-010 |
 | `spec/trapezoidal.md` | PROOF-003 |
 | `src/*.c` | API-003, STYLE-002, TEST-006 |
-| `src/back_substitution.c` | API-003, API-004, API-030, FP-001, KERNEL-001, KERNEL-002, WP-011 |
 | `src/bisection.c` | API-006, API-009, KERNEL-004 |
 | `src/bisection_*.c` | FP-001, KERNEL-001 |
 | `src/bisection_acsl.h` | API-007, KERNEL-007, WP-001, WP-002, WP-006 |
@@ -536,6 +535,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `src/simpson.c` | API-004, API-014, API-036, FP-001, KERNEL-001, KERNEL-002, PROOF-004, TEST-013 |
 | `src/status_str.c` | API-002 |
 | `src/substitution_acsl.h` | KERNEL-007, WP-011 |
+| `src/transpose_substitution.c` | API-003, API-004, API-030, FP-001, KERNEL-001, KERNEL-002, WP-011 |
 | `src/trapezoidal.c` | API-004, API-013, API-036, FP-001, KERNEL-001, KERNEL-002, PROOF-003, TEST-010 |
 | `src/version.c` | API-002 |
 | `test/benchmark/unchecked.c` | API-019, BENCHMARK-001, BENCHMARK-002, BENCHMARK-003, BENCHMARK-005 |
@@ -593,7 +593,6 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `verification/rocq/theory/Real/LUSolve.v` | PROOF-012 |
 | `verification/rocq/theory/Real/Substitution.v` | PROOF-010 |
 | `verification/rocq/theory/VST/*.v` | VST-004, VST-007 |
-| `verification/rocq/theory/VST/BackSubstitution.v` | VST-008 |
 | `verification/rocq/theory/VST/BisectionInit.v` | VST-005 |
 | `verification/rocq/theory/VST/BisectionMid.v` | VST-005 |
 | `verification/rocq/theory/VST/BisectionResult.v` | VST-005 |
@@ -602,3 +601,4 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `verification/rocq/theory/VST/FpSqrt.v` | FP-006, VST-005 |
 | `verification/rocq/theory/VST/LU.v` | VST-008 |
 | `verification/rocq/theory/VST/LUSolve.v` | VST-008 |
+| `verification/rocq/theory/VST/TransposeSubstitution.v` | VST-008 |
