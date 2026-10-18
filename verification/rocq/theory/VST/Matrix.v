@@ -83,3 +83,33 @@ Proof.
   - split; [apply Z.div_pos; rep_lia |].
     apply Z.div_le_upper_bound; [lia |]. rep_lia.
 Qed.
+
+(* The output buffer while the kernel writes it in decreasing index: the caller's contents
+   before p, the model from p on. *)
+Definition lsuf (L : list float) (ol : list val) (N p : Z) : list val :=
+  sublist 0 p ol ++ map Vfloat (sublist p N L).
+
+Lemma Zlength_lsuf (L : list float) (ol : list val) (N p : Z) :
+  Zlength L = N -> Zlength ol = N -> 0 <= p <= N -> Zlength (lsuf L ol N p) = N.
+Proof. intros. unfold lsuf. list_solve. Qed.
+
+Lemma lsuf_step (L : list float) (ol : list val) (N p : Z) :
+  Zlength L = N -> Zlength ol = N -> 0 < p <= N ->
+  upd_Znth (p - 1) (lsuf L ol N p) (Vfloat (Znth (p - 1) L)) = lsuf L ol N (p - 1).
+Proof. intros. unfold lsuf. list_solve. Qed.
+
+Lemma lsuf_get {d : Inhabitant val} (L : list float) (ol : list val) (N p q : Z) :
+  Zlength L = N -> Zlength ol = N -> 0 <= p <= q -> q < N ->
+  @Znth val d q (lsuf L ol N p) = Vfloat (Znth q L).
+Proof.
+  intros. rewrite (Znth_inhabitant d Inhabitant_val) by (rewrite Zlength_lsuf; lia).
+  unfold lsuf. list_solve.
+Qed.
+
+Lemma lsuf_full (L : list float) (ol : list val) (N : Z) :
+  Zlength L = N -> Zlength ol = N -> lsuf L ol N 0 = map Vfloat L.
+Proof. intros. unfold lsuf. list_solve. Qed.
+
+Lemma lsuf_zero (L : list float) (ol : list val) (N : Z) :
+  Zlength L = N -> Zlength ol = N -> lsuf L ol N N = ol.
+Proof. intros. unfold lsuf. list_solve. Qed.
