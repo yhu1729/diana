@@ -79,6 +79,24 @@ def test_partial_run_keeps_report(gate, monkeypatch, args):
     gate.write_report.assert_not_called()
 
 
+def test_report_has_stamp_between_marker_and_table(tmp_path, monkeypatch):
+    module = load_module(monkeypatch)
+    report = tmp_path / "report.md"
+    report.write_text(f"# Report\n\n{module.REPORT_MARKER}\n\nold table\n")
+    monkeypatch.setattr(module, "REPORT", report)
+    monkeypatch.setattr(module.check_provenance, "tool_version", Mock(return_value=[]))
+    monkeypatch.setattr(module.check_provenance, "render_stamp", Mock(return_value="STAMP"))
+    theorem = module.Theorem(spec="k", id="K-B1", layer="B", informal="x", rocq="Diana.K.b1")
+    theorem.result["rocq"] = "ok"
+    module.write_report([theorem])
+    assert report.read_text() == (
+        f"# Report\n\n{module.REPORT_MARKER}\n\nSTAMP\n\n"
+        "| Spec | ID | Layer | Lean | Rocq | Frama-C | Statement |\n"
+        "|---|---|---|---|---|---|---|\n"
+        "| k | K-B1 | B | – | ok | – | x |\n"
+    )
+
+
 def test_shared_constant_gets_every_result(gate, monkeypatch):
     gate.FRAMA_C_EXPECTATION.write_text("kernel.c 1\n")
     (gate.SPEC_DIR / "bisection.md").write_text(
