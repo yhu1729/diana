@@ -53,6 +53,7 @@ theory/VST/ForwardSubstitution.v
 ../clight/fp_sqrt_aarch64_macos.v
 theory/VST/FpSqrt.v
 ../clight/lu_aarch64_macos.v
+theory/VST/LU.v
 theory/VST/Newton.v
 ../clight/newton_init_aarch64_macos.v
 theory/VST/NewtonInit.v
