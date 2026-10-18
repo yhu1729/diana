@@ -463,7 +463,7 @@ Definition f_diana_lu := {|
                                                   (Sifthenelse (Eunop Onotbool
                                                                  (Etempvar _t'6 tint)
                                                                  tint)
-                                                    (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
+                                                    (Sreturn (Some (Econst_int (Int.repr (-5)) tint)))
                                                     Sskip))
                                                 (Sassign
                                                   (Ederef

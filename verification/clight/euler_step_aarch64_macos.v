@@ -79,12 +79,17 @@ Definition _diana_fp_finite : ident := $"diana_fp_finite".
 Definition _f : ident := $"f".
 Definition _h : ident := $"h".
 Definition _i : ident := $"i".
+Definition _j : ident := $"j".
 Definition _main : ident := $"main".
 Definition _r : ident := $"r".
 Definition _x : ident := $"x".
 Definition _y : ident := $"y".
 Definition _y_out : ident := $"y_out".
 Definition _t'1 : ident := 128%positive.
+Definition _t'10 : ident := 137%positive.
+Definition _t'11 : ident := 138%positive.
+Definition _t'12 : ident := 139%positive.
+Definition _t'13 : ident := 140%positive.
 Definition _t'2 : ident := 129%positive.
 Definition _t'3 : ident := 130%positive.
 Definition _t'4 : ident := 131%positive.
@@ -92,6 +97,7 @@ Definition _t'5 : ident := 132%positive.
 Definition _t'6 : ident := 133%positive.
 Definition _t'7 : ident := 134%positive.
 Definition _t'8 : ident := 135%positive.
+Definition _t'9 : ident := 136%positive.
 
 Definition f_diana_fp_finite := {|
   fn_return := tint;
@@ -118,10 +124,12 @@ Definition f_diana_euler_step := {|
                 (_d, tulong) :: (_h, tdouble) :: (_y_out, (tptr tdouble)) ::
                 nil);
   fn_vars := nil;
-  fn_temps := ((_r, tdouble) :: (_i, tulong) :: (_t'4, tint) ::
-               (_t'3, tint) :: (_t'2, tint) :: (_t'1, tint) ::
-               (_t'8, tdouble) :: (_t'7, tdouble) :: (_t'6, tdouble) ::
-               (_t'5, tdouble) :: nil);
+  fn_temps := ((_r, tdouble) :: (_i, tulong) :: (_j, tulong) ::
+               (_t'7, tint) :: (_t'6, tint) :: (_t'5, tint) ::
+               (_t'4, tint) :: (_t'3, tint) :: (_t'2, tint) ::
+               (_t'1, tint) :: (_t'13, tdouble) :: (_t'12, tdouble) ::
+               (_t'11, tdouble) :: (_t'10, tdouble) :: (_t'9, tdouble) ::
+               (_t'8, tdouble) :: nil);
   fn_body :=
 (Ssequence
   (Ssequence
@@ -163,26 +171,81 @@ Definition f_diana_euler_step := {|
             Sbreak)
           (Ssequence
             (Ssequence
-              (Sset _t'7
+              (Sset _t'12
                 (Ederef
                   (Ebinop Oadd (Etempvar _y (tptr tdouble))
                     (Etempvar _i tulong) (tptr tdouble)) tdouble))
               (Ssequence
-                (Sset _t'8
+                (Sset _t'13
                   (Ederef
                     (Ebinop Oadd (Etempvar _f (tptr tdouble))
                       (Etempvar _i tulong) (tptr tdouble)) tdouble))
                 (Sset _r
-                  (Ebinop Oadd (Etempvar _t'7 tdouble)
+                  (Ebinop Oadd (Etempvar _t'12 tdouble)
                     (Ebinop Omul (Etempvar _h tdouble)
-                      (Etempvar _t'8 tdouble) tdouble) tdouble))))
+                      (Etempvar _t'13 tdouble) tdouble) tdouble))))
             (Ssequence
-              (Scall (Some _t'4)
+              (Scall (Some _t'7)
                 (Evar _diana_fp_finite (Tfunction (tdouble :: nil) tint
                                          cc_default))
                 ((Etempvar _r tdouble) :: nil))
-              (Sifthenelse (Eunop Onotbool (Etempvar _t'4 tint) tint)
-                (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
+              (Sifthenelse (Eunop Onotbool (Etempvar _t'7 tint) tint)
+                (Ssequence
+                  (Ssequence
+                    (Scall (Some _t'4)
+                      (Evar _diana_fp_finite (Tfunction (tdouble :: nil) tint
+                                               cc_default))
+                      ((Etempvar _h tdouble) :: nil))
+                    (Sifthenelse (Eunop Onotbool (Etempvar _t'4 tint) tint)
+                      (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
+                      Sskip))
+                  (Ssequence
+                    (Ssequence
+                      (Sset _j
+                        (Ecast (Econst_int (Int.repr 0) tuint) tulong))
+                      (Sloop
+                        (Ssequence
+                          (Sifthenelse (Ebinop Olt (Etempvar _j tulong)
+                                         (Etempvar _d tulong) tint)
+                            Sskip
+                            Sbreak)
+                          (Ssequence
+                            (Ssequence
+                              (Ssequence
+                                (Sset _t'11
+                                  (Ederef
+                                    (Ebinop Oadd (Etempvar _y (tptr tdouble))
+                                      (Etempvar _j tulong) (tptr tdouble))
+                                    tdouble))
+                                (Scall (Some _t'5)
+                                  (Evar _diana_fp_finite (Tfunction
+                                                           (tdouble :: nil)
+                                                           tint cc_default))
+                                  ((Etempvar _t'11 tdouble) :: nil)))
+                              (Sifthenelse (Eunop Onotbool
+                                             (Etempvar _t'5 tint) tint)
+                                (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
+                                Sskip))
+                            (Ssequence
+                              (Ssequence
+                                (Sset _t'10
+                                  (Ederef
+                                    (Ebinop Oadd (Etempvar _f (tptr tdouble))
+                                      (Etempvar _j tulong) (tptr tdouble))
+                                    tdouble))
+                                (Scall (Some _t'6)
+                                  (Evar _diana_fp_finite (Tfunction
+                                                           (tdouble :: nil)
+                                                           tint cc_default))
+                                  ((Etempvar _t'10 tdouble) :: nil)))
+                              (Sifthenelse (Eunop Onotbool
+                                             (Etempvar _t'6 tint) tint)
+                                (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
+                                Sskip))))
+                        (Sset _j
+                          (Ebinop Oadd (Etempvar _j tulong)
+                            (Econst_int (Int.repr 1) tint) tulong))))
+                    (Sreturn (Some (Econst_int (Int.repr (-5)) tint)))))
                 Sskip))))
         (Sset _i
           (Ebinop Oadd (Etempvar _i tulong) (Econst_int (Int.repr 1) tint)
@@ -198,19 +261,19 @@ Definition f_diana_euler_step := {|
               Sbreak)
             (Ssequence
               (Ssequence
-                (Sset _t'5
+                (Sset _t'8
                   (Ederef
                     (Ebinop Oadd (Etempvar _y (tptr tdouble))
                       (Etempvar _i tulong) (tptr tdouble)) tdouble))
                 (Ssequence
-                  (Sset _t'6
+                  (Sset _t'9
                     (Ederef
                       (Ebinop Oadd (Etempvar _f (tptr tdouble))
                         (Etempvar _i tulong) (tptr tdouble)) tdouble))
                   (Sset _r
-                    (Ebinop Oadd (Etempvar _t'5 tdouble)
+                    (Ebinop Oadd (Etempvar _t'8 tdouble)
                       (Ebinop Omul (Etempvar _h tdouble)
-                        (Etempvar _t'6 tdouble) tdouble) tdouble))))
+                        (Etempvar _t'9 tdouble) tdouble) tdouble))))
               (Sassign
                 (Ederef
                   (Ebinop Oadd (Etempvar _y_out (tptr tdouble))

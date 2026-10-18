@@ -324,7 +324,7 @@ Definition f_diana_forward_substitution := {|
                             ((Etempvar _r tdouble) :: nil))
                           (Sifthenelse (Eunop Onotbool (Etempvar _t'7 tint)
                                          tint)
-                            (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
+                            (Sreturn (Some (Econst_int (Int.repr (-5)) tint)))
                             Sskip))
                         (Sassign
                           (Ederef

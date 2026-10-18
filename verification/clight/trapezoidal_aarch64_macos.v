@@ -90,6 +90,9 @@ Definition _t'3 : ident := 130%positive.
 Definition _t'4 : ident := 131%positive.
 Definition _t'5 : ident := 132%positive.
 Definition _t'6 : ident := 133%positive.
+Definition _t'7 : ident := 134%positive.
+Definition _t'8 : ident := 135%positive.
+Definition _t'9 : ident := 136%positive.
 
 Definition f_diana_fp_finite := {|
   fn_return := tint;
@@ -116,8 +119,9 @@ Definition f_diana_trapezoidal := {|
                 (_result, (tptr tdouble)) :: nil);
   fn_vars := nil;
   fn_temps := ((_s, tdouble) :: (_r, tdouble) :: (_i, tulong) ::
-               (_t'3, tint) :: (_t'2, tint) :: (_t'1, tint) ::
-               (_t'6, tdouble) :: (_t'5, tdouble) :: (_t'4, tdouble) :: nil);
+               (_t'5, tint) :: (_t'4, tint) :: (_t'3, tint) ::
+               (_t'2, tint) :: (_t'1, tint) :: (_t'9, tdouble) ::
+               (_t'8, tdouble) :: (_t'7, tdouble) :: (_t'6, tdouble) :: nil);
   fn_body :=
 (Ssequence
   (Ssequence
@@ -142,12 +146,12 @@ Definition f_diana_trapezoidal := {|
       Sskip))
   (Ssequence
     (Ssequence
-      (Sset _t'5
+      (Sset _t'8
         (Ederef
           (Ebinop Oadd (Etempvar _y (tptr tdouble))
             (Econst_int (Int.repr 0) tint) (tptr tdouble)) tdouble))
       (Ssequence
-        (Sset _t'6
+        (Sset _t'9
           (Ederef
             (Ebinop Oadd (Etempvar _y (tptr tdouble))
               (Ebinop Osub (Etempvar _n tulong)
@@ -156,7 +160,7 @@ Definition f_diana_trapezoidal := {|
         (Sset _s
           (Ebinop Omul
             (Econst_float (Float.of_bits (Int64.repr 4602678819172646912)) tdouble)
-            (Ebinop Oadd (Etempvar _t'5 tdouble) (Etempvar _t'6 tdouble)
+            (Ebinop Oadd (Etempvar _t'8 tdouble) (Etempvar _t'9 tdouble)
               tdouble) tdouble))))
     (Ssequence
       (Ssequence
@@ -169,12 +173,12 @@ Definition f_diana_trapezoidal := {|
               Sskip
               Sbreak)
             (Ssequence
-              (Sset _t'4
+              (Sset _t'7
                 (Ederef
                   (Ebinop Oadd (Etempvar _y (tptr tdouble))
                     (Etempvar _i tulong) (tptr tdouble)) tdouble))
               (Sset _s
-                (Ebinop Oadd (Etempvar _s tdouble) (Etempvar _t'4 tdouble)
+                (Ebinop Oadd (Etempvar _s tdouble) (Etempvar _t'7 tdouble)
                   tdouble))))
           (Sset _i
             (Ebinop Oadd (Etempvar _i tulong) (Econst_int (Int.repr 1) tint)
@@ -184,12 +188,49 @@ Definition f_diana_trapezoidal := {|
           (Ebinop Omul (Etempvar _h tdouble) (Etempvar _s tdouble) tdouble))
         (Ssequence
           (Ssequence
-            (Scall (Some _t'3)
+            (Scall (Some _t'5)
               (Evar _diana_fp_finite (Tfunction (tdouble :: nil) tint
                                        cc_default))
               ((Etempvar _r tdouble) :: nil))
-            (Sifthenelse (Eunop Onotbool (Etempvar _t'3 tint) tint)
-              (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
+            (Sifthenelse (Eunop Onotbool (Etempvar _t'5 tint) tint)
+              (Ssequence
+                (Ssequence
+                  (Scall (Some _t'3)
+                    (Evar _diana_fp_finite (Tfunction (tdouble :: nil) tint
+                                             cc_default))
+                    ((Etempvar _h tdouble) :: nil))
+                  (Sifthenelse (Eunop Onotbool (Etempvar _t'3 tint) tint)
+                    (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
+                    Sskip))
+                (Ssequence
+                  (Ssequence
+                    (Sset _i (Ecast (Econst_int (Int.repr 0) tuint) tulong))
+                    (Sloop
+                      (Ssequence
+                        (Sifthenelse (Ebinop Olt (Etempvar _i tulong)
+                                       (Etempvar _n tulong) tint)
+                          Sskip
+                          Sbreak)
+                        (Ssequence
+                          (Ssequence
+                            (Sset _t'6
+                              (Ederef
+                                (Ebinop Oadd (Etempvar _y (tptr tdouble))
+                                  (Etempvar _i tulong) (tptr tdouble))
+                                tdouble))
+                            (Scall (Some _t'4)
+                              (Evar _diana_fp_finite (Tfunction
+                                                       (tdouble :: nil) tint
+                                                       cc_default))
+                              ((Etempvar _t'6 tdouble) :: nil)))
+                          (Sifthenelse (Eunop Onotbool (Etempvar _t'4 tint)
+                                         tint)
+                            (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
+                            Sskip)))
+                      (Sset _i
+                        (Ebinop Oadd (Etempvar _i tulong)
+                          (Econst_int (Int.repr 1) tint) tulong))))
+                  (Sreturn (Some (Econst_int (Int.repr (-5)) tint)))))
               Sskip))
           (Ssequence
             (Sassign (Ederef (Etempvar _result (tptr tdouble)) tdouble)

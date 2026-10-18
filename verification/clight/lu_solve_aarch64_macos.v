@@ -406,7 +406,7 @@ Definition f_diana_lu_solve := {|
                                 ((Etempvar _s tdouble) :: nil))
                               (Sifthenelse (Eunop Onotbool
                                              (Etempvar _t'8 tint) tint)
-                                (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
+                                (Sreturn (Some (Econst_int (Int.repr (-5)) tint)))
                                 Sskip))
                             (Sassign
                               (Ederef
@@ -490,7 +490,7 @@ Definition f_diana_lu_solve := {|
                                     ((Etempvar _r tdouble) :: nil))
                                   (Sifthenelse (Eunop Onotbool
                                                  (Etempvar _t'9 tint) tint)
-                                    (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
+                                    (Sreturn (Some (Econst_int (Int.repr (-5)) tint)))
                                     Sskip))
                                 (Sassign
                                   (Ederef

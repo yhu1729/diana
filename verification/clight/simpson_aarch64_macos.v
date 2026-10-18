@@ -88,6 +88,8 @@ Definition _so : ident := $"so".
 Definition _x : ident := $"x".
 Definition _y : ident := $"y".
 Definition _t'1 : ident := 128%positive.
+Definition _t'10 : ident := 137%positive.
+Definition _t'11 : ident := 138%positive.
 Definition _t'2 : ident := 129%positive.
 Definition _t'3 : ident := 130%positive.
 Definition _t'4 : ident := 131%positive.
@@ -95,6 +97,7 @@ Definition _t'5 : ident := 132%positive.
 Definition _t'6 : ident := 133%positive.
 Definition _t'7 : ident := 134%positive.
 Definition _t'8 : ident := 135%positive.
+Definition _t'9 : ident := 136%positive.
 
 Definition f_diana_fp_finite := {|
   fn_return := tint;
@@ -122,9 +125,10 @@ Definition f_diana_simpson := {|
   fn_vars := nil;
   fn_temps := ((_so, tdouble) :: (_se, tdouble) :: (_s, tdouble) ::
                (_r, tdouble) :: (_p, tulong) :: (_k, tulong) ::
-               (_t'4, tint) :: (_t'3, tint) :: (_t'2, tint) ::
-               (_t'1, tint) :: (_t'8, tdouble) :: (_t'7, tdouble) ::
-               (_t'6, tdouble) :: (_t'5, tdouble) :: nil);
+               (_t'6, tint) :: (_t'5, tint) :: (_t'4, tint) ::
+               (_t'3, tint) :: (_t'2, tint) :: (_t'1, tint) ::
+               (_t'11, tdouble) :: (_t'10, tdouble) :: (_t'9, tdouble) ::
+               (_t'8, tdouble) :: (_t'7, tdouble) :: nil);
   fn_body :=
 (Ssequence
   (Ssequence
@@ -172,7 +176,7 @@ Definition f_diana_simpson := {|
                 Sskip
                 Sbreak)
               (Ssequence
-                (Sset _t'8
+                (Sset _t'11
                   (Ederef
                     (Ebinop Oadd (Etempvar _y (tptr tdouble))
                       (Ebinop Oadd
@@ -181,8 +185,8 @@ Definition f_diana_simpson := {|
                         (Econst_int (Int.repr 1) tuint) tulong)
                       (tptr tdouble)) tdouble))
                 (Sset _so
-                  (Ebinop Oadd (Etempvar _so tdouble) (Etempvar _t'8 tdouble)
-                    tdouble))))
+                  (Ebinop Oadd (Etempvar _so tdouble)
+                    (Etempvar _t'11 tdouble) tdouble))))
             (Sset _k
               (Ebinop Oadd (Etempvar _k tulong)
                 (Econst_int (Int.repr 1) tint) tulong))))
@@ -198,7 +202,7 @@ Definition f_diana_simpson := {|
                     Sskip
                     Sbreak)
                   (Ssequence
-                    (Sset _t'7
+                    (Sset _t'10
                       (Ederef
                         (Ebinop Oadd (Etempvar _y (tptr tdouble))
                           (Ebinop Omul (Econst_int (Int.repr 2) tuint)
@@ -206,18 +210,18 @@ Definition f_diana_simpson := {|
                         tdouble))
                     (Sset _se
                       (Ebinop Oadd (Etempvar _se tdouble)
-                        (Etempvar _t'7 tdouble) tdouble))))
+                        (Etempvar _t'10 tdouble) tdouble))))
                 (Sset _k
                   (Ebinop Oadd (Etempvar _k tulong)
                     (Econst_int (Int.repr 1) tint) tulong))))
             (Ssequence
               (Ssequence
-                (Sset _t'5
+                (Sset _t'8
                   (Ederef
                     (Ebinop Oadd (Etempvar _y (tptr tdouble))
                       (Econst_int (Int.repr 0) tint) (tptr tdouble)) tdouble))
                 (Ssequence
-                  (Sset _t'6
+                  (Sset _t'9
                     (Ederef
                       (Ebinop Oadd (Etempvar _y (tptr tdouble))
                         (Ebinop Osub (Etempvar _n tulong)
@@ -226,8 +230,8 @@ Definition f_diana_simpson := {|
                   (Sset _s
                     (Ebinop Oadd
                       (Ebinop Oadd
-                        (Ebinop Oadd (Etempvar _t'5 tdouble)
-                          (Etempvar _t'6 tdouble) tdouble)
+                        (Ebinop Oadd (Etempvar _t'8 tdouble)
+                          (Etempvar _t'9 tdouble) tdouble)
                         (Ebinop Omul
                           (Econst_float (Float.of_bits (Int64.repr 4616189618054758400)) tdouble)
                           (Etempvar _so tdouble) tdouble) tdouble)
@@ -243,12 +247,54 @@ Definition f_diana_simpson := {|
                     tdouble))
                 (Ssequence
                   (Ssequence
-                    (Scall (Some _t'4)
+                    (Scall (Some _t'6)
                       (Evar _diana_fp_finite (Tfunction (tdouble :: nil) tint
                                                cc_default))
                       ((Etempvar _r tdouble) :: nil))
-                    (Sifthenelse (Eunop Onotbool (Etempvar _t'4 tint) tint)
-                      (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
+                    (Sifthenelse (Eunop Onotbool (Etempvar _t'6 tint) tint)
+                      (Ssequence
+                        (Ssequence
+                          (Scall (Some _t'4)
+                            (Evar _diana_fp_finite (Tfunction
+                                                     (tdouble :: nil) tint
+                                                     cc_default))
+                            ((Etempvar _h tdouble) :: nil))
+                          (Sifthenelse (Eunop Onotbool (Etempvar _t'4 tint)
+                                         tint)
+                            (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
+                            Sskip))
+                        (Ssequence
+                          (Ssequence
+                            (Sset _k
+                              (Ecast (Econst_int (Int.repr 0) tuint) tulong))
+                            (Sloop
+                              (Ssequence
+                                (Sifthenelse (Ebinop Olt (Etempvar _k tulong)
+                                               (Etempvar _n tulong) tint)
+                                  Sskip
+                                  Sbreak)
+                                (Ssequence
+                                  (Ssequence
+                                    (Sset _t'7
+                                      (Ederef
+                                        (Ebinop Oadd
+                                          (Etempvar _y (tptr tdouble))
+                                          (Etempvar _k tulong)
+                                          (tptr tdouble)) tdouble))
+                                    (Scall (Some _t'5)
+                                      (Evar _diana_fp_finite (Tfunction
+                                                               (tdouble ::
+                                                                nil) tint
+                                                               cc_default))
+                                      ((Etempvar _t'7 tdouble) :: nil)))
+                                  (Sifthenelse (Eunop Onotbool
+                                                 (Etempvar _t'5 tint) tint)
+                                    (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
+                                    Sskip)))
+                              (Sset _k
+                                (Ebinop Oadd (Etempvar _k tulong)
+                                  (Econst_int (Int.repr 1) tint) tulong))))
+                          (Sreturn (Some (Econst_int (Int.repr (-5)) tint)))))
                       Sskip))
                   (Ssequence
                     (Sassign

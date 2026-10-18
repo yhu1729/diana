@@ -219,7 +219,7 @@ Definition f_diana_newton_step := {|
                                        cc_default))
               ((Etempvar _dx tdouble) :: nil))
             (Sifthenelse (Eunop Onotbool (Etempvar _t'5 tint) tint)
-              (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
+              (Sreturn (Some (Econst_int (Int.repr (-5)) tint)))
               Sskip))
           (Ssequence
             (Ssequence
@@ -238,7 +238,7 @@ Definition f_diana_newton_step := {|
                                            cc_default))
                   ((Etempvar _x tdouble) :: nil))
                 (Sifthenelse (Eunop Onotbool (Etempvar _t'6 tint) tint)
-                  (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
+                  (Sreturn (Some (Econst_int (Int.repr (-5)) tint)))
                   Sskip))
               (Ssequence
                 (Ssequence
