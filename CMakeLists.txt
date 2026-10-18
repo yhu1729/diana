@@ -18,6 +18,15 @@ option(DIANA_BUILD_TEST "Build the C test suite" OFF)
 option(DIANA_SANITIZER "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 option(DIANA_WERROR "Treat warnings as errors" OFF)
 option(DIANA_BUILD_SHARED_LIB "Build Diana as a shared library" OFF)
+option(DIANA_ALLOW_UNKNOWN_COMPILER "Build with a C compiler other than gcc or clang; it gets none of the strict floating-point options, so the verified strict IEEE binary64 semantics are not established" OFF)
+
+if(NOT CMAKE_C_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
+    if(DIANA_ALLOW_UNKNOWN_COMPILER)
+        message(WARNING "C compiler ID '${CMAKE_C_COMPILER_ID}' gets none of Diana's strict floating-point options: the verified strict IEEE binary64 semantics are not established for this build")
+    else()
+        message(FATAL_ERROR "Diana must be built with gcc or clang (C compiler ID GNU, Clang or AppleClang), not '${CMAKE_C_COMPILER_ID}': only those get the strict floating-point options the proofs assume. Set DIANA_ALLOW_UNKNOWN_COMPILER=ON to build without that guarantee")
+    endif()
+endif()
 
 string(TOUPPER "${CMAKE_BUILD_TYPE}" diana_config)
 foreach(flag_var CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE

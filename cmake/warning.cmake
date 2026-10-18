@@ -1,5 +1,5 @@
 function(diana_set_strict_flag target)
-    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+    if(CMAKE_C_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
         target_compile_options(${target} PRIVATE
             -Wall -Wextra -Wconversion -Wshadow -Wvla -Wpedantic -Wstrict-prototypes
             -Wmissing-prototypes -Wcast-qual -Wpointer-arith -Wundef -Wdouble-promotion
