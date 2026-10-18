@@ -6,6 +6,7 @@ path:
   - CMakeLists.txt
   - include/diana/diana.h
   - pyproject.toml
+  - uv.lock
   - test/python/test_status.py
   - test/install/main.c
 related: [BUILD-009]
@@ -21,7 +22,8 @@ The version is written in several places, and two checks tie the main ones toget
 - Install test: `test/install/main.c` fails unless the linked `diana_version()` equals the
   `DIANA_VERSION_STRING` of the installed header.
 
-Not checked: `version` in `verification/lean/lakefile.toml`, and the `find_package(diana 1.0 ...)`
-requests in `test/install/CMakeLists.txt` and the `doc/api/` example, which need to change only
-with the major version because the installed package is `SameMajorVersion`-compatible
-(BUILD-009).
+Not checked: `version` in `verification/lean/lakefile.toml`, the `diana` entry of `uv.lock`
+(`uv lock` or `uv sync` rewrites it from `pyproject.toml`; commit it with the version), and the
+`find_package(diana 1.0 ...)` requests in `test/install/CMakeLists.txt` and the `doc/api/` example,
+which need to change only with the major version because the installed package is
+`SameMajorVersion`-compatible (BUILD-009).

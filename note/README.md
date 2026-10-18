@@ -601,6 +601,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `test/python/test_status.py` | API-027, BUILD-006 |
 | `test/python/test_substitution.py` | TEST-036 |
 | `test/python/test_trapezoidal.py` | TEST-010, TEST-011, TEST-012 |
+| `uv.lock` | BUILD-006 |
 | `verification/clight/*.v` | PROVER-006, VST-001, VST-002, VST-003, VST-006, VST-009 |
 | `verification/clight/manifest.txt` | CI-016, VST-009 |
 | `verification/frama-c/expectation.txt` | CI-011, GATE-006, KERNEL-006, PROVER-005, WP-005, WP-007, WP-008 |
