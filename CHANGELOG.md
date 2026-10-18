@@ -156,13 +156,13 @@ of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and Rem
   operations in Python floats, the mirror identity, the SUBSTITUTION-B1 to B4 bounds in exact
   rationals, and the Cholesky solve against `numpy.linalg.solve`.
 - `diana.lu(a)` returns `(lu, piv)`, the packed factor as a new `array.array("d")` in the
-  column-major layout of `a` and the pivot rows as a `list` of `int` (module `diana._lu`; extension
-  function `diana._diana.lu(a, out)`, which writes the factor into `out` and returns the pivots). A
-  length that is not a square or a non-finite entry raises `ValueError`, an overflowing update
-  `diana.FloatOverflowError`, a zero pivot column `diana.SingularError`. `test/python/test_lu.py`
-  checks bitwise agreement with the operations in Python floats, pivots included, the LU-B3 and B4
-  bounds in exact rationals, exact recovery of a permuted integer factorization, and solves against
-  `numpy.linalg.solve`.
+  column-major layout of `a` and the pivot rows as a new `array.array("q")` (module `diana._lu`;
+  extension function `diana._diana.lu(a, out)`, which writes the factor into `out` and returns the
+  pivots). A length that is not a square or a non-finite entry raises `ValueError`, an overflowing
+  update `diana.FloatOverflowError`, a zero pivot column `diana.SingularError`.
+  `test/python/test_lu.py` checks bitwise agreement with the operations in Python floats, pivots
+  included, the LU-B3 and B4 bounds in exact rationals, exact recovery of a permuted integer
+  factorization, and solves against `numpy.linalg.solve`.
 - `diana.lu_solve(lu, piv, b)` returns the solution of `A x = b` as a new `array.array("d")`
   from the pair `diana.lu` returns, so `diana.lu_solve(*diana.lu(a), b)` solves the system
   (module `diana._lu_solve`; extension function `diana._diana.lu_solve(lu, piv, b, out)`). `piv`

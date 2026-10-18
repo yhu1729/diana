@@ -69,7 +69,7 @@ singular: zero derivative or pivot
 ## Python
 
 `diana.lu(a)` returns `(lu, piv)`: the packed factor as a new `array.array("d")` in the same
-column-major layout, and the pivot rows as a `list` of `int`. `a` is an
+column-major layout, and the pivot rows as a new `array.array("q")`. `a` is an
 [array argument](overview.md#array-arguments) whose length `n·n` is a square; a length that is
 not or a NaN or infinite entry raises `ValueError`, an update that overflows
 `diana.FloatOverflowError`, and a zero pivot column `diana.SingularError`. With NumPy, pass
@@ -79,7 +79,7 @@ not or a NaN or infinite entry raises `ValueError`, an update that overflows
 >>> import diana
 >>> f, piv = diana.lu([2.0, -3.0, 3.0, 2.0, 1.0, -9.0, 1.0, 0.0, 6.0])
 >>> piv
-[1, 2, 2]
+array('q', [1, 2, 2])
 >>> [round(x, 3) for x in f]
 [-3.0, -1.0, -0.667, 1.0, -8.0, -0.333, 0.0, 6.0, 3.0]
 >>> import numpy as np

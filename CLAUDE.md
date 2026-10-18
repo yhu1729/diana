@@ -277,7 +277,7 @@ pivot exactly for a singular `A`), Flocq layer B (B1 to B4: finiteness and `|L̂
 `DIANA_OK`, and the componentwise backward error `γ_{min(i,j)+1}·|L̂|·|Û|` plus underflow, reusing
 Cholesky's `dot_error` and the substitution `row_error`), WP the ACSL contract (C1, 157 goals),
 VST the kernel against the model through partial-state matrices (C2) and the `diana_fp_finite`
-copy (C3). Python `diana.lu(a)` returns `(lu, piv)`, an `array.array("d")` and a `list` of `int`.
+copy (C3). Python `diana.lu(a)` returns `(lu, piv)`, an `array.array("d")` and an `array.array("q")`.
 
 v1.0.0: LU solve `diana_lu_solve(lu, piv, n, b, x)` (`src/lu_solve.c`,
 `diana/lu_solve.h`, its own method `lu_solve`): solves `A·x = b` from `lu` and `piv` as `diana_lu`
