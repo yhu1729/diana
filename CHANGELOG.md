@@ -6,6 +6,18 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-18
+
+The first stable release. The classical Runge–Kutta step joins the ODE methods, and linear
+algebra arrives: Cholesky factorization, forward and back substitution, LU factorization with
+partial pivoting and the LU solve, each through every verification layer — Lean and Rocq over the
+reals, Flocq over binary64, Frama-C WP and VST on the C — with a Python binding. Opt-in unchecked
+Euler and RK4 kernels, one function per source file for every verified kernel, and the technical
+notes of `note/` complete it. From this release the public C API, the Python package and their
+documented behaviour follow Semantic Versioning. Breaking changes against 0.3.0: `diana/wrapper.h`
+is removed, and the second attribute of `diana.MaxIterError` is `uncertainty` instead of `width`
+(see Changed and Removed).
+
 ### Added
 
 #### C library
@@ -894,7 +906,8 @@ and what it assumes; its generated report gives the status of every theorem.
   and is never shipped, and Alt-Ergo is only a proof oracle. Diana itself has no runtime
   dependency.
 
-[Unreleased]: https://gitlab.com/yhu1729/diana/-/compare/v0.3.0...main
+[Unreleased]: https://gitlab.com/yhu1729/diana/-/compare/v1.0.0...main
+[1.0.0]: https://gitlab.com/yhu1729/diana/-/compare/v0.3.0...v1.0.0
 [0.3.0]: https://gitlab.com/yhu1729/diana/-/compare/v0.2.0...v0.3.0
 [0.2.0]: https://gitlab.com/yhu1729/diana/-/compare/v0.1.0...v0.2.0
 [0.1.0]: https://gitlab.com/yhu1729/diana/-/tags/v0.1.0
