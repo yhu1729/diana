@@ -11,8 +11,8 @@ extern "C" {
 
 diana_status diana_forward_substitution(const double *l, size_t n,
                                         const double *b, double *x);
-diana_status diana_back_substitution(const double *l, size_t n, const double *b,
-                                     double *x);
+diana_status diana_transpose_substitution(const double *l, size_t n,
+                                          const double *b, double *x);
 
 #ifdef __cplusplus
 }

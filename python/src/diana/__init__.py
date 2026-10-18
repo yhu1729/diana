@@ -8,7 +8,7 @@ not part of the verified code. Kernels over tabulated samples, :func:`trapezoida
 explicit Euler step and :func:`euler` loops over it with a callable; :func:`rk4_stage` and
 :func:`rk4_step` build one classical Runge–Kutta step and :func:`rk4` loops over them.
 :func:`cholesky` factors a symmetric positive definite matrix stored column-major, and
-:func:`forward_substitution` and :func:`back_substitution` solve with its triangular factor.
+:func:`forward_substitution` and :func:`transpose_substitution` solve with its triangular factor.
 :func:`lu` factors a square matrix with partial pivoting, and :func:`lu_solve` solves with its
 factors.
 """
@@ -37,7 +37,7 @@ from diana._lu_solve import lu_solve
 from diana._newton import newton
 from diana._rk4 import rk4, rk4_stage, rk4_step
 from diana._simpson import simpson
-from diana._substitution import back_substitution, forward_substitution
+from diana._substitution import forward_substitution, transpose_substitution
 from diana._trapezoidal import trapezoidal
 
 __all__ = [
@@ -56,7 +56,6 @@ __all__ = [
     "MaxIterError",
     "Newton",
     "SingularError",
-    "back_substitution",
     "bisection",
     "cholesky",
     "euler",
@@ -70,6 +69,7 @@ __all__ = [
     "rk4_step",
     "simpson",
     "status_str",
+    "transpose_substitution",
     "trapezoidal",
     "version",
 ]

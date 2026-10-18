@@ -42,8 +42,8 @@ static inline Py_ssize_t diana_py_square_side(Py_ssize_t m) {
 
 PyObject *diana_py_version(PyObject *self, PyObject *ignored);
 PyObject *diana_py_status_str(PyObject *self, PyObject *arg);
-PyObject *diana_py_back_substitution(PyObject *self, PyObject *args,
-                                     PyObject *kwds);
+PyObject *diana_py_transpose_substitution(PyObject *self, PyObject *args,
+                                          PyObject *kwds);
 PyObject *diana_py_cholesky(PyObject *self, PyObject *args, PyObject *kwds);
 PyObject *diana_py_euler_step(PyObject *self, PyObject *args, PyObject *kwds);
 PyObject *diana_py_forward_substitution(PyObject *self, PyObject *args,

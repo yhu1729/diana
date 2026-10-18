@@ -17,8 +17,8 @@
   @ ensures \result == DIANA_OK ==>
   @         \forall integer p; 0 <= p < n ==> \is_finite(x[p]);
   @*/
-diana_status diana_back_substitution(const double *l, size_t n, const double *b,
-                                     double *x) {
+diana_status diana_transpose_substitution(const double *l, size_t n,
+                                          const double *b, double *x) {
   double s;
   double r;
   size_t i;

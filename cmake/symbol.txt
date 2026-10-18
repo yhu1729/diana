@@ -1,4 +1,3 @@
-diana_back_substitution
 diana_bisection
 diana_bisection_init
 diana_bisection_result
@@ -21,5 +20,6 @@ diana_rk4_step
 diana_rk4_step_unchecked
 diana_simpson
 diana_status_str
+diana_transpose_substitution
 diana_trapezoidal
 diana_version

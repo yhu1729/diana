@@ -1,5 +1,5 @@
-"""Triangular solve drivers: forward and back substitution with the C kernels
-``diana._diana.forward_substitution`` and ``diana._diana.back_substitution``."""
+"""Triangular solve drivers: forward and transpose substitution with the C kernels
+``diana._diana.forward_substitution`` and ``diana._diana.transpose_substitution``."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from collections.abc import Buffer, Iterable
 
 from diana import _diana
 
-__all__ = ["back_substitution", "forward_substitution"]
+__all__ = ["transpose_substitution", "forward_substitution"]
 
 
 def _samples(v: Buffer | Iterable[float]) -> Buffer:
@@ -43,13 +43,13 @@ def forward_substitution(lower: Buffer | Iterable[float], b: Buffer | Iterable[f
     return out
 
 
-def back_substitution(lower: Buffer | Iterable[float], b: Buffer | Iterable[float]) -> array:
+def transpose_substitution(lower: Buffer | Iterable[float], b: Buffer | Iterable[float]) -> array:
     """Return the solution ``x`` of ``L^T*x = b`` as a new ``array.array("d")``.
 
     ``lower`` holds the lower-triangular ``L`` exactly as for :func:`forward_substitution`, column
     major with only the entries on or below the diagonal read, and the system solved is the one
     of its transpose, an upper-triangular matrix. So ``A*x = b`` for ``A = L*L^T`` is
-    ``back_substitution(L, forward_substitution(L, b))`` with ``L = cholesky(A)``.
+    ``transpose_substitution(L, forward_substitution(L, b))`` with ``L = cholesky(A)``.
 
     Entry ``i``, from ``i = n - 1`` down to 0, is
     ``(b[i] - L[n-1, i]*x[n-1] - ... - L[i+1, i]*x[i+1]) / L[i, i]``, the products subtracted in
@@ -61,5 +61,5 @@ def back_substitution(lower: Buffer | Iterable[float], b: Buffer | Iterable[floa
     lower = _samples(lower)
     b = _samples(b)
     out = array("d", bytes(8 * (memoryview(b).nbytes // 8)))
-    _diana.back_substitution(lower, b, out)
+    _diana.transpose_substitution(lower, b, out)
     return out

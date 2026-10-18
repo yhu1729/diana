@@ -63,7 +63,6 @@ add_library(diana ${diana_library_type}
     src/bisection_mid.c
     src/bisection_result.c
     src/bisection_step.c
-    src/back_substitution.c
     src/cholesky.c
     src/euler.c
     src/euler_step.c
@@ -82,6 +81,7 @@ add_library(diana ${diana_library_type}
     src/rk4_step.c
     src/rk4_step_unchecked.c
     src/simpson.c
+    src/transpose_substitution.c
     src/trapezoidal.c
     src/version.c)
 add_library(diana::diana ALIAS diana)
@@ -182,7 +182,6 @@ if(DIANA_BUILD_PYTHON)
     find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
     Python_add_library(_diana MODULE WITH_SOABI
         python/ext/module.c
-        python/ext/back_substitution.c
         python/ext/bisection_exec.c
         python/ext/bisection_init.c
         python/ext/bisection_new.c
@@ -214,6 +213,7 @@ if(DIANA_BUILD_PYTHON)
         python/ext/status_str.c
         python/ext/substitution.c
         python/ext/substitution_exec.c
+        python/ext/transpose_substitution.c
         python/ext/trapezoidal.c
         python/ext/trapezoidal_exec.c
         python/ext/version.c)
