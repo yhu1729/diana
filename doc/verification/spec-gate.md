@@ -13,6 +13,7 @@ the front matter explains the hypotheses and the proofs.
 | `uv run script/check_spec.py --no-report` | CI `style_python` | checks the spec files only |
 | `uv run script/check_spec.py --run --strict` | `script/dev.sh verify` | runs both provers, checks axioms, rewrites the [report](report.md) |
 | `script/check_spec.py --run --strict --prover lean --no-report` | CI `verify_lean` | the same for the Lean theorems only |
+| `script/check_spec.py --run --strict --prover rocq --layer A --layer B --no-report` | CI `verify_rocq` | the same for the Rocq theorems of layers A and B, without CompCert or VST |
 
 A full run checks that each named constant exists, contains no `sorry` or `Admitted`, and depends
 only on the axioms in `script/axiom_allow.yaml`. With `--strict` it also fails when a listed theorem
@@ -21,7 +22,10 @@ is not proved and when an ACSL theorem has no Frama-C goal count in
 (`script/verify_frama_c.sh` does), and it does not check that a theorem's formal statement says
 what its informal text says.
 
-The report is rewritten only by a run of both provers, which needs the local opam switch, so it is
+`--layer` (repeatable) checks only the theorems of the given layers; without layer C the Rocq run
+builds and imports only `theory/Real/` and `theory/Float/`.
+
+The report is rewritten only by a run of both provers on every layer, which needs the local opam switch, so it is
 regenerated locally and committed; CI never rewrites it. Each rewrite stamps it with a hash of
 `include/`, `spec/`, `src/` and `verification/`, of the allowed axioms and of the Frama-C script
 with its `SKIP` list, and with the tool versions; CI's `verify_provenance` fails when the
