@@ -125,17 +125,18 @@ CompCert is under the INRIA non-commercial license: it is a research-only depend
 in a local opam switch, and is never shipped or baked into a CI image. `doc/third-party.md` lists
 every tool with its version and license.
 
-Build the proofs with `cd verification/rocq && make`. `make check` prints the axioms of the listed
+Build the proofs with `cd verification/rocq && make` (`make float` builds only layers A and B,
+which need no CompCert or VST). `make check` prints the axioms of the listed
 theorems, but it compiles the generated, uncommitted `CheckSpec.v`, which any run of
 `uv run script/check_spec.py` writes; run that once first, or just `script/dev.sh verify`, which
 orders the steps.
 
 ## Before you commit
 
-CI checks the C build, ctest, pytest, Frama-C WP, layer A in Lean with its axiom gate, and that
-layer A compiles in Rocq; the GitHub mirror runs the same checks again, and the C and Python tests
-also on macOS and on every supported Python version. It does **not** check layers B and C-VST, the
-Rocq axiom gate, or the Clight AST, because no CI image carries Flocq, CompCert, or VST. A green
+CI checks the C build, ctest, pytest, Frama-C WP, layer A in Lean, and layers A and B in Rocq,
+each with its axiom gate; the GitHub mirror runs the same checks again, and the C and Python tests
+also on macOS and on every supported Python version. It does **not** check layer C-VST with its
+Rocq axioms, or the Clight AST, because no CI image carries CompCert or VST. A green
 pipeline says nothing about those, so they are your responsibility before the commit lands; CI's
 `verify_provenance` only checks, from hashes, that the committed report and AST manifest were
 written for the sources committed and that the report is green.
