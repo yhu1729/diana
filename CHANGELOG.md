@@ -342,16 +342,17 @@ of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and Rem
   anchor in `README.md`, `CONTRIBUTING.md`, `CLAUDE.md`, `doc/`, `note/` and `spec/`.
   `script/dev.sh test` and the `style_python` CI job run it, and `test/python/test_check_doc.py`
   tests it.
-- GitHub Actions on the GitHub mirror of the GitLab project (`.github/workflows/`): one workflow
-  per GitLab path list runs the GitLab jobs again on every push, under the same names and with
-  the same images and commands — the style checks with the commit check over the pushed range,
-  ctest with gcc 14 and clang 18 in Debug with sanitizers and in Release, the install tests,
-  pytest with the wheel checks, C and Python coverage as run artifacts, Frama-C WP, the Lean
-  build and gate, and the Rocq layer A. It adds what GitLab does not run: ctest, the install
-  tests, pytest and the wheel checks on AArch64 macOS with Apple clang, and `test_python` on
-  Python 3.12, 3.13 and 3.14. Actions are pinned to commit SHAs and images to digests, the token
-  is read-only, and there is no release job; GitLab CI stays the primary pipeline, and its
-  `.change_style` list now includes `.github/workflows/`, since notes name those files.
+- GitHub Actions on the GitHub mirror of the GitLab project (`.github/workflows/`): one workflow per
+  GitLab path list runs the GitLab jobs again on every push, under the same names and with the same
+  images and commands — the style checks with the commit check over the pushed range, ctest with gcc
+  14 and clang 18 in Debug with sanitizers and in Release, the install tests, pytest with the wheel
+  checks, C and Python coverage as run artifacts, Frama-C WP, the Lean build and gate, the Rocq
+  layer A, and the provenance check of the AST manifest and the report. It adds what GitLab does not
+  run: ctest, the install tests, pytest and the wheel checks on AArch64 macOS with Apple clang, and
+  `test_python` on Python 3.12, 3.13 and 3.14. Actions are pinned to commit SHAs and images to
+  digests, the token is read-only, and there is no release job; GitLab CI stays the primary
+  pipeline, and its `.change_style` list now includes `.github/workflows/`, since notes name those
+  files.
 
 ### Changed
 

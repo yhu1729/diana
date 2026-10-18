@@ -411,6 +411,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `.github/workflows/style_python.yml` | CI-020 |
 | `.github/workflows/verify_frama_c.yml` | CI-021 |
 | `.github/workflows/verify_lean.yml` | CI-022 |
+| `.github/workflows/verify_provenance.yml` | CI-016 |
 | `.github/workflows/verify_rocq.yml` | CI-021 |
 | `.gitignore` | BUILD-011, VERIFY-005, WP-009 |
 | `.gitlab-ci.yml` | BENCHMARK-005, BUILD-007, CI-001, CI-002, CI-003, CI-004, CI-005, CI-006, CI-007, CI-008, CI-009, CI-010, CI-011, CI-012, CI-013, CI-014, CI-016, CI-018, COMPILER-004, GATE-007, PROVER-001, PROVER-005, PROVER-006, TEST-004, TEST-006, VERIFY-001 |

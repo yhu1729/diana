@@ -43,7 +43,7 @@ names, images and commands:
 | `style_git`, `style_name`, `style_c`, `style_python` | the style job of the same name |
 | `c` | ctest with gcc 14 and clang 18 in Debug and Release, `test_install`, `coverage_c`, and the macOS jobs |
 | `python` | `test_python` on Python 3.12, 3.13 and 3.14, `test_python_macos`, `coverage_python` |
-| `verify_frama_c`, `verify_lean`, `verify_rocq` | the verify job of the same name |
+| `verify_frama_c`, `verify_lean`, `verify_rocq`, `verify_provenance` | the verify job of the same name |
 
 It closes two gaps GitLab leaves: macOS jobs (`test_macos_{debug,release}`, `test_install_macos`,
 `test_python_macos`) build and test on AArch64 macOS with Apple clang, and `test_python` runs every
