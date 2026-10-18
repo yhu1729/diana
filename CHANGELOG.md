@@ -338,6 +338,11 @@ of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and Rem
   digests, the token is read-only, and there is no release job; GitLab CI stays the primary
   pipeline, and its `.change_style` list now includes `.github/workflows/`, since notes name those
   files.
+- ctest `configure` (`test/c/test_configure.cmake`) reconfigures the project into a scratch
+  directory and checks that every rejected floating-point flag fails configuration in
+  `CMAKE_C_FLAGS` and its per-configuration variants while the strict flags and their safe
+  neighbours pass, and, with a faked compiler ID, that an unknown compiler is refused unless
+  `DIANA_ALLOW_UNKNOWN_COMPILER=ON`.
 
 ### Changed
 
@@ -346,6 +351,18 @@ of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and Rem
 - The strict compile flags add `-fno-math-errno` (`cmake/warning.cmake`,
   `script/compare_compiler.sh`, `test/doc/test_example.py`), so that gcc and Linux clang compile
   `__builtin_sqrt` without a libm fallback that would set `errno`; no result changes.
+- Configuration stops on a C compiler whose ID is not exactly `GNU`, `Clang` or `AppleClang`,
+  which used to build silently without the strict floating-point flags (Intel `icx` and NVIDIA
+  `nvc`, for example, contract to fused multiply-add by default). The new option
+  `DIANA_ALLOW_UNKNOWN_COMPILER` (OFF) builds anyway, with a warning that the verified strict IEEE
+  binary64 semantics are not established; such a build still gets none of the strict or warning
+  flags.
+- The configure-time flag guard rejects, besides `-Ofast`, `-ffast-math` and
+  `-funsafe-math-optimizations`, the fast-math parts `-ffinite-math-only`, `-fno-honor-nans`,
+  `-fno-honor-infinities`, `-fassociative-math`, `-freciprocal-math`, `-fno-signed-zeros` and
+  `-fapprox-func`, contraction (`-ffp-contract=fast` or `on`), and the fast models
+  `-ffp-model=fast` or `aggressive` and Intel's `-fp-model fast`, in `CMAKE_C_FLAGS` and its
+  per-configuration variants; the error names the flag and the variable.
 - `doc/` is rewritten for human readers: each page explains what a method or tool does and why,
   with its examples, and ends with links to the notes that hold the exact detail it no longer
   repeats (evaluation and check order, theorem coverage and bounds, tool behaviour, CI internals).
