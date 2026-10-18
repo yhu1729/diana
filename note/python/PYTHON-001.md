@@ -15,7 +15,9 @@ each named after its function without `diana_py_` (STYLE-002); all are listed in
   `PyInit__diana`, which calls each `diana_py_<kernel>_exec(m)` in turn and drops the module if
   one fails.
 - `module.h`: shared declarations, the exception pointers `diana_py_bracket_error` and
-  `diana_py_singular_error`, and the `static inline` byte-range overlap test `diana_py_overlap`.
+  `diana_py_singular_error`, the `static inline` byte-range overlap test `diana_py_overlap`, and
+  the `static inline` `diana_py_square_side`, the side `n` of a column-major matrix of length
+  `n*n` (API-029).
 - `status_exec.c`: registers `status_str`, the status constants `OK` to `ERR_SINGULAR`, and
   creates `BracketError` and `SingularError` (both `ValueError` subclasses).
 - `raise.c` (`diana_py_raise`): `DIANA_ERR_ARG` raises `ValueError`, `DIANA_ERR_BRACKET`

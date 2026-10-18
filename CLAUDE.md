@@ -61,7 +61,8 @@ one line per idea, no design (a design is written only when an item is picked up
 - **Python binding:** C extension sources in `python/ext/` (`module.c` creates `diana._diana` and calls one
   `diana_py_<kernel>_exec` per kernel, in `<kernel>_exec.c` with the kernel's method and type tables;
   each method or function in its own file such as `bisection_step.c`; declarations and the
-  `static inline` `diana_py_overlap` in `module.h`, object structs in `bisection_object.h` and
+  `static inline` `diana_py_overlap` and `diana_py_square_side` in `module.h`, object structs in
+  `bisection_object.h` and
   `newton_object.h`); pure-Python package in `python/src/diana/`
   with one private driver module per kernel (`_bisection.py`, `_newton.py`) re-exported by `__init__.py`, and
   `_convert.py` (`real`, the scalar check the bisection, Euler and RK4 drivers apply: a string is

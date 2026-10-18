@@ -27,6 +27,15 @@ static inline int diana_py_overlap(const Py_buffer *a, const Py_buffer *b) {
   return a0 < b0 + (uintptr_t)b->len && b0 < a0 + (uintptr_t)a->len;
 }
 
+static inline Py_ssize_t diana_py_square_side(Py_ssize_t m) {
+  Py_ssize_t n = 0;
+
+  while (n + 1 <= m / (n + 1)) {
+    ++n;
+  }
+  return n;
+}
+
 PyObject *diana_py_version(PyObject *self, PyObject *ignored);
 PyObject *diana_py_status_str(PyObject *self, PyObject *arg);
 PyObject *diana_py_back_substitution(PyObject *self, PyObject *args,

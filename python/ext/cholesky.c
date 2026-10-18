@@ -2,15 +2,6 @@
 
 #include "module.h"
 
-static inline Py_ssize_t square_side(Py_ssize_t m) {
-  Py_ssize_t n = 0;
-
-  while (n + 1 <= m / (n + 1)) {
-    ++n;
-  }
-  return n;
-}
-
 PyObject *diana_py_cholesky(PyObject *Py_UNUSED(self), PyObject *args,
                             PyObject *kwds) {
   static char *kwlist[] = {"a", "out", NULL};
@@ -34,7 +25,7 @@ PyObject *diana_py_cholesky(PyObject *Py_UNUSED(self), PyObject *args,
                          "out must have at least one sample") < 0) {
     goto release_a;
   }
-  n = square_side(va.shape[0]);
+  n = diana_py_square_side(va.shape[0]);
   if (n * n != va.shape[0]) {
     PyErr_SetString(PyExc_ValueError,
                     "a must have n*n samples for some n, a square number");
