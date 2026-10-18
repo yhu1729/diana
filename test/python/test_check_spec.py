@@ -8,6 +8,7 @@ import pytest
 
 def load_module(monkeypatch, name="diana_test_check_spec"):
     path = Path(__file__).resolve().parents[2] / "script" / "check_spec.py"
+    monkeypatch.syspath_prepend(str(path.parent))
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
     monkeypatch.setitem(sys.modules, spec.name, module)
