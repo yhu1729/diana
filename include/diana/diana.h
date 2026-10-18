@@ -14,6 +14,7 @@
 #include "diana/newton.h"
 #include "diana/ode.h"
 #include "diana/rk4.h"
+#include "diana/scalar.h"
 #include "diana/simpson.h"
 #include "diana/status.h"
 #include "diana/substitution.h"

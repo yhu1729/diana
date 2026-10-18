@@ -1,8 +1,8 @@
 #include "diana/bisection.h"
 
-diana_status diana_bisection(diana_bisection_fn f, void *ctx, double a,
-                             double b, double tol, unsigned max_iter,
-                             double *root, unsigned *iter) {
+diana_status diana_bisection(diana_scalar_fn f, void *ctx, double a, double b,
+                             double tol, unsigned max_iter, double *root,
+                             unsigned *iter) {
   diana_bisection_state s;
   diana_status st;
   double fa, fb;
@@ -10,7 +10,7 @@ diana_status diana_bisection(diana_bisection_fn f, void *ctx, double a,
   if (iter != (unsigned *)0) {
     *iter = 0u;
   }
-  if (f == (diana_bisection_fn)0 || root == (double *)0) {
+  if (f == (diana_scalar_fn)0 || root == (double *)0) {
     return DIANA_ERR_ARG;
   }
 
