@@ -22,7 +22,7 @@ hashes no longer match the commit or a status is not `ok`.
 | `script/run_frama_c.sh` | `3ca1907f389bf28891ff6e1079db40c956d918c45ec87a0767e288870c7bce54` |
 | `spec/` | `75e2bd58da032b4bac6a6e6c18f665ae2cf8d5caf6982d18c5ef90edefafcaf2` |
 | `src/` | `f02253502d28163eb3b2917101e93b8bd2c7c8a27b860607a2193b198557e57d` |
-| `verification/` | `a3ef7b3d655eed4d7198b8b44dc257cf3a7644ef273d4c8257881d50272592cb` |
+| `verification/` | `3425bfb082e310b109badaa6b46592503ae3849527e57c666ff1e95a63334100` |
 
 | Tool | Version |
 |---|---|
