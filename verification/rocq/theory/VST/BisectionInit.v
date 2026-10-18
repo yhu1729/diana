@@ -24,13 +24,14 @@ Definition fp_abs_spec :=
 
 Definition t_state := Tstruct _diana_bisection_state noattr.
 
-Definition cstate_repr (c : cstate) : reptype t_state :=
+Definition cstate_repr (c : cstate) (st : int) : reptype t_state :=
   (Vfloat (FB.sa (cfl c)), (Vfloat (FB.sb (cfl c)), (Vfloat (FB.sfa (cfl c)),
    (Vfloat (FB.sfb (cfl c)), (Vfloat (FB.sx (cfl c)), (Vfloat (FB.stol (cfl c)),
-   (Vint (citer c), Vint (cmax c)))))))).
+   (Vint (citer c), (Vint (cmax c), Vint st)))))))).
 
-Definition init_repr (old : reptype t_state) (o : option cstate) : reptype t_state :=
-  match o with Some c => cstate_repr c | None => old end.
+(* On success the status field holds the returned status. *)
+Definition init_repr (old : reptype t_state) (o : option cstate) (z : Z) : reptype t_state :=
+  match o with Some c => cstate_repr c (Int.repr z) | None => old end.
 
 Definition init_spec :=
   DECLARE _diana_bisection_init
@@ -42,7 +43,8 @@ Definition init_spec :=
     SEP (data_at sh t_state old s)
   POST [ tint ]
     PROP () RETURN (Vint (Int.repr (fst (c_init a b fa fb tol m))))
-    SEP (data_at sh t_state (init_repr old (snd (c_init a b fa fb tol m))) s).
+    SEP (data_at sh t_state
+           (init_repr old (snd (c_init a b fa fb tol m)) (fst (c_init a b fa fb tol m))) s).
 
 Definition Gprog : funspecs :=
   ltac:(with_library prog [fp_finite_spec; fp_abs_spec; Diana.VST.BisectionMid.mid_spec;
@@ -211,9 +213,9 @@ Proof.
   forward_call (a, b).
   forward.
   forward_if.
-  { forward. forward. forward. init_post. forward. }
+  { forward. forward. forward. forward. init_post. forward. }
   forward_if.
-  { forward. forward. forward. init_post. forward. }
+  { forward. forward. forward. forward. init_post. forward. }
   forward_if (temp _t'18 (Vint (if (Float.cmp Cle (Float.sub b a) tol ||
                                     Float.cmp Cle (c_mid a b) a)%bool
                                 then Int.one else Int.zero))).
@@ -228,9 +230,9 @@ Proof.
   destruct (Float.cmp Cle (Float.sub b a) tol || Float.cmp Cle (c_mid a b) a ||
             Float.cmp Cge (c_mid a b) b)%bool eqn:Hstop.
   { forward_if.
-    - init_post. forward.
+    - forward. init_post. forward.
     - exfalso; apply Int.one_not_zero; assumption. }
   forward_if.
   { contradiction. }
-  init_post. forward.
+  forward. init_post. forward.
 Qed.

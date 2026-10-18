@@ -7,21 +7,22 @@ Definition Vprog : varspecs. mk_varspecs prog. Defined.
 
 Definition t_state := Tstruct _diana_newton_state noattr.
 
-Definition cstate_repr (c : cstate) : reptype t_state :=
-  (Vfloat (cx c), (Vfloat (cdx c), (Vfloat (ctol c), (Vint (citer c), Vint (cmax c))))).
+Definition cstate_repr (c : cstate) (st : int) : reptype t_state :=
+  (Vfloat (cx c), (Vfloat (cdx c), (Vfloat (ctol c), (Vint (citer c), (Vint (cmax c), Vint st))))).
 
 Definition result_spec :=
   DECLARE _diana_newton_result
-  WITH sh : share, s : val, root : val, dx : val, c : cstate, shr : share, shw : share
+  WITH sh : share, s : val, root : val, dx : val, c : cstate, st : int, shr : share,
+       shw : share
   PRE [ tptr t_state, tptr tdouble, tptr tdouble ]
     PROP (readable_share sh; writable_share shr; writable_share shw;
           s <> nullval; root <> nullval; dx <> nullval)
     PARAMS (s; root; dx)
-    SEP (data_at sh t_state (cstate_repr c) s;
+    SEP (data_at sh t_state (cstate_repr c st) s;
          data_at_ shr tdouble root; data_at_ shw tdouble dx)
   POST [ tint ]
     PROP () RETURN (Vint (Int.repr 0))
-    SEP (data_at sh t_state (cstate_repr c) s;
+    SEP (data_at sh t_state (cstate_repr c st) s;
          data_at shr tdouble (Vfloat (cx c)) root;
          data_at shw tdouble (Vfloat (cdx c)) dx).
 
@@ -36,14 +37,14 @@ Proof.
   - subst s. contradiction.
   - forward_if (PROP ()
       LOCAL (temp _s s; temp _root root; temp _dx dx)
-      SEP (data_at sh t_state (cstate_repr c) s;
+      SEP (data_at sh t_state (cstate_repr c st) s;
            data_at shr tdouble (Vfloat (cx c)) root;
            data_at_ shw tdouble dx)).
     + forward. forward. entailer!.
     + contradiction.
     + forward_if (PROP ()
         LOCAL (temp _s s; temp _root root; temp _dx dx)
-        SEP (data_at sh t_state (cstate_repr c) s;
+        SEP (data_at sh t_state (cstate_repr c st) s;
              data_at shr tdouble (Vfloat (cx c)) root;
              data_at shw tdouble (Vfloat (cdx c)) dx)).
       * forward. forward. entailer!.

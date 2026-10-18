@@ -15,11 +15,12 @@ Definition fp_finite_spec :=
 
 Definition t_state := Tstruct _diana_newton_state noattr.
 
-Definition cstate_repr (c : cstate) : reptype t_state :=
-  (Vfloat (cx c), (Vfloat (cdx c), (Vfloat (ctol c), (Vint (citer c), Vint (cmax c))))).
+Definition cstate_repr (c : cstate) (st : int) : reptype t_state :=
+  (Vfloat (cx c), (Vfloat (cdx c), (Vfloat (ctol c), (Vint (citer c), (Vint (cmax c), Vint st))))).
 
-Definition init_repr (old : reptype t_state) (o : option cstate) : reptype t_state :=
-  match o with Some c => cstate_repr c | None => old end.
+(* On success the status field holds the returned status. *)
+Definition init_repr (old : reptype t_state) (o : option cstate) (z : Z) : reptype t_state :=
+  match o with Some c => cstate_repr c (Int.repr z) | None => old end.
 
 Definition init_spec :=
   DECLARE _diana_newton_init
@@ -30,7 +31,7 @@ Definition init_spec :=
     SEP (data_at sh t_state old s)
   POST [ tint ]
     PROP () RETURN (Vint (Int.repr (fst (c_init x0 tol m))))
-    SEP (data_at sh t_state (init_repr old (snd (c_init x0 tol m))) s).
+    SEP (data_at sh t_state (init_repr old (snd (c_init x0 tol m)) (fst (c_init x0 tol m))) s).
 
 Definition Gprog : funspecs :=
   ltac:(with_library prog [fp_finite_spec; init_spec]).
@@ -123,6 +124,6 @@ Proof.
   forward_if.
   { contradiction. }
   sep_apply (data_at_data_at_ sh t_state old s).
-  forward. forward. forward. forward. forward.
+  forward. forward. forward. forward. forward. forward.
   init_post. forward.
 Qed.

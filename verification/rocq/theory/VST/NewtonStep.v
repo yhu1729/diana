@@ -23,19 +23,33 @@ Definition fp_abs_spec :=
 
 Definition t_state := Tstruct _diana_newton_state noattr.
 
-Definition cstate_repr (c : cstate) : reptype t_state :=
-  (Vfloat (cx c), (Vfloat (cdx c), (Vfloat (ctol c), (Vint (citer c), Vint (cmax c))))).
+Definition cstate_repr (c : cstate) (st : int) : reptype t_state :=
+  (Vfloat (cx c), (Vfloat (cdx c), (Vfloat (ctol c), (Vint (citer c), (Vint (cmax c), Vint st))))).
+
+(* A state whose status is not DIANA_CONTINUE (1) is rejected unchanged; otherwise the step is
+   c_step, and the status becomes its result when that is 0, 1 or -3 (the errors -1, -4 and -5
+   leave the state, status included, unchanged). *)
+Definition step_result (st : int) (c : cstate) (fx dfx : float) : Z :=
+  if Int.eq st Int.one then fst (c_step c fx dfx) else -1.
+
+Definition step_status (st : int) (z : Z) : int :=
+  if (Z.eqb z 0 || Z.eqb z 1 || Z.eqb z (-3))%bool then Int.repr z else st.
+
+Definition step_repr (st : int) (c : cstate) (fx dfx : float) : reptype t_state :=
+  if Int.eq st Int.one then
+    cstate_repr (snd (c_step c fx dfx)) (step_status st (fst (c_step c fx dfx)))
+  else cstate_repr c st.
 
 Definition step_spec :=
   DECLARE _diana_newton_step
-  WITH sh : share, s : val, c : cstate, fx : float, dfx : float
+  WITH sh : share, s : val, c : cstate, st : int, fx : float, dfx : float
   PRE [ tptr t_state, tdouble, tdouble ]
     PROP (writable_share sh)
     PARAMS (s; Vfloat fx; Vfloat dfx)
-    SEP (data_at sh t_state (cstate_repr c) s)
+    SEP (data_at sh t_state (cstate_repr c st) s)
   POST [ tint ]
-    PROP () RETURN (Vint (Int.repr (fst (c_step c fx dfx))))
-    SEP (data_at sh t_state (cstate_repr (snd (c_step c fx dfx))) s).
+    PROP () RETURN (Vint (Int.repr (step_result st c fx dfx)))
+    SEP (data_at sh t_state (step_repr st c fx dfx) s).
 
 Definition Gprog : funspecs :=
   ltac:(with_library prog [fp_finite_spec; fp_abs_spec; step_spec]).
@@ -108,7 +122,8 @@ Ltac absurd_branch :=
             rewrite ?Int.eq_true, ?(Int.eq_false _ _ Int.one_not_zero) in H; discriminate H end ].
 
 Ltac step_post :=
-  match goal with |- semax _ _ _ ?P => unfold P end; unfold abbreviate, c_step, c_zero;
+  match goal with |- semax _ _ _ ?P => unfold P end;
+  unfold abbreviate, step_result, step_repr, step_status, c_step, c_zero; rewrite Int.eq_true;
   cbv zeta beta;
   cbn [fst snd cx cdx ctol citer cmax];
   repeat match goal with
@@ -117,7 +132,7 @@ Ltac step_post :=
     | H : orb _ _ = _ |- _ => rewrite H
     | H : Int.ltu _ _ = _ |- _ => try change (Int.repr 1) with Int.one in H; rewrite H
     end;
-  cbv iota beta; cbn [fst snd negb orb cx cdx ctol citer cmax];
+  cbv iota beta; cbn [fst snd negb orb cx cdx ctol citer cmax Z.eqb Pos.eqb];
   try change (Int.repr 1) with Int.one.
 
 #[local] Opaque VB.c_abs.
@@ -128,11 +143,28 @@ Proof.
   destruct c as [x0 dx0 tol it m].
   unfold cstate_repr. cbn [cx cdx ctol citer cmax].
   assert_PROP (isptr s) as Hs by entailer!.
-  forward_if (temp _t'1 (Vint (if c_fin fx then Int.zero else Int.one))).
+  forward_if (temp _t'1 (Vint (if Int.eq st Int.one then Int.zero else Int.one))).
   { subst s. contradiction. }
+  { forward. forward. entailer!. change (Int.repr 1) with Int.one.
+    destruct (Int.eq st Int.one); reflexivity. }
+  destruct (Int.eq st Int.one) eqn:Est.
+  2: { forward_if (temp _t'2 (Vint Int.one)).
+       - forward. entailer!.
+       - apply Int.one_not_zero in H. contradiction.
+       - forward_if (temp _t'4 (Vint Int.one)).
+         + forward. entailer!.
+         + apply Int.one_not_zero in H. contradiction.
+         + forward_if.
+           * match goal with |- semax _ _ _ ?P => unfold P end.
+             unfold abbreviate, step_result, step_repr. rewrite Est. cbv iota.
+             forward.
+           * apply Int.one_not_zero in H. contradiction. }
+  apply Int.same_if_eq in Est. subst st.
+  forward_if (temp _t'2 (Vint (if c_fin fx then Int.zero else Int.one))).
+  { contradiction. }
   { forward_call fx. forward. entailer!. unfold c_fin.
     destruct (Binary.is_finite 53 1024 fx); reflexivity. }
-  forward_if (temp _t'3 (Vint (if (negb (c_fin fx) || negb (c_fin dfx))%bool
+  forward_if (temp _t'4 (Vint (if (negb (c_fin fx) || negb (c_fin dfx))%bool
                                then Int.one else Int.zero))).
   { forward. entailer!. bool_solve. }
   { forward_call dfx. forward. entailer!. bool_solve. }
@@ -146,7 +178,7 @@ Proof.
   { unfold c_fin in Hfin. rewrite !Bool.orb_false_iff, !Bool.negb_false_iff in Hfin. tauto. }
   destruct Hf as [Hfx Hdfx].
   forward_if.
-  { forward. forward. forward. step_post. forward. }
+  { forward. forward. forward. forward. step_post. forward. }
   forward_if.
   { step_post. forward. }
   forward.
@@ -170,7 +202,7 @@ Proof.
   forward_if.
   { absurd_branch. }
   forward.
-  forward_if (temp _t'7 (Vint (if (Float.cmp Ceq (Float.sub x0 (Float.div fx dfx)) x0 ||
+  forward_if (temp _t'8 (Vint (if (Float.cmp Ceq (Float.sub x0 (Float.div fx dfx)) x0 ||
                                    Float.cmp Cle (VB.c_abs (Float.div fx dfx)) tol)%bool
                                then Int.one else Int.zero))).
   { forward. entailer!. bool_solve. }
@@ -180,12 +212,12 @@ Proof.
   destruct (Float.cmp Ceq (Float.sub x0 (Float.div fx dfx)) x0 ||
             Float.cmp Cle (VB.c_abs (Float.div fx dfx)) tol)%bool eqn:Hconv.
   { forward_if.
-    - step_post. forward.
+    - forward. step_post. forward.
     - absurd_branch. }
   forward_if.
   { absurd_branch. }
   forward. forward.
   forward_if.
-  { step_post. forward. }
+  { forward. step_post. forward. }
   step_post. forward.
 Qed.

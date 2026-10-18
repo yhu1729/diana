@@ -16,21 +16,32 @@ Definition fp_finite_spec :=
 
 Definition t_state := Tstruct _diana_bisection_state noattr.
 
-Definition cstate_repr (c : cstate) : reptype t_state :=
+Definition cstate_repr (c : cstate) (st : int) : reptype t_state :=
   (Vfloat (FB.sa (cfl c)), (Vfloat (FB.sb (cfl c)), (Vfloat (FB.sfa (cfl c)),
    (Vfloat (FB.sfb (cfl c)), (Vfloat (FB.sx (cfl c)), (Vfloat (FB.stol (cfl c)),
-   (Vint (citer c), Vint (cmax c)))))))).
+   (Vint (citer c), (Vint (cmax c), Vint st)))))))).
+
+(* A state whose status is not DIANA_CONTINUE (1) is rejected unchanged; otherwise the step is
+   c_step and the status becomes its result, except that -1 leaves it at 1. *)
+Definition step_result (st : int) (c : cstate) (fx : float) : Z :=
+  if Int.eq st Int.one then fst (c_step c fx) else -1.
+
+Definition step_repr (st : int) (c : cstate) (fx : float) : reptype t_state :=
+  if Int.eq st Int.one then
+    cstate_repr (snd (c_step c fx))
+      (if Z.eqb (fst (c_step c fx)) (-1) then st else Int.repr (fst (c_step c fx)))
+  else cstate_repr c st.
 
 Definition step_spec :=
   DECLARE _diana_bisection_step
-  WITH sh : share, s : val, c : cstate, fx : float
+  WITH sh : share, s : val, c : cstate, st : int, fx : float
   PRE [ tptr t_state, tdouble ]
     PROP (writable_share sh)
     PARAMS (s; Vfloat fx)
-    SEP (data_at sh t_state (cstate_repr c) s)
+    SEP (data_at sh t_state (cstate_repr c st) s)
   POST [ tint ]
-    PROP () RETURN (Vint (Int.repr (fst (c_step c fx))))
-    SEP (data_at sh t_state (cstate_repr (snd (c_step c fx))) s).
+    PROP () RETURN (Vint (Int.repr (step_result st c fx)))
+    SEP (data_at sh t_state (step_repr st c fx) s).
 
 Definition Gprog : funspecs :=
   ltac:(with_library prog [fp_finite_spec; Diana.VST.BisectionMid.mid_spec; step_spec]).
@@ -76,7 +87,8 @@ Proof.
 Qed.
 
 Ltac step_post :=
-  match goal with |- semax _ _ _ ?P => unfold P end; unfold abbreviate, c_step, c_zero;
+  match goal with |- semax _ _ _ ?P => unfold P end;
+  unfold abbreviate, step_result, step_repr, c_step, c_zero; rewrite Int.eq_true;
   cbv zeta beta;
   cbn [fst snd cfl citer cmax FB.sa FB.sb FB.sfa FB.sfb FB.sx FB.stol];
   repeat match goal with H : FB.mkstate _ _ _ _ _ _ = c_keep _ _ |- _ => rewrite <- H end;
@@ -87,7 +99,7 @@ Ltac step_post :=
     | H : orb _ _ = _ |- _ => rewrite H
     | H : Int.ltu _ _ = _ |- _ => rewrite H
     end;
-  cbv iota beta; cbn [fst snd negb orb].
+  cbv iota beta; cbn [fst snd negb orb Z.eqb Pos.eqb].
 
 #[local] Opaque c_keep c_mid c_abs.
 
@@ -97,8 +109,22 @@ Proof.
   destruct c as [[a b fa fb x tol] it m].
   unfold cstate_repr. cbn [cfl citer cmax FB.sa FB.sb FB.sfa FB.sfb FB.sx FB.stol].
   assert_PROP (isptr s) as Hs by entailer!.
-  forward_if (temp _t'1 (Vint (if c_fin fx then Int.zero else Int.one))).
+  forward_if (temp _t'1 (Vint (if Int.eq st Int.one then Int.zero else Int.one))).
   { subst s. contradiction. }
+  { forward. forward. entailer!. change (Int.repr 1) with Int.one.
+    destruct (Int.eq st Int.one); reflexivity. }
+  destruct (Int.eq st Int.one) eqn:Est.
+  2: { forward_if (temp _t'2 (Vint Int.one)).
+       - forward. entailer!.
+       - apply Int.one_not_zero in H. contradiction.
+       - forward_if.
+         + match goal with |- semax _ _ _ ?P => unfold P end.
+           unfold abbreviate, step_result, step_repr. rewrite Est. cbv iota.
+           forward.
+         + apply Int.one_not_zero in H. contradiction. }
+  apply Int.same_if_eq in Est. subst st.
+  forward_if (temp _t'2 (Vint (if c_fin fx then Int.zero else Int.one))).
+  { contradiction. }
   { forward_call fx. forward. entailer!. unfold c_fin.
     destruct (Binary.is_finite 53 1024 fx); reflexivity. }
   destruct (c_fin fx) eqn:Hfin.
@@ -109,11 +135,12 @@ Proof.
   { contradiction. }
   forward. forward. forward.
   forward_if.
-  { forward. forward. forward. forward. step_post. forward. }
+  { forward. forward. forward. forward. forward. step_post. forward. }
   forward.
   forward_if (PROP () LOCAL (temp _x (Vfloat x); temp _s s; temp _fx (Vfloat fx))
     SEP (data_at sh t_state (cstate_repr
-           (mkcstate (c_keep (FB.mkstate a b fa fb x tol) fx) (Int.add it Int.one) m)) s)).
+           (mkcstate (c_keep (FB.mkstate a b fa fb x tol) fx) (Int.add it Int.one) m)
+           Int.one) s)).
   { forward. forward. rewrite c_keep_same by (apply b2z_repr_eq; assumption).
     entailer!. }
   { forward. forward.
@@ -124,10 +151,10 @@ Proof.
   unfold cstate_repr. cbn [cfl citer cmax FB.sa FB.sb FB.sfa FB.sfb FB.sx FB.stol].
   forward. forward. forward.
   forward_if.
-  { step_post. forward. }
+  { forward. step_post. forward. }
   forward. forward. forward_call (a1, b1). forward.
   forward. forward.
-  forward_if (temp _t'4 (Vint (if (Float.cmp Cle (c_mid a1 b1) a1 ||
+  forward_if (temp _t'5 (Vint (if (Float.cmp Cle (c_mid a1 b1) a1 ||
                                   Float.cmp Cge (c_mid a1 b1) b1)%bool
                                then Int.one else Int.zero))).
   { forward. entailer!. rewrite H2. reflexivity. }
@@ -135,12 +162,12 @@ Proof.
     destruct (Float.cmp Cge _ _); reflexivity. }
   destruct (Float.cmp Cle (c_mid a1 b1) a1 || Float.cmp Cge (c_mid a1 b1) b1)%bool eqn:Hst.
   { forward_if.
-    - step_post. forward.
+    - forward. step_post. forward.
     - apply Int.one_not_zero in H2. contradiction. }
   forward_if.
   { contradiction. }
   forward. forward.
   forward_if.
-  { step_post. forward. }
+  { forward. step_post. forward. }
   step_post. forward.
 Qed.
