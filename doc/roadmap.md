@@ -15,10 +15,8 @@ else.
 
 ## Toward 1.1
 
-Closing the trust and tooling gaps of 1.0.
+Closing the tooling gaps of 1.0.
 
-- `high` Second Clight target (x86-64 Linux)
-- `high` Compiler comparison on x86-64 Linux
 - `high` Benchmark suite covering every kernel
 - `high` GIL released in the Python array functions
 - `high` Dot product, norm, `axpy`
@@ -129,11 +127,10 @@ Dense factorizations on the stride interface.
 
 ## Toward 2.3
 
-Iterative solvers, their storage, and offload of the batched kernels.
+Iterative solvers and their storage.
 
 - `low` Jacobi, Gauss–Seidel, conjugate gradient
 - `low` Sparse matrix storage for the iterative solvers
-- `low` GPU offload of the batched kernels
 
 ## Toward 2.4
 
