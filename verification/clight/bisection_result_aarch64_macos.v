@@ -85,6 +85,7 @@ Definition _main : ident := $"main".
 Definition _max_iter : ident := $"max_iter".
 Definition _root : ident := $"root".
 Definition _s : ident := $"s".
+Definition _status : ident := $"status".
 Definition _tol : ident := $"tol".
 Definition _width : ident := $"width".
 Definition _x : ident := $"x".
@@ -163,7 +164,8 @@ Definition composites : list composite_definition :=
    (Member_plain _a tdouble :: Member_plain _b tdouble ::
     Member_plain _fa tdouble :: Member_plain _fb tdouble ::
     Member_plain _x tdouble :: Member_plain _tol tdouble ::
-    Member_plain _iter tuint :: Member_plain _max_iter tuint :: nil)
+    Member_plain _iter tuint :: Member_plain _max_iter tuint ::
+    Member_plain _status tint :: nil)
    noattr :: nil).
 
 Definition global_definitions : list (ident * globdef fundef type) :=

@@ -86,6 +86,7 @@ Definition _iter : ident := $"iter".
 Definition _main : ident := $"main".
 Definition _max_iter : ident := $"max_iter".
 Definition _s : ident := $"s".
+Definition _status : ident := $"status".
 Definition _tol : ident := $"tol".
 Definition _x : ident := $"x".
 Definition _t'1 : ident := 128%positive.
@@ -97,6 +98,8 @@ Definition _t'14 : ident := 141%positive.
 Definition _t'15 : ident := 142%positive.
 Definition _t'16 : ident := 143%positive.
 Definition _t'17 : ident := 144%positive.
+Definition _t'18 : ident := 145%positive.
+Definition _t'19 : ident := 146%positive.
 Definition _t'2 : ident := 129%positive.
 Definition _t'3 : ident := 130%positive.
 Definition _t'4 : ident := 131%positive.
@@ -130,26 +133,42 @@ Definition f_diana_bisection_step := {|
   fn_params := ((_s, (tptr (Tstruct _diana_bisection_state noattr))) ::
                 (_fx, tdouble) :: nil);
   fn_vars := nil;
-  fn_temps := ((_x, tdouble) :: (_t'4, tint) :: (_t'3, tdouble) ::
-               (_t'2, tint) :: (_t'1, tint) :: (_t'17, tuint) ::
+  fn_temps := ((_x, tdouble) :: (_t'5, tint) :: (_t'4, tdouble) ::
+               (_t'3, tint) :: (_t'2, tint) :: (_t'1, tint) ::
+               (_t'19, tint) :: (_t'18, tuint) :: (_t'17, tdouble) ::
                (_t'16, tdouble) :: (_t'15, tdouble) :: (_t'14, tdouble) ::
                (_t'13, tdouble) :: (_t'12, tdouble) :: (_t'11, tdouble) ::
                (_t'10, tdouble) :: (_t'9, tdouble) :: (_t'8, tdouble) ::
-               (_t'7, tdouble) :: (_t'6, tuint) :: (_t'5, tuint) :: nil);
+               (_t'7, tuint) :: (_t'6, tuint) :: nil);
   fn_body :=
 (Ssequence
   (Ssequence
-    (Sifthenelse (Ebinop Oeq
-                   (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
-                   (Ecast (Econst_int (Int.repr 0) tint)
-                     (tptr (Tstruct _diana_bisection_state noattr))) tint)
-      (Sset _t'1 (Econst_int (Int.repr 1) tint))
-      (Ssequence
-        (Scall (Some _t'2)
-          (Evar _diana_fp_finite (Tfunction (tdouble :: nil) tint cc_default))
-          ((Etempvar _fx tdouble) :: nil))
-        (Sset _t'1 (Ecast (Eunop Onotbool (Etempvar _t'2 tint) tint) tbool))))
-    (Sifthenelse (Etempvar _t'1 tint)
+    (Ssequence
+      (Sifthenelse (Ebinop Oeq
+                     (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
+                     (Ecast (Econst_int (Int.repr 0) tint)
+                       (tptr (Tstruct _diana_bisection_state noattr))) tint)
+        (Sset _t'1 (Econst_int (Int.repr 1) tint))
+        (Ssequence
+          (Sset _t'19
+            (Efield
+              (Ederef
+                (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
+                (Tstruct _diana_bisection_state noattr)) _status tint))
+          (Sset _t'1
+            (Ecast
+              (Ebinop One (Etempvar _t'19 tint)
+                (Econst_int (Int.repr 1) tint) tint) tbool))))
+      (Sifthenelse (Etempvar _t'1 tint)
+        (Sset _t'2 (Econst_int (Int.repr 1) tint))
+        (Ssequence
+          (Scall (Some _t'3)
+            (Evar _diana_fp_finite (Tfunction (tdouble :: nil) tint
+                                     cc_default))
+            ((Etempvar _fx tdouble) :: nil))
+          (Sset _t'2
+            (Ecast (Eunop Onotbool (Etempvar _t'3 tint) tint) tbool)))))
+    (Sifthenelse (Etempvar _t'2 tint)
       (Sreturn (Some (Econst_int (Int.repr (-1)) tint)))
       Sskip))
   (Ssequence
@@ -159,7 +178,7 @@ Definition f_diana_bisection_step := {|
           (Tstruct _diana_bisection_state noattr)) _x tdouble))
     (Ssequence
       (Ssequence
-        (Sset _t'17
+        (Sset _t'18
           (Efield
             (Ederef
               (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
@@ -169,7 +188,7 @@ Definition f_diana_bisection_step := {|
             (Ederef
               (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
               (Tstruct _diana_bisection_state noattr)) _iter tuint)
-          (Ebinop Oadd (Etempvar _t'17 tuint) (Econst_int (Int.repr 1) tuint)
+          (Ebinop Oadd (Etempvar _t'18 tuint) (Econst_int (Int.repr 1) tuint)
             tuint)))
       (Ssequence
         (Sifthenelse (Ebinop Oeq (Etempvar _fx tdouble)
@@ -203,11 +222,18 @@ Definition f_diana_bisection_step := {|
                         (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
                         (Tstruct _diana_bisection_state noattr)) _fb tdouble)
                     (Etempvar _fx tdouble))
-                  (Sreturn (Some (Econst_int (Int.repr 0) tint)))))))
+                  (Ssequence
+                    (Sassign
+                      (Efield
+                        (Ederef
+                          (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
+                          (Tstruct _diana_bisection_state noattr)) _status
+                        tint) (Econst_int (Int.repr 0) tint))
+                    (Sreturn (Some (Econst_int (Int.repr 0) tint))))))))
           Sskip)
         (Ssequence
           (Ssequence
-            (Sset _t'16
+            (Sset _t'17
               (Efield
                 (Ederef
                   (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
@@ -216,7 +242,7 @@ Definition f_diana_bisection_step := {|
                            (Ebinop Ogt (Etempvar _fx tdouble)
                              (Econst_float (Float.of_bits (Int64.repr 0)) tdouble)
                              tint)
-                           (Ebinop Ogt (Etempvar _t'16 tdouble)
+                           (Ebinop Ogt (Etempvar _t'17 tdouble)
                              (Econst_float (Float.of_bits (Int64.repr 0)) tdouble)
                              tint) tint)
               (Ssequence
@@ -247,115 +273,137 @@ Definition f_diana_bisection_step := {|
                   (Etempvar _fx tdouble)))))
           (Ssequence
             (Ssequence
-              (Sset _t'13
+              (Sset _t'14
                 (Efield
                   (Ederef
                     (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
                     (Tstruct _diana_bisection_state noattr)) _b tdouble))
               (Ssequence
-                (Sset _t'14
+                (Sset _t'15
                   (Efield
                     (Ederef
                       (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
                       (Tstruct _diana_bisection_state noattr)) _a tdouble))
                 (Ssequence
-                  (Sset _t'15
+                  (Sset _t'16
                     (Efield
                       (Ederef
                         (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
                         (Tstruct _diana_bisection_state noattr)) _tol
                       tdouble))
                   (Sifthenelse (Ebinop Ole
-                                 (Ebinop Osub (Etempvar _t'13 tdouble)
-                                   (Etempvar _t'14 tdouble) tdouble)
-                                 (Etempvar _t'15 tdouble) tint)
-                    (Sreturn (Some (Econst_int (Int.repr 0) tint)))
+                                 (Ebinop Osub (Etempvar _t'14 tdouble)
+                                   (Etempvar _t'15 tdouble) tdouble)
+                                 (Etempvar _t'16 tdouble) tint)
+                    (Ssequence
+                      (Sassign
+                        (Efield
+                          (Ederef
+                            (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
+                            (Tstruct _diana_bisection_state noattr)) _status
+                          tint) (Econst_int (Int.repr 0) tint))
+                      (Sreturn (Some (Econst_int (Int.repr 0) tint))))
                     Sskip))))
             (Ssequence
               (Ssequence
                 (Ssequence
-                  (Sset _t'11
+                  (Sset _t'12
                     (Efield
                       (Ederef
                         (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
                         (Tstruct _diana_bisection_state noattr)) _a tdouble))
                   (Ssequence
-                    (Sset _t'12
+                    (Sset _t'13
                       (Efield
                         (Ederef
                           (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
                           (Tstruct _diana_bisection_state noattr)) _b
                         tdouble))
-                    (Scall (Some _t'3)
+                    (Scall (Some _t'4)
                       (Evar _diana_bisection_mid (Tfunction
                                                    (tdouble :: tdouble ::
                                                     nil) tdouble cc_default))
-                      ((Etempvar _t'11 tdouble) ::
-                       (Etempvar _t'12 tdouble) :: nil))))
+                      ((Etempvar _t'12 tdouble) ::
+                       (Etempvar _t'13 tdouble) :: nil))))
                 (Sassign
                   (Efield
                     (Ederef
                       (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
                       (Tstruct _diana_bisection_state noattr)) _x tdouble)
-                  (Etempvar _t'3 tdouble)))
+                  (Etempvar _t'4 tdouble)))
               (Ssequence
                 (Ssequence
                   (Ssequence
-                    (Sset _t'7
+                    (Sset _t'8
                       (Efield
                         (Ederef
                           (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
                           (Tstruct _diana_bisection_state noattr)) _x
                         tdouble))
                     (Ssequence
-                      (Sset _t'8
+                      (Sset _t'9
                         (Efield
                           (Ederef
                             (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
                             (Tstruct _diana_bisection_state noattr)) _a
                           tdouble))
-                      (Sifthenelse (Ebinop Ole (Etempvar _t'7 tdouble)
-                                     (Etempvar _t'8 tdouble) tint)
-                        (Sset _t'4 (Econst_int (Int.repr 1) tint))
+                      (Sifthenelse (Ebinop Ole (Etempvar _t'8 tdouble)
+                                     (Etempvar _t'9 tdouble) tint)
+                        (Sset _t'5 (Econst_int (Int.repr 1) tint))
                         (Ssequence
-                          (Sset _t'9
+                          (Sset _t'10
                             (Efield
                               (Ederef
                                 (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
                                 (Tstruct _diana_bisection_state noattr)) _x
                               tdouble))
                           (Ssequence
-                            (Sset _t'10
+                            (Sset _t'11
                               (Efield
                                 (Ederef
                                   (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
                                   (Tstruct _diana_bisection_state noattr)) _b
                                 tdouble))
-                            (Sset _t'4
+                            (Sset _t'5
                               (Ecast
-                                (Ebinop Oge (Etempvar _t'9 tdouble)
-                                  (Etempvar _t'10 tdouble) tint) tbool)))))))
-                  (Sifthenelse (Etempvar _t'4 tint)
-                    (Sreturn (Some (Econst_int (Int.repr 0) tint)))
+                                (Ebinop Oge (Etempvar _t'10 tdouble)
+                                  (Etempvar _t'11 tdouble) tint) tbool)))))))
+                  (Sifthenelse (Etempvar _t'5 tint)
+                    (Ssequence
+                      (Sassign
+                        (Efield
+                          (Ederef
+                            (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
+                            (Tstruct _diana_bisection_state noattr)) _status
+                          tint) (Econst_int (Int.repr 0) tint))
+                      (Sreturn (Some (Econst_int (Int.repr 0) tint))))
                     Sskip))
                 (Ssequence
                   (Ssequence
-                    (Sset _t'5
+                    (Sset _t'6
                       (Efield
                         (Ederef
                           (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
                           (Tstruct _diana_bisection_state noattr)) _iter
                         tuint))
                     (Ssequence
-                      (Sset _t'6
+                      (Sset _t'7
                         (Efield
                           (Ederef
                             (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
                             (Tstruct _diana_bisection_state noattr))
                           _max_iter tuint))
-                      (Sifthenelse (Ebinop Oge (Etempvar _t'5 tuint)
-                                     (Etempvar _t'6 tuint) tint)
-                        (Sreturn (Some (Econst_int (Int.repr (-3)) tint)))
+                      (Sifthenelse (Ebinop Oge (Etempvar _t'6 tuint)
+                                     (Etempvar _t'7 tuint) tint)
+                        (Ssequence
+                          (Sassign
+                            (Efield
+                              (Ederef
+                                (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
+                                (Tstruct _diana_bisection_state noattr))
+                              _status tint)
+                            (Econst_int (Int.repr (-3)) tint))
+                          (Sreturn (Some (Econst_int (Int.repr (-3)) tint))))
                         Sskip)))
                   (Sreturn (Some (Econst_int (Int.repr 1) tint))))))))))))
 |}.
@@ -365,7 +413,8 @@ Definition composites : list composite_definition :=
    (Member_plain _a tdouble :: Member_plain _b tdouble ::
     Member_plain _fa tdouble :: Member_plain _fb tdouble ::
     Member_plain _x tdouble :: Member_plain _tol tdouble ::
-    Member_plain _iter tuint :: Member_plain _max_iter tuint :: nil)
+    Member_plain _iter tuint :: Member_plain _max_iter tuint ::
+    Member_plain _status tint :: nil)
    noattr :: nil).
 
 Definition global_definitions : list (ident * globdef fundef type) :=

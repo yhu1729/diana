@@ -86,6 +86,7 @@ Definition _iter : ident := $"iter".
 Definition _main : ident := $"main".
 Definition _max_iter : ident := $"max_iter".
 Definition _s : ident := $"s".
+Definition _status : ident := $"status".
 Definition _tol : ident := $"tol".
 Definition _x : ident := $"x".
 Definition _t'1 : ident := 128%positive.
@@ -381,7 +382,15 @@ Definition f_diana_bisection_init := {|
                                           (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
                                           (Tstruct _diana_bisection_state noattr))
                                         _x tdouble) (Etempvar _a tdouble))
-                                    (Sreturn (Some (Econst_int (Int.repr 0) tint))))))
+                                    (Ssequence
+                                      (Sassign
+                                        (Efield
+                                          (Ederef
+                                            (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
+                                            (Tstruct _diana_bisection_state noattr))
+                                          _status tint)
+                                        (Econst_int (Int.repr 0) tint))
+                                      (Sreturn (Some (Econst_int (Int.repr 0) tint)))))))
                               Sskip)
                             (Ssequence
                               (Sifthenelse (Ebinop Oeq (Etempvar _fb tdouble)
@@ -408,7 +417,15 @@ Definition f_diana_bisection_init := {|
                                             (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
                                             (Tstruct _diana_bisection_state noattr))
                                           _x tdouble) (Etempvar _b tdouble))
-                                      (Sreturn (Some (Econst_int (Int.repr 0) tint))))))
+                                      (Ssequence
+                                        (Sassign
+                                          (Efield
+                                            (Ederef
+                                              (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
+                                              (Tstruct _diana_bisection_state noattr))
+                                            _status tint)
+                                          (Econst_int (Int.repr 0) tint))
+                                        (Sreturn (Some (Econst_int (Int.repr 0) tint)))))))
                                 Sskip)
                               (Ssequence
                                 (Ssequence
@@ -452,9 +469,25 @@ Definition f_diana_bisection_init := {|
                                               (Etempvar _b tdouble) tint)
                                             tbool)))))
                                   (Sifthenelse (Etempvar _t'19 tint)
-                                    (Sreturn (Some (Econst_int (Int.repr 0) tint)))
+                                    (Ssequence
+                                      (Sassign
+                                        (Efield
+                                          (Ederef
+                                            (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
+                                            (Tstruct _diana_bisection_state noattr))
+                                          _status tint)
+                                        (Econst_int (Int.repr 0) tint))
+                                      (Sreturn (Some (Econst_int (Int.repr 0) tint))))
                                     Sskip))
-                                (Sreturn (Some (Econst_int (Int.repr 1) tint)))))))))))))))))))
+                                (Ssequence
+                                  (Sassign
+                                    (Efield
+                                      (Ederef
+                                        (Etempvar _s (tptr (Tstruct _diana_bisection_state noattr)))
+                                        (Tstruct _diana_bisection_state noattr))
+                                      _status tint)
+                                    (Econst_int (Int.repr 1) tint))
+                                  (Sreturn (Some (Econst_int (Int.repr 1) tint))))))))))))))))))))
 |}.
 
 Definition composites : list composite_definition :=
@@ -462,7 +495,8 @@ Definition composites : list composite_definition :=
    (Member_plain _a tdouble :: Member_plain _b tdouble ::
     Member_plain _fa tdouble :: Member_plain _fb tdouble ::
     Member_plain _x tdouble :: Member_plain _tol tdouble ::
-    Member_plain _iter tuint :: Member_plain _max_iter tuint :: nil)
+    Member_plain _iter tuint :: Member_plain _max_iter tuint ::
+    Member_plain _status tint :: nil)
    noattr :: nil).
 
 Definition global_definitions : list (ident * globdef fundef type) :=

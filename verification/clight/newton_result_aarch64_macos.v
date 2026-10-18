@@ -81,6 +81,7 @@ Definition _main : ident := $"main".
 Definition _max_iter : ident := $"max_iter".
 Definition _root : ident := $"root".
 Definition _s : ident := $"s".
+Definition _status : ident := $"status".
 Definition _tol : ident := $"tol".
 Definition _x : ident := $"x".
 Definition _t'1 : ident := 128%positive.
@@ -133,7 +134,7 @@ Definition composites : list composite_definition :=
 (Composite _diana_newton_state Struct
    (Member_plain _x tdouble :: Member_plain _dx tdouble ::
     Member_plain _tol tdouble :: Member_plain _iter tuint ::
-    Member_plain _max_iter tuint :: nil)
+    Member_plain _max_iter tuint :: Member_plain _status tint :: nil)
    noattr :: nil).
 
 Definition global_definitions : list (ident * globdef fundef type) :=

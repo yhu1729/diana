@@ -81,6 +81,7 @@ Definition _iter : ident := $"iter".
 Definition _main : ident := $"main".
 Definition _max_iter : ident := $"max_iter".
 Definition _s : ident := $"s".
+Definition _status : ident := $"status".
 Definition _tol : ident := $"tol".
 Definition _x : ident := $"x".
 Definition _x0 : ident := $"x0".
@@ -189,14 +190,21 @@ Definition f_diana_newton_init := {|
                       (Etempvar _s (tptr (Tstruct _diana_newton_state noattr)))
                       (Tstruct _diana_newton_state noattr)) _max_iter tuint)
                   (Etempvar _max_iter tuint))
-                (Sreturn (Some (Econst_int (Int.repr 1) tint)))))))))))
+                (Ssequence
+                  (Sassign
+                    (Efield
+                      (Ederef
+                        (Etempvar _s (tptr (Tstruct _diana_newton_state noattr)))
+                        (Tstruct _diana_newton_state noattr)) _status tint)
+                    (Econst_int (Int.repr 1) tint))
+                  (Sreturn (Some (Econst_int (Int.repr 1) tint))))))))))))
 |}.
 
 Definition composites : list composite_definition :=
 (Composite _diana_newton_state Struct
    (Member_plain _x tdouble :: Member_plain _dx tdouble ::
     Member_plain _tol tdouble :: Member_plain _iter tuint ::
-    Member_plain _max_iter tuint :: nil)
+    Member_plain _max_iter tuint :: Member_plain _status tint :: nil)
    noattr :: nil).
 
 Definition global_definitions : list (ident * globdef fundef type) :=
