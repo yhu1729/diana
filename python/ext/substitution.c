@@ -14,6 +14,7 @@ PyObject *diana_py_substitution(PyObject *args, PyObject *kwds,
   Py_ssize_t n;
   PyObject *ret = NULL;
   diana_status st;
+  const char *msg;
 
   if (!PyArg_ParseTupleAndKeywords(args, kwds, format, kwlist, &lower, &b,
                                    &out)) {
@@ -48,11 +49,14 @@ PyObject *diana_py_substitution(PyObject *args, PyObject *kwds,
   st = solve((const double *)vl.buf, (size_t)n, (const double *)vb.buf,
              (double *)vo.buf);
   if (st != DIANA_OK) {
-    diana_py_raise(st, st == DIANA_ERR_SINGULAR
-                           ? "matrix is singular: a diagonal entry is zero"
-                       : st == DIANA_ERR_OVERFLOW
-                           ? "the solution overflows"
-                           : "lower or b has a non-finite entry");
+    if (st == DIANA_ERR_SINGULAR) {
+      msg = "matrix is singular: a diagonal entry is zero";
+    } else if (st == DIANA_ERR_OVERFLOW) {
+      msg = "the solution overflows";
+    } else {
+      msg = "lower or b has a non-finite entry";
+    }
+    diana_py_raise(st, msg);
     goto cleanup;
   }
   ret = Py_None;

@@ -16,6 +16,7 @@ PyObject *diana_py_lu(PyObject *Py_UNUSED(self), PyObject *args,
   PyObject *index;
   PyObject *ret = NULL;
   diana_status st;
+  const char *msg;
 
   if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO:lu", kwlist, &a, &out)) {
     return NULL;
@@ -49,10 +50,14 @@ PyObject *diana_py_lu(PyObject *Py_UNUSED(self), PyObject *args,
   }
   st = diana_lu((const double *)va.buf, (size_t)n, (double *)vo.buf, piv);
   if (st != DIANA_OK) {
-    diana_py_raise(st, st == DIANA_ERR_SINGULAR
-                           ? "matrix is singular: a pivot column is zero"
-                       : st == DIANA_ERR_OVERFLOW ? "an update overflows"
-                                                  : "a has a non-finite entry");
+    if (st == DIANA_ERR_SINGULAR) {
+      msg = "matrix is singular: a pivot column is zero";
+    } else if (st == DIANA_ERR_OVERFLOW) {
+      msg = "an update overflows";
+    } else {
+      msg = "a has a non-finite entry";
+    }
+    diana_py_raise(st, msg);
     goto cleanup;
   }
   list = PyList_New(n);
