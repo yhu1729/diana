@@ -19,6 +19,7 @@ on:
       - test/doc/**
       - doc/api/**
       - script/check_spec.py
+      - script/check_provenance.py
       - script/check_wheel.py
       - README.md
       - LICENSE

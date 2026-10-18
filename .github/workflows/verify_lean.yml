@@ -9,6 +9,7 @@ on:
       - verification/lean/**
       - spec/**
       - script/check_spec.py
+      - script/check_provenance.py
       - script/axiom_allow.yaml
       - ci/docker/lean.Dockerfile
   workflow_dispatch:
