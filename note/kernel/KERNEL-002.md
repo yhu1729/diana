@@ -11,6 +11,7 @@ path:
   - src/cholesky.c
   - src/forward_substitution.c
   - src/back_substitution.c
+  - src/lu.c
 related: [KERNEL-003, API-003, FP-002]
 ---
 A checked kernel writes its output only once it knows the call succeeds, so `DIANA_ERR_ARG`
@@ -32,6 +33,10 @@ leaves every output untouched. The vector kernels do this in two passes without 
   input and `DIANA_ERR_SINGULAR` leave `x` untouched), but entry `i` needs the entries computed
   before it, so an overflowing entry (`DIANA_ERR_ARG`) is found with `x` partly written
   (API-030). Keeping `x` untouched would take a second `n`-vector.
+- `diana_lu` checks its arguments and every entry of `a` before writing (so a non-finite entry
+  leaves `lu` and `piv` untouched), but it factors in place in `lu` and each step needs the
+  steps before it, so a zero pivot column (`DIANA_ERR_SINGULAR`) or an overflowing update
+  (`DIANA_ERR_ARG`) is found with both partly written (API-032).
 - Proved: `y_out` untouched on `DIANA_ERR_ARG` by WP (EULER-C1, RK4-C1, RK4-C2) and unchanged
   unless every component is finite by VST (EULER-C2, RK4-C3, RK4-C4).
 

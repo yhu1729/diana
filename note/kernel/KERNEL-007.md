@@ -24,5 +24,7 @@ private header `src/<method>_acsl.h` that the method's sources include.
   a predicate's parameter types, so the parameters are `double *`.
 
 The headers hold only `/*@ ... */` annotations and an include of the method's public header, so
-they change no Clight AST. No source file defines a predicate of its own; `src/cholesky.c`, the
-only file of its method, declares its own copy of `column_end`.
+they change no Clight AST. A method of one source file keeps its annotations there:
+`src/cholesky.c` declares its own copy of `column_end`, and `src/lu.c` its own `column_end` and
+the predicate `lu_valid(a, n, lu, piv)` (readable `a`, writable `lu` and `piv`, all three
+separate).

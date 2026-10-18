@@ -20,8 +20,9 @@ private modules, so `diana.<name>` is the whole API.
 - One private driver module per kernel: `_bisection.py` (`bisection`), `_newton.py` (`newton`),
   `_trapezoidal.py`, `_simpson.py`, `_euler.py` (`euler_step`, `euler`), `_rk4.py` (`rk4_stage`,
   `rk4_step`, `rk4`), `_cholesky.py` (`cholesky`), `_substitution.py` (`forward_substitution`,
-  `back_substitution`). The single-call array functions pass a buffer through and copy any other
-  iterable into `array.array("d")`; `euler` and `rk4` copy `y0` element by element.
+  `back_substitution`), `_lu.py` (`lu`). The single-call array functions pass a buffer through
+  and copy any other iterable into `array.array("d")`; `euler` and `rk4` copy `y0` element by
+  element.
 - `__init__.py` also takes `Bisection`, `Newton` and the status constants from `_diana`, aliases
   `version` and `status_str`, and sets `__version__ = version()`.
 - `_diana.pyi` is the type stub of the extension and `py.typed` marks the package as typed.
