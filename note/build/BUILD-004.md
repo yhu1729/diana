@@ -6,7 +6,7 @@ path:
   - CMakeLists.txt
   - pyproject.toml
   - script/check_wheel.py
-related: [BUILD-002, BUILD-005, BUILD-011, PYTHON-006]
+related: [BUILD-002, BUILD-005, BUILD-011, BUILD-012, PYTHON-006]
 ---
 scikit-build-core (`>= 0.11`) builds the wheel from the root `CMakeLists.txt` and defines
 `SKBUILD`, which forces `DIANA_BUILD_PYTHON=ON`. The wheel holds the package directory
@@ -17,7 +17,8 @@ scikit-build-core (`>= 0.11`) builds the wheel from the root `CMakeLists.txt` an
   archive or CMake file.
 - Shared (`DIANA_BUILD_SHARED_LIB=ON`): the wheel also holds `diana/libdiana.dylib` (macOS) or
   `diana/libdiana.so` (Linux) beside the extension, unversioned because `VERSION`/`SOVERSION` are
-  set only outside scikit-build; the `ARCHIVE` destination is `EXCLUDE_FROM_ALL`, and headers and
+  set only outside scikit-build, and exporting only the public functions (BUILD-012); the
+  `ARCHIVE` destination is `EXCLUDE_FROM_ALL`, and headers and
   CMake exports are not installed.
 - Only with `SKBUILD` and a shared library: the extension's install RPATH is `@loader_path`
   (macOS) or `$ORIGIN` (Linux) with `INSTALL_RPATH_USE_LINK_PATH OFF`, and the macOS library has

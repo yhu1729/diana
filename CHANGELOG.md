@@ -421,6 +421,10 @@ is removed, and the second attribute of `diana.MaxIterError` is `uncertainty` in
 - `dianaConfigVersion.cmake` is `SameMajorVersion`-compatible instead of `SameMinorVersion`, as
   Semantic Versioning and the major-version `SOVERSION` require: `find_package(diana 1.0)`
   accepts every later 1.x release.
+- A shared `libdiana` exports only the 25 public functions listed in `cmake/symbol.txt`
+  (`-exported_symbols_list` on macOS, a version script on Linux), so the private helpers
+  `diana_bisection_mid` and `diana_fp_sqrt` are no longer part of its ABI; the ctest `symbol`
+  checks the list against the public headers and the library's exports.
 
 ### Removed
 

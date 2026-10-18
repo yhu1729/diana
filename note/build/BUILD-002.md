@@ -6,7 +6,7 @@ path:
   - CMakeLists.txt
   - pyproject.toml
   - script/dev.sh
-related: [BUILD-003, BUILD-005, BUILD-007, BUILD-008, BUILD-004]
+related: [BUILD-003, BUILD-005, BUILD-007, BUILD-008, BUILD-004, BUILD-012]
 ---
 `CMakeLists.txt` defines five options:
 
@@ -21,7 +21,8 @@ related: [BUILD-003, BUILD-005, BUILD-007, BUILD-008, BUILD-004]
 
 Other settings: C11 required without extensions, `CMAKE_EXPORT_COMPILE_COMMANDS ON`, and on
 `diana` `POSITION_INDEPENDENT_CODE ON` (a static `libdiana` links into the extension module) and
-`C_VISIBILITY_PRESET default`.
+`C_VISIBILITY_PRESET default`; a shared library exports only the functions of
+`cmake/symbol.txt` (BUILD-012).
 
 Who sets what: `pyproject.toml` passes `-DDIANA_BUILD_PYTHON=ON -DDIANA_BUILD_TEST=OFF` to
 scikit-build-core; `script/dev.sh config` passes `-DDIANA_BUILD_TEST=ON -DDIANA_WERROR=ON`,

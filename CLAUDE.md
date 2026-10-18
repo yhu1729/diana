@@ -50,7 +50,8 @@ one line per idea, no design (a design is written only when an item is picked up
   square root is `__builtin_sqrt` in `diana_fp_sqrt`, `src/fp_sqrt.c`, whose WP contract and VST
   funspec for the builtin are assumed, note FP-006); caller-owned
   buffer; every public function returns `diana_status` (except the string functions `diana_status_str`
-  and `diana_version`); prefix `diana_`; `-ffp-contract=off`, no
+  and `diana_version`), is listed in `cmake/symbol.txt` (a shared `libdiana` exports nothing else);
+  prefix `diana_`; `-ffp-contract=off`, no
   `-ffast-math`/`-Ofast` (the verified semantics are strict IEEE binary64); `-fno-math-errno` so the
   builtin square root needs no libm. Format with `clang-format`
   (LLVM style, `.clang-format`; use the version pinned in the uv `lint` group, CI `style_c` checks it).

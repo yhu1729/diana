@@ -4,6 +4,7 @@ title: Add a method
 kind: procedure
 path:
   - CMakeLists.txt
+  - cmake/symbol.txt
   - include/diana/diana.h
   - test/c/CMakeLists.txt
   - test/c/test_compiler.c
@@ -22,11 +23,13 @@ related:
   - WP-007
   - PROVER-007
   - VERIFY-002
+  - BUILD-012
 ---
 A method touches the library, its tests, the binding, every proof layer and the docs. Wire it as
 `simpson` (one function) or `rk4` (several functions) is wired:
 
-1. `include/diana/<method>.h` with `extern "C"` guards, included from `include/diana/diana.h`.
+1. `include/diana/<method>.h` with `extern "C"` guards, included from `include/diana/diana.h`;
+   each public function also in `cmake/symbol.txt` (BUILD-012).
 2. One `src/<function>.c` per function (KERNEL-001), and `src/<method>.c` for an optional callback
    wrapper (KERNEL-004); list each in `add_library(diana ...)` of `CMakeLists.txt`. Shared helper:
    KERNEL-005; shared ACSL predicates: KERNEL-007.
