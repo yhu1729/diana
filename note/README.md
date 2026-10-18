@@ -414,6 +414,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `include/diana/newton.h` | API-010 |
 | `include/diana/ode.h` | API-006, API-017, KERNEL-004 |
 | `include/diana/rk4.h` | API-016, API-018 |
+| `include/diana/scalar.h` | API-006, KERNEL-004 |
 | `include/diana/simpson.h` | API-014 |
 | `include/diana/status.h` | API-002 |
 | `include/diana/substitution.h` | API-030 |

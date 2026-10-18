@@ -8,15 +8,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [1.0.0] - 2026-10-18
 
-The first stable release. The classical Runge–Kutta step joins the ODE methods, and linear
-algebra arrives: Cholesky factorization, forward and back substitution, LU factorization with
-partial pivoting and the LU solve, each through every verification layer — Lean and Rocq over the
-reals, Flocq over binary64, Frama-C WP and VST on the C — with a Python binding. Opt-in unchecked
-Euler and RK4 kernels, one function per source file for every verified kernel, and the technical
-notes of `note/` complete it. From this release the public C API, the Python package and their
-documented behaviour follow Semantic Versioning. Breaking changes against 0.3.0: `diana/wrapper.h`
-is removed, and the second attribute of `diana.MaxIterError` is `uncertainty` instead of `width`
-(see Changed and Removed).
+The first stable release. The classical Runge–Kutta step joins the ODE methods, and linear algebra
+arrives: Cholesky factorization, forward and back substitution, LU factorization with partial
+pivoting and the LU solve, each through every verification layer — Lean and Rocq over the reals,
+Flocq over binary64, Frama-C WP and VST on the C — with a Python binding. Opt-in unchecked Euler and
+RK4 kernels, one function per source file for every verified kernel, and the technical notes of
+`note/` complete it. From this release the public C API, the Python package and their documented
+behaviour follow Semantic Versioning. Breaking changes against 0.3.0: `diana/wrapper.h` is removed,
+the callback type `diana_bisection_fn` is renamed `diana_scalar_fn`, and the second attribute of
+`diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and Removed).
 
 ### Added
 
@@ -396,6 +396,9 @@ is removed, and the second attribute of `diana.MaxIterError` is `uncertainty` in
   `diana_newton_fn` and `diana_newton` in `diana/newton.h`, `diana_euler` in `diana/euler.h` and
   `diana_rk4` in `diana/rk4.h`. The callback type `diana_ode_fn` they share is in the new public
   header `diana/ode.h`, which both include; `diana/diana.h` includes every header as before.
+- The scalar callback type `diana_bisection_fn` is renamed `diana_scalar_fn` and moves to the new
+  public header `diana/scalar.h`, which `diana/bisection.h` includes, so the secant, regula falsi
+  and Brent wrappers of the roadmap can share it.
 - The verified Euler step `diana_euler_step` moves from `src/euler.c` to `src/euler_step.c`, named
   after its function, with its Frama-C row (49 goals), its Clight AST
   `verification/clight/euler_step_aarch64_macos.v` (only the recorded source path changes) and

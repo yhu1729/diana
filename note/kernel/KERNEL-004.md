@@ -8,6 +8,7 @@ path:
   - src/newton.c
   - src/rk4.c
   - include/diana/ode.h
+  - include/diana/scalar.h
 related: [KERNEL-001, KERNEL-003, API-001]
 ---
 The callback convenience functions `diana_bisection`, `diana_newton`, `diana_euler` and
@@ -15,7 +16,7 @@ The callback convenience functions `diana_bisection`, `diana_newton`, `diana_eul
 declared in their method's public header. They have no ACSL contract, no Frama-C expectation
 row, no Clight AST and no VST proof.
 
-- Callback types: `diana_bisection_fn` in `diana/bisection.h`, `diana_newton_fn` in
+- Callback types: `diana_scalar_fn` in `diana/scalar.h` (included by `diana/bisection.h`), `diana_newton_fn` in
   `diana/newton.h`, and `diana_ode_fn`, shared by Euler and RK4, in `diana/ode.h`.
 - Each loops over checked verified kernels only: `init` / `step` / `result` for bisection and
   Newton, `diana_euler_step`, and `diana_rk4_stage` (stages 2 to 4) with `diana_rk4_step`; never

@@ -91,7 +91,7 @@ one line per idea, no design (a design is written only when an item is picked up
   struct (`init` / `step` / `result`) or a function over tabulated arrays. No function pointer in a
   verified kernel. Callback convenience wrappers (`diana_bisection`, `diana_euler`, `diana_newton`,
   `diana_rk4`) are in `src/<method>.c`, declared in the method's header (the ODE callback type
-  `diana_ode_fn` in `diana/ode.h`), and are not VST-verified.
+  `diana_ode_fn` in `diana/ode.h`, the scalar one `diana_scalar_fn` in `diana/scalar.h`), and are not VST-verified.
 - **One function per file:** each implementation file (`src/*.c`, `python/ext/*.c`) defines exactly
   one function, named after it without `diana_` or `diana_py_` (`src/bisection_init.c`,
   `src/status_str.c`, `python/ext/bisection_step.c`); `static inline` helpers do not count (those of
