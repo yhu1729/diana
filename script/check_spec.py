@@ -25,7 +25,9 @@ ALLOW_FILE = ROOT / "script" / "axiom_allow.yaml"
 
 ID_RE = re.compile(r"^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-[ABC]\d+$")
 PROVERS = ("lean", "rocq")
+LAYERS = ("A", "B", "C")
 LAYER_REQUIRE = {"A": ("lean", "rocq"), "B": ("rocq",), "C": ()}
+ROCQ_TARGET = {"A": "check_real", "B": "check_float", "C": "check"}
 
 
 @dataclass
@@ -168,11 +170,14 @@ LEAN_AXIOM_RE = re.compile(
 
 
 def run_prover(
-    theorems: list[Theorem], allow: dict[str, list[str]], provers: tuple[str, ...]
+    theorems: list[Theorem],
+    allow: dict[str, list[str]],
+    provers: tuple[str, ...],
+    layers: tuple[str, ...] = LAYERS,
 ) -> None:
     for prover, directory, cmd in (
         ("lean", LEAN_DIR, ["lake", "env", "lean", "CheckSpec.lean"]),
-        ("rocq", ROCQ_DIR, ["make", "-s", "check"]),
+        ("rocq", ROCQ_DIR, ["make", "-s", ROCQ_TARGET[max(layers)]]),
     ):
         if prover not in provers:
             continue
@@ -318,11 +323,18 @@ def main() -> int:
         choices=PROVERS,
         help="prover to check with --run and --strict (repeatable; default: all)",
     )
+    ap.add_argument(
+        "--layer",
+        action="append",
+        type=str.upper,
+        choices=LAYERS,
+        help="layer to check (repeatable; default: all); without C, Rocq builds no VST",
+    )
     ap.add_argument("--strict", action="store_true", help="fail unless every theorem is verified")
     ap.add_argument(
         "--no-report",
         action="store_true",
-        help="do not rewrite the report (it is rewritten only by --run with every prover)",
+        help="do not rewrite the report (only --run with every prover and layer rewrites it)",
     )
     args = ap.parse_args()
 
@@ -335,13 +347,22 @@ def main() -> int:
     if not theorems:
         print("error: no theorem found under spec/", file=sys.stderr)
         return 1
+    layers = tuple(sorted(set(args.layer))) if args.layer else LAYERS
+    theorems = [t for t in theorems if t.layer in layers]
+    if not theorems:
+        print(f"error: no theorem of layer {', '.join(layers)} under spec/", file=sys.stderr)
+        return 1
+    provers = tuple(args.prover) if args.prover else PROVERS
+    if args.strict and not any(getattr(t, p) for t in theorems for p in provers):
+        if args.prover or not any(t.acsl for t in theorems):
+            print("error: --strict selects no theorem to check", file=sys.stderr)
+            return 1
 
     write_check_file(theorems)
     allow = yaml.safe_load(ALLOW_FILE.read_text()) if ALLOW_FILE.is_file() else {}
-    provers = tuple(args.prover) if args.prover else PROVERS
     if args.run:
-        run_prover(theorems, allow, provers)
-    if args.run and provers == PROVERS and not args.no_report:
+        run_prover(theorems, allow, provers, layers)
+    if args.run and provers == PROVERS and layers == LAYERS and not args.no_report:
         try:
             write_report(theorems)
         except ValueError as exc:
@@ -364,7 +385,8 @@ def main() -> int:
                 unverified.append((t.id, "frama-c", f"missing expectation for {source}"))
             elif status == "unreadable":
                 unverified.append((t.id, "frama-c", f"invalid expectation for {source}"))
-    print(f"{len(theorems)} theorem(s) in {len({t.spec for t in theorems})} spec file(s)")
+    scope = "" if layers == LAYERS else f" of layer {', '.join(layers)}"
+    print(f"{len(theorems)} theorem(s){scope} in {len({t.spec for t in theorems})} spec file(s)")
     for tid, p, why in unverified:
         print(f"  {tid} [{p}]: {why}")
     if args.strict and unverified:
