@@ -81,8 +81,8 @@ theorem:
     informal: >
       backward error of back substitution, row i < n: if the binary64 x̂ᵢ is finite, L[i, i] is a
       nonzero real and (n − i)·u < 1, then
-      |bᵢ − Σ_{i≤k<n} L[k, i]·x̂ₖ| ≤ γₙ₋ᵢ·Σ_{i≤k<n} |L[k, i]·x̂ₖ| + (1 + γₙ₋ᵢ)·(n − 1 − i + |L[i, i]|)·η,
-      B1 on the mirrored system.
+      |bᵢ − Σ_{i≤k<n} L[k, i]·x̂ₖ| ≤ γₙ₋ᵢ·Σ_{i≤k<n} |L[k, i]·x̂ₖ|
+      + (1 + γₙ₋ᵢ)·(n − 1 − i + |L[i, i]|)·η, B1 on the mirrored system.
     rocq: Diana.Float.Substitution.back_backward_error
   - id: SUBSTITUTION-B4
     layer: B
@@ -177,9 +177,10 @@ row, after the rows before it have been written.
 - **A1**: `fwd` is defined row by row (`solve` builds rows `0, …, m − 1`, `fwd L b i` reads row `i`
   of `solve L b (i + 1)`), and `fwd_eq` states the recurrence `xᵢ = row L b x i`; then
   `L[i, i]·xᵢ = bᵢ − Σ_{k<i} L[i, k]·xₖ` once `L[i, i] ≠ 0`.
-- **A3**: strong induction on `i`. With `e = x − y`, A1 gives `L[i, i]·eᵢ = rᵢ − Σ_{k<i} L[i, k]·eₖ`,
-  `r` the residual of `y`, so `|L[i, i]|·|eᵢ| ≤ ρᵢ + Σ_{k<i} |L[i, k]|·zₖ`, and the right side is
-  `|L[i, i]|·zᵢ` by `fwd_eq` for `M(L)`. **A2** is A3 with `ρ = 0`, since `fwd M 0 = 0`.
+- **A3**: strong induction on `i`. With `e = x − y`, A1 gives
+  `L[i, i]·eᵢ = rᵢ − Σ_{k<i} L[i, k]·eₖ`, `r` the residual of `y`, so
+  `|L[i, i]|·|eᵢ| ≤ ρᵢ + Σ_{k<i} |L[i, k]|·zₖ`, and the right side is `|L[i, i]|·zᵢ` by `fwd_eq`
+  for `M(L)`. **A2** is A3 with `ρ = 0`, since `fwd M 0 = 0`.
 - **A4–A6**: `bwd` is `fwd` on the mirrored system; `sum_mirror` reindexes
   `Σ_{q≤n−1−i} g(n − 1 − q) = Σ_{i≤k<n} g(k)`, and `cmp_mirror` gives `M(L′) = M(L)′` on the
   indices below `n`, so A4–A6 are A1–A3 on `L′`, `b′` and `ρ′` (`fwd_congr` for the comparison
@@ -224,9 +225,9 @@ row, after the rows before it have been written.
   Back sums are `Σ_{k ∈ [i, n)}` in Lean (`Finset.Ico`) and `sum (n − i) (fun t => … (i + t))` in
   Rocq, over the `sum` of `Diana.Real.Cholesky`, which A7 needs.
 - **Layer B** (`verification/rocq/theory/Float/Substitution.v`): `fdotv`, `frow`, `fsolve`, `ffwd`,
-  `fmirror`, `fmirrorv` and `fbwd` mirror layer A in binary64 with Cholesky's `fsub` (`Bminus`) and
-  `Diana.Float.Sum`'s `fmul` and `fdiv`, in `mode_NE` and parameterised by the NaN-payload functions;
-  `rmat` and `rvec` read the binary64 data as reals for B2 and B4.
+  `fmirror`, `fmirrorv` and `fbwd` mirror layer A in binary64 with Cholesky's `fsub` (`Bminus`)
+  and `Diana.Float.Sum`'s `fmul` and `fdiv`, in `mode_NE` and parameterised by the NaN-payload
+  functions; `rmat` and `rvec` read the binary64 data as reals for B2 and B4.
 - **Layer C, VST** (`verification/rocq/theory/VST/ForwardSubstitution.v` and
   `BackSubstitution.v` against `verification/clight/forward_substitution_aarch64_macos.v` and
   `back_substitution_aarch64_macos.v`, CompCert target AArch64 macOS; models in the AST-free
