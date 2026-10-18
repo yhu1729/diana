@@ -162,11 +162,13 @@ is removed, and the second attribute of `diana.MaxIterError` is `uncertainty` in
 - `diana.lu_solve(lu, piv, b)` returns the solution of `A x = b` as a new `array.array("d")`
   from the pair `diana.lu` returns, so `diana.lu_solve(*diana.lu(a), b)` solves the system
   (module `diana._lu_solve`; extension function `diana._diana.lu_solve(lu, piv, b, out)`). `piv`
-  is any iterable of `int`; a wrong length, a non-finite entry, a pivot row not below `n` or an
-  overflow raises `ValueError`, a negative pivot row `OverflowError`, a zero diagonal entry of `U`
-  `diana.SingularError`. `test/python/test_lu_solve.py` checks bitwise agreement with the
-  operations in Python floats and with the two substitution functions, the LU-SOLVE-B1 to B4
-  bounds in exact rationals, and the solve against `numpy.linalg.solve`.
+  is any iterable of `int`, copied into a tuple before its items are converted, so an `__index__`
+  that changes a `piv` list neither crashes the call nor changes the solve; a wrong length, a
+  non-finite entry, a pivot row not below `n` or an overflow raises `ValueError`, a negative pivot
+  row `OverflowError`, a zero diagonal entry of `U` `diana.SingularError`.
+  `test/python/test_lu_solve.py` checks bitwise agreement with the operations in Python floats and
+  with the two substitution functions, the LU-SOLVE-B1 to B4 bounds in exact rationals, and the
+  solve against `numpy.linalg.solve`.
 - `diana.rk4_stage(y, k, h, stage)` and `diana.rk4_step(y, k1, k2, k3, k4, h)` return a new
   `array.array("d")` from the kernels, reading float64 buffers in place and copying other iterables
   (module `diana._rk4`; extension functions `diana._diana.rk4_stage` and `rk4_step` with an explicit
