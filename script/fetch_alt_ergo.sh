@@ -1,7 +1,4 @@
 #!/bin/sh
-# Install the Alt-Ergo of the toolchain pin, the static Linux x86-64 release binary checked
-# against its SHA-256, as DIR/alt-ergo (default .cache/alt-ergo). CI puts DIR first on PATH,
-# since the framac/frama-c image ships another Alt-Ergo. Usage: fetch_alt_ergo.sh [DIR]
 set -eu
 version=2.6.4
 sha256=80d41dd9cf4b024be7412e499f81960ddc63978f5d78a29311a05aaab125681a

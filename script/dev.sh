@@ -182,9 +182,6 @@ build_lean() {
     (cd verification/lean && lake exe cache get && lake build)
 }
 
-# Memory per VST proof: measured peak RSS of one rocq compile on the heaviest
-# theory/VST file, rounded up (note PROVER-008); the cap keeps
-# DIANA_JOB such proofs resident at once within hw.memsize / MemTotal.
 rocq_job_byte=2147483648
 
 rocq_jobs() {

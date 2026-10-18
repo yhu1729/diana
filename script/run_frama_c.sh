@@ -30,8 +30,6 @@ metrics=$(frama-c -cpp-extra-args="-Iinclude -Isrc" -metrics $files 2>&1) || {
     echo "error: frama-c -metrics failed" >&2
     exit 1
 }
-# Print the called functions of one section of the metrics report; fail unless
-# the section and its entries have the expected form (note WP-004).
 called_in_section() {
     echo "$metrics" | awk -v section="$1" '
         function bad() { failed = 1; exit 1 }
@@ -94,8 +92,6 @@ done
 if [ -n "$skip" ]; then
     set -- -wp-skip-fct "$skip" "$@"
 fi
-# Make the row's directories before WP does: its own mkdir of a missing parent
-# races with the rows started at the same time and fails the goal instead.
 mkdir -p "verification/frama-c/session/$row" "verification/frama-c/cache/$row"
 exec frama-c \
     -cpp-extra-args="-Iinclude -Isrc" \

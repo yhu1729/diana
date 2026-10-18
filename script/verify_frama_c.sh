@@ -17,11 +17,8 @@ if [ "$count" -eq 0 ]; then
     echo "no entry in $expectation" >&2
     exit 1
 fi
-# WP runs 4 provers per row by default; keep about that many in flight over all
-# the rows, so a row gets 4 provers alone and 1 when 4 or more rows run at once.
 par=$(((4 + jobs - 1) / jobs))
 echo "WP: $count rows, $jobs at a time, -wp-par $par"
-# Longest rows first (goal count as the estimate), so the tail is short.
 if [ "$jobs" -eq 1 ]; then
     cat "$tmp/row"
 else
