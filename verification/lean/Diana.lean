@@ -4,6 +4,7 @@ public import Diana.Real.Bisection
 public import Diana.Real.Cholesky
 public import Diana.Real.Euler
 public import Diana.Real.LU
+public import Diana.Real.LUSolve
 public import Diana.Real.Newton
 public import Diana.Real.OneStep
 public import Diana.Real.Quadrature
