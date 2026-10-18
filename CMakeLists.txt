@@ -31,8 +31,8 @@ endif()
 string(TOUPPER "${CMAKE_BUILD_TYPE}" diana_config)
 foreach(flag_var CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
         CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_${diana_config})
-    if("${${flag_var}}" MATCHES "-Ofast|-ffast-math|-funsafe-math-optimizations")
-        message(FATAL_ERROR "Diana must not be built with -Ofast, -ffast-math or -funsafe-math-optimizations (${flag_var}): the verified semantics are strict IEEE binary64")
+    if("${${flag_var}}" MATCHES "-Ofast|-ffast-math|-funsafe-math-optimizations|-ffinite-math-only|-fno-honor-nans|-fno-honor-infinities|-fassociative-math|-freciprocal-math|-fno-signed-zeros|-fapprox-func|-ffp-contract=(fast|on)|-f?fp-model[= ](fast|aggressive)")
+        message(FATAL_ERROR "Diana must not be built with ${CMAKE_MATCH_0} (${flag_var}): the verified semantics are strict IEEE binary64, every operation rounded separately in source order")
     endif()
 endforeach()
 
