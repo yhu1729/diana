@@ -40,6 +40,21 @@ All notable changes to this project are documented here. The format follows
   `src/substitution_acsl.h`); `test/c/test_substitution.c` covers both at 100% line and branch
   coverage, and the compiler corpus has 270 cases per kernel, every gcc and clang build matching
   CompCert bitwise.
+- LU factorization with partial pivoting `diana_lu(a, n, lu, piv)` in `diana/lu.h`: `a` holds a
+  square `n×n` matrix column-major (`a[i + j n] = A[i, j]`), every entry read; `lu` receives the
+  packed factor of `P A = L U` in the same layout, `L` strictly below the diagonal (its unit
+  diagonal not stored) and `U` on and above it, and `piv[k]` (`size_t`) the row interchanged with
+  row `k` at step `k`, as LAPACK's `getrf` counting from 0. Step `k` takes as pivot the first
+  entry of largest magnitude in column `k` on or below the diagonal, interchanges rows across all
+  columns, divides the entries below the pivot by it (a division, not a product with the
+  reciprocal) and subtracts the rounded products `L[i,k] U[k,j]` from the entries below and right
+  of it, so every entry is the Doolittle recurrence on `P A` in order `t = 0, 1, ...`.
+  `DIANA_ERR_ARG` for a NULL pointer, `n == 0`, an overflowing `n n` or a NaN or infinite entry of
+  `a` leaves `lu` and `piv` untouched; a zero pivot column returns `DIANA_ERR_SINGULAR` and an
+  update that overflows `DIANA_ERR_ARG`, both with `lu` and `piv` partly written. `lu` and `piv`
+  must not overlap `a` or each other. Frama-C WP proves the ACSL contract (157 goals, LU-C1,
+  `spec/lu.md`); `test/c/test_lu.c` covers it at 100% line and branch coverage, and the compiler
+  corpus has 260 LU cases, every gcc and clang build matching CompCert bitwise.
 - `diana_fp_sqrt(x)` (`src/fp_sqrt.c`, private header `src/fp_sqrt.h`), the square root of the
   Cholesky pivots: `__builtin_sqrt`, which gcc, clang and CompCert compile to the IEEE square-root
   instruction, so no libm call. Its contract is the second `SKIP` entry of
@@ -110,6 +125,14 @@ All notable changes to this project are documented here. The format follows
   `diana.SingularError`. `test/python/test_substitution.py` checks bitwise agreement with the
   operations in Python floats, the mirror identity, the SUBSTITUTION-B1 to B4 bounds in exact
   rationals, and the Cholesky solve against `numpy.linalg.solve`.
+- `diana.lu(a)` returns `(lu, piv)`, the packed factor as a new `array.array("d")` in the
+  column-major layout of `a` and the pivot rows as a `list` of `int` (module `diana._lu`;
+  extension function `diana._diana.lu(a, out)`, which writes the factor into `out` and returns
+  the pivots). A length that is not a square, a non-finite entry or an overflowing update raises
+  `ValueError`, a zero pivot column `diana.SingularError`. `test/python/test_lu.py` checks bitwise
+  agreement with the operations in Python floats, pivots included, the LU-B3 and B4 bounds in
+  exact rationals, exact recovery of a permuted integer factorization, and solves against
+  `numpy.linalg.solve`.
 - `diana.rk4_stage(y, k, h, stage)` and `diana.rk4_step(y, k1, k2, k3, k4, h)` return a new
   `array.array("d")` from the kernels, reading float64 buffers in place and copying other iterables
   (module `diana._rk4`; extension functions `diana._diana.rk4_stage` and `rk4_step` with an explicit
@@ -154,6 +177,23 @@ All notable changes to this project are documented here. The format follows
   `back_substitution_aarch64_macos.v`. The prefix-buffer lemmas, `lower_finite`, `lt_of_ltu` and
   `no_overflow` of the Cholesky VST proof moved to the AST-free `VST/Matrix.v`, which both methods
   import.
+- LU with partial pivoting through every layer (`spec/lu.md`). The model is one definition over a
+  record of operations (`Diana.Real.LU.ops`), at the reals in layer A and at binary64 in layer B,
+  and its structural lemma `state_nstate`, for any operations, makes the pivoted factorization the
+  unpivoted one of `P A`. Lean and Rocq prove layer A: the unpivoted steps give `L U = B` once the
+  pivots are nonzero (LU-A1), partial pivoting gives `P A = L U` (A2), the interchanges form a
+  permutation for any number type (A3), the multipliers are at most 1 in magnitude (A4), and
+  exact partial pivoting stops at a zero pivot exactly when `A` is singular (A5, A6, through
+  back and forward substitution). Flocq proves, under the conditions of `DIANA_OK`, that every
+  entry is finite (B1) and every multiplier at most 1 in magnitude (B2), and the componentwise
+  backward error on and below the diagonal (B3, B4: `|P A - L U| <= gamma_{min(i,j)+1} |L| |U|`
+  per entry plus underflow, Higham's Theorem 9.3), reusing Cholesky's `dot_error` and the
+  substitution `row_error`. VST proves `diana_lu` against the model with CompCert's operations
+  (C2: each status exactly when the model gives it, the model factor and pivot rows on
+  `DIANA_OK`) and the AST's copy of `diana_fp_finite` (C3), on the committed AST
+  `verification/clight/lu_aarch64_macos.v`. The pivot magnitude is computed in line rather than
+  with `diana_fp_abs`, whose finiteness precondition WP could not discharge for the
+  multipliers.
 - Lean and Rocq prove RK4 layer A (`spec/rk4.md`, RK4-A1 to A7): the step-size derivatives of the
   increment through third order as explicit jets (A1), the order conditions
   `Phi(0) = G`, `Phi'(0) = E2/2`, `Phi''(0) = E3/3`, `Phi'''(0) = E4/4` without symmetry of the
@@ -222,6 +262,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The extension's square-side helper is `diana_py_square_side` in `python/ext/module.h`, shared by
+  `cholesky.c` and `lu.c`.
 - The strict compile flags add `-fno-math-errno` (`cmake/warning.cmake`,
   `script/compare_compiler.sh`, `test/doc/test_example.py`), so that gcc and Linux clang compile
   `__builtin_sqrt` without a libm fallback that would set `errno`; no result changes.
