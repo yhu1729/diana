@@ -1,0 +1,42 @@
+name: verify_frama_c
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+    paths:
+      - .github/workflows/verify_frama_c.yml
+      - include/**
+      - src/**
+      - verification/frama-c/**
+      - script/run_frama_c.sh
+      - script/check_frama_c.sh
+      - script/verify_frama_c.sh
+      - script/job_count.sh
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify_frama_c:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      FRAMA_C_IMAGE: framac/frama-c:32.1@sha256:4f0b7a2bd600c4daabfdcdfa393a3c18301e0db18f3b2739f1d9650193462d36
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: chmod -R a+rwX .
+      - run: docker run --rm -v "$PWD:/work" -w /work "$FRAMA_C_IMAGE" sh -c 'frama-c -version && script/verify_frama_c.sh'
+      - if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: frama-c-report
+          path: verification/frama-c/report.txt
+          retention-days: 30
