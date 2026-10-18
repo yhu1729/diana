@@ -12,6 +12,7 @@ int main(void) {
   CHECK(strcmp(diana_status_str(DIANA_ERR_SINGULAR),
                "zero derivative or pivot") == 0);
   CHECK(strcmp(diana_status_str(DIANA_ERR_OVERFLOW), "result overflows") == 0);
+  CHECK(strcmp(diana_status_str(DIANA_ERR_CALLBACK), "callback failed") == 0);
   CHECK(diana_status_str((diana_status)12345) != (const char *)0);
   CHECK(strcmp(diana_version(), DIANA_VERSION_STRING) == 0);
   return check_report("status");

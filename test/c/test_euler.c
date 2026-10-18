@@ -271,7 +271,7 @@ struct record {
   void *self;
 };
 
-static void decay(double t, const double *y, double *dy, size_t d, void *ctx) {
+static int decay(double t, const double *y, double *dy, size_t d, void *ctx) {
   size_t i;
 
   (void)t;
@@ -279,20 +279,22 @@ static void decay(double t, const double *y, double *dy, size_t d, void *ctx) {
   for (i = 0; i < d; ++i) {
     dy[i] = -y[i];
   }
+  return 0;
 }
 
-static void rotation(double t, const double *y, double *dy, size_t d,
-                     void *ctx) {
+static int rotation(double t, const double *y, double *dy, size_t d,
+                    void *ctx) {
   (void)t;
   (void)d;
   (void)ctx;
   dy[0] = y[1];
   dy[1] = -y[0];
+  return 0;
 }
 
 /* y' = t, recording each time and the context pointer; the derivative is
    infinite from call fail_at on. */
-static void ramp(double t, const double *y, double *dy, size_t d, void *ctx) {
+static int ramp(double t, const double *y, double *dy, size_t d, void *ctx) {
   struct record *rec = (struct record *)ctx;
 
   (void)y;
@@ -303,6 +305,7 @@ static void ramp(double t, const double *y, double *dy, size_t d, void *ctx) {
   }
   dy[0] = rec->calls >= rec->fail_at ? HUGE_VAL : t;
   rec->calls++;
+  return 0;
 }
 
 static void test_wrapper_integrate(void) {
@@ -314,20 +317,22 @@ static void test_wrapper_integrate(void) {
   unsigned done = 99u;
 
   /* y_{k+1} = y_k - y_k / 2 = y_k / 2 */
-  CHECK_EQ_STATUS(diana_euler(decay, (void *)0, 0.0, 0.5, 3u, y, 2u, w, &done),
+  CHECK_EQ_STATUS(diana_euler(decay, (void *)0, 0.0, 0.5, 3u, y, 2u, w,
+                              sizeof w / sizeof w[0], &done),
                   DIANA_OK);
   CHECK(done == 3u);
   CHECK(y[0] == 0.125 && y[1] == 0.375);
 
   /* (y1, y2) <- (y1 + y2, y2 - y1): (1, 0), (1, -1), (0, -2), (-2, -2) */
-  CHECK_EQ_STATUS(
-      diana_euler(rotation, (void *)0, 0.0, 1.0, 3u, r, 2u, w, (unsigned *)0),
-      DIANA_OK);
+  CHECK_EQ_STATUS(diana_euler(rotation, (void *)0, 0.0, 1.0, 3u, r, 2u, w,
+                              sizeof w / sizeof w[0], (unsigned *)0),
+                  DIANA_OK);
   CHECK(r[0] == -2.0 && r[1] == -2.0);
 
   /* y' = t from t0 = 1 with h = 1/4: times 1, 1.25, 1.5, 1.75 and
      y = (1 + 1.25 + 1.5 + 1.75) / 4 */
-  CHECK_EQ_STATUS(diana_euler(ramp, &rec, 1.0, 0.25, 4u, z, 1u, w, &done),
+  CHECK_EQ_STATUS(diana_euler(ramp, &rec, 1.0, 0.25, 4u, z, 1u, w,
+                              sizeof w / sizeof w[0], &done),
                   DIANA_OK);
   CHECK(done == 4u && rec.calls == 4u && rec.self == (void *)&rec);
   CHECK(rec.t[0] == 1.0 && rec.t[1] == 1.25 && rec.t[2] == 1.5 &&
@@ -341,7 +346,8 @@ static void test_wrapper_no_step(void) {
   struct record rec = {0u, {0.0}, 100u, (void *)0};
   unsigned done = 99u;
 
-  CHECK_EQ_STATUS(diana_euler(ramp, &rec, 0.0, 1.0, 0u, y, 1u, w, &done),
+  CHECK_EQ_STATUS(diana_euler(ramp, &rec, 0.0, 1.0, 0u, y, 1u, w,
+                              sizeof w / sizeof w[0], &done),
                   DIANA_OK);
   CHECK(done == 0u && rec.calls == 0u && y[0] == 2.0);
 }
@@ -352,21 +358,22 @@ static void test_wrapper_argument(void) {
   struct record rec = {0u, {0.0}, 100u, (void *)0};
   unsigned done = 99u;
 
-  CHECK_EQ_STATUS(
-      diana_euler((diana_ode_fn)0, &rec, 0.0, 1.0, 1u, y, 1u, w, &done),
-      DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(diana_euler((diana_ode_fn)0, &rec, 0.0, 1.0, 1u, y, 1u, w,
+                              sizeof w / sizeof w[0], &done),
+                  DIANA_ERR_ARG);
   CHECK(done == 0u);
-  CHECK_EQ_STATUS(
-      diana_euler(ramp, &rec, 0.0, 1.0, 1u, (double *)0, 1u, w, &done),
-      DIANA_ERR_ARG);
-  CHECK_EQ_STATUS(
-      diana_euler(ramp, &rec, 0.0, 1.0, 1u, y, 1u, (double *)0, &done),
-      DIANA_ERR_ARG);
-  CHECK_EQ_STATUS(diana_euler(ramp, &rec, 0.0, 1.0, 1u, y, 0u, w, &done),
+  CHECK_EQ_STATUS(diana_euler(ramp, &rec, 0.0, 1.0, 1u, (double *)0, 1u, w,
+                              sizeof w / sizeof w[0], &done),
                   DIANA_ERR_ARG);
   CHECK_EQ_STATUS(
-      diana_euler((diana_ode_fn)0, &rec, 0.0, 1.0, 1u, y, 1u, w, (unsigned *)0),
+      diana_euler(ramp, &rec, 0.0, 1.0, 1u, y, 1u, (double *)0, 4u, &done),
       DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(diana_euler(ramp, &rec, 0.0, 1.0, 1u, y, 0u, w,
+                              sizeof w / sizeof w[0], &done),
+                  DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(diana_euler((diana_ode_fn)0, &rec, 0.0, 1.0, 1u, y, 1u, w,
+                              sizeof w / sizeof w[0], (unsigned *)0),
+                  DIANA_ERR_ARG);
   CHECK(rec.calls == 0u && y[0] == 2.0);
 }
 
@@ -381,15 +388,60 @@ static void test_wrapper_failure(void) {
 
   /* y' = t from t0 = 0, h = 1: steps at t = 0 and t = 1 succeed, the third
      derivative is infinite */
-  CHECK_EQ_STATUS(diana_euler(ramp, &rec, 0.0, 1.0, 5u, z, 1u, w, &done),
+  CHECK_EQ_STATUS(diana_euler(ramp, &rec, 0.0, 1.0, 5u, z, 1u, w,
+                              sizeof w / sizeof w[0], &done),
                   DIANA_ERR_ARG);
   CHECK(done == 2u && rec.calls == 3u && z[0] == 1.0);
 
   /* y' = -y with h = -2 overflows on the first step: y + 2y */
-  CHECK_EQ_STATUS(
-      diana_euler(decay, (void *)0, 0.0, -2.0, 3u, big, 1u, w, &done),
-      DIANA_ERR_OVERFLOW);
+  CHECK_EQ_STATUS(diana_euler(decay, (void *)0, 0.0, -2.0, 3u, big, 1u, w,
+                              sizeof w / sizeof w[0], &done),
+                  DIANA_ERR_OVERFLOW);
   CHECK(done == 0u && big[0] == DBL_MAX / 2.0);
+}
+
+/* y' = t; the callback refuses from call fail_at on. */
+static int stopper(double t, const double *y, double *dy, size_t d, void *ctx) {
+  struct record *rec = (struct record *)ctx;
+  int refuse = rec->calls >= rec->fail_at;
+
+  (void)y;
+  (void)d;
+  dy[0] = t;
+  rec->calls++;
+  return refuse;
+}
+
+/* A non-zero return stops the wrapper with DIANA_ERR_CALLBACK before the
+   step it would feed: t = 0 gives z = 0, t = 1 gives z = 1, then the third
+   call refuses. */
+static void test_wrapper_callback(void) {
+  double z[1] = {0.0};
+  double w[2];
+  struct record rec = {0u, {0.0}, 2u, (void *)0};
+  unsigned done = 99u;
+
+  CHECK_EQ_STATUS(diana_euler(stopper, &rec, 0.0, 1.0, 5u, z, 1u, w,
+                              sizeof w / sizeof w[0], &done),
+                  DIANA_ERR_CALLBACK);
+  CHECK(done == 2u && rec.calls == 3u && z[0] == 1.0);
+}
+
+/* work must hold 2 d doubles; a shorter one, or a d whose 2 d overflows
+   size_t, is rejected before any call. */
+static void test_wrapper_work_size(void) {
+  double y[2] = {1.0, 3.0};
+  double w[4];
+  struct record rec = {0u, {0.0}, 100u, (void *)0};
+  unsigned done = 99u;
+
+  CHECK_EQ_STATUS(diana_euler(ramp, &rec, 0.0, 1.0, 1u, y, 2u, w, 3u, &done),
+                  DIANA_ERR_ARG);
+  CHECK(done == 0u && rec.calls == 0u && y[0] == 1.0 && y[1] == 3.0);
+  CHECK_EQ_STATUS(diana_euler(ramp, &rec, 0.0, 1.0, 1u, y, SIZE_MAX / 2u + 1u,
+                              w, SIZE_MAX, &done),
+                  DIANA_ERR_ARG);
+  CHECK(done == 0u && rec.calls == 0u);
 }
 
 int main(void) {
@@ -407,5 +459,7 @@ int main(void) {
   test_wrapper_no_step();
   test_wrapper_argument();
   test_wrapper_failure();
+  test_wrapper_callback();
+  test_wrapper_work_size();
   return check_report("euler");
 }

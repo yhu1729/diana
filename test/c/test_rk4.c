@@ -570,7 +570,7 @@ struct record {
   void *self;
 };
 
-static void decay(double t, const double *y, double *dy, size_t d, void *ctx) {
+static int decay(double t, const double *y, double *dy, size_t d, void *ctx) {
   size_t i;
 
   (void)t;
@@ -578,20 +578,22 @@ static void decay(double t, const double *y, double *dy, size_t d, void *ctx) {
   for (i = 0; i < d; ++i) {
     dy[i] = -y[i];
   }
+  return 0;
 }
 
-static void rotation(double t, const double *y, double *dy, size_t d,
-                     void *ctx) {
+static int rotation(double t, const double *y, double *dy, size_t d,
+                    void *ctx) {
   (void)t;
   (void)d;
   (void)ctx;
   dy[0] = y[1];
   dy[1] = -y[0];
+  return 0;
 }
 
 /* y' = t, recording each time and the context pointer; the derivative is
    infinite from call fail_at on. */
-static void ramp(double t, const double *y, double *dy, size_t d, void *ctx) {
+static int ramp(double t, const double *y, double *dy, size_t d, void *ctx) {
   struct record *rec = (struct record *)ctx;
 
   (void)y;
@@ -602,6 +604,7 @@ static void ramp(double t, const double *y, double *dy, size_t d, void *ctx) {
   }
   dy[0] = rec->calls >= rec->fail_at ? HUGE_VAL : t;
   rec->calls++;
+  return 0;
 }
 
 static void test_wrapper_integrate(void) {
@@ -616,25 +619,27 @@ static void test_wrapper_integrate(void) {
 
   /* y' = -y with h = 1: the stages are y, y/2, 3y/4, y/4 and the step
      multiplies by 1 - 1 + 1/2 - 1/6 + 1/24 = 3/8 */
-  CHECK_EQ_STATUS(diana_rk4(decay, (void *)0, 0.0, 1.0, 3u, y, 2u, w, &done),
+  CHECK_EQ_STATUS(diana_rk4(decay, (void *)0, 0.0, 1.0, 3u, y, 2u, w,
+                            sizeof w / sizeof w[0], &done),
                   DIANA_OK);
   CHECK(done == 3u);
   CHECK(y[0] == 3.375 && y[1] == -0.421875);
 
   /* y' = (y2, -y1) with h = 6: the step is 37 I - 30 A for the rotation A,
      (1, 0) -> (37, 30) -> (469, 2220) */
-  CHECK_EQ_STATUS(
-      diana_rk4(rotation, (void *)0, 0.0, 6.0, 1u, r, 2u, w, (unsigned *)0),
-      DIANA_OK);
+  CHECK_EQ_STATUS(diana_rk4(rotation, (void *)0, 0.0, 6.0, 1u, r, 2u, w,
+                            sizeof w / sizeof w[0], (unsigned *)0),
+                  DIANA_OK);
   CHECK(r[0] == 37.0 && r[1] == 30.0);
-  CHECK_EQ_STATUS(
-      diana_rk4(rotation, (void *)0, 6.0, 6.0, 1u, r, 2u, w, (unsigned *)0),
-      DIANA_OK);
+  CHECK_EQ_STATUS(diana_rk4(rotation, (void *)0, 6.0, 6.0, 1u, r, 2u, w,
+                            sizeof w / sizeof w[0], (unsigned *)0),
+                  DIANA_OK);
   CHECK(r[0] == 469.0 && r[1] == 2220.0);
 
   /* y' = t from t0 = 1 with h = 1/4: the slopes are taken at t, t + h/2
      (twice) and t + h, and RK4 integrates t exactly to (1.5^2 - 1) / 2 */
-  CHECK_EQ_STATUS(diana_rk4(ramp, &rec, 1.0, 0.25, 2u, z, 1u, w, &done),
+  CHECK_EQ_STATUS(diana_rk4(ramp, &rec, 1.0, 0.25, 2u, z, 1u, w,
+                            sizeof w / sizeof w[0], &done),
                   DIANA_OK);
   CHECK(done == 2u && rec.calls == 8u && rec.self == (void *)&rec);
   for (i = 0; i < 8u; ++i) {
@@ -649,7 +654,8 @@ static void test_wrapper_no_step(void) {
   struct record rec = {0u, {0.0}, 100u, (void *)0};
   unsigned done = 99u;
 
-  CHECK_EQ_STATUS(diana_rk4(ramp, &rec, 0.0, 1.0, 0u, y, 1u, w, &done),
+  CHECK_EQ_STATUS(diana_rk4(ramp, &rec, 0.0, 1.0, 0u, y, 1u, w,
+                            sizeof w / sizeof w[0], &done),
                   DIANA_OK);
   CHECK(done == 0u && rec.calls == 0u && y[0] == 2.0);
 }
@@ -660,21 +666,22 @@ static void test_wrapper_argument(void) {
   struct record rec = {0u, {0.0}, 100u, (void *)0};
   unsigned done = 99u;
 
-  CHECK_EQ_STATUS(
-      diana_rk4((diana_ode_fn)0, &rec, 0.0, 1.0, 1u, y, 1u, w, &done),
-      DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(diana_rk4((diana_ode_fn)0, &rec, 0.0, 1.0, 1u, y, 1u, w,
+                            sizeof w / sizeof w[0], &done),
+                  DIANA_ERR_ARG);
   CHECK(done == 0u);
-  CHECK_EQ_STATUS(
-      diana_rk4(ramp, &rec, 0.0, 1.0, 1u, (double *)0, 1u, w, &done),
-      DIANA_ERR_ARG);
-  CHECK_EQ_STATUS(
-      diana_rk4(ramp, &rec, 0.0, 1.0, 1u, y, 1u, (double *)0, &done),
-      DIANA_ERR_ARG);
-  CHECK_EQ_STATUS(diana_rk4(ramp, &rec, 0.0, 1.0, 1u, y, 0u, w, &done),
+  CHECK_EQ_STATUS(diana_rk4(ramp, &rec, 0.0, 1.0, 1u, (double *)0, 1u, w,
+                            sizeof w / sizeof w[0], &done),
                   DIANA_ERR_ARG);
   CHECK_EQ_STATUS(
-      diana_rk4((diana_ode_fn)0, &rec, 0.0, 1.0, 1u, y, 1u, w, (unsigned *)0),
+      diana_rk4(ramp, &rec, 0.0, 1.0, 1u, y, 1u, (double *)0, 10u, &done),
       DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(diana_rk4(ramp, &rec, 0.0, 1.0, 1u, y, 0u, w,
+                            sizeof w / sizeof w[0], &done),
+                  DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(diana_rk4((diana_ode_fn)0, &rec, 0.0, 1.0, 1u, y, 1u, w,
+                            sizeof w / sizeof w[0], (unsigned *)0),
+                  DIANA_ERR_ARG);
   CHECK(rec.calls == 0u && y[0] == 2.0);
 }
 
@@ -693,7 +700,8 @@ static void test_wrapper_failure(void) {
     struct record rec = {0u, {0.0}, 0u, (void *)0};
     rec.fail_at = fail;
     z[0] = 0.0;
-    CHECK_EQ_STATUS(diana_rk4(ramp, &rec, 0.0, 1.0, 5u, z, 1u, w, &done),
+    CHECK_EQ_STATUS(diana_rk4(ramp, &rec, 0.0, 1.0, 5u, z, 1u, w,
+                              sizeof w / sizeof w[0], &done),
                     DIANA_ERR_ARG);
     CHECK(done == 0u && rec.calls == fail + 1u && z[0] == 0.0);
   }
@@ -701,16 +709,73 @@ static void test_wrapper_failure(void) {
     /* the first step reaches y(1) = 1/2, the second fails at k2 */
     struct record rec = {0u, {0.0}, 5u, (void *)0};
     z[0] = 0.0;
-    CHECK_EQ_STATUS(diana_rk4(ramp, &rec, 0.0, 1.0, 5u, z, 1u, w, &done),
+    CHECK_EQ_STATUS(diana_rk4(ramp, &rec, 0.0, 1.0, 5u, z, 1u, w,
+                              sizeof w / sizeof w[0], &done),
                     DIANA_ERR_ARG);
     CHECK(done == 1u && rec.calls == 6u && z[0] == 0.5);
   }
 
   /* y' = -y with h = -2 from DBL_MAX/2: Y2 = 2y = DBL_MAX, and
      Y3 = y + DBL_MAX overflows */
-  CHECK_EQ_STATUS(diana_rk4(decay, (void *)0, 0.0, -2.0, 3u, big, 1u, w, &done),
+  CHECK_EQ_STATUS(diana_rk4(decay, (void *)0, 0.0, -2.0, 3u, big, 1u, w,
+                            sizeof w / sizeof w[0], &done),
                   DIANA_ERR_OVERFLOW);
   CHECK(done == 0u && big[0] == DBL_MAX / 2.0);
+}
+
+/* y' = t; the callback refuses from call fail_at on. */
+static int stopper(double t, const double *y, double *dy, size_t d, void *ctx) {
+  struct record *rec = (struct record *)ctx;
+  int refuse = rec->calls >= rec->fail_at;
+
+  (void)y;
+  (void)d;
+  dy[0] = t;
+  rec->calls++;
+  return refuse;
+}
+
+/* A non-zero return from any of the four calls of a step stops the wrapper
+   with DIANA_ERR_CALLBACK and y at the last good state: refusing call 1 to 4
+   of the first step leaves y = 0; refusing the fifth call keeps the first
+   step, y' = t with h = 1 from 0 giving (0 + 1 + 2 (1/2 + 1/2)) / 6 = 1/2. */
+static void test_wrapper_callback(void) {
+  double z[1];
+  double w[5];
+  struct record rec;
+  unsigned done;
+  unsigned at;
+
+  for (at = 0u; at <= 4u; ++at) {
+    z[0] = 0.0;
+    rec.calls = 0u;
+    rec.fail_at = at;
+    rec.self = (void *)0;
+    done = 99u;
+    CHECK_EQ_STATUS(diana_rk4(stopper, &rec, 0.0, 1.0, 3u, z, 1u, w,
+                              sizeof w / sizeof w[0], &done),
+                    DIANA_ERR_CALLBACK);
+    CHECK(rec.calls == at + 1u);
+    CHECK(done == (at < 4u ? 0u : 1u));
+    CHECK(z[0] == (at < 4u ? 0.0 : 0.5));
+  }
+}
+
+/* work must hold 5 d doubles; a shorter one, or a d whose 5 d overflows
+   size_t, is rejected before any call. */
+static void test_wrapper_work_size(void) {
+  double y[2] = {1.0, 3.0};
+  double w[10];
+  struct record rec = {0u, {0.0}, 100u, (void *)0};
+  unsigned done = 99u;
+
+  CHECK_EQ_STATUS(diana_rk4(ramp, &rec, 0.0, 1.0, 1u, y, 2u, w, 9u, &done),
+                  DIANA_ERR_ARG);
+  CHECK(done == 0u && rec.calls == 0u && y[0] == 1.0 && y[1] == 3.0);
+  CHECK_EQ_STATUS(diana_rk4(ramp, &rec, 0.0, 1.0, 1u, y, SIZE_MAX / 5u + 1u, w,
+                            SIZE_MAX, &done),
+                  DIANA_ERR_ARG);
+  CHECK(done == 0u && rec.calls == 0u);
 }
 
 int main(void) {
@@ -739,5 +804,7 @@ int main(void) {
   test_wrapper_no_step();
   test_wrapper_argument();
   test_wrapper_failure();
+  test_wrapper_callback();
+  test_wrapper_work_size();
   return check_report("rk4");
 }
