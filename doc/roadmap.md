@@ -37,6 +37,8 @@ trust statement shorter.
 - `medium` Horner polynomial evaluation
 - `medium` Free-threaded CPython
 - `medium` Coverage-guided fuzzing of the C kernels
+- `low` Composite midpoint rule
+- `low` Finite-difference derivative
 
 ## Toward 1.3
 
@@ -59,6 +61,12 @@ Methods built on what 1.2 added, and the remaining error bounds.
 - `medium` RK4 local-error constants `M₅`, `N₄` from bounds on the derivatives of `F`
 - `medium` Growth-factor bound on the LU factors under partial pivoting
 - `medium` Forward error bound on the Cholesky factor, the LU factors and the LU solve
+- `low` Fixed-point iteration
+- `low` Gauss–Legendre rule
+- `low` Störmer–Verlet
+- `low` Adams–Bashforth
+- `low` Newton divided differences
+- `low` Mutation testing of the C test suite
 
 ## Toward 2.0
 
@@ -69,31 +77,26 @@ The one API break: the interfaces the high-performance work needs.
 - `medium` Computed error bound returned by each kernel whose layer-B theorem proves one
 - `medium` Reverse-communication state with room for an iteration count and step-size control
 
-## After 2.0
+## Toward 2.1
 
-High-performance implementation on the 2.0 interfaces, measured against the benchmark suite.
+Vectorized and threaded kernels on the 2.0 interfaces, measured against the benchmark suite, and
+the larger linear algebra that needs them.
 
 - `medium` SIMD-vectorized array kernels
 - `medium` OpenMP threading of the array and batched kernels
 - `medium` Deterministic parallel reduction
-- `low` Blocked Cholesky and LU
-- `low` GPU offload of the batched kernels
-- `low` Distributed-memory linear algebra with MPI
-- `low` Sparse matrix storage for the iterative solvers
-- `low` FMA variant of each kernel
-
-## Unscheduled
-
-- `low` Fixed-point iteration
-- `low` Composite midpoint rule
-- `low` Gauss–Legendre rule
-- `low` Störmer–Verlet
-- `low` Adams–Bashforth
 - `low` Householder QR
 - `low` Jacobi, Gauss–Seidel, conjugate gradient
 - `low` Power iteration
-- `low` Newton divided differences
-- `low` Finite-difference derivative
+- `low` Sparse matrix storage for the iterative solvers
 - `low` VST proof of the callback wrappers
+
+## Toward 2.2
+
+Blocked, offloaded and distributed kernels, and the whole-program proof.
+
+- `low` Blocked Cholesky and LU
+- `low` GPU offload of the batched kernels
+- `low` Distributed-memory linear algebra with MPI
+- `low` FMA variant of each kernel
 - `low` Composition of the per-function VST proofs into a whole-program proof
-- `low` Mutation testing of the C test suite

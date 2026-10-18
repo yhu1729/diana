@@ -20,7 +20,7 @@ A change updates the living documents it affects in the same commit:
 - The affected `doc/` page and every note the change makes wrong (`note/README.md`, Maintain).
 
 `doc/roadmap.md` is the only place for future work: one line per idea, under a release section
-(`Toward 1.1`, `Toward 2.0`, `After 2.0`, `Unscheduled`), each starting with a priority `high`,
+(`Toward 1.1`, `Toward 1.2`, ..., `Toward 2.0`, ...), each starting with a priority `high`,
 `medium` or `low` as defined at its top. An entry is a candidate, not a commitment or a design: a
 design is written only when someone picks the item up, so the roadmap holds no plans, sub-bullets
 or design text.
