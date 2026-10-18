@@ -13,6 +13,7 @@ typedef struct diana_newton_state {
   double tol;
   unsigned iter;
   unsigned max_iter;
+  diana_status status;
 } diana_newton_state;
 
 diana_status diana_newton_init(diana_newton_state *s, double x0, double tol,

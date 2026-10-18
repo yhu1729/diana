@@ -9,6 +9,7 @@
   @         \result == DIANA_OK || \result == DIANA_CONTINUE;
   @ ensures (\result == DIANA_OK || \result == DIANA_CONTINUE) ==> bisection_bracket(s, DIANA_BISECTION_MAX_ACSL);
   @ ensures \result == DIANA_CONTINUE ==> bisection_next(s);
+  @ ensures (\result == DIANA_OK || \result == DIANA_CONTINUE) ==> s->status == \result;
   @ ensures (\result == DIANA_ERR_ARG || \result == DIANA_ERR_BRACKET) && s != \null ==>
   @         bisection_unchanged{Pre, Post}(s);
   @*/
@@ -46,16 +47,20 @@ diana_status diana_bisection_init(diana_bisection_state *s, double a, double b,
     s->b = a;
     s->fb = fa;
     s->x = a;
+    s->status = DIANA_OK;
     return DIANA_OK;
   }
   if (fb == 0.0) {
     s->a = b;
     s->fa = fb;
     s->x = b;
+    s->status = DIANA_OK;
     return DIANA_OK;
   }
   if (b - a <= tol || s->x <= a || s->x >= b) {
+    s->status = DIANA_OK;
     return DIANA_OK;
   }
+  s->status = DIANA_CONTINUE;
   return DIANA_CONTINUE;
 }

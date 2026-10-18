@@ -22,7 +22,8 @@
   @   \at(s->fa, L1) == \at(s->fa, L2) && \at(s->fb, L1) == \at(s->fb, L2) &&
   @   \at(s->x, L1) == \at(s->x, L2) && \at(s->tol, L1) == \at(s->tol, L2) &&
   @   \at(s->iter, L1) == \at(s->iter, L2) &&
-  @   \at(s->max_iter, L1) == \at(s->max_iter, L2);
+  @   \at(s->max_iter, L1) == \at(s->max_iter, L2) &&
+  @   \at(s->status, L1) == \at(s->status, L2);
   @*/
 
 #endif

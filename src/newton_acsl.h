@@ -11,7 +11,8 @@
 /*@ predicate newton_unchanged{L1, L2}(diana_newton_state *s) =
   @   \at(s->x, L1) == \at(s->x, L2) && \at(s->dx, L1) == \at(s->dx, L2) &&
   @   \at(s->tol, L1) == \at(s->tol, L2) && \at(s->iter, L1) == \at(s->iter, L2) &&
-  @   \at(s->max_iter, L1) == \at(s->max_iter, L2);
+  @   \at(s->max_iter, L1) == \at(s->max_iter, L2) &&
+  @   \at(s->status, L1) == \at(s->status, L2);
   @*/
 
 #endif

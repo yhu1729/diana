@@ -17,6 +17,7 @@ typedef struct diana_bisection_state {
   double tol;
   unsigned iter;
   unsigned max_iter;
+  diana_status status;
 } diana_bisection_state;
 
 diana_status diana_bisection_init(diana_bisection_state *s, double a, double b,

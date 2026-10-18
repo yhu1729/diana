@@ -6,7 +6,8 @@
   @ assigns *s;
   @ ensures \result == DIANA_ERR_ARG || \result == DIANA_CONTINUE;
   @ ensures \result == DIANA_CONTINUE ==> newton_state(s) && s->x == x0 && s->dx == 0. &&
-  @         s->tol == tol && s->iter == 0 && s->max_iter == max_iter && max_iter > 0;
+  @         s->tol == tol && s->iter == 0 && s->max_iter == max_iter && max_iter > 0 &&
+  @         s->status == DIANA_CONTINUE;
   @ ensures \result == DIANA_ERR_ARG && s != \null ==> newton_unchanged{Pre, Post}(s);
   @*/
 diana_status diana_newton_init(diana_newton_state *s, double x0, double tol,
@@ -25,5 +26,6 @@ diana_status diana_newton_init(diana_newton_state *s, double x0, double tol,
   s->tol = tol;
   s->iter = 0u;
   s->max_iter = max_iter;
+  s->status = DIANA_CONTINUE;
   return DIANA_CONTINUE;
 }
