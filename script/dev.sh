@@ -15,12 +15,14 @@ usage: script/dev.sh config [cmake option...]
   build   build the C library and tests, rebuild the Python extension
   test    run ctest and pytest, then the ruff, clang-format, clang-tidy and
           documentation checks
-  verify  check the Clight ASTs, then at once compare the ccomp build of the
-          kernels with gcc/clang builds bitwise, build the Lean and Rocq proofs
-          and run Frama-C WP (logs in the build directory under verify/), then
-          run the spec gate in strict mode, which fails on a theorem that is
-          listed in spec/ but not proved (rewrites the report in
-          doc/verification/report.md)
+  verify  check the Clight ASTs and record their sources in
+          verification/clight/manifest.txt, then at once compare the ccomp
+          build of the kernels with gcc/clang builds bitwise, build the Lean and
+          Rocq proofs and run Frama-C WP (logs in the build directory under
+          verify/), then run the spec gate in strict mode, which fails on a
+          theorem that is listed in spec/ but not proved (rewrites the report in
+          doc/verification/report.md with a stamp of its inputs), and check the
+          manifest and the stamp
 
 environment:
   DIANA_BUILD_DIR      CMake build directory (default build)
@@ -173,6 +175,7 @@ check_clight() {
             "(the VST proofs are about the ASTs of the platform in their file name)"
     fi
     [ "$stale" -eq 0 ] || fail "after a source change, rerun with DIANA_CLIGHT_UPDATE=1"
+    uv run --no-sync script/check_provenance.py --write-manifest "$platform"
 }
 
 build_lean() {
@@ -222,6 +225,7 @@ dev_verify() {
     DIANA_JOB=$jobs
     export DIANA_JOB
     check_clight
+    digest=$(uv run --no-sync script/check_provenance.py --digest)
     if [ "$jobs" -eq 1 ]; then
         opam_run script/compare_compiler.sh
         build_lean
@@ -261,6 +265,9 @@ dev_verify() {
         [ -z "$failed" ] || fail "verify stage failed:$failed (logs in $verify_dir)"
     fi
     opam_run uv run --no-sync script/check_spec.py --run --strict
+    [ "$(uv run --no-sync script/check_provenance.py --digest)" = "$digest" ] ||
+        fail "an input of the report stamp changed during verify; rerun it"
+    uv run --no-sync script/check_provenance.py
 }
 
 command=${1:-}
