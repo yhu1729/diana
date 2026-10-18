@@ -13,13 +13,13 @@ Actions](#github-actions)).
 | build | `build_{gcc,clang}_{debug,release}` | the C library and tests with gcc 14 and clang 18, Debug with sanitizers and Release, warnings as errors |
 | test | `test_{gcc,clang}_{debug,release}`, `test_install`, `test_python` | ctest on each build; the installed CMake package; pytest, the documentation examples and the wheels |
 | report | `coverage_c`, `coverage_python` | coverage of the C library and of the Python package and extension (the README badges) |
-| verify | `verify_frama_c`, `verify_lean`, `verify_rocq`, `verify_provenance` | Frama-C WP on every source; layer A in Lean with its axiom gate; layer A compiles in Rocq; the committed Clight AST manifest and report match the sources |
+| verify | `verify_frama_c`, `verify_lean`, `verify_rocq`, `verify_provenance` | Frama-C WP on every source; layer A in Lean and layers A and B in Rocq, each with its axiom gate; the committed Clight AST manifest and report match the sources |
 | release | `release` | a GitLab release for a tag, once the test and verify jobs pass |
 
 ## What CI does not check
 
-- Layers B and C-VST, the Rocq axiom gate, the Clight ASTs and the compiler comparison: no CI
-  image carries Flocq, CompCert or VST. Run [local verification](../verification/local.md).
+- Layer C-VST with its Rocq axiom gate, the Clight ASTs and the compiler comparison: no CI image
+  carries CompCert or VST. Run [local verification](../verification/local.md).
   `verify_provenance` only checks, from hashes, that its committed output is current.
 - macOS: GitLab never runs the macOS-only build paths; the GitHub mirror does (below).
 - `clang-tidy` and EditorConfig: local only.
@@ -60,6 +60,7 @@ digests; coverage reports and the Frama-C report are run artifacts, and there ar
 [CI-005](../../note/ci/CI-005.md) commit range of `style_git`,
 [CI-006](../../note/ci/CI-006.md) `style_name`,
 [CI-012](../../note/ci/CI-012.md) `verify_lean` and its image,
+[CI-013](../../note/ci/CI-013.md) `verify_rocq`,
 [CI-014](../../note/ci/CI-014.md) what gates a release,
 [CI-015](../../note/ci/CI-015.md) the Lean container image,
 [CI-016](../../note/ci/CI-016.md) `verify_provenance`,
