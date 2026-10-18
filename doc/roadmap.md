@@ -10,7 +10,6 @@ value or far from the current proof tooling.
 
 ## Toward 1.0
 
-- `high` LU factorization with partial pivoting
 
 ## Method
 
