@@ -1423,8 +1423,8 @@ static void substitution_case(const char *label, const double *l, size_t n,
                               const double *b) {
   substitution_run("forward_substitution", diana_forward_substitution, label, l,
                    n, b);
-  substitution_run("back_substitution", diana_back_substitution, label, l, n,
-                   b);
+  substitution_run("transpose_substitution", diana_transpose_substitution,
+                   label, l, n, b);
 }
 
 static void test_substitution(void) {
@@ -1482,8 +1482,8 @@ static void test_substitution(void) {
   put_head("forward_substitution", "null_x");
   put_status(st);
   printf("\n");
-  st = diana_back_substitution(exact3, 3u, back_b, (double *)0);
-  put_head("back_substitution", "null_x");
+  st = diana_transpose_substitution(exact3, 3u, back_b, (double *)0);
+  put_head("transpose_substitution", "null_x");
   put_status(st);
   printf("\n");
   substitution_case("empty", exact3, 0u, forward_b);
@@ -1493,8 +1493,9 @@ static void test_substitution(void) {
   put_status(st);
   put_double(out[0]);
   printf("\n");
-  st = diana_back_substitution((const double *)0, 0u, (const double *)0, out);
-  put_head("back_substitution", "all_null");
+  st = diana_transpose_substitution((const double *)0, 0u, (const double *)0,
+                                    out);
+  put_head("transpose_substitution", "all_null");
   put_status(st);
   put_double(out[0]);
   printf("\n");

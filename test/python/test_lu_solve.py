@@ -364,7 +364,7 @@ def test_matches_substitution():
         lower = [lu[i + k * n] if i > k else float(i == k) for k in range(n) for i in range(n)]
         upper_t = [lu[k + i * n] if i >= k else 0.0 for k in range(n) for i in range(n)]
         y = diana.forward_substitution(lower, interchange(b, piv))
-        want = diana.back_substitution(upper_t, y)
+        want = diana.transpose_substitution(upper_t, y)
         assert all(same(x, w) for x, w in zip(diana.lu_solve(lu, piv, b), want, strict=True))
 
 

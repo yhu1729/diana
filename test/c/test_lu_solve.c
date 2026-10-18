@@ -339,7 +339,8 @@ static void test_substitution(void) {
       c[piv[k]] = t;
     }
     CHECK_EQ_STATUS(diana_forward_substitution(lower, n, c, y), DIANA_OK);
-    CHECK_EQ_STATUS(diana_back_substitution(upper_t, n, y, want), DIANA_OK);
+    CHECK_EQ_STATUS(diana_transpose_substitution(upper_t, n, y, want),
+                    DIANA_OK);
     check_ok(lu, piv, n, b, want);
   }
 }

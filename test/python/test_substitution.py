@@ -24,7 +24,7 @@ X3 = [3.0, -2.0, 5.0]
 FB3 = [6.0, -5.0, -2.0]  # L x
 BB3 = [-1.0, 2.0, 5.0]  # L^T x
 
-SOLVES = [diana.forward_substitution, diana.back_substitution]
+SOLVES = [diana.forward_substitution, diana.transpose_substitution]
 SOLVE_IDS = ["forward", "back"]
 
 
@@ -70,7 +70,7 @@ def back_reference(lower, n, b):
 
 REFERENCES = {
     diana.forward_substitution: forward_reference,
-    diana.back_substitution: back_reference,
+    diana.transpose_substitution: back_reference,
 }
 
 
@@ -112,7 +112,7 @@ MAKER_IDS = ["list", "tuple", "iterator", "fraction", "array", "numpy", "readonl
 
 @pytest.mark.parametrize("make", MAKERS, ids=MAKER_IDS)
 def test_container(make):
-    for solve, b in ((diana.forward_substitution, FB3), (diana.back_substitution, BB3)):
+    for solve, b in ((diana.forward_substitution, FB3), (diana.transpose_substitution, BB3)):
         r = solve(make(L3), make(b))
         assert type(r) is array.array
         assert r.typecode == "d"
@@ -132,7 +132,9 @@ def test_numpy_layout():
     lo = np.array([[2.0, 0.0, 0.0], [1.0, 4.0, 0.0], [-1.0, 2.0, 1.0]])
     x = np.array(X3)
     assert np.array_equal(np.asarray(diana.forward_substitution(lo.ravel(order="F"), lo @ x)), x)
-    assert np.array_equal(np.asarray(diana.back_substitution(lo.ravel(order="F"), lo.T @ x)), x)
+    assert np.array_equal(
+        np.asarray(diana.transpose_substitution(lo.ravel(order="F"), lo.T @ x)), x
+    )
 
 
 def test_cholesky_solve():
@@ -141,7 +143,7 @@ def test_cholesky_solve():
     lo = diana.cholesky(a)
     y = diana.forward_substitution(lo, [-6.0, -3.0, 51.0])
     assert list(y) == [-3.0, 0.0, 12.0]
-    assert list(diana.back_substitution(lo, y)) == [1.0, -2.0, 3.0]
+    assert list(diana.transpose_substitution(lo, y)) == [1.0, -2.0, 3.0]
 
 
 def test_cholesky_solve_agrees_with_lapack():
@@ -151,13 +153,13 @@ def test_cholesky_solve_agrees_with_lapack():
         a = b.T @ b + n * np.eye(n)
         rhs = np.array([rng.uniform(-1.0, 1.0) for _ in range(n)])
         lo = diana.cholesky(a.ravel(order="F"))
-        x = np.asarray(diana.back_substitution(lo, diana.forward_substitution(lo, rhs)))
+        x = np.asarray(diana.transpose_substitution(lo, diana.forward_substitution(lo, rhs)))
         assert np.allclose(x, np.linalg.solve(a, rhs), rtol=1e-12, atol=1e-14)
 
 
 def test_one_by_one():
     assert list(diana.forward_substitution([4.0], [2.0])) == [0.5]
-    assert list(diana.back_substitution([-4.0], [2.0])) == [-0.5]
+    assert list(diana.transpose_substitution([-4.0], [2.0])) == [-0.5]
 
 
 @pytest.mark.parametrize("solve", SOLVES, ids=SOLVE_IDS)
@@ -172,29 +174,29 @@ def test_operation_order():
     # 5/3 rounds up; multiplying by fl(1/3) would round down.
     want = float.fromhex("0x1.aaaaaaaaaaaabp+0")
     assert diana.forward_substitution([3.0], [5.0])[0] == want
-    assert diana.back_substitution([3.0], [5.0])[0] == want
+    assert diana.transpose_substitution([3.0], [5.0])[0] == want
     # (1 + 3*2^-52) - fl((1 + 2^-52)^2) is 2^-52; a fused multiply-add would leave
     # 2^-52 - 2^-104.
     lower = [1.0, 1.0 + EPS, 0.0, 1.0]
     assert diana.forward_substitution(lower, [1.0 + EPS, 1.0 + 3 * EPS])[1] == EPS
-    assert diana.back_substitution(lower, [1.0 + 3 * EPS, 1.0 + EPS])[0] == EPS
+    assert diana.transpose_substitution(lower, [1.0 + 3 * EPS, 1.0 + EPS])[0] == EPS
     # 2^-53 - (-1) - (-2^-53) in this order is two ties that round to 1; the other order gives
     # 1 + 2^-52. Each solve subtracts first the product of the unknown it computed first.
     t = 2.0**-53
     forward = [1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0]
     assert list(diana.forward_substitution(forward, [-1.0, -t, t])) == [-1.0, -t, 1.0]
     back = [1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
-    assert list(diana.back_substitution(back, [t, -t, -1.0])) == [1.0, -t, -1.0]
+    assert list(diana.transpose_substitution(back, [t, -t, -1.0])) == [1.0, -t, -1.0]
 
 
 def test_signed_zero_and_underflow():
     r = diana.forward_substitution([-2.0, 0.0, 0.0, 4.0], [0.0, 0.0])
     assert same(r[0], -0.0) and same(r[1], 0.0)
-    r = diana.back_substitution([-2.0, 0.0, 0.0, 4.0], [0.0, 0.0])
+    r = diana.transpose_substitution([-2.0, 0.0, 0.0, 4.0], [0.0, 0.0])
     assert same(r[0], -0.0) and same(r[1], 0.0)
     tiny = math.ulp(0.0)
     assert same(diana.forward_substitution([2.0], [tiny])[0], 0.0)
-    assert diana.back_substitution([0.5], [tiny])[0] == 2 * tiny
+    assert diana.transpose_substitution([0.5], [tiny])[0] == 2 * tiny
 
 
 @pytest.mark.parametrize("solve", SOLVES, ids=SOLVE_IDS)
@@ -252,17 +254,17 @@ def test_nonfinite_rhs(solve, p, v):
     ("solve", "lower", "b"),
     [
         (diana.forward_substitution, [1e-300], [1e300]),
-        (diana.back_substitution, [1e-300], [1e300]),
+        (diana.transpose_substitution, [1e-300], [1e300]),
         (diana.forward_substitution, [1.0, 1e300, 0.0, 1.0], [1e300, 0.0]),
         (diana.forward_substitution, [1.0, -1.0, 0.0, 1.0], [DBL_MAX, DBL_MAX]),
-        (diana.back_substitution, [1.0, -1.0, 0.0, 1.0], [DBL_MAX, DBL_MAX]),
+        (diana.transpose_substitution, [1.0, -1.0, 0.0, 1.0], [DBL_MAX, DBL_MAX]),
         (
             diana.forward_substitution,
             [1.0, 0.0, -1e300, 0.0, 1.0, 1e300, 0.0, 0.0, 1.0],
             [1e300, 1e300, 0.0],
         ),
         (
-            diana.back_substitution,
+            diana.transpose_substitution,
             [1.0, 1e300, -1e300, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
             [0.0, 1e300, 1e300],
         ),
@@ -316,7 +318,7 @@ def test_wrong_element_type(solve):
         solve([1.0], "1")
 
 
-@pytest.mark.parametrize("name", ["forward_substitution", "back_substitution"])
+@pytest.mark.parametrize("name", ["forward_substitution", "transpose_substitution"])
 def test_extension_checks_out(name):
     ext = getattr(diana._diana, name)
     lower = array.array("d", L3)
@@ -364,7 +366,7 @@ def test_back_is_reversed_forward():
     rng = random.Random(2718)
     for n in range(1, 25):
         lower, b = system(rng, n)
-        x = diana.back_substitution(lower, b)
+        x = diana.transpose_substitution(lower, b)
         xr = diana.forward_substitution(flip(lower, n), b[::-1])
         assert all(same(p, q) for p, q in zip(x, xr[::-1], strict=True))
 
@@ -441,7 +443,7 @@ def exact_back(lower, n, b):
     ("solve", "rows", "exact", "comparison"),
     [
         (diana.forward_substitution, forward_rows, exact_forward, exact_forward),
-        (diana.back_substitution, back_rows, exact_back, exact_back),
+        (diana.transpose_substitution, back_rows, exact_back, exact_back),
     ],
     ids=SOLVE_IDS,
 )

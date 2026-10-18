@@ -122,11 +122,11 @@ static void test_exact(void) {
   size_t j;
 
   check_ok(diana_forward_substitution, l1, 1u, b1, x1);
-  check_ok(diana_back_substitution, l1, 1u, b1, x1);
+  check_ok(diana_transpose_substitution, l1, 1u, b1, x1);
   apply(l3, 3u, x3, 0, b);
   check_ok(diana_forward_substitution, l3, 3u, b, x3);
   apply(l3, 3u, x3, 1, b);
-  check_ok(diana_back_substitution, l3, 3u, b, x3);
+  check_ok(diana_transpose_substitution, l3, 3u, b, x3);
   for (j = 0; j < DIM; ++j) {
     for (i = 0; i < DIM; ++i) {
       if (i < j) {
@@ -142,7 +142,7 @@ static void test_exact(void) {
   apply(l, DIM, x, 0, b);
   check_ok(diana_forward_substitution, l, DIM, b, x);
   apply(l, DIM, x, 1, b);
-  check_ok(diana_back_substitution, l, DIM, b, x);
+  check_ok(diana_transpose_substitution, l, DIM, b, x);
 }
 
 /* Solve A x = b from the Cholesky factor: L y = b, then L^T x = y. */
@@ -157,7 +157,7 @@ static void test_cholesky(void) {
 
   CHECK_EQ_STATUS(diana_cholesky(a, 3u, l), DIANA_OK);
   CHECK_EQ_STATUS(diana_forward_substitution(l, 3u, b, y), DIANA_OK);
-  CHECK_EQ_STATUS(diana_back_substitution(l, 3u, y, x), DIANA_OK);
+  CHECK_EQ_STATUS(diana_transpose_substitution(l, 3u, y, x), DIANA_OK);
   CHECK(bits(x[0]) == bits(want[0]));
   CHECK(bits(x[1]) == bits(want[1]));
   CHECK(bits(x[2]) == bits(want[2]));
@@ -174,7 +174,7 @@ static void test_upper_ignored(void) {
   apply(l, 3u, x, 0, b);
   check_ok(diana_forward_substitution, l, 3u, b, x);
   apply(l, 3u, x, 1, b);
-  check_ok(diana_back_substitution, l, 3u, b, x);
+  check_ok(diana_transpose_substitution, l, 3u, b, x);
 }
 
 /* Each quotient is correctly rounded: 5/3 rounds up, 5 * fl(1/3) would round
@@ -189,9 +189,9 @@ static void test_rounded(void) {
   static const double x2[2] = {-0.0, 0.0};
 
   check_ok(diana_forward_substitution, l1, 1u, b1, x1);
-  check_ok(diana_back_substitution, l1, 1u, b1, x1);
+  check_ok(diana_transpose_substitution, l1, 1u, b1, x1);
   check_ok(diana_forward_substitution, l2, 2u, b2, x2);
-  check_ok(diana_back_substitution, l2, 2u, b2, x2);
+  check_ok(diana_transpose_substitution, l2, 2u, b2, x2);
 }
 
 /* x1 = (1 + 3*2^-52) - (1 + 2^-52)^2 with the product rounded first is
@@ -204,7 +204,7 @@ static void test_no_contraction(void) {
   static const double bx[2] = {DBL_EPSILON, 1.0 + DBL_EPSILON};
 
   check_ok(diana_forward_substitution, l, 2u, fb, fx);
-  check_ok(diana_back_substitution, l, 2u, bb, bx);
+  check_ok(diana_transpose_substitution, l, 2u, bb, bx);
 }
 
 /* The products are subtracted in the order their unknowns were computed:
@@ -220,7 +220,7 @@ static void test_order(void) {
   static const double bx[3] = {1.0, -0x1p-53, -1.0};
 
   check_ok(diana_forward_substitution, fl, 3u, fb, fx);
-  check_ok(diana_back_substitution, bl, 3u, bb, bx);
+  check_ok(diana_transpose_substitution, bl, 3u, bb, bx);
 }
 
 /* Underflow is not an error: 2^-1074 / 2 is a tie that rounds to +0, and a
@@ -233,9 +233,9 @@ static void test_underflow(void) {
   static const double x2[1] = {0x1p-1073};
 
   check_ok(diana_forward_substitution, l, 1u, b, x);
-  check_ok(diana_back_substitution, l, 1u, b, x);
+  check_ok(diana_transpose_substitution, l, 1u, b, x);
   check_ok(diana_forward_substitution, l2, 1u, b, x2);
-  check_ok(diana_back_substitution, l2, 1u, b, x2);
+  check_ok(diana_transpose_substitution, l2, 1u, b, x2);
 }
 
 /* Back substitution is forward substitution on the system with its indices
@@ -270,7 +270,7 @@ static void test_reversal(void) {
       }
       br[k] = b[n - 1u - k];
     }
-    CHECK_EQ_STATUS(diana_back_substitution(l, n, b, x), DIANA_OK);
+    CHECK_EQ_STATUS(diana_transpose_substitution(l, n, b, x), DIANA_OK);
     CHECK_EQ_STATUS(diana_forward_substitution(lr, n, br, xr), DIANA_OK);
     for (k = 0; k < n; ++k) {
       CHECK(bits(x[k]) == bits(xr[n - 1u - k]));
@@ -348,17 +348,17 @@ static void test_overflow(void) {
   static const double nan_bb[3] = {0.0, 1e300, 1e300};
 
   check_overflow(diana_forward_substitution, tiny, 1u, big);
-  check_overflow(diana_back_substitution, tiny, 1u, big);
+  check_overflow(diana_transpose_substitution, tiny, 1u, big);
   check_overflow(diana_forward_substitution, product, 2u, product_b);
   check_overflow(diana_forward_substitution, sum, 2u, sum_fb);
-  check_overflow(diana_back_substitution, sum, 2u, sum_bb);
+  check_overflow(diana_transpose_substitution, sum, 2u, sum_bb);
   check_overflow(diana_forward_substitution, nan_fl, 3u, nan_fb);
-  check_overflow(diana_back_substitution, nan_bl, 3u, nan_bb);
+  check_overflow(diana_transpose_substitution, nan_bl, 3u, nan_bb);
 }
 
 int main(void) {
   test_argument(diana_forward_substitution);
-  test_argument(diana_back_substitution);
+  test_argument(diana_transpose_substitution);
   test_exact();
   test_cholesky();
   test_upper_ignored();
@@ -368,9 +368,9 @@ int main(void) {
   test_underflow();
   test_reversal();
   test_singular(diana_forward_substitution);
-  test_singular(diana_back_substitution);
+  test_singular(diana_transpose_substitution);
   test_nonfinite(diana_forward_substitution);
-  test_nonfinite(diana_back_substitution);
+  test_nonfinite(diana_transpose_substitution);
   test_overflow();
   return check_report("substitution");
 }
