@@ -80,6 +80,10 @@ corpus, so far run only on AArch64 macOS.
   factors without `DIANA_ERR_SINGULAR`; the backward error is proved.
 - That a triangular system with a nonzero diagonal solves without overflow; when it does, the
   backward error and a forward error bound through the comparison matrix are proved.
+- A bound on the growth of the LU factors (`|U|` against `|A|`, up to `2^(n−1)` with partial
+  pivoting), a forward error bound on them, and that a nonsingular binary64 matrix factors
+  without `DIANA_ERR_SINGULAR` or an overflow; the backward error relative to `|L|·|U|` is
+  proved.
 
 ## Technical notes
 
