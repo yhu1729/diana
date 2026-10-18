@@ -1,0 +1,41 @@
+name: style_name
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+    paths:
+      - .github/workflows/style_name.yml
+      - .python-version
+      - pyproject.toml
+      - uv.lock
+      - CMakeLists.txt
+      - cmake/**
+      - include/**
+      - src/**
+      - python/**
+      - test/**
+      - script/**
+      - spec/**
+      - verification/**
+      - ci/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  style_name:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: |
+          bad=$(find . -maxdepth 2 -type d \( -name tests -o -name docs -o -name scripts -o -name proofs -o -name wrappers -o -name tools \) -not -path "./.git/*" -not -path "./.venv/*" -not -path "./build/*")
+          if [ -n "$bad" ]; then echo "plural directory name not allowed: $bad"; exit 1; fi
