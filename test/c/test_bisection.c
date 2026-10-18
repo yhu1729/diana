@@ -174,9 +174,9 @@ static void test_error(void) {
       DIANA_ERR_MAXITER);
   CHECK(iter == 5u);
   CHECK(fabs(root - sqrt(2.0)) <= 2.0 / 64.0);
-  CHECK_EQ_STATUS(diana_bisection((diana_bisection_fn)0, 0, 0.0, 2.0, 1e-12, 5u,
-                                  &root, &iter),
-                  DIANA_ERR_ARG);
+  CHECK_EQ_STATUS(
+      diana_bisection((diana_scalar_fn)0, 0, 0.0, 2.0, 1e-12, 5u, &root, &iter),
+      DIANA_ERR_ARG);
   CHECK_EQ_STATUS(
       diana_bisection(sq_minus_2, 0, 0.0, 2.0, 1e-12, 5u, (double *)0, &iter),
       DIANA_ERR_ARG);
@@ -208,7 +208,7 @@ static void test_error(void) {
                                   (unsigned *)0),
                   DIANA_OK);
   CHECK(fabs(root - sqrt(2.0)) <= 1e-12);
-  CHECK_EQ_STATUS(diana_bisection((diana_bisection_fn)0, 0, 0.0, 2.0, 1e-12, 5u,
+  CHECK_EQ_STATUS(diana_bisection((diana_scalar_fn)0, 0, 0.0, 2.0, 1e-12, 5u,
                                   &root, (unsigned *)0),
                   DIANA_ERR_ARG);
 }
