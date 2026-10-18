@@ -342,17 +342,21 @@ new size and layout), and the second attribute of `diana.MaxIterError` is `uncer
   anchor in `README.md`, `CONTRIBUTING.md`, `CLAUDE.md`, `doc/`, `note/` and `spec/`.
   `script/dev.sh test` and the `style_python` CI job run it, and `test/python/test_check_doc.py`
   tests it.
-- GitHub Actions on the GitHub mirror of the GitLab project (`.github/workflows/`): one workflow per
-  GitLab path list runs the GitLab jobs again on every push, under the same names and with the same
-  images and commands — the style checks with the commit check over the pushed range, ctest with gcc
-  14 and clang 18 in Debug with sanitizers and in Release, the install tests, pytest with the wheel
-  checks, C and Python coverage as run artifacts, Frama-C WP, the Lean build and gate, the Rocq
-  layer A, and the provenance check of the AST manifest and the report. It adds what GitLab does not
-  run: ctest, the install tests, pytest and the wheel checks on AArch64 macOS with Apple clang, and
-  `test_python` on Python 3.12, 3.13 and 3.14. Actions are pinned to commit SHAs and images to
-  digests, the token is read-only, and there is no release job; GitLab CI stays the primary
-  pipeline, and its `.change_style` list now includes `.github/workflows/`, since notes name those
-  files.
+- GitHub Actions on the GitHub mirror of the GitLab project (`.github/workflows/`): `ci.yml` runs
+  the GitLab jobs again on every push, under the same names, with the same images, commands and
+  `needs` (the C builds after `style_c`, `test_install` and `verify_frama_c` after
+  `test_gcc_release`, each coverage job after its tests), and its first job, `change`, selects them
+  from the `.change_*` lists of `.gitlab-ci.yml` with the new `script/ci_change.py`, so each path
+  list is written once — the style checks, ctest with gcc 14 and clang 18 in Debug with sanitizers
+  and in Release, the install tests, pytest with the wheel checks, C and Python coverage as run
+  artifacts, Frama-C WP, the Lean build and gate, the Rocq layers A and B, and the provenance check
+  of the AST manifest and the report; `style_git.yml` runs the commit check over the pushed range,
+  never cancelled. It adds what GitLab does not run: ctest, the install tests, pytest and the wheel
+  checks on AArch64 macOS with Apple clang, and `test_python` on Python 3.12, 3.13 and 3.14. It
+  caches the uv downloads, elan, Mathlib's packages and the Lean build, and the WP verdicts, each
+  under a key of its own inputs. Actions are pinned to commit SHAs and images to digests, the token
+  is read-only, and there is no release job; GitLab CI stays the primary pipeline, and its
+  `.change_style` list now includes `.github/workflows/`, since notes name those files.
 - ctest `configure` (`test/c/test_configure.cmake`) reconfigures the project into a scratch
   directory and checks that every rejected floating-point flag fails configuration in
   `CMAKE_C_FLAGS` and its per-configuration variants while the strict flags and their safe

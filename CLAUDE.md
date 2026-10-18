@@ -220,11 +220,12 @@ note/                 technical notes per topic, index by topic and by path (REA
   without requiring Rocq-only layers or Frama-C coverage; Rocq CI uses
   `--run --strict --prover rocq --layer A --layer B --no-report` (note CI-013).
 - CI: GitLab CI (`.gitlab-ci.yml`) is primary and alone makes a release. The GitHub mirror runs
-  `.github/workflows/` on every push: one workflow per `.change_*` list, with the GitLab job names,
-  images (pinned by digest) and commands, plus macOS jobs and `test_python` on Python 3.12, 3.13
-  and 3.14; actions pinned to commit SHAs, `permissions: contents: read`. A change to a
-  `.change_*` list changes the matching workflow's `paths:` too (note CI-018;
-  `doc/development/ci.md`, notes CI-017 to CI-025)
+  `.github/workflows/ci.yml` on every push, with the GitLab job names, `needs`, images (pinned by
+  digest) and commands, plus macOS jobs and `test_python` on Python 3.12, 3.13 and 3.14, and
+  `style_git.yml`; its `change` job selects jobs from the `.change_*` lists of `.gitlab-ci.yml`
+  (`script/ci_change.py`), so a list is edited in one place; caches keyed on their inputs; actions
+  pinned to commit SHAs, `permissions: contents: read` (`doc/development/ci.md`, notes CI-017 to
+  CI-026)
 
 ## Status
 

@@ -35,22 +35,21 @@ that mirrors it.
 
 The GitHub repository is a push mirror of the GitLab project, and `.github/workflows/` runs a
 second pipeline over the same commits. GitLab stays the primary pipeline and the only one that
-makes a release. Each GitHub workflow carries the jobs of one GitLab path list, with the same job
-names, images and commands:
-
-| Workflow | Jobs |
-|---|---|
-| `style_git`, `style_name`, `style_c`, `style_python` | the style job of the same name |
-| `c` | ctest with gcc 14 and clang 18 in Debug and Release, `test_install`, `coverage_c`, and the macOS jobs |
-| `python` | `test_python` on Python 3.12, 3.13 and 3.14, `test_python_macos`, `coverage_python` |
-| `verify_frama_c`, `verify_lean`, `verify_rocq`, `verify_provenance` | the verify job of the same name |
+makes a release. `ci.yml` holds every GitLab job but `style_git` and `release`, with the same job
+names, images, commands and `needs`: the C builds wait for `style_c`, `test_install` and
+`verify_frama_c` for `test_gcc_release`, and each coverage job for its tests. Its first job,
+`change`, reads the `.change_*` lists of `.gitlab-ci.yml` with `script/ci_change.py`, so a job runs
+for the same changed files as on GitLab and the path lists exist once. `style_git.yml` runs
+`style_git` alone, never cancelled.
 
 It closes two gaps GitLab leaves: macOS jobs (`test_macos_{debug,release}`, `test_install_macos`,
 `test_python_macos`) build and test on AArch64 macOS with Apple clang, and `test_python` runs every
 Python version `requires-python` admits instead of only `.python-version`. Unlike GitLab, it runs
 on every branch push, since a mirrored branch has no merge request; a version tag or a manual run
-(`workflow_dispatch`) runs every workflow. Actions are pinned to commit SHAs and images to
-digests; coverage reports and the Frama-C report are run artifacts, and there are no badges.
+(`workflow_dispatch`) runs every job. Actions are pinned to commit SHAs and images to digests;
+coverage reports and the Frama-C report are run artifacts, and there are no badges. To save run
+time it caches the uv downloads, elan, Mathlib and the Lean build, and the WP verdicts, each under
+a key of its own inputs.
 
 ## Technical notes
 
@@ -64,10 +63,11 @@ digests; coverage reports and the Frama-C report are run artifacts, and there ar
 [CI-014](../../note/ci/CI-014.md) what gates a release,
 [CI-015](../../note/ci/CI-015.md) the Lean container image,
 [CI-016](../../note/ci/CI-016.md) `verify_provenance`,
-[CI-017](../../note/ci/CI-017.md) the GitHub workflows,
-[CI-018](../../note/ci/CI-018.md) their path filters,
+[CI-017](../../note/ci/CI-017.md) the GitHub workflow and its `needs`,
+[CI-018](../../note/ci/CI-018.md) the `change` job,
 [CI-019](../../note/ci/CI-019.md) their commit range,
 [CI-021](../../note/ci/CI-021.md) Frama-C and Rocq under `docker run`,
 [CI-023](../../note/ci/CI-023.md) the macOS jobs,
 [CI-024](../../note/ci/CI-024.md) the Python versions,
-[CI-025](../../note/ci/CI-025.md) updating the pins.
+[CI-025](../../note/ci/CI-025.md) updating the pins,
+[CI-026](../../note/ci/CI-026.md) the caches.

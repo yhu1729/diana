@@ -211,8 +211,8 @@ The rest is convention:
 Work on a branch off `main` and open a merge request on
 [GitLab](https://gitlab.com/yhu1729/diana). Merge-request pipelines keep the path filters, so a
 job runs only when a file it depends on changes; when you add a job, or a file an existing job
-reads, extend the matching `.change_*` list at the top of `.gitlab-ci.yml` and the `paths:` of the
-GitHub workflow in `.github/workflows/` that mirrors it. The GitHub repository is a mirror of the
-GitLab project and runs those workflows on every push. Report a bug or discuss a method before
+reads, extend the matching `.change_*` list at the top of `.gitlab-ci.yml`. The GitHub repository
+is a mirror of the GitLab project, and its `.github/workflows/ci.yml` reads the same lists, so the
+mirrored job follows; a new job also needs its copy there, with the same `needs`. Report a bug or discuss a method before
 implementing it at
 [Issues](https://gitlab.com/yhu1729/diana/-/issues).
