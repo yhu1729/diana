@@ -5,8 +5,10 @@
 /*@ requires s == \null || (newton_state(s) && s->iter < s->max_iter);
   @ assigns *s;
   @ ensures \result == DIANA_ERR_ARG || \result == DIANA_ERR_SINGULAR ||
-  @         \result == DIANA_ERR_MAXITER || \result == DIANA_OK || \result == DIANA_CONTINUE;
-  @ ensures \result != DIANA_ERR_ARG && \result != DIANA_ERR_SINGULAR ==>
+  @         \result == DIANA_ERR_OVERFLOW || \result == DIANA_ERR_MAXITER ||
+  @         \result == DIANA_OK || \result == DIANA_CONTINUE;
+  @ ensures \result != DIANA_ERR_ARG && \result != DIANA_ERR_SINGULAR &&
+  @         \result != DIANA_ERR_OVERFLOW ==>
   @         newton_state(s) && s->iter == \old(s->iter) + 1 && s->tol == \old(s->tol) &&
   @         s->max_iter == \old(s->max_iter);
   @ ensures \result == DIANA_OK ==> \abs(s->dx) <= s->tol || s->x == \old(s->x);
@@ -14,7 +16,10 @@
   @         s->x != \old(s->x);
   @ ensures \result == DIANA_ERR_MAXITER ==> s->iter == s->max_iter;
   @ ensures \result == DIANA_ERR_SINGULAR ==> dfx == 0. && fx != 0.;
-  @ ensures (\result == DIANA_ERR_ARG || \result == DIANA_ERR_SINGULAR) && s != \null ==>
+  @ ensures \result == DIANA_ERR_OVERFLOW ==>
+  @         \is_finite(fx) && \is_finite(dfx) && fx != 0. && dfx != 0.;
+  @ ensures (\result == DIANA_ERR_ARG || \result == DIANA_ERR_SINGULAR ||
+  @          \result == DIANA_ERR_OVERFLOW) && s != \null ==>
   @         newton_unchanged{Pre, Post}(s);
   @*/
 diana_status diana_newton_step(diana_newton_state *s, double fx, double dfx) {
@@ -36,11 +41,11 @@ diana_status diana_newton_step(diana_newton_state *s, double fx, double dfx) {
   }
   dx = fx / dfx;
   if (!diana_fp_finite(dx)) {
-    return DIANA_ERR_ARG;
+    return DIANA_ERR_OVERFLOW;
   }
   x = s->x - dx;
   if (!diana_fp_finite(x)) {
-    return DIANA_ERR_ARG;
+    return DIANA_ERR_OVERFLOW;
   }
   converged = x == s->x || diana_fp_abs(dx) <= s->tol;
   s->iter = s->iter + 1u;

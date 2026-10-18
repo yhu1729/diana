@@ -20,7 +20,7 @@
   @          lu_solve_valid(lu, piv, n, b, x);
   @ assigns x[0 .. n - 1];
   @ ensures \result == DIANA_OK || \result == DIANA_ERR_ARG ||
-  @         \result == DIANA_ERR_SINGULAR;
+  @         \result == DIANA_ERR_SINGULAR || \result == DIANA_ERR_OVERFLOW;
   @ ensures \result != DIANA_ERR_ARG ==>
   @         lu != \null && piv != \null && b != \null && x != \null &&
   @         n >= 1 && n * n <= 18446744073709551615;
@@ -128,7 +128,7 @@ diana_status diana_lu_solve(const double *lu, const size_t *piv, size_t n,
       s = s - lu[i + k * n] * x[k];
     }
     if (!diana_fp_finite(s)) {
-      return DIANA_ERR_ARG;
+      return DIANA_ERR_OVERFLOW;
     }
     x[i] = s;
   }
@@ -152,7 +152,7 @@ diana_status diana_lu_solve(const double *lu, const size_t *piv, size_t n,
     }
     r = s / lu[i + i * n];
     if (!diana_fp_finite(r)) {
-      return DIANA_ERR_ARG;
+      return DIANA_ERR_OVERFLOW;
     }
     x[i] = r;
   }

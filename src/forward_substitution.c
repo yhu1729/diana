@@ -8,7 +8,7 @@
   @          n > 18446744073709551615 / n || substitution_valid(l, n, b, x);
   @ assigns x[0 .. n - 1];
   @ ensures \result == DIANA_OK || \result == DIANA_ERR_ARG ||
-  @         \result == DIANA_ERR_SINGULAR;
+  @         \result == DIANA_ERR_SINGULAR || \result == DIANA_ERR_OVERFLOW;
   @ ensures \result != DIANA_ERR_ARG ==>
   @         l != \null && b != \null && x != \null && n >= 1 &&
   @         n * n <= 18446744073709551615;
@@ -86,7 +86,7 @@ diana_status diana_forward_substitution(const double *l, size_t n,
     }
     r = s / l[i + i * n];
     if (!diana_fp_finite(r)) {
-      return DIANA_ERR_ARG;
+      return DIANA_ERR_OVERFLOW;
     }
     x[i] = r;
   }

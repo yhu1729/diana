@@ -8,10 +8,14 @@
   @ requires y == \null || result == \null || n < 2 ||
   @          \separated(result, y + (0 .. n - 1));
   @ assigns *result;
-  @ ensures \result == DIANA_OK || \result == DIANA_ERR_ARG;
+  @ ensures \result == DIANA_OK || \result == DIANA_ERR_ARG ||
+  @         \result == DIANA_ERR_OVERFLOW;
   @ ensures \result == DIANA_OK ==>
   @         y != \null && result != \null && n >= 2 && \is_finite(*result);
-  @ ensures \result == DIANA_ERR_ARG && result != \null ==>
+  @ ensures \result == DIANA_ERR_OVERFLOW ==>
+  @         y != \null && result != \null && n >= 2 && \is_finite(h) &&
+  @         \forall integer q; 0 <= q < n ==> \is_finite(y[q]);
+  @ ensures (\result == DIANA_ERR_ARG || \result == DIANA_ERR_OVERFLOW) && result != \null ==>
   @         *result == \old(*result);
   @*/
 diana_status diana_trapezoidal(const double *y, size_t n, double h,
@@ -35,7 +39,20 @@ diana_status diana_trapezoidal(const double *y, size_t n, double h,
 
   r = h * s;
   if (!diana_fp_finite(r)) {
-    return DIANA_ERR_ARG;
+    if (!diana_fp_finite(h)) {
+      return DIANA_ERR_ARG;
+    }
+    /*@ loop invariant 0 <= i <= n;
+      @ loop invariant \forall integer q; 0 <= q < i ==> \is_finite(y[q]);
+      @ loop assigns i;
+      @ loop variant n - i;
+      @*/
+    for (i = 0u; i < n; ++i) {
+      if (!diana_fp_finite(y[i])) {
+        return DIANA_ERR_ARG;
+      }
+    }
+    return DIANA_ERR_OVERFLOW;
   }
   *result = r;
   return DIANA_OK;

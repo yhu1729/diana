@@ -8,11 +8,15 @@
   @ requires y == \null || result == \null || n < 3 ||
   @          \separated(result, y + (0 .. n - 1));
   @ assigns *result;
-  @ ensures \result == DIANA_OK || \result == DIANA_ERR_ARG;
+  @ ensures \result == DIANA_OK || \result == DIANA_ERR_ARG ||
+  @         \result == DIANA_ERR_OVERFLOW;
   @ ensures \result == DIANA_OK ==>
   @         y != \null && result != \null && n >= 3 && n % 2 == 1 &&
   @         \is_finite(*result);
-  @ ensures \result == DIANA_ERR_ARG && result != \null ==>
+  @ ensures \result == DIANA_ERR_OVERFLOW ==>
+  @         y != \null && result != \null && n >= 3 && \is_finite(h) &&
+  @         \forall integer q; 0 <= q < n ==> \is_finite(y[q]);
+  @ ensures (\result == DIANA_ERR_ARG || \result == DIANA_ERR_OVERFLOW) && result != \null ==>
   @         *result == \old(*result);
   @*/
 diana_status diana_simpson(const double *y, size_t n, double h,
@@ -51,7 +55,20 @@ diana_status diana_simpson(const double *y, size_t n, double h,
   s = ((y[0] + y[n - 1u]) + 4.0 * so) + 2.0 * se;
   r = h * s / 3.0;
   if (!diana_fp_finite(r)) {
-    return DIANA_ERR_ARG;
+    if (!diana_fp_finite(h)) {
+      return DIANA_ERR_ARG;
+    }
+    /*@ loop invariant 0 <= k <= n;
+      @ loop invariant \forall integer q; 0 <= q < k ==> \is_finite(y[q]);
+      @ loop assigns k;
+      @ loop variant n - k;
+      @*/
+    for (k = 0u; k < n; ++k) {
+      if (!diana_fp_finite(y[k])) {
+        return DIANA_ERR_ARG;
+      }
+    }
+    return DIANA_ERR_OVERFLOW;
   }
   *result = r;
   return DIANA_OK;
