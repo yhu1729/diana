@@ -1,0 +1,112 @@
+name: python
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+    paths:
+      - .github/workflows/python.yml
+      - .clang-format
+      - .python-version
+      - pyproject.toml
+      - uv.lock
+      - CMakeLists.txt
+      - cmake/**
+      - include/**
+      - src/**
+      - python/**
+      - test/python/**
+      - test/doc/**
+      - doc/api/**
+      - script/check_spec.py
+      - script/check_wheel.py
+      - README.md
+      - LICENSE
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_LINK_MODE: copy
+  SKBUILD_CMAKE_DEFINE: DIANA_WERROR=ON
+
+jobs:
+  test_python:
+    name: test_python_${{ matrix.python }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    container: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python: '3.12'
+            image: ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58
+          - python: '3.13'
+            image: ghcr.io/astral-sh/uv:python3.13-bookworm-slim@sha256:531f855bda2c73cd6ef67d56b733b357cea384185b3022bd09f05e002cd144ca
+          - python: '3.14'
+            image: ghcr.io/astral-sh/uv:python3.14-bookworm-slim@sha256:7cf77f594be8042dab6daa9fe326f90962252268b4f120a7f5dccce4d947e6c1
+    env:
+      UV_PYTHON: ${{ matrix.python }}
+    steps:
+      - run: apt-get update -qq && apt-get install -y -qq --no-install-recommends build-essential cmake ninja-build > /dev/null
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: uv --version
+      - run: uv sync --group test --group lint
+      - run: uv run pytest -q
+      - run: uv build
+      - run: uv run --with twine twine check dist/*
+      - run: uv run --no-sync script/check_wheel.py
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dist-${{ matrix.python }}
+          path: dist/
+          retention-days: 7
+
+  test_python_macos:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - run: uv --version
+      - run: uv sync --group test --group lint
+      - run: uv run pytest -q
+      - run: uv build
+      - run: uv run --with twine twine check dist/*
+      - run: uv run --no-sync script/check_wheel.py
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dist-macos
+          path: dist/
+          retention-days: 7
+
+  coverage_python:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    container: ghcr.io/astral-sh/uv:python3.13-bookworm-slim@sha256:531f855bda2c73cd6ef67d56b733b357cea384185b3022bd09f05e002cd144ca
+    env:
+      SKBUILD_CMAKE_DEFINE: DIANA_WERROR=ON;CMAKE_C_FLAGS=--coverage;CMAKE_MODULE_LINKER_FLAGS=--coverage
+    steps:
+      - run: apt-get update -qq && apt-get install -y -qq --no-install-recommends build-essential cmake ninja-build > /dev/null
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: uv sync --group test --group coverage --reinstall-package diana
+      - run: mkdir -p coverage/python-c
+      - run: uv run --no-sync pytest -q --cov=diana --cov-branch --cov-report=term --cov-report=xml:coverage/python.xml --cov-report=html:coverage/python
+      - run: uv run --no-sync gcovr --root . --filter python/ext/ --gcov-exclude-directories '.*/CMakeFiles/[0-9.]+/.*' --print-summary --cobertura coverage/python-c.xml --html-details coverage/python-c/index.html build
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage-python
+          path: coverage/
+          retention-days: 30
