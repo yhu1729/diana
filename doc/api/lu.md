@@ -1,11 +1,11 @@
 # LU factorization
 
 The LU factorization with partial pivoting writes a square matrix as `P·A = L·U`, with `L` unit
-lower triangular, `U` upper triangular and `P` a row permutation. It is the standard first step
-for solving `A·x = b` with a general matrix: each step takes as pivot the entry of largest
-magnitude in its column, which keeps every multiplier at most 1 in magnitude. In exact arithmetic
-it fails, at a pivot column that is entirely zero, exactly when the matrix is singular. Shared
-conventions are in the [API overview](overview.md).
+lower triangular, `U` upper triangular and `P` a row permutation. It is the standard first step for
+solving `A·x = b` with a general matrix, the [LU solve](lu_solve.md) being the second: each step
+takes as pivot the entry of largest magnitude in its column, which keeps every multiplier at most 1
+in magnitude. In exact arithmetic it fails, at a pivot column that is entirely zero, exactly when
+the matrix is singular. Shared conventions are in the [API overview](overview.md).
 
 ## C
 
