@@ -16,6 +16,8 @@ const char *diana_status_str(diana_status s) {
     return "zero derivative or pivot";
   case DIANA_ERR_OVERFLOW:
     return "result overflows";
+  case DIANA_ERR_CALLBACK:
+    return "callback failed";
   }
   return "unknown status";
 }
