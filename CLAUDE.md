@@ -248,10 +248,10 @@ by VST against the Flocq model.
 The opt-in `_unchecked` Euler and RK4 kernels have layers B and C only (`euler_unchecked`,
 `rk4_unchecked`). The callback wrappers and the Python binding are tested, not verified.
 
-Layers B and C-VST, the Rocq axiom gate, the Clight AST check and the `ccomp` comparison run only
-locally (note VERIFY-001); CI builds layer A, runs WP, and `verify_provenance` checks only that
-the committed report and AST manifest match the sources. What each layer assumes:
-`doc/verification/trust.md`.
+Layer C-VST, its Rocq axiom gate, the Clight AST check and the `ccomp` comparison run only locally
+(note VERIFY-001); CI builds layers A and B and runs their Rocq axiom gate, runs WP, and
+`verify_provenance` checks only that the committed report and AST manifest match the sources. What
+each layer assumes: `doc/verification/trust.md`.
 
 Version 1.0.0 is set everywhere (note BUILD-006) and its `CHANGELOG.md` section is dated, but the
 `v1.0.0` tag is held: create it only on an explicit request (CI `release` runs only on a version
