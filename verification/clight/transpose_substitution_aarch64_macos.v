@@ -15,7 +15,7 @@ Module Info.
   Definition abi := "apple".
   Definition bitsize := 64.
   Definition big_endian := false.
-  Definition source_file := "src/back_substitution.c".
+  Definition source_file := "src/transpose_substitution.c".
   Definition normalized := true.
 End Info.
 
@@ -74,8 +74,8 @@ Definition ___compcert_va_float64 : ident := $"__compcert_va_float64".
 Definition ___compcert_va_int32 : ident := $"__compcert_va_int32".
 Definition ___compcert_va_int64 : ident := $"__compcert_va_int64".
 Definition _b : ident := $"b".
-Definition _diana_back_substitution : ident := $"diana_back_substitution".
 Definition _diana_fp_finite : ident := $"diana_fp_finite".
+Definition _diana_transpose_substitution : ident := $"diana_transpose_substitution".
 Definition _i : ident := $"i".
 Definition _j : ident := $"j".
 Definition _k : ident := $"k".
@@ -117,7 +117,7 @@ Definition f_diana_fp_finite := {|
   (Sreturn (Some (Etempvar _t'1 tint))))
 |}.
 
-Definition f_diana_back_substitution := {|
+Definition f_diana_transpose_substitution := {|
   fn_return := tint;
   fn_callconv := cc_default;
   fn_params := ((_l, (tptr tdouble)) :: (_n, tulong) ::
@@ -584,10 +584,11 @@ Definition global_definitions : list (ident * globdef fundef type) :=
      (tint :: nil) tvoid
      {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|})) ::
  (_diana_fp_finite, Gfun(Internal f_diana_fp_finite)) ::
- (_diana_back_substitution, Gfun(Internal f_diana_back_substitution)) :: nil).
+ (_diana_transpose_substitution, Gfun(Internal f_diana_transpose_substitution)) ::
+ nil).
 
 Definition public_idents : list ident :=
-(_diana_back_substitution :: ___builtin_debug :: ___builtin_fmin ::
+(_diana_transpose_substitution :: ___builtin_debug :: ___builtin_fmin ::
  ___builtin_fmax :: ___builtin_fnmsub :: ___builtin_fnmadd ::
  ___builtin_fmsub :: ___builtin_fmadd :: ___builtin_clsll ::
  ___builtin_clsl :: ___builtin_cls :: ___builtin_expect ::
