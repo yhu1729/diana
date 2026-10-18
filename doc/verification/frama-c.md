@@ -22,7 +22,8 @@ contract, update the count in the same commit. The output is collected in
   `src/bisection_acsl.h`.
 - A floating-point fact beyond WP's reach goes into a small helper function of its own whose
   contract WP assumes, and Flocq and VST prove instead: the bisection midpoint and the square
-  root of the Cholesky factorization; the script fails if WP would assume any other contract.
+  root of the Cholesky factorization; the script fails if WP would assume any other contract, and
+  also if it cannot read Frama-C's list of the called functions, as after a format change.
 - A nonlinear index bound such as `i + j*n < n*n` needs a lemma in the factored form Alt-Ergo can
   prove and an assertion that instantiates it in each loop.
 
