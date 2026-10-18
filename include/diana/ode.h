@@ -7,8 +7,8 @@
 extern "C" {
 #endif
 
-typedef void (*diana_ode_fn)(double t, const double *y, double *dy, size_t d,
-                             void *ctx);
+typedef int (*diana_ode_fn)(double t, const double *y, double *dy, size_t d,
+                            void *ctx);
 
 #ifdef __cplusplus
 }

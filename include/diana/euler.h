@@ -17,7 +17,7 @@ diana_status diana_euler_step_unchecked(const double *y, const double *f,
 
 diana_status diana_euler(diana_ode_fn fn, void *ctx, double t0, double h,
                          unsigned nstep, double *y, size_t d, double *work,
-                         unsigned *done);
+                         size_t lwork, unsigned *done);
 
 #ifdef __cplusplus
 }

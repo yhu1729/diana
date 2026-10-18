@@ -4,7 +4,7 @@
 
 diana_status diana_rk4(diana_ode_fn fn, void *ctx, double t0, double h,
                        unsigned nstep, double *y, size_t d, double *work,
-                       unsigned *done) {
+                       size_t lwork, unsigned *done) {
   double *k1;
   double *k2;
   double *k3;
@@ -18,7 +18,7 @@ diana_status diana_rk4(diana_ode_fn fn, void *ctx, double t0, double h,
     *done = 0u;
   }
   if (fn == (diana_ode_fn)0 || y == (double *)0 || work == (double *)0 ||
-      d == 0u) {
+      d == 0u || lwork / 5u < d) {
     return DIANA_ERR_ARG;
   }
 
@@ -28,22 +28,30 @@ diana_status diana_rk4(diana_ode_fn fn, void *ctx, double t0, double h,
   k4 = k3 + d;
   ys = k4 + d;
   for (k = 0u; k < nstep; ++k) {
-    fn(t0 + (double)k * h, y, k1, d, ctx);
+    if (fn(t0 + (double)k * h, y, k1, d, ctx) != 0) {
+      return DIANA_ERR_CALLBACK;
+    }
     st = diana_rk4_stage(y, k1, d, h, 2, ys);
     if (st != DIANA_OK) {
       return st;
     }
-    fn(t0 + ((double)k + 0.5) * h, ys, k2, d, ctx);
+    if (fn(t0 + ((double)k + 0.5) * h, ys, k2, d, ctx) != 0) {
+      return DIANA_ERR_CALLBACK;
+    }
     st = diana_rk4_stage(y, k2, d, h, 3, ys);
     if (st != DIANA_OK) {
       return st;
     }
-    fn(t0 + ((double)k + 0.5) * h, ys, k3, d, ctx);
+    if (fn(t0 + ((double)k + 0.5) * h, ys, k3, d, ctx) != 0) {
+      return DIANA_ERR_CALLBACK;
+    }
     st = diana_rk4_stage(y, k3, d, h, 4, ys);
     if (st != DIANA_OK) {
       return st;
     }
-    fn(t0 + (double)(k + 1u) * h, ys, k4, d, ctx);
+    if (fn(t0 + (double)(k + 1u) * h, ys, k4, d, ctx) != 0) {
+      return DIANA_ERR_CALLBACK;
+    }
     st = diana_rk4_step(y, k1, k2, k3, k4, d, h, ys);
     if (st != DIANA_OK) {
       return st;

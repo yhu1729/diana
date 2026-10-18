@@ -26,7 +26,7 @@ diana_status diana_rk4_step_unchecked(const double *y, const double *k1,
 
 diana_status diana_rk4(diana_ode_fn fn, void *ctx, double t0, double h,
                        unsigned nstep, double *y, size_t d, double *work,
-                       unsigned *done);
+                       size_t lwork, unsigned *done);
 
 #ifdef __cplusplus
 }
