@@ -57,6 +57,7 @@ theory/VST/FpSqrt.v
 ../clight/lu_aarch64_macos.v
 theory/VST/LU.v
 ../clight/lu_solve_aarch64_macos.v
+theory/VST/LUSolve.v
 theory/VST/Newton.v
 ../clight/newton_init_aarch64_macos.v
 theory/VST/NewtonInit.v
