@@ -12,6 +12,8 @@ from pathlib import Path
 
 import yaml
 
+import check_provenance
+
 ROOT = Path(__file__).resolve().parent.parent
 SPEC_DIR = ROOT / "spec"
 LEAN_DIR = ROOT / "verification" / "lean"
@@ -301,7 +303,10 @@ def write_report(theorems: list[Theorem]) -> None:
         lines.append(
             f"| {t.spec} | {t.id} | {t.layer} | {cells[0]} | {cells[1]} | {cells[2]} | {informal} |"
         )
-    REPORT.write_text(head + marker + "\n\n" + "\n".join(lines) + "\n", encoding="utf-8")
+    stamp = check_provenance.render_stamp(check_provenance.tool_version())
+    REPORT.write_text(
+        head + marker + "\n\n" + stamp + "\n\n" + "\n".join(lines) + "\n", encoding="utf-8"
+    )
 
 
 def main() -> int:
