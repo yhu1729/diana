@@ -6,6 +6,35 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+#### Verification
+
+- Provenance for the local-only layers. `script/dev.sh verify` records in
+  `verification/clight/manifest.txt` the SHA-256 of each Clight AST, of its source and of every
+  header the source includes from `include/` or `src/`, once the Clight check passes, and the
+  spec gate stamps `doc/verification/report.md` with the SHA-256 of the files git lists under
+  `include/`, `spec/`, `src/` and `verification/` and of `script/axiom_allow.yaml` and
+  `script/run_frama_c.sh` (the allowed axioms and the `SKIP` list), and with the versions of
+  Lean, Rocq, Flocq, Coquelicot, CompCert, VST, Frama-C and Alt-Ergo, whenever it rewrites the
+  report. The new `script/check_provenance.py` (standard library and git, no CompCert or prover)
+  fails when an AST, its source or a header changed after the manifest, when an input changed
+  after the stamp, or when a report cell is not `ok`; `script/dev.sh verify` runs it last, after checking that no input changed
+  while the provers ran, and the new CI job `verify_provenance` (stage `verify`, required for a
+  release) runs it on every change to those inputs, so a change committed without a local
+  verify run fails CI. Unit tests in `test/python/test_check_provenance.py`.
+
+### Changed
+
+#### Verification
+
+- `script/run_frama_c.sh` fails closed: the `SKIP` trust-boundary check now fails when the
+  "Undefined and unspecified functions" or "Specified-only functions" section of the
+  `frama-c -metrics` report is missing, duplicated or not in the expected form (entries that do
+  not add up to the count in the section header), where it used to find no function and pass. A
+  source argument (`*.c`, `*.h`, `*.i`) that is not a file, a run with no source file and a
+  failing `frama-c -metrics` run now also fail, instead of being dropped from the check.
+
 ## [1.0.0] - 2026-10-18
 
 The first stable release. The classical Runge–Kutta step joins the ODE methods, and linear algebra
