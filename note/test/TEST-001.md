@@ -16,7 +16,8 @@ The C tests are ctest executables in `test/c/`; the Python tests are pytest modu
   `test_<name>`, links `diana::diana` and `m`, applies `diana_set_strict_flag` (the library's
   warning and floating-point flags, plus `-Werror` with `DIANA_WERROR`) and registers ctest test
   `<name>`. The tests are `status`, `bisection`, `cholesky`, `compiler` (the corpus driver,
-  COMPILER-010), `euler`, `lu`, `newton`, `rk4`, `simpson`, `substitution` and `trapezoidal`;
+  COMPILER-010), `euler`, `lu`, `lu_solve`, `newton`, `rk4`, `simpson`, `substitution` and
+  `trapezoidal`;
   outside scikit-build ctest also has `install` and `find_package` (TEST-002). `test/c/` is built
   only with `-DDIANA_BUILD_TEST=ON` (default OFF; the wheel build passes OFF).
 - `test/c/check.h` needs only `<stdio.h>`: `CHECK(cond)` and `CHECK_EQ_STATUS(got, want)` count a

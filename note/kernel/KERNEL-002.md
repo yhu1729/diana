@@ -12,6 +12,7 @@ path:
   - src/forward_substitution.c
   - src/back_substitution.c
   - src/lu.c
+  - src/lu_solve.c
 related: [KERNEL-003, API-003, FP-002]
 ---
 A checked kernel writes its output only once it knows the call succeeds, so `DIANA_ERR_ARG`
@@ -37,6 +38,9 @@ leaves every output untouched. The vector kernels do this in two passes without 
   leaves `lu` and `piv` untouched), but it factors in place in `lu` and each step needs the
   steps before it, so a zero pivot column (`DIANA_ERR_SINGULAR`) or an overflowing update
   (`DIANA_ERR_ARG`) is found with both partly written (API-032).
+- `diana_lu_solve` checks its arguments, every entry of `lu` and `b`, every pivot row and the
+  diagonal before writing, so those exits leave `x` untouched, but it solves in place in `x`, so
+  an overflowing entry of either solve is found with `x` partly written (API-034).
 - Proved: `y_out` untouched on `DIANA_ERR_ARG` by WP (EULER-C1, RK4-C1, RK4-C2) and unchanged
   unless every component is finite by VST (EULER-C2, RK4-C3, RK4-C4).
 

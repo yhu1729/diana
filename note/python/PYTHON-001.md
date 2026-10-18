@@ -30,8 +30,9 @@ each named after its function without `diana_py_` (STYLE-002); all are listed in
   them. The state types have `<kernel>_new.c`, `_init.c`, `_step.c`, `_result.c` and the object
   struct in `bisection_object.h` / `newton_object.h`; the array functions are `trapezoidal.c`,
   `simpson.c`, `euler_step.c`, `rk4_stage.c`, `rk4_step.c`, `cholesky.c`,
-  `forward_substitution.c`, `back_substitution.c` and `lu.c`, the one that allocates (its pivot
-  rows, with `PyMem_New`). The last two pass their kernel to
+  `forward_substitution.c`, `back_substitution.c`, `lu.c` and `lu_solve.c`, the two that
+  allocate (the pivot rows, with `PyMem_New`). `forward_substitution.c` and
+  `back_substitution.c` pass their kernel to
   `substitution.c` (`diana_py_substitution`, the shared argument checks), registered with them by
   `substitution_exec.c`; the kernel type `diana_py_solve_fn` is in `module.h`.
 

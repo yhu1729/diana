@@ -119,6 +119,8 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [API-031](api/API-031.md) | fact | Python forward_substitution, back_substitution and their extension functions |
 | [API-032](api/API-032.md) | fact | LU evaluation order, exits and what each exit writes |
 | [API-033](api/API-033.md) | fact | Python lu and the extension function lu(a, out) |
+| [API-034](api/API-034.md) | fact | LU solve evaluation order, exits and what each exit writes |
+| [API-035](api/API-035.md) | fact | Python lu_solve and the extension function lu_solve(lu, piv, b, out) |
 
 ### benchmark
 
@@ -246,6 +248,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [PROOF-009](proof/PROOF-009.md) | fact | Cholesky theorems, their hypotheses and the backward error bound |
 | [PROOF-010](proof/PROOF-010.md) | fact | Substitution theorems, their hypotheses and the error bounds |
 | [PROOF-011](proof/PROOF-011.md) | fact | LU theorems, their hypotheses and the backward error bounds |
+| [PROOF-012](proof/PROOF-012.md) | fact | LU solve theorems, their hypotheses and the residual bounds |
 
 ### prover
 
@@ -331,6 +334,8 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [TEST-036](test/TEST-036.md) | fact | Substitution Python tests against a binary64 reference and the B bounds |
 | [TEST-037](test/TEST-037.md) | fact | LU C test values, rounding pins and failure cases |
 | [TEST-038](test/TEST-038.md) | fact | LU Python tests against a binary64 reference and the B3 and B4 bounds |
+| [TEST-039](test/TEST-039.md) | fact | LU solve C test values, rounding pins and failure cases |
+| [TEST-040](test/TEST-040.md) | fact | LU solve Python tests against a binary64 reference and the B bounds |
 
 ### verify
 
@@ -402,6 +407,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `include/diana/diana.h` | API-001, API-002, BUILD-006, KERNEL-006 |
 | `include/diana/euler.h` | API-015, API-018 |
 | `include/diana/lu.h` | API-032 |
+| `include/diana/lu_solve.h` | API-034 |
 | `include/diana/newton.h` | API-010 |
 | `include/diana/ode.h` | API-006, API-017, KERNEL-004 |
 | `include/diana/rk4.h` | API-016, API-018 |
@@ -429,6 +435,8 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `python/ext/get_array.c` | API-020 |
 | `python/ext/lu.c` | API-022, API-033, PYTHON-004 |
 | `python/ext/lu_exec.c` | API-033 |
+| `python/ext/lu_solve.c` | API-022, API-035, PYTHON-004 |
+| `python/ext/lu_solve_exec.c` | API-035 |
 | `python/ext/module.c` | PYTHON-003, PYTHON-007 |
 | `python/ext/module.h` | API-004, PYTHON-004, PYTHON-007 |
 | `python/ext/newton_*.c` | API-023 |
@@ -454,6 +462,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `python/src/diana/_error.py` | API-022 |
 | `python/src/diana/_euler.py` | API-003, API-020, API-026, PYTHON-004 |
 | `python/src/diana/_lu.py` | API-020, API-033 |
+| `python/src/diana/_lu_solve.py` | API-020, API-035 |
 | `python/src/diana/_newton.py` | API-011, API-022, API-025 |
 | `python/src/diana/_rk4.py` | API-003, API-020, API-026, PYTHON-004 |
 | `python/src/diana/_simpson.py` | API-020 |
@@ -478,6 +487,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `spec/euler.md` | PROOF-005 |
 | `spec/euler_unchecked.md` | KERNEL-003, PROOF-005 |
 | `spec/lu.md` | PROOF-011 |
+| `spec/lu_solve.md` | PROOF-012 |
 | `spec/newton.md` | PROOF-002 |
 | `spec/rk4.md` | PROOF-006, PROOF-008 |
 | `spec/rk4_unchecked.md` | KERNEL-003, PROOF-008 |
@@ -504,6 +514,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `src/fp_sqrt.c` | FP-006, KERNEL-001, KERNEL-005 |
 | `src/fp_sqrt.h` | FP-006, KERNEL-005, WP-003 |
 | `src/lu.c` | API-003, API-004, API-032, FP-001, KERNEL-001, KERNEL-002, WP-011, WP-012 |
+| `src/lu_solve.c` | API-003, API-004, API-034, FP-001, KERNEL-001, KERNEL-002, WP-011 |
 | `src/newton.c` | API-006, API-012, KERNEL-004, TEST-032 |
 | `src/newton_*.c` | FP-001, KERNEL-001 |
 | `src/newton_acsl.h` | API-010, KERNEL-007, WP-001, WP-002 |
@@ -531,6 +542,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `test/c/test_compiler.c` | COMPILER-001, COMPILER-005, COMPILER-006, COMPILER-007, COMPILER-008, COMPILER-009, COMPILER-010, COMPILER-011, FP-005, KERNEL-006 |
 | `test/c/test_euler.c` | API-017, TEST-016, TEST-017, TEST-018, TEST-019 |
 | `test/c/test_lu.c` | TEST-037 |
+| `test/c/test_lu_solve.c` | TEST-039 |
 | `test/c/test_newton.c` | API-011, API-012, TEST-027, TEST-028, TEST-029, TEST-030, TEST-031, TEST-032 |
 | `test/c/test_rk4.c` | API-017, TEST-021, TEST-022, TEST-023, TEST-024, TEST-025 |
 | `test/c/test_simpson.c` | TEST-013, TEST-014 |
@@ -545,6 +557,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `test/python/test_cholesky.py` | TEST-034 |
 | `test/python/test_euler.py` | TEST-016, TEST-017, TEST-019, TEST-020 |
 | `test/python/test_lu.py` | TEST-038 |
+| `test/python/test_lu_solve.py` | TEST-040 |
 | `test/python/test_newton.py` | API-025, TEST-027, TEST-028, TEST-029, TEST-030, TEST-031 |
 | `test/python/test_rk4.py` | TEST-022, TEST-023, TEST-025, TEST-026 |
 | `test/python/test_simpson.py` | TEST-013, TEST-014, TEST-015 |
@@ -557,6 +570,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `verification/lean/Diana/Real/Bisection.lean` | WP-006 |
 | `verification/lean/Diana/Real/Cholesky.lean` | PROOF-009 |
 | `verification/lean/Diana/Real/LU.lean` | PROOF-011 |
+| `verification/lean/Diana/Real/LUSolve.lean` | PROOF-012 |
 | `verification/lean/Diana/Real/Substitution.lean` | PROOF-010 |
 | `verification/lean/lake-manifest.json` | CI-015, PROVER-001, PROVER-009 |
 | `verification/lean/lakefile.toml` | CI-015, PROVER-001, PROVER-009 |
@@ -565,10 +579,12 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `verification/rocq/_CoqProject` | GATE-003, KERNEL-006, PROVER-007, VST-001, VST-002, VST-004 |
 | `verification/rocq/theory/Float/Cholesky.v` | PROOF-009 |
 | `verification/rocq/theory/Float/LU.v` | PROOF-011 |
+| `verification/rocq/theory/Float/LUSolve.v` | PROOF-012 |
 | `verification/rocq/theory/Float/Substitution.v` | PROOF-010 |
 | `verification/rocq/theory/Real/Bisection.v` | WP-006 |
 | `verification/rocq/theory/Real/Cholesky.v` | PROOF-009 |
 | `verification/rocq/theory/Real/LU.v` | PROOF-011 |
+| `verification/rocq/theory/Real/LUSolve.v` | PROOF-012 |
 | `verification/rocq/theory/Real/Substitution.v` | PROOF-010 |
 | `verification/rocq/theory/VST/*.v` | VST-004, VST-007 |
 | `verification/rocq/theory/VST/BackSubstitution.v` | VST-008 |
@@ -579,3 +595,4 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `verification/rocq/theory/VST/ForwardSubstitution.v` | VST-008 |
 | `verification/rocq/theory/VST/FpSqrt.v` | FP-006, VST-005 |
 | `verification/rocq/theory/VST/LU.v` | VST-008 |
+| `verification/rocq/theory/VST/LUSolve.v` | VST-008 |

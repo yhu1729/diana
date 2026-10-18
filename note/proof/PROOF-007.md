@@ -14,7 +14,8 @@ definitions under "Model correspondence".
 - Layer A: the exact method (`step`, `iterate`, `rk4` with `incT`, the quadrature sums), proved
   separately in Lean 4 with Mathlib and in Rocq with Stdlib reals (Coquelicot where needed).
 - Layer B, Rocq only: Flocq models (`fstep`, `ftrap`, `fsimpson`, `feuler`, `frk4_stage`,
-  `frk4_step`, `fchol`, `ffwd`, `fbwd`, `fstate` of LU) from `Bplus`, `Bmult`, `Bdiv`,
+  `frk4_step`, `fchol`, `ffwd`, `fbwd`, `fstate` of LU, `fsolution` of the LU solve) from
+  `Bplus`, `Bmult`, `Bdiv`,
   `Bminus` and `Bsqrt` in
   `mode_NE`, over NaN-payload functions.
 - Layer C has two tools. Frama-C WP proves each source file's ACSL contract: memory safety, no
@@ -24,7 +25,8 @@ definitions under "Model correspondence".
   `c_simpson`, `c_euler`, `c_stage`, `c_rk4`) written in CompCert's `Float` operations;
   Cholesky's `c_l` and the substitution models `c_fwd`, `c_bwd` are the Flocq `fchol`, `ffwd`,
   `fbwd` at CompCert's NaN functions, equal by conversion; LU's `c_state` is one model, defined
-  over any number type, at those operations, whose layer A is the same definition at the reals.
+  over any number type, at those operations, whose layer A is the same definition at the reals;
+  the LU solve's `c_y`, `c_x` are its Flocq `fforward`, `fsolution` at CompCert's NaN functions.
 - C to B: CompCert's `Float.add`, `Float.mul`, `Float.div`, `Float.sub` are Flocq's `Bplus`,
   `Bmult`, `Bdiv`, `Bminus` at CompCert's NaN-payload function, so a model theorem
   (`c_trap_model`, `c_simpson_model`, `c_euler_model`, BISECTION-C10, NEWTON-C7, RK4-C5, C6)

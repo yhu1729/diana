@@ -25,6 +25,7 @@ private header `src/<method>_acsl.h` that the method's sources include.
 
 The headers hold only `/*@ ... */` annotations and an include of the method's public header, so
 they change no Clight AST. A method of one source file keeps its annotations there:
-`src/cholesky.c` declares its own copy of `column_end`, and `src/lu.c` its own `column_end` and
+`src/cholesky.c` declares its own copy of `column_end`, `src/lu.c` its own `column_end` and
 the predicate `lu_valid(a, n, lu, piv)` (readable `a`, writable `lu` and `piv`, all three
-separate).
+separate), and `src/lu_solve.c` its own `column_end` and `lu_solve_valid(lu, piv, n, b, x)`
+(readable `lu`, `piv` and `b`, writable `x` separate from all three).
