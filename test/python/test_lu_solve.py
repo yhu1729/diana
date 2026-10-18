@@ -235,6 +235,19 @@ def test_pivot_type(piv, error):
         diana.lu_solve(LU3, piv, B3)
 
 
+def test_pivot_snapshot():
+    # The extension converts a copy of piv, so an __index__ that empties the list reads no freed
+    # item and the solve uses the rows piv held when it was called.
+    class Clear:
+        def __index__(self):
+            piv.clear()
+            return PIV3[0]
+
+    piv = [Clear(), *PIV3[1:]]
+    assert list(diana.lu_solve(LU3, piv, B3)) == X3
+    assert piv == []
+
+
 @pytest.mark.parametrize(
     ("lu", "b"),
     [
