@@ -9,7 +9,8 @@ explicit Euler step and :func:`euler` loops over it with a callable; :func:`rk4_
 :func:`rk4_step` build one classical Runge–Kutta step and :func:`rk4` loops over them.
 :func:`cholesky` factors a symmetric positive definite matrix stored column-major, and
 :func:`forward_substitution` and :func:`back_substitution` solve with its triangular factor.
-:func:`lu` factors a square matrix with partial pivoting.
+:func:`lu` factors a square matrix with partial pivoting, and :func:`lu_solve` solves with its
+factors.
 """
 
 from __future__ import annotations
@@ -30,6 +31,7 @@ from diana._diana import (
 from diana._error import BracketError, MaxIterError, SingularError
 from diana._euler import euler, euler_step
 from diana._lu import lu
+from diana._lu_solve import lu_solve
 from diana._newton import newton
 from diana._rk4 import rk4, rk4_stage, rk4_step
 from diana._simpson import simpson
@@ -56,6 +58,7 @@ __all__ = [
     "euler_step",
     "forward_substitution",
     "lu",
+    "lu_solve",
     "newton",
     "rk4",
     "rk4_stage",
