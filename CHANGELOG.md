@@ -55,6 +55,20 @@ All notable changes to this project are documented here. The format follows
   must not overlap `a` or each other. Frama-C WP proves the ACSL contract (157 goals, LU-C1,
   `spec/lu.md`); `test/c/test_lu.c` covers it at 100% line and branch coverage, and the compiler
   corpus has 260 LU cases, every gcc and clang build matching CompCert bitwise.
+- LU solve `diana_lu_solve(lu, piv, n, b, x)` in `diana/lu_solve.h`: solves `A x = b` from the
+  packed factor `lu` and pivot rows `piv` exactly as `diana_lu` writes them. It copies `b` to `x`,
+  interchanges `x[k]` and `x[piv[k]]` for `k = 0, ..., n - 1`, then solves with the unit
+  lower-triangular `L` (no division) and the upper-triangular `U`, each row subtracting the
+  rounded products in the order its unknowns were computed, so the two solves are
+  `diana_forward_substitution` with the unit lower factor and `diana_back_substitution` with the
+  transposed upper factor bit for bit. A NULL pointer, `n == 0`, an overflowing `n n`, a NaN or
+  infinite entry of `lu` or `b`, or a pivot row `piv[k] >= n` is `DIANA_ERR_ARG` and a zero
+  diagonal entry of `U` `DIANA_ERR_SINGULAR`, all with `x` untouched; an entry of either solve
+  that overflows is `DIANA_ERR_ARG` found with `x` partly written. Only `piv[k] < n` is checked:
+  any such values are a sequence of interchanges. `x` must not overlap `lu`, `piv` or `b`.
+  Frama-C WP proves the ACSL contract (180 goals, LU-SOLVE-C1, `spec/lu_solve.md`);
+  `test/c/test_lu_solve.c` covers it at 100% line and branch coverage, and the compiler corpus has
+  292 cases, every gcc and clang build matching CompCert bitwise.
 - `diana_fp_sqrt(x)` (`src/fp_sqrt.c`, private header `src/fp_sqrt.h`), the square root of the
   Cholesky pivots: `__builtin_sqrt`, which gcc, clang and CompCert compile to the IEEE square-root
   instruction, so no libm call. Its contract is the second `SKIP` entry of
@@ -133,6 +147,14 @@ All notable changes to this project are documented here. The format follows
   agreement with the operations in Python floats, pivots included, the LU-B3 and B4 bounds in
   exact rationals, exact recovery of a permuted integer factorization, and solves against
   `numpy.linalg.solve`.
+- `diana.lu_solve(lu, piv, b)` returns the solution of `A x = b` as a new `array.array("d")`
+  from the pair `diana.lu` returns, so `diana.lu_solve(*diana.lu(a), b)` solves the system
+  (module `diana._lu_solve`; extension function `diana._diana.lu_solve(lu, piv, b, out)`). `piv`
+  is any iterable of `int`; a wrong length, a non-finite entry, a pivot row not below `n` or an
+  overflow raises `ValueError`, a negative pivot row `OverflowError`, a zero diagonal entry of `U`
+  `diana.SingularError`. `test/python/test_lu_solve.py` checks bitwise agreement with the
+  operations in Python floats and with the two substitution functions, the LU-SOLVE-B1 to B4
+  bounds in exact rationals, and the solve against `numpy.linalg.solve`.
 - `diana.rk4_stage(y, k, h, stage)` and `diana.rk4_step(y, k1, k2, k3, k4, h)` return a new
   `array.array("d")` from the kernels, reading float64 buffers in place and copying other iterables
   (module `diana._rk4`; extension functions `diana._diana.rk4_stage` and `rk4_step` with an explicit
@@ -194,6 +216,19 @@ All notable changes to this project are documented here. The format follows
   `verification/clight/lu_aarch64_macos.v`. The pivot magnitude is computed in line rather than
   with `diana_fp_abs`, whose finiteness precondition WP could not discharge for the
   multipliers.
+- The LU solve through every layer (`spec/lu_solve.md`). Lean and Rocq prove layer A: the
+  interchanges of any pivot rows below `n` form a permutation (LU-SOLVE-A1), the solve with a
+  packed factor whose `U` has no zero diagonal entry gives `L U x = P b` (A2), and with the
+  factors of `A` from `diana_lu`, when every pivot is nonzero, `A x = b` (A3), the row order of
+  the factorization being the interchanges of its pivot rows for any number type. Flocq proves
+  the backward error of each row of the forward solve (B1) and of the back solve (B2, the
+  substitution's B3 for `U^T`), the residual of the factored system
+  `|P b - L U x| <= alpha + |L| beta` (B3), and with the factors of `diana_lu` the residual
+  `|P b - P A x|`, which adds the factorization's LU-B3 and B4 bounds applied to `|x|` (B4:
+  Higham's Theorem 9.4 in componentwise residual form, with underflow terms). VST proves
+  `diana_lu_solve` against the model with CompCert's operations (C2: each status exactly when the
+  model gives it, the model solution on `DIANA_OK`) and the AST's copy of `diana_fp_finite`
+  (C3), on the committed AST `verification/clight/lu_solve_aarch64_macos.v`.
 - Lean and Rocq prove RK4 layer A (`spec/rk4.md`, RK4-A1 to A7): the step-size derivatives of the
   increment through third order as explicit jets (A1), the order conditions
   `Phi(0) = G`, `Phi'(0) = E2/2`, `Phi''(0) = E3/3`, `Phi'''(0) = E4/4` without symmetry of the
