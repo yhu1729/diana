@@ -6,7 +6,6 @@
 typedef struct {
   PyObject_HEAD
   diana_bisection_state s;
-  int status;
 } BisectionObject;
 
 PyObject *diana_py_bisection_new(PyTypeObject *type, PyObject *args,

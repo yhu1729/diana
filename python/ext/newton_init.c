@@ -15,6 +15,5 @@ int diana_py_newton_init(NewtonObject *self, PyObject *args, PyObject *kwds) {
     diana_py_raise(st, NULL);
     return -1;
   }
-  self->status = (int)st;
   return 0;
 }

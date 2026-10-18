@@ -6,7 +6,6 @@
 typedef struct {
   PyObject_HEAD
   diana_newton_state s;
-  int status;
 } NewtonObject;
 
 PyObject *diana_py_newton_new(PyTypeObject *type, PyObject *args,

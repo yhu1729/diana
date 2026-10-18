@@ -26,7 +26,7 @@ static PyMemberDef bisection_member[] = {
      "steps performed"},
     {"max_iter", Py_T_UINT, offsetof(BisectionObject, s.max_iter), Py_READONLY,
      "step limit"},
-    {"status", Py_T_INT, offsetof(BisectionObject, status), Py_READONLY,
+    {"status", Py_T_INT, offsetof(BisectionObject, s.status), Py_READONLY,
      "last status code"},
     {NULL, 0, 0, 0, NULL}};
 

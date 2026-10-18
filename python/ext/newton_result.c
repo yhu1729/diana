@@ -3,7 +3,7 @@
 PyObject *diana_py_newton_result(NewtonObject *self,
                                  PyObject *Py_UNUSED(ignored)) {
   double root, dx;
-  if (self->status == DIANA_ERR_ARG) {
+  if (self->s.status == DIANA_ERR_ARG) {
     PyErr_SetString(PyExc_RuntimeError, "Newton state is not initialized");
     return NULL;
   }

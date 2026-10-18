@@ -12,6 +12,9 @@ extern PyObject *diana_py_bracket_error;
 extern PyObject *diana_py_singular_error;
 extern PyObject *diana_py_float_overflow_error;
 
+_Static_assert(sizeof(diana_status) == sizeof(int),
+               "the status members are read as a C int");
+
 void diana_py_raise(diana_status st, const char *msg);
 
 int diana_py_convert_uint(PyObject *obj, void *out);

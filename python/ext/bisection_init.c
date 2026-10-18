@@ -17,6 +17,5 @@ int diana_py_bisection_init(BisectionObject *self, PyObject *args,
     diana_py_raise(st, NULL);
     return -1;
   }
-  self->status = (int)st;
   return 0;
 }
