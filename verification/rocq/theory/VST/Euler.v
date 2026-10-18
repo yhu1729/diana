@@ -9,6 +9,12 @@ Fixpoint c_euler (h : float) (ys fs : list float) : list float :=
   | _, _ => nil
   end.
 
+Definition euler_status (h : float) (ys fs : list float) : Z :=
+  if forallb (Binary.is_finite 53 1024) (c_euler h ys fs) then 0
+  else if (Binary.is_finite 53 1024 h && forallb (Binary.is_finite 53 1024) ys &&
+           forallb (Binary.is_finite 53 1024) fs)%bool
+  then -5 else -1.
+
 Lemma c_euler_model (h : float) (ys fs : list float) :
   c_euler h ys fs = Diana.Float.Euler.feuler Float.binop_nan Float.binop_nan h ys fs.
 Proof.

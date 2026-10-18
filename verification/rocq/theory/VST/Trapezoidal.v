@@ -2,6 +2,7 @@ From VST.floyd Require Import proofauto.
 From Diana.Clight Require Import trapezoidal_aarch64_macos.
 From Diana.Float Require Trapezoidal.
 From Diana.VST Require Bisection.
+From Diana.VST Require Euler.
 From Diana.VST Require Import Tactic.
 
 #[export] Instance CompSpecs : compspecs. make_compspecs prog. Defined.
@@ -20,6 +21,11 @@ Definition c_sum (ys : list float) (i : Z) : float :=
 
 Definition c_trap (ys : list float) (h : float) : float :=
   Float.mul h (c_sum ys (Zlength ys - 1)).
+
+Definition trap_status (ys : list float) (h : float) : Z :=
+  if Binary.is_finite 53 1024 (c_trap ys h) then 0
+  else if (Binary.is_finite 53 1024 h && forallb (Binary.is_finite 53 1024) ys)%bool
+  then -5 else -1.
 
 Lemma c_trap_model (ys : list float) (h : float) :
   c_trap ys h =
@@ -68,7 +74,7 @@ Definition trapezoidal_spec :=
          data_at shr tdouble r0 res)
   POST [ tint ]
     PROP ()
-    RETURN (Vint (Int.repr (if Binary.is_finite 53 1024 (c_trap ys h) then 0 else -1)))
+    RETURN (Vint (Int.repr (trap_status ys h)))
     SEP (data_at sh (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
          data_at shr tdouble
            (if Binary.is_finite 53 1024 (c_trap ys h) then Vfloat (c_trap ys h) else r0) res).
@@ -125,7 +131,8 @@ Proof.
     break:
     (PROP ()
        LOCAL (temp _s (Vfloat (c_sum ys (Zlength ys - 1))); temp _y y;
-              temp _h (Vfloat h); temp _result res)
+              temp _n (Vlong (Int64.repr (Zlength ys))); temp _h (Vfloat h);
+              temp _result res)
        SEP (data_at sh (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
             data_at shr tdouble r0 res)).
   { forward. Exists 1. entailer!.
@@ -144,8 +151,52 @@ Proof.
   destruct (Binary.is_finite 53 1024 (Float.mul h (c_sum ys (Zlength ys - 1)))) eqn:Hfin.
   - forward_if.
     + discriminate.
-    + forward. forward. unfold c_trap. rewrite Hfin. entailer!.
+    + forward. forward. unfold trap_status, c_trap. rewrite Hfin. entailer!.
   - forward_if.
-    + forward. unfold c_trap. rewrite Hfin. entailer!.
+    + assert (Hc : Binary.is_finite 53 1024 (c_trap ys h) = false) by exact Hfin.
+      forward_call h.
+      destruct (Binary.is_finite 53 1024 h) eqn:Hh.
+      2: { forward_if; [| contradiction]. forward.
+           unfold trap_status. rewrite Hc, Hh. entailer!. }
+      forward_if; [discriminate |].
+      forward_for
+        (fun j : Z => PROP (0 <= j <= Zlength ys;
+                            forallb (Binary.is_finite 53 1024) (sublist 0 j ys) = true)
+           LOCAL (temp _i (Vlong (Int64.repr j)); temp _y y;
+                  temp _n (Vlong (Int64.repr (Zlength ys))))
+           SEP (data_at sh (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
+                data_at shr tdouble r0 res))
+        continue:
+        (fun j : Z => PROP (0 <= j < Zlength ys;
+                            forallb (Binary.is_finite 53 1024) (sublist 0 (j + 1) ys) = true)
+           LOCAL (temp _i (Vlong (Int64.repr j)); temp _y y;
+                  temp _n (Vlong (Int64.repr (Zlength ys))))
+           SEP (data_at sh (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
+                data_at shr tdouble r0 res))
+        break:
+        (PROP (forallb (Binary.is_finite 53 1024) ys = true)
+           LOCAL ()
+           SEP (data_at sh (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
+                data_at shr tdouble r0 res)).
+      { forward. Exists 0. entailer!. }
+      { entailer!. }
+      { match goal with |- context [temp _i (Vlong (Int64.repr ?x))] => rename x into j end.
+        forward. forward_call (Znth j ys).
+        destruct (Binary.is_finite 53 1024 (Znth j ys)) eqn:Hyj.
+        2: { forward_if; [| contradiction]. forward.
+             assert (Hys : forallb (Binary.is_finite 53 1024) ys = false)
+               by (apply (Diana.VST.Euler.forallb_false ys j); [lia | exact Hyj]).
+             unfold trap_status. rewrite Hc, Hh, Hys. entailer!. }
+        forward_if; [discriminate |].
+        forward. Exists j. entailer!.
+        rewrite Diana.VST.Euler.forallb_sublist_succ by lia. rewrite Hyj, andb_true_r. auto. }
+      { match goal with |- context [temp _i (Vlong (Int64.repr ?x))] => rename x into j end.
+        forward. Exists (j + 1). entailer!. }
+      { match goal with H : forallb _ (sublist 0 ?x ys) = true |- _ =>
+          assert (x = Zlength ys) by lia; subst x end.
+        rewrite sublist_same in * by lia. entailer!. }
+      forward.
+      match goal with H : forallb _ ys = true |- _ => unfold trap_status; rewrite Hc, Hh, H end.
+      entailer!.
     + contradiction.
 Qed.

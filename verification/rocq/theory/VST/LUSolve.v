@@ -255,12 +255,12 @@ Definition lu_solve_spec :=
           (st = -1 /\ ~ (all_finite ll n /\ piv_ok pl n /\ vec_finite bl n) /\ xs = ox) \/
           (st = -4 /\ all_finite ll n /\ piv_ok pl n /\ vec_finite bl n /\
            ~ diag_nonzero ll n /\ xs = ox) \/
-          (st = -1 /\ all_finite ll n /\ piv_ok pl n /\ vec_finite bl n /\ diag_nonzero ll n /\
+          (st = -5 /\ all_finite ll n /\ piv_ok pl n /\ vec_finite bl n /\ diag_nonzero ll n /\
            exists i, 0 <= i < n /\
              (forall i', 0 <= i' < i -> Binary.is_finite 53 1024 (c_y ll pl bl n i') = true) /\
              Binary.is_finite 53 1024 (c_y ll pl bl n i) = false /\
              xs = lpre (c_yl ll pl bl n) (map Vfloat (c_pb pl bl n)) n i) \/
-          (st = -1 /\ all_finite ll n /\ piv_ok pl n /\ vec_finite bl n /\ diag_nonzero ll n /\
+          (st = -5 /\ all_finite ll n /\ piv_ok pl n /\ vec_finite bl n /\ diag_nonzero ll n /\
            y_finite ll pl bl n /\
            exists i, 0 <= i < n /\
              (forall i', i < i' < n -> Binary.is_finite 53 1024 (c_x ll pl bl n i') = true) /\
@@ -674,7 +674,7 @@ Proof.
       + rewrite lpre_step by (rewrite ?Zlength_map; lia). cancel.
     - forward_if.
       + set (xs := lpre (c_yl ll pl bl n) (map Vfloat (c_pb pl bl n)) n i).
-        forward. Exists (-1) xs. entailer!.
+        forward. Exists (-5) xs. entailer!.
         right. right. right. left. split; [reflexivity |]. split; [exact Haf |].
         split; [exact Hpo |]. split; [exact Hvf |]. split; [exact Hdz |].
         exists i. split; [lia |]. split; [| split; [exact Hfin | reflexivity]].
@@ -778,7 +778,7 @@ Proof.
       + rewrite lsuf_step by (rewrite ?Zlength_map; lia). cancel.
     - forward_if.
       + set (xs := lsuf (c_xl ll pl bl n) (map Vfloat (c_yl ll pl bl n)) n i).
-        forward. Exists (-1) xs. entailer!.
+        forward. Exists (-5) xs. entailer!.
         right. right. right. right. split; [reflexivity |]. split; [exact Haf |].
         split; [exact Hpo |]. split; [exact Hvf |]. split; [exact Hdz |]. split; [exact Hyf |].
         exists (i - 1). split; [lia |].

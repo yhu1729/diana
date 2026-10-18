@@ -359,7 +359,7 @@ Definition lu_spec :=
     PROP ((st = 0 /\ c_ok al n /\ ls = map Vfloat (mlist n (c_state al n (Z.to_nat n))) /\
            ps = c_piv_list al n) \/
           (st = -1 /\ ~ all_finite al n /\ ls = ol /\ ps = opl) \/
-          (st = -1 /\ all_finite al n /\
+          (st = -5 /\ all_finite al n /\
            (exists k, (k < Z.to_nat n)%nat /\ (forall k', (k' < k)%nat -> c_step_ok al n k') /\
               c_overflow al n k) /\
            Zlength ls = (n * n)%Z /\ Zlength ps = n) \/
@@ -867,7 +867,7 @@ Proof.
             assert (Hl1 : Zlength ls0 = n * n) by (unfold ls0; rewrite Zlength_map, Zlength_mlist; lia).
             assert (Hl2 : Zlength ps0 = n) by (apply Zlength_vpre; lia).
             forward.
-            match goal with |- context [data_at shp _ ?ps piv] => Exists (-1) ls0 ps end.
+            match goal with |- context [data_at shp _ ?ps piv] => Exists (-5) ls0 ps end.
             entailer!. right. right. left. rewrite ?ZtoNat_Zlength in *.
             repeat match goal with |- _ /\ _ => split end; (reflexivity || assumption).
           + exfalso. match goal with H : _ <> _ |- _ => apply H; reflexivity end. }

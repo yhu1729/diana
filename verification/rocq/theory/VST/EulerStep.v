@@ -29,8 +29,7 @@ Definition euler_spec :=
          data_at sho (tarray tdouble (Zlength ys)) os out)
   POST [ tint ]
     PROP ()
-    RETURN (Vint (Int.repr
-      (if forallb (Binary.is_finite 53 1024) (c_euler h ys fs) then 0 else -1)))
+    RETURN (Vint (Int.repr (euler_status h ys fs)))
     SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
          data_at shf (tarray tdouble (Zlength ys)) (map Vfloat fs) f;
          data_at sho (tarray tdouble (Zlength ys))
@@ -114,7 +113,64 @@ Proof.
     - forward_if.
       + assert (Hb : forallb (Binary.is_finite 53 1024) L = false).
         { apply (forallb_false L a); [lia |]. rewrite HZ by lia. exact Hfin. }
-        forward. fold L. rewrite Hb. entailer!.
+        forward_call h.
+        destruct (Binary.is_finite 53 1024 h) eqn:Hh.
+        2: { forward_if; [| contradiction]. forward.
+             unfold euler_status. fold L. rewrite Hb, Hh. entailer!. }
+        forward_if; [discriminate |].
+        forward_for
+          (fun j : Z => PROP (0 <= j <= Zlength ys;
+                              forallb (Binary.is_finite 53 1024) (sublist 0 j ys) = true;
+                              forallb (Binary.is_finite 53 1024) (sublist 0 j fs) = true)
+             LOCAL (temp _j (Vlong (Int64.repr j)); temp _y y; temp _f f;
+                    temp _d (Vlong (Int64.repr (Zlength ys))))
+             SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
+                  data_at shf (tarray tdouble (Zlength ys)) (map Vfloat fs) f;
+                  data_at sho (tarray tdouble (Zlength ys)) os out))
+          continue:
+          (fun j : Z => PROP (0 <= j < Zlength ys;
+                              forallb (Binary.is_finite 53 1024) (sublist 0 (j + 1) ys) = true;
+                              forallb (Binary.is_finite 53 1024) (sublist 0 (j + 1) fs) = true)
+             LOCAL (temp _j (Vlong (Int64.repr j)); temp _y y; temp _f f;
+                    temp _d (Vlong (Int64.repr (Zlength ys))))
+             SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
+                  data_at shf (tarray tdouble (Zlength ys)) (map Vfloat fs) f;
+                  data_at sho (tarray tdouble (Zlength ys)) os out))
+          break:
+          (PROP (forallb (Binary.is_finite 53 1024) ys = true;
+                 forallb (Binary.is_finite 53 1024) fs = true)
+             LOCAL ()
+             SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
+                  data_at shf (tarray tdouble (Zlength ys)) (map Vfloat fs) f;
+                  data_at sho (tarray tdouble (Zlength ys)) os out)).
+        { forward. Exists 0. entailer!. }
+        { entailer!. }
+        { rename a0 into j.
+          forward. forward_call (Znth j ys).
+          destruct (Binary.is_finite 53 1024 (Znth j ys)) eqn:Hyj.
+          2: { forward_if; [| contradiction]. forward.
+               assert (Hys : forallb (Binary.is_finite 53 1024) ys = false)
+                 by (apply (forallb_false ys j); [lia | exact Hyj]).
+               unfold euler_status. fold L. rewrite Hb, Hh, Hys. entailer!. }
+          forward_if; [discriminate |].
+          forward. forward_call (Znth j fs).
+          destruct (Binary.is_finite 53 1024 (Znth j fs)) eqn:Hfj.
+          2: { forward_if; [| contradiction]. forward.
+               assert (Hfs : forallb (Binary.is_finite 53 1024) fs = false)
+                 by (apply (forallb_false fs j); [lia | exact Hfj]).
+               unfold euler_status. fold L. rewrite Hb, Hh, Hfs, andb_false_r. entailer!. }
+          forward_if; [discriminate |].
+          forward. Exists j. entailer!.
+          rewrite !forallb_sublist_succ by lia. rewrite Hyj, Hfj, !andb_true_r. auto. }
+        { forward. Exists (a0 + 1). entailer!. }
+        { assert (a0 = Zlength ys) by lia. subst a0.
+          rewrite !sublist_same in * by lia. entailer!. }
+        forward.
+        match goal with
+        | Hy : forallb _ ys = true, Hf : forallb _ fs = true |- _ =>
+            unfold euler_status; fold L; rewrite Hb, Hh, Hy, Hf
+        end.
+        entailer!.
       + contradiction. }
   { forward. Exists (a + 1). entailer!. }
   { assert (a = Zlength ys) by lia. subst a. rewrite sublist_same in * by lia. entailer!. }
@@ -153,7 +209,7 @@ Proof.
   { forward. Exists (a + 1). entailer!. }
   { assert (a = Zlength ys) by lia. subst a. entailer!.
     rewrite sublist_same, sublist_nil, app_nil_r by lia. cancel. }
-  forward. fold L.
+  forward. fold L. unfold euler_status. fold L.
   match goal with H : forallb _ L = true |- _ => rewrite H end.
   entailer!.
 Qed.

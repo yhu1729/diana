@@ -2,6 +2,7 @@ From VST.floyd Require Import proofauto.
 From Diana.Clight Require Import simpson_aarch64_macos.
 From Diana.Float Require Simpson.
 From Diana.VST Require Bisection.
+From Diana.VST Require Euler.
 From Diana.VST Require Import Tactic.
 
 #[export] Instance CompSpecs : compspecs. make_compspecs prog. Defined.
@@ -62,6 +63,11 @@ Definition c_s (ys : list float) : float :=
 Definition c_simpson (ys : list float) (h : float) : float :=
   Float.div (Float.mul h (c_s ys)) c_three.
 
+Definition simpson_status (ys : list float) (h : float) : Z :=
+  if Binary.is_finite 53 1024 (c_simpson ys h) then 0
+  else if (Binary.is_finite 53 1024 h && forallb (Binary.is_finite 53 1024) ys)%bool
+  then -5 else -1.
+
 Lemma c_simpson_model (ys : list float) (h : float) :
   c_simpson ys h =
   Diana.Float.Simpson.fsimpson Float.binop_nan Float.binop_nan Float.binop_nan
@@ -93,7 +99,7 @@ Definition simpson_spec :=
          data_at shr tdouble r0 res)
   POST [ tint ]
     PROP ()
-    RETURN (Vint (Int.repr (if Binary.is_finite 53 1024 (c_simpson ys h) then 0 else -1)))
+    RETURN (Vint (Int.repr (simpson_status ys h)))
     SEP (data_at sh (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
          data_at shr tdouble
            (if Binary.is_finite 53 1024 (c_simpson ys h) then Vfloat (c_simpson ys h) else r0)
@@ -215,8 +221,52 @@ Proof.
   destruct (Binary.is_finite 53 1024 (c_simpson ys h)) eqn:Hfin.
   - forward_if.
     + discriminate.
-    + forward. forward.
+    + forward. forward. unfold simpson_status. rewrite Hfin. entailer!.
   - forward_if.
-    + forward.
+    + assert (Hc : Binary.is_finite 53 1024 (c_simpson ys h) = false) by exact Hfin.
+      forward_call h.
+      destruct (Binary.is_finite 53 1024 h) eqn:Hh.
+      2: { forward_if; [| contradiction]. forward.
+           unfold simpson_status. rewrite Hc, Hh. entailer!. }
+      forward_if; [discriminate |].
+      forward_for
+        (fun j : Z => PROP (0 <= j <= Zlength ys;
+                            forallb (Binary.is_finite 53 1024) (sublist 0 j ys) = true)
+           LOCAL (temp _k (Vlong (Int64.repr j)); temp _y y;
+                  temp _n (Vlong (Int64.repr (Zlength ys))))
+           SEP (data_at sh (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
+                data_at shr tdouble r0 res))
+        continue:
+        (fun j : Z => PROP (0 <= j < Zlength ys;
+                            forallb (Binary.is_finite 53 1024) (sublist 0 (j + 1) ys) = true)
+           LOCAL (temp _k (Vlong (Int64.repr j)); temp _y y;
+                  temp _n (Vlong (Int64.repr (Zlength ys))))
+           SEP (data_at sh (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
+                data_at shr tdouble r0 res))
+        break:
+        (PROP (forallb (Binary.is_finite 53 1024) ys = true)
+           LOCAL ()
+           SEP (data_at sh (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
+                data_at shr tdouble r0 res)).
+      { forward. Exists 0. entailer!. }
+      { entailer!. }
+      { match goal with |- context [temp _k (Vlong (Int64.repr ?x))] => rename x into j end.
+        forward. forward_call (Znth j ys).
+        destruct (Binary.is_finite 53 1024 (Znth j ys)) eqn:Hyj.
+        2: { forward_if; [| contradiction]. forward.
+             assert (Hys : forallb (Binary.is_finite 53 1024) ys = false)
+               by (apply (Diana.VST.Euler.forallb_false ys j); [lia | exact Hyj]).
+             unfold simpson_status. rewrite Hc, Hh, Hys. entailer!. }
+        forward_if; [discriminate |].
+        forward. Exists j. entailer!.
+        rewrite Diana.VST.Euler.forallb_sublist_succ by lia. rewrite Hyj, andb_true_r. auto. }
+      { match goal with |- context [temp _k (Vlong (Int64.repr ?x))] => rename x into j end.
+        forward. Exists (j + 1). entailer!. }
+      { match goal with H : forallb _ (sublist 0 ?x ys) = true |- _ =>
+          assert (x = Zlength ys) by lia; subst x end.
+        rewrite sublist_same in * by lia. entailer!. }
+      forward.
+      match goal with H : forallb _ ys = true |- _ => unfold simpson_status; rewrite Hc, Hh, H end.
+      entailer!.
     + contradiction.
 Qed.

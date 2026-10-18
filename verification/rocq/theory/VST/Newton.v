@@ -23,9 +23,9 @@ Definition c_step (c : cstate) (fx dfx : float) : Z * cstate :=
   if Float.cmp Ceq fx c_zero then (0, mkcstate (cx c) c_zero (ctol c) it (cmax c)) else
   if Float.cmp Ceq dfx c_zero then (-4, c) else
   let dx := Float.div fx dfx in
-  if negb (c_fin dx) then (-1, c) else
+  if negb (c_fin dx) then (-5, c) else
   let x := Float.sub (cx c) dx in
-  if negb (c_fin x) then (-1, c) else
+  if negb (c_fin x) then (-5, c) else
   let c' := mkcstate x dx (ctol c) it (cmax c) in
   if (Float.cmp Ceq x (cx c) || Float.cmp Cle (VB.c_abs dx) (ctol c))%bool then (0, c')
   else if negb (Int.ltu it (cmax c)) then (-3, c')
@@ -35,7 +35,7 @@ Theorem c_step_fstep (c : cstate) (fx dfx : float) :
   c_fin fx = true -> c_fin dfx = true -> Float.cmp Ceq fx c_zero = false ->
   Float.cmp Ceq dfx c_zero = false ->
   c_fin (Float.div fx dfx) = true -> c_fin (Float.sub (cx c) (Float.div fx dfx)) = true ->
-  fst (c_step c fx dfx) <> (-1)%Z /\
+  fst (c_step c fx dfx) <> (-1)%Z /\ fst (c_step c fx dfx) <> (-5)%Z /\
   cx (snd (c_step c fx dfx)) = FN.fstep Float.binop_nan Float.binop_nan (cx c) fx dfx /\
   cdx (snd (c_step c fx dfx)) = Diana.Float.Sum.fdiv Float.binop_nan fx dfx /\
   citer (snd (c_step c fx dfx)) = Int.add (citer c) Int.one /\

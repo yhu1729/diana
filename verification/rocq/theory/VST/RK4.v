@@ -20,6 +20,12 @@ Definition c_coef (s : Z) (h : float) : float := if Z.eqb s 4 then h else Float.
 Definition c_stage (s : Z) (h : float) (ys ks : list float) : list float :=
   Diana.VST.Euler.c_euler (c_coef s h) ys ks.
 
+Definition stage_status (s : Z) (h : float) (ys ks : list float) : Z :=
+  if forallb (Binary.is_finite 53 1024) (c_stage s h ys ks) then 0
+  else if (Binary.is_finite 53 1024 h && forallb (Binary.is_finite 53 1024) ys &&
+           forallb (Binary.is_finite 53 1024) ks)%bool
+  then -5 else -1.
+
 Lemma c_stage_model (s : Z) (h : float) (ys ks : list float) :
   c_stage s h ys ks = Diana.Float.RK4.frk4_stage Float.binop_nan Float.binop_nan s h ys ks.
 Proof.
@@ -37,6 +43,13 @@ Fixpoint c_rk4 (h : float) (ys k1s k2s k3s k4s : list float) : list float :=
       c_step h y a b c e :: c_rk4 h ys' k1s' k2s' k3s' k4s'
   | _, _, _, _, _ => nil
   end.
+
+Definition rk4_status (h : float) (ys k1s k2s k3s k4s : list float) : Z :=
+  if forallb (Binary.is_finite 53 1024) (c_rk4 h ys k1s k2s k3s k4s) then 0
+  else if (Binary.is_finite 53 1024 h && forallb (Binary.is_finite 53 1024) ys &&
+           forallb (Binary.is_finite 53 1024) k1s && forallb (Binary.is_finite 53 1024) k2s &&
+           forallb (Binary.is_finite 53 1024) k3s && forallb (Binary.is_finite 53 1024) k4s)%bool
+  then -5 else -1.
 
 Lemma c_rk4_model (h : float) (ys k1s k2s k3s k4s : list float) :
   c_rk4 h ys k1s k2s k3s k4s =

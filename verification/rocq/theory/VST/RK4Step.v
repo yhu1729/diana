@@ -37,8 +37,7 @@ Definition step_spec :=
          data_at sho (tarray tdouble (Zlength ys)) os out)
   POST [ tint ]
     PROP ()
-    RETURN (Vint (Int.repr
-      (if forallb (Binary.is_finite 53 1024) (c_rk4 h ys k1s k2s k3s k4s) then 0 else -1)))
+    RETURN (Vint (Int.repr (rk4_status h ys k1s k2s k3s k4s)))
     SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
          data_at sh1 (tarray tdouble (Zlength ys)) (map Vfloat k1s) k1;
          data_at sh2 (tarray tdouble (Zlength ys)) (map Vfloat k2s) k2;
@@ -151,7 +150,108 @@ Proof.
     - forward_if.
       + assert (Hb : forallb (Binary.is_finite 53 1024) L = false).
         { apply (Diana.VST.Euler.forallb_false L a); [lia |]. rewrite HZ by lia. exact Hfin. }
-        forward. fold L. rewrite Hb. entailer!.
+        forward_call h.
+        destruct (Binary.is_finite 53 1024 h) eqn:Hh.
+        2: { forward_if; [| contradiction]. forward.
+             unfold rk4_status. fold L. rewrite Hb, Hh. entailer!. }
+        forward_if; [discriminate |].
+        forward_for
+          (fun j : Z => PROP (0 <= j <= Zlength ys;
+                              forallb (Binary.is_finite 53 1024) (sublist 0 j ys) = true;
+                              forallb (Binary.is_finite 53 1024) (sublist 0 j k1s) = true;
+                              forallb (Binary.is_finite 53 1024) (sublist 0 j k2s) = true;
+                              forallb (Binary.is_finite 53 1024) (sublist 0 j k3s) = true;
+                              forallb (Binary.is_finite 53 1024) (sublist 0 j k4s) = true)
+             LOCAL (temp _j (Vlong (Int64.repr j)); temp _y y; temp _k1 k1; temp _k2 k2; temp _k3 k3; temp _k4 k4;
+                    temp _d (Vlong (Int64.repr (Zlength ys))))
+             SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
+                  data_at sh1 (tarray tdouble (Zlength ys)) (map Vfloat k1s) k1;
+                  data_at sh2 (tarray tdouble (Zlength ys)) (map Vfloat k2s) k2;
+                  data_at sh3 (tarray tdouble (Zlength ys)) (map Vfloat k3s) k3;
+                  data_at sh4 (tarray tdouble (Zlength ys)) (map Vfloat k4s) k4;
+                  data_at sho (tarray tdouble (Zlength ys)) os out))
+          continue:
+          (fun j : Z => PROP (0 <= j < Zlength ys;
+                              forallb (Binary.is_finite 53 1024) (sublist 0 (j + 1) ys) = true;
+                              forallb (Binary.is_finite 53 1024) (sublist 0 (j + 1) k1s) = true;
+                              forallb (Binary.is_finite 53 1024) (sublist 0 (j + 1) k2s) = true;
+                              forallb (Binary.is_finite 53 1024) (sublist 0 (j + 1) k3s) = true;
+                              forallb (Binary.is_finite 53 1024) (sublist 0 (j + 1) k4s) = true)
+             LOCAL (temp _j (Vlong (Int64.repr j)); temp _y y; temp _k1 k1; temp _k2 k2; temp _k3 k3; temp _k4 k4;
+                    temp _d (Vlong (Int64.repr (Zlength ys))))
+             SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
+                  data_at sh1 (tarray tdouble (Zlength ys)) (map Vfloat k1s) k1;
+                  data_at sh2 (tarray tdouble (Zlength ys)) (map Vfloat k2s) k2;
+                  data_at sh3 (tarray tdouble (Zlength ys)) (map Vfloat k3s) k3;
+                  data_at sh4 (tarray tdouble (Zlength ys)) (map Vfloat k4s) k4;
+                  data_at sho (tarray tdouble (Zlength ys)) os out))
+          break:
+          (PROP (forallb (Binary.is_finite 53 1024) ys = true;
+                 forallb (Binary.is_finite 53 1024) k1s = true;
+                 forallb (Binary.is_finite 53 1024) k2s = true;
+                 forallb (Binary.is_finite 53 1024) k3s = true;
+                 forallb (Binary.is_finite 53 1024) k4s = true)
+             LOCAL ()
+             SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
+                  data_at sh1 (tarray tdouble (Zlength ys)) (map Vfloat k1s) k1;
+                  data_at sh2 (tarray tdouble (Zlength ys)) (map Vfloat k2s) k2;
+                  data_at sh3 (tarray tdouble (Zlength ys)) (map Vfloat k3s) k3;
+                  data_at sh4 (tarray tdouble (Zlength ys)) (map Vfloat k4s) k4;
+                  data_at sho (tarray tdouble (Zlength ys)) os out)).
+        { forward. Exists 0. entailer!. }
+        { entailer!. }
+        { rename a0 into j.
+          forward. forward_call (Znth j ys).
+          destruct (Binary.is_finite 53 1024 (Znth j ys)) eqn:Hf0.
+          2: { forward_if; [| contradiction]. forward.
+               assert (Hn : forallb (Binary.is_finite 53 1024) ys = false)
+                 by (apply (Diana.VST.Euler.forallb_false ys j); [lia | exact Hf0]).
+               unfold rk4_status. fold L. rewrite Hb, Hh, Hn, ?andb_false_r, ?andb_false_l.
+               entailer!. }
+          forward_if; [discriminate |].
+          forward. forward_call (Znth j k1s).
+          destruct (Binary.is_finite 53 1024 (Znth j k1s)) eqn:Hf1.
+          2: { forward_if; [| contradiction]. forward.
+               assert (Hn : forallb (Binary.is_finite 53 1024) k1s = false)
+                 by (apply (Diana.VST.Euler.forallb_false k1s j); [lia | exact Hf1]).
+               unfold rk4_status. fold L. rewrite Hb, Hh, Hn, ?andb_false_r, ?andb_false_l.
+               entailer!. }
+          forward_if; [discriminate |].
+          forward. forward_call (Znth j k2s).
+          destruct (Binary.is_finite 53 1024 (Znth j k2s)) eqn:Hf2.
+          2: { forward_if; [| contradiction]. forward.
+               assert (Hn : forallb (Binary.is_finite 53 1024) k2s = false)
+                 by (apply (Diana.VST.Euler.forallb_false k2s j); [lia | exact Hf2]).
+               unfold rk4_status. fold L. rewrite Hb, Hh, Hn, ?andb_false_r, ?andb_false_l.
+               entailer!. }
+          forward_if; [discriminate |].
+          forward. forward_call (Znth j k3s).
+          destruct (Binary.is_finite 53 1024 (Znth j k3s)) eqn:Hf3.
+          2: { forward_if; [| contradiction]. forward.
+               assert (Hn : forallb (Binary.is_finite 53 1024) k3s = false)
+                 by (apply (Diana.VST.Euler.forallb_false k3s j); [lia | exact Hf3]).
+               unfold rk4_status. fold L. rewrite Hb, Hh, Hn, ?andb_false_r, ?andb_false_l.
+               entailer!. }
+          forward_if; [discriminate |].
+          forward. forward_call (Znth j k4s).
+          destruct (Binary.is_finite 53 1024 (Znth j k4s)) eqn:Hf4.
+          2: { forward_if; [| contradiction]. forward.
+               assert (Hn : forallb (Binary.is_finite 53 1024) k4s = false)
+                 by (apply (Diana.VST.Euler.forallb_false k4s j); [lia | exact Hf4]).
+               unfold rk4_status. fold L. rewrite Hb, Hh, Hn, ?andb_false_r, ?andb_false_l.
+               entailer!. }
+          forward_if; [discriminate |].
+          forward. Exists j. entailer!.
+          rewrite !Diana.VST.Euler.forallb_sublist_succ by lia.
+          rewrite Hf0, Hf1, Hf2, Hf3, Hf4, !andb_true_r. repeat split; assumption. }
+        { forward. Exists (a0 + 1). entailer!. }
+        { assert (a0 = Zlength ys) by lia. subst a0.
+          rewrite !sublist_same in * by lia. entailer!. }
+        forward.
+        unfold rk4_status. fold L. rewrite Hb, Hh.
+        repeat match goal with H : forallb _ ?l = true |- context [forallb _ ?l] =>
+          rewrite H end.
+        entailer!.
       + contradiction. }
   { forward. Exists (a + 1). entailer!. }
   { assert (a = Zlength ys) by lia. subst a. rewrite sublist_same in * by lia. entailer!. }
@@ -202,7 +302,7 @@ Proof.
   { forward. Exists (a + 1). entailer!. }
   { assert (a = Zlength ys) by lia. subst a. entailer!.
     rewrite sublist_same, sublist_nil, app_nil_r by lia. cancel. }
-  forward. fold L.
+  forward. fold L. unfold rk4_status. fold L.
   match goal with H : forallb _ L = true |- _ => rewrite H end.
   entailer!.
 Qed.

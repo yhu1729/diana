@@ -29,8 +29,7 @@ Definition stage_spec :=
          data_at sho (tarray tdouble (Zlength ys)) os out)
   POST [ tint ]
     PROP ()
-    RETURN (Vint (Int.repr
-      (if forallb (Binary.is_finite 53 1024) (c_stage s h ys ks) then 0 else -1)))
+    RETURN (Vint (Int.repr (stage_status s h ys ks)))
     SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
          data_at shk (tarray tdouble (Zlength ys)) (map Vfloat ks) k;
          data_at sho (tarray tdouble (Zlength ys))
@@ -79,7 +78,7 @@ Proof.
   { forward. entailer!. destruct (zlt 4 s); [lia | reflexivity]. }
   forward_if; try contradiction.
   set (c := c_coef s h).
-  forward_if (PROP () LOCAL (temp _c (Vfloat c); temp _y y; temp _k k;
+  forward_if (PROP () LOCAL (temp _c (Vfloat c); temp _h (Vfloat h); temp _y y; temp _k k;
       temp _d (Vlong (Int64.repr (Zlength ys))); temp _y_out out)
     SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
          data_at shk (tarray tdouble (Zlength ys)) (map Vfloat ks) k;
@@ -96,7 +95,7 @@ Proof.
   forward_for
     (fun i : Z => PROP (0 <= i <= Zlength ys;
                         forallb (Binary.is_finite 53 1024) (sublist 0 i L) = true)
-       LOCAL (temp _i (Vlong (Int64.repr i)); temp _c (Vfloat c); temp _y y; temp _k k;
+       LOCAL (temp _i (Vlong (Int64.repr i)); temp _c (Vfloat c); temp _h (Vfloat h); temp _y y; temp _k k;
               temp _d (Vlong (Int64.repr (Zlength ys))); temp _y_out out)
        SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
             data_at shk (tarray tdouble (Zlength ys)) (map Vfloat ks) k;
@@ -104,14 +103,14 @@ Proof.
     continue:
     (fun i : Z => PROP (0 <= i < Zlength ys;
                         forallb (Binary.is_finite 53 1024) (sublist 0 (i + 1) L) = true)
-       LOCAL (temp _i (Vlong (Int64.repr i)); temp _c (Vfloat c); temp _y y; temp _k k;
+       LOCAL (temp _i (Vlong (Int64.repr i)); temp _c (Vfloat c); temp _h (Vfloat h); temp _y y; temp _k k;
               temp _d (Vlong (Int64.repr (Zlength ys))); temp _y_out out)
        SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
             data_at shk (tarray tdouble (Zlength ys)) (map Vfloat ks) k;
             data_at sho (tarray tdouble (Zlength ys)) os out))
     break:
     (PROP (forallb (Binary.is_finite 53 1024) L = true)
-       LOCAL (temp _c (Vfloat c); temp _y y; temp _k k;
+       LOCAL (temp _c (Vfloat c); temp _h (Vfloat h); temp _y y; temp _k k;
               temp _d (Vlong (Int64.repr (Zlength ys))); temp _y_out out)
        SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
             data_at shk (tarray tdouble (Zlength ys)) (map Vfloat ks) k;
@@ -130,7 +129,65 @@ Proof.
     - forward_if.
       + assert (Hb : forallb (Binary.is_finite 53 1024) L = false).
         { apply (Diana.VST.Euler.forallb_false L a); [lia |]. rewrite HZ by lia. exact Hfin. }
-        forward. fold L. rewrite Hb. entailer!.
+        forward_call h.
+        destruct (Binary.is_finite 53 1024 h) eqn:Hh.
+        2: { forward_if; [| contradiction]. forward.
+             unfold stage_status. fold L. rewrite Hb, Hh. entailer!. }
+        forward_if; [discriminate |].
+        forward_for
+          (fun j : Z => PROP (0 <= j <= Zlength ys;
+                              forallb (Binary.is_finite 53 1024) (sublist 0 j ys) = true;
+                              forallb (Binary.is_finite 53 1024) (sublist 0 j ks) = true)
+             LOCAL (temp _j (Vlong (Int64.repr j)); temp _y y; temp _k k;
+                    temp _d (Vlong (Int64.repr (Zlength ys))))
+             SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
+                  data_at shk (tarray tdouble (Zlength ys)) (map Vfloat ks) k;
+                  data_at sho (tarray tdouble (Zlength ys)) os out))
+          continue:
+          (fun j : Z => PROP (0 <= j < Zlength ys;
+                              forallb (Binary.is_finite 53 1024) (sublist 0 (j + 1) ys) = true;
+                              forallb (Binary.is_finite 53 1024) (sublist 0 (j + 1) ks) = true)
+             LOCAL (temp _j (Vlong (Int64.repr j)); temp _y y; temp _k k;
+                    temp _d (Vlong (Int64.repr (Zlength ys))))
+             SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
+                  data_at shk (tarray tdouble (Zlength ys)) (map Vfloat ks) k;
+                  data_at sho (tarray tdouble (Zlength ys)) os out))
+          break:
+          (PROP (forallb (Binary.is_finite 53 1024) ys = true;
+                 forallb (Binary.is_finite 53 1024) ks = true)
+             LOCAL ()
+             SEP (data_at shy (tarray tdouble (Zlength ys)) (map Vfloat ys) y;
+                  data_at shk (tarray tdouble (Zlength ys)) (map Vfloat ks) k;
+                  data_at sho (tarray tdouble (Zlength ys)) os out)).
+        { forward. Exists 0. entailer!. }
+        { entailer!. }
+        { rename a0 into j.
+          forward. forward_call (Znth j ys).
+          destruct (Binary.is_finite 53 1024 (Znth j ys)) eqn:Hyj.
+          2: { forward_if; [| contradiction]. forward.
+               assert (Hys : forallb (Binary.is_finite 53 1024) ys = false)
+                 by (apply (Diana.VST.Euler.forallb_false ys j); [lia | exact Hyj]).
+               unfold stage_status. fold L. rewrite Hb, Hh, Hys. entailer!. }
+          forward_if; [discriminate |].
+          forward. forward_call (Znth j ks).
+          destruct (Binary.is_finite 53 1024 (Znth j ks)) eqn:Hkj.
+          2: { forward_if; [| contradiction]. forward.
+               assert (Hks : forallb (Binary.is_finite 53 1024) ks = false)
+                 by (apply (Diana.VST.Euler.forallb_false ks j); [lia | exact Hkj]).
+               unfold stage_status. fold L. rewrite Hb, Hh, Hks, andb_false_r. entailer!. }
+          forward_if; [discriminate |].
+          forward. Exists j. entailer!.
+          rewrite !Diana.VST.Euler.forallb_sublist_succ by lia.
+          rewrite Hyj, Hkj, !andb_true_r. auto. }
+        { forward. Exists (a0 + 1). entailer!. }
+        { assert (a0 = Zlength ys) by lia. subst a0.
+          rewrite !sublist_same in * by lia. entailer!. }
+        forward.
+        match goal with
+        | Hy : forallb _ ys = true, Hk : forallb _ ks = true |- _ =>
+            unfold stage_status; fold L; rewrite Hb, Hh, Hy, Hk
+        end.
+        entailer!.
       + contradiction. }
   { forward. Exists (a + 1). entailer!. }
   { assert (a = Zlength ys) by lia. subst a. rewrite sublist_same in * by lia. entailer!. }
@@ -168,7 +225,7 @@ Proof.
   { forward. Exists (a + 1). entailer!. }
   { assert (a = Zlength ys) by lia. subst a. entailer!.
     rewrite sublist_same, sublist_nil, app_nil_r by lia. cancel. }
-  forward. fold L.
+  forward. fold L. unfold stage_status. fold L.
   match goal with H : forallb _ L = true |- _ => rewrite H end.
   entailer!.
 Qed.

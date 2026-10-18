@@ -32,7 +32,7 @@ Definition back_substitution_spec :=
            bwd_finite ll bl n /\ xs = map Vfloat (c_bwd_list ll bl n)) \/
           (st = -1 /\ ~ (lower_finite ll n /\ vec_finite bl n) /\ xs = ox) \/
           (st = -4 /\ lower_finite ll n /\ vec_finite bl n /\ ~ diag_nonzero ll n /\ xs = ox) \/
-          (st = -1 /\ lower_finite ll n /\ vec_finite bl n /\ diag_nonzero ll n /\
+          (st = -5 /\ lower_finite ll n /\ vec_finite bl n /\ diag_nonzero ll n /\
            exists i, 0 <= i < n /\
              (forall i', i < i' < n -> Binary.is_finite 53 1024 (c_bwd ll bl n i') = true) /\
              Binary.is_finite 53 1024 (c_bwd ll bl n i) = false /\
@@ -347,7 +347,7 @@ Proof.
       + rewrite lsuf_step by lia. cancel.
     - forward_if.
       + set (xs := lsuf (c_bwd_list ll bl n) ox n i).
-        forward. Exists (-1) xs. entailer!.
+        forward. Exists (-5) xs. entailer!.
         right. right. right. split; [reflexivity |]. split; [exact Hlf |].
         split; [exact Hvf |]. split; [exact Hdz |].
         exists (i - 1). split; [lia |].
