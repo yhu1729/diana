@@ -7,6 +7,10 @@ on:
     paths:
       - .github/workflows/verify_rocq.yml
       - verification/rocq/**
+      - spec/**
+      - script/check_spec.py
+      - script/check_provenance.py
+      - script/axiom_allow.yaml
   workflow_dispatch:
 
 permissions:
@@ -23,9 +27,18 @@ jobs:
     env:
       ROCQ_IMAGE: mathcomp/mathcomp:2.6.0-rocq-prover-9.2@sha256:a4e066dbe94d40fbbefc2ab7692abb905011a053d1a5434ababee659ffe293e8
       COQUELICOT_VERSION: 3.4.5
+      FLOCQ_VERSION: 4.2.2
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - run: chmod -R a+rwX .
-      - run: docker run --rm -v "$PWD:/work" -w /work -e COQUELICOT_VERSION "$ROCQ_IMAGE" sh -c 'rocq --version && opam update -y rocq-released && opam install -y "coq-coquelicot.$COQUELICOT_VERSION" && cd verification/rocq && make real'
+      - run: >-
+          docker run --rm -v "$PWD:/work" -w /work -e COQUELICOT_VERSION -e FLOCQ_VERSION "$ROCQ_IMAGE" sh -c '
+          sudo apt-get update -qq &&
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends python3 python3-yaml > /dev/null &&
+          rocq --version &&
+          opam update -y rocq-released &&
+          opam install -y "coq-coquelicot.$COQUELICOT_VERSION" "coq-flocq.$FLOCQ_VERSION" &&
+          make -C verification/rocq float &&
+          python3 script/check_spec.py --run --strict --prover rocq --layer A --layer B --no-report'
