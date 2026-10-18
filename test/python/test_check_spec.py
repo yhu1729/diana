@@ -31,7 +31,7 @@ def gate(tmp_path, monkeypatch):
     monkeypatch.setattr(module, "write_check_file", Mock())
     monkeypatch.setattr(module, "write_report", Mock())
 
-    def verify(theorems, allow, provers):
+    def verify(theorems, allow, provers, layers):
         for theorem in theorems:
             for prover in provers:
                 if getattr(theorem, prover):
@@ -196,6 +196,157 @@ def test_explicit_prover_filters_out_acsl_coverage(gate, monkeypatch, provers):
         args.extend(["--prover", prover])
     assert run_gate(gate, monkeypatch, *args) == 0
     assert gate.run_prover.call_args.args[2] == provers
+
+
+def write_layered_spec(gate):
+    (gate.SPEC_DIR / "bisection.md").write_text(
+        """---
+method: bisection
+kernel: kernel.c
+theorem:
+  - id: BISECTION-A1
+    layer: A
+    informal: real theorem
+    lean: Diana.Real.Bisection.a1
+    rocq: Diana.Real.Bisection.a1
+  - id: BISECTION-B1
+    layer: B
+    informal: float theorem
+    rocq: Diana.Float.Bisection.b1
+  - id: BISECTION-C1
+    layer: C
+    informal: code theorem
+    rocq: Diana.VST.Bisection.c1
+    acsl: kernel.c:kernel
+---
+"""
+    )
+
+
+@pytest.mark.parametrize(
+    ("args", "layers"),
+    [
+        (("--layer", "A"), ("A",)),
+        (("--layer", "b", "--layer", "a", "--layer", "B"), ("A", "B")),
+        (("--layer", "C", "--layer", "B", "--layer", "A"), ("A", "B", "C")),
+        ((), ("A", "B", "C")),
+    ],
+)
+def test_layer_selects_theorems(gate, monkeypatch, args, layers):
+    write_layered_spec(gate)
+    gate.FRAMA_C_EXPECTATION.write_text("kernel.c 1\n")
+    assert run_gate(gate, monkeypatch, "--run", "--strict", "--no-report", *args) == 0
+    checked = gate.write_check_file.call_args.args[0]
+    assert [t.layer for t in checked] == list(layers)
+    assert gate.run_prover.call_args.args[0] == checked
+    assert gate.run_prover.call_args.args[3] == layers
+
+
+@pytest.mark.parametrize(
+    ("args", "written"),
+    [
+        (("--layer", "A", "--layer", "B"), False),
+        (("--layer", "C"), False),
+        (("--layer", "A", "--layer", "B", "--layer", "C"), True),
+    ],
+)
+def test_partial_layer_keeps_report(gate, monkeypatch, args, written):
+    write_layered_spec(gate)
+    gate.FRAMA_C_EXPECTATION.write_text("kernel.c 1\n")
+    assert run_gate(gate, monkeypatch, "--run", *args) == 0
+    assert gate.write_report.called is written
+
+
+def test_layer_without_c_skips_acsl_coverage(gate, monkeypatch, capsys):
+    write_layered_spec(gate)
+    args = ["--run", "--strict", "--no-report"]
+    assert run_gate(gate, monkeypatch, *args, "--layer", "A", "--layer", "B") == 0
+    assert "of layer A, B in 1 spec file(s)" in capsys.readouterr().out
+    assert run_gate(gate, monkeypatch, *args, "--layer", "C") == 1
+    assert "BISECTION-C1 [frama-c]: missing expectation" in capsys.readouterr().out
+
+
+def test_strict_layer_failure_is_reported(gate, monkeypatch, capsys):
+    write_layered_spec(gate)
+
+    def fail_float(theorems, allow, provers, layers):
+        for theorem in theorems:
+            theorem.result["rocq"] = "axiom: x" if theorem.layer == "B" else "ok"
+
+    gate.run_prover.side_effect = fail_float
+    args = ["--run", "--strict", "--no-report", "--prover", "rocq", "--layer", "A", "--layer", "B"]
+    assert run_gate(gate, monkeypatch, *args) == 1
+    assert "BISECTION-B1 [rocq]: axiom: x" in capsys.readouterr().out
+
+
+def test_layer_without_theorem_fails(gate, monkeypatch, capsys):
+    assert run_gate(gate, monkeypatch, "--no-report", "--layer", "A", "--layer", "B") == 1
+    assert "no theorem of layer A, B under spec/" in capsys.readouterr().err
+    gate.write_check_file.assert_not_called()
+
+
+def test_unknown_layer_is_rejected(gate, monkeypatch):
+    with pytest.raises(SystemExit) as exc:
+        run_gate(gate, monkeypatch, "--layer", "D")
+    assert exc.value.code == 2
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        ("--prover", "lean", "--layer", "B"),
+        ("--prover", "lean", "--layer", "C"),
+        ("--prover", "rocq", "--layer", "C"),
+    ],
+)
+def test_strict_without_constant_fails(gate, monkeypatch, capsys, args):
+    path = gate.SPEC_DIR / "bisection.md"
+    path.write_text(
+        path.read_text().removesuffix("---\n")
+        + """  - id: BISECTION-B1
+    layer: B
+    informal: float theorem
+    rocq: Diana.Float.Bisection.b1
+---
+"""
+    )
+    assert run_gate(gate, monkeypatch, "--run", "--strict", "--no-report", *args) == 1
+    assert "--strict selects no theorem to check" in capsys.readouterr().err
+    gate.run_prover.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("layers", "target"),
+    [
+        (("A",), "check_real"),
+        (("B",), "check_float"),
+        (("A", "B"), "check_float"),
+        (("A", "B", "C"), "check"),
+        (("C",), "check"),
+    ],
+)
+def test_rocq_target_follows_highest_layer(tmp_path, monkeypatch, layers, target):
+    module = load_module(monkeypatch)
+    monkeypatch.setattr(module, "ROCQ_DIR", tmp_path)
+    proc = Mock(returncode=0, stdout="Closed under the global context\n", stderr="")
+    run = Mock(return_value=proc)
+    monkeypatch.setattr(module.subprocess, "run", run)
+    theorem = module.Theorem(spec="k", id="K-A1", layer="A", informal="x", rocq="Diana.Real.K.a1")
+    module.run_prover([theorem], {}, ("rocq",), layers)
+    assert run.call_args.args[0] == ["make", "-s", target]
+    assert run.call_args.kwargs["cwd"] == tmp_path
+    assert theorem.result["rocq"] == "ok"
+
+
+def test_rocq_target_defaults_to_full_check(tmp_path, monkeypatch):
+    module = load_module(monkeypatch)
+    monkeypatch.setattr(module, "ROCQ_DIR", tmp_path)
+    proc = Mock(returncode=0, stdout="Closed under the global context\n", stderr="")
+    run = Mock(return_value=proc)
+    monkeypatch.setattr(module.subprocess, "run", run)
+    theorem = module.Theorem(spec="k", id="K-A1", layer="A", informal="x", rocq="Diana.Real.K.a1")
+    module.run_prover([theorem], {}, ("rocq",))
+    assert run.call_args.args[0] == ["make", "-s", "check"]
 
 
 def test_id_prefix_must_match_method(gate, monkeypatch, capsys):
