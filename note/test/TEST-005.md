@@ -5,7 +5,7 @@ kind: fact
 path:
   - test/python/test_check_spec.py
   - script/check_spec.py
-related: [GATE-001, GATE-006, WP-007, TEST-042]
+related: [GATE-001, GATE-006, GATE-007, WP-007, TEST-042]
 ---
 `test/python/test_check_spec.py` tests `script/check_spec.py` on temporary spec and Frama-C
 expectation files with the prover runs mocked, so pytest checks the gate's logic without Lean,
@@ -25,6 +25,12 @@ Rocq or Frama-C. PyYAML, which the gate needs for the front matter, is in the uv
   file's row.
 - A run with neither `--run` nor `--strict` calls no prover and ignores the expectation file; an
   explicit `--prover` skips the Frama-C coverage check.
+- `--layer` (any case, repeated or reordered) hands only the theorems of those layers to the
+  check files and `run_prover`, together with the sorted layers; a partial selection keeps the
+  report, one without `C` skips the Frama-C coverage check, one that matches no theorem, or a
+  strict run whose selection names no constant of a selected prover, fails, and `D` is rejected.
+  The real `run_prover` runs `make -s check_real`, `check_float` or `check` for the highest layer
+  (`check` by default).
 - Two theorems naming one constant both receive its result (`check failed` when `lake` is
   missing). The ID prefix must be the method in capitals with `_` written `-`
   (`OTHER-UNCHECKED-C1` for `other_unchecked`), and `kernel` may be a list whose files must exist.

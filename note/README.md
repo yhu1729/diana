@@ -167,7 +167,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [CI-010](ci/CI-010.md) | fact | coverage_c and coverage_python rebuild with --coverage |
 | [CI-011](ci/CI-011.md) | fact | verify_frama_c runs every WP row on framac/frama-c:32.1 |
 | [CI-012](ci/CI-012.md) | fact | verify_lean builds Lean and runs the Lean-only gate with system python3 |
-| [CI-013](ci/CI-013.md) | fact | verify_rocq compiles layer A only, with Coquelicot on the MathComp image |
+| [CI-013](ci/CI-013.md) | fact | verify_rocq builds layers A and B and runs their Rocq axiom gate |
 | [CI-014](ci/CI-014.md) | fact | release runs on a version tag once every test and verify job passes |
 | [CI-015](ci/CI-015.md) | procedure | Build the Lean CI image from ci/docker/lean.Dockerfile |
 | [CI-016](ci/CI-016.md) | fact | verify_provenance checks the AST manifest, the report stamp and its status |
@@ -219,7 +219,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [GATE-004](gate/GATE-004.md) | fact | How the gate reads the provers' axiom output |
 | [GATE-005](gate/GATE-005.md) | fact | Allowed axioms in script/axiom_allow.yaml |
 | [GATE-006](gate/GATE-006.md) | fact | When and how the gate rewrites doc/verification/report.md |
-| [GATE-007](gate/GATE-007.md) | fact | Exit status of the spec gate with --strict and --prover |
+| [GATE-007](gate/GATE-007.md) | fact | Exit status of the spec gate with --strict, --prover and --layer |
 | [GATE-008](gate/GATE-008.md) | fact | What the spec gate does not check |
 | [GATE-009](gate/GATE-009.md) | fact | The report stamp records input digests and tool versions |
 
@@ -509,7 +509,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `script/check_doc.py` | CI-007, STYLE-003 |
 | `script/check_frama_c.sh` | WP-007, WP-010 |
 | `script/check_provenance.py` | CI-016, GATE-009, TEST-042, VST-009 |
-| `script/check_spec.py` | CI-007, CI-012, GATE-001, GATE-002, GATE-003, GATE-004, GATE-006, GATE-007, GATE-008, GATE-009, TEST-005, VERIFY-005 |
+| `script/check_spec.py` | CI-007, CI-012, CI-013, GATE-001, GATE-002, GATE-003, GATE-004, GATE-006, GATE-007, GATE-008, GATE-009, TEST-005, VERIFY-005 |
 | `script/check_wheel.py` | BUILD-004, BUILD-007, BUILD-010, CI-003, CI-009, CI-023, TEST-004 |
 | `script/compare_compiler.sh` | COMPILER-001, COMPILER-002, COMPILER-003, COMPILER-004, COMPILER-008, COMPILER-011, FP-004, FP-005 |
 | `script/dev.sh` | BENCHMARK-005, BUILD-002, BUILD-003, BUILD-007, BUILD-010, COMPILER-002, COMPILER-004, GATE-007, PROVER-003, PROVER-008, PYTHON-005, STYLE-008, TEST-001, VERIFY-001, VERIFY-002, VERIFY-003, VERIFY-004, VST-001, VST-002, VST-003, VST-009 |

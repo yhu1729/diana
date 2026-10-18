@@ -4,10 +4,12 @@ title: How the gate reads the provers' axiom output
 kind: fact
 path:
   - script/check_spec.py
-related: [GATE-003, GATE-005, GATE-007]
+related: [GATE-003, GATE-005, GATE-007, PROVER-007]
 ---
 With `--run`, the gate runs `lake env lean CheckSpec.lean` in `verification/lean` and
-`make -s check` in `verification/rocq`, and gives each listed constant a status per prover.
+`make -s <target>` in `verification/rocq`, and gives each listed constant a status per prover.
+The target follows the highest selected layer (GATE-007, PROVER-007): `check_real` for A alone,
+`check_float` for B, and `check`, which builds everything including VST, for C or no `--layer`.
 
 - A prover command that cannot start or exits non-zero sets every pending constant of that prover
   to `check failed`, and its output goes to stderr.

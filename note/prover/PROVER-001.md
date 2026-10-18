@@ -18,7 +18,7 @@ else lives in one opam switch on OCaml 4.14 (locally the switch `4.14.1`), which
 | Lean 4 | `leanprover/lean4:v4.35.0` | `verification/lean/lean-toolchain` |
 | Mathlib | `v4.35.0` | `lakefile.toml` (`rev`), `lake-manifest.json` (commit) |
 | Rocq | 9.2.0 (`rocq-core`) | install command; CI image `mathcomp/mathcomp:2.6.0-rocq-prover-9.2` |
-| Flocq | 4.2.2 | install command |
+| Flocq | 4.2.2 | install command; `FLOCQ_VERSION` in `.gitlab-ci.yml` |
 | Coquelicot | 3.4.5 | install command; `COQUELICOT_VERSION` in `.gitlab-ci.yml` |
 | CompCert | 3.18 (`clightgen` and the AST `Info.version` say 3.17) | install command |
 | VST | 2.17 | install command |

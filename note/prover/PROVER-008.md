@@ -19,4 +19,5 @@ sequential `make`.
 - Files build in parallel as far as their imports allow. On the 24 GB M4 the cap is 12, so
   `DIANA_JOB=10` gives 10 jobs; the cold Rocq build went from 187 s sequential to 73 s
   (VERIFY-004).
-- `make real` is always sequential (PROVER-007).
+- `make real` and `make float` pass `-j N` on to the generated makefile in the same way; CI runs
+  `make float` without it (PROVER-007, CI-013).

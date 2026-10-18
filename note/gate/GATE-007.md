@@ -1,12 +1,12 @@
 ---
 id: GATE-007
-title: Exit status of the spec gate with --strict and --prover
+title: Exit status of the spec gate with --strict, --prover and --layer
 kind: fact
 path:
   - script/check_spec.py
   - script/dev.sh
   - .gitlab-ci.yml
-related: [GATE-004, GATE-006, WP-007, VERIFY-001]
+related: [GATE-004, GATE-006, WP-007, VERIFY-001, CI-013]
 ---
 `script/check_spec.py` exits 1 on a structural error or when no theorem is found. Otherwise:
 
@@ -20,8 +20,15 @@ related: [GATE-004, GATE-006, WP-007, VERIFY-001]
   the WP run unnoticed; the count alone proves nothing.
 - `--prover lean` or `--prover rocq` (repeatable) limits `--run` and `--strict` to those provers
   and drops the Frama-C requirement.
+- `--layer A`, `B` or `C` (repeatable, any case) limits the check files, `--run` and `--strict`,
+  the Frama-C requirement included, to the theorems of those layers, and picks the Rocq target
+  (GATE-004). It exits 1 when no theorem has a selected layer, and with `--strict` when no
+  selected theorem names a constant of a selected prover nor, without `--prover`, an `acsl` file,
+  so a misspelt selection cannot pass by checking nothing.
 
-Invocations: `script/dev.sh verify` runs `--run --strict` (both provers, report rewritten). CI
-`verify_lean` runs `--run --strict --prover lean --no-report`, so a missing Lean proof fails CI
-without requiring the Rocq-only layers or Frama-C rows. CI `style_python` runs the structural,
-non-strict check with `--no-report`. The Rocq axiom gate runs only locally (VERIFY-001).
+Invocations: `script/dev.sh verify` runs `--run --strict` (both provers, every layer, report
+rewritten). CI `verify_lean` runs `--run --strict --prover lean --no-report`, so a missing Lean
+proof fails CI without requiring the Rocq-only layers or Frama-C rows; CI `verify_rocq` runs
+`--run --strict --prover rocq --layer A --layer B --no-report`, the Rocq axiom gate of layers A
+and B without VST (CI-013). CI `style_python` runs the structural, non-strict check with
+`--no-report`. The Rocq axiom gate of layer C runs only locally (VERIFY-001).
