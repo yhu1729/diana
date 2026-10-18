@@ -13,13 +13,17 @@ arrives: Cholesky factorization, forward and transpose substitution, LU factoriz
 pivoting and the LU solve, each through every verification layer — Lean and Rocq over the reals,
 Flocq over binary64, Frama-C WP and VST on the C — with a Python binding. Opt-in unchecked Euler and
 RK4 kernels, one function per source file for every verified kernel, and the technical notes of
-`note/` complete it. From this release the public C API, the Python package and their documented
-behaviour follow Semantic Versioning. Breaking changes against 0.3.0: `diana/wrapper.h` is removed,
-the callback type `diana_bisection_fn` is renamed `diana_scalar_fn`, an overflow from finite inputs
-in Euler, the quadrature rules and Newton returns `DIANA_ERR_OVERFLOW` instead of `DIANA_ERR_ARG`,
-`diana_euler` and `diana_rk4` take the work length `lwork` and an `int`-returning callback, the
-bisection and Newton states gain a `status` field (a new size and layout), and the second attribute
-of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and Removed).
+`note/` complete it. CI now builds the Rocq layers A and B with their axiom gate and checks, from
+hashes, that the committed verification report and Clight ASTs match their sources, on GitLab and on
+a GitHub mirror that also tests on macOS and on Python 3.12 to 3.14; configuration refuses a
+compiler whose strict floating-point mode it cannot set. From this release the public C API, the
+Python package and their documented behaviour follow Semantic Versioning. Breaking changes against
+0.3.0: `diana/wrapper.h` is removed, the callback type `diana_bisection_fn` is renamed
+`diana_scalar_fn`, an overflow from finite inputs in Euler, the quadrature rules and Newton returns
+`DIANA_ERR_OVERFLOW` instead of `DIANA_ERR_ARG`, `diana_euler` and `diana_rk4` take the work length
+`lwork` and an `int`-returning callback, the bisection and Newton states gain a `status` field (a
+new size and layout), and the second attribute of `diana.MaxIterError` is `uncertainty` instead of
+`width` (see Changed and Removed).
 
 ### Added
 
