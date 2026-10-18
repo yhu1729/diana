@@ -14,6 +14,7 @@ PyObject *diana_py_lu_solve(PyObject *Py_UNUSED(self), PyObject *args,
   Py_buffer vo;
   Py_ssize_t n;
   Py_ssize_t k;
+  PyObject *iter;
   PyObject *seq = NULL;
   PyObject *index;
   size_t *rows = NULL;
@@ -50,11 +51,19 @@ PyObject *diana_py_lu_solve(PyObject *Py_UNUSED(self), PyObject *args,
     PyErr_SetString(PyExc_ValueError, "out must not overlap lu or b");
     goto cleanup;
   }
-  seq = PySequence_Fast(piv, "piv must be an iterable of int");
+  iter = PyObject_GetIter(piv);
+  if (iter == NULL) {
+    if (PyErr_ExceptionMatches(PyExc_TypeError)) {
+      PyErr_SetString(PyExc_TypeError, "piv must be an iterable of int");
+    }
+    goto cleanup;
+  }
+  seq = PySequence_Tuple(iter);
+  Py_DECREF(iter);
   if (seq == NULL) {
     goto cleanup;
   }
-  if (PySequence_Fast_GET_SIZE(seq) != n) {
+  if (PyTuple_GET_SIZE(seq) != n) {
     PyErr_SetString(PyExc_ValueError, "piv must have the same length as b");
     goto cleanup;
   }
@@ -64,7 +73,7 @@ PyObject *diana_py_lu_solve(PyObject *Py_UNUSED(self), PyObject *args,
     goto cleanup;
   }
   for (k = 0; k < n; ++k) {
-    index = PyNumber_Index(PySequence_Fast_GET_ITEM(seq, k));
+    index = PyNumber_Index(PyTuple_GET_ITEM(seq, k));
     if (index == NULL) {
       goto cleanup;
     }
