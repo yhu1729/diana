@@ -6,6 +6,7 @@ src/cholesky.c 108
 src/euler_step.c 49
 src/euler_step_unchecked.c 19
 src/forward_substitution.c 109
+src/lu.c 157
 src/newton_init.c 36
 src/newton_result.c 13
 src/newton_step.c 66
