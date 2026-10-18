@@ -28,11 +28,11 @@ Summation and its error bound, the first second-order ODE method, and the proofs
 trust statement shorter.
 
 - `high` Explicit midpoint and Heun (second-order Runge–Kutta)
-- `high` Error bound for reordered summation, the prerequisite of pairwise, compensated, vectorized and threaded sums
+- `high` Error bound for reordered summation (pairwise, compensated, vectorized, threaded)
 - `medium` Compensated summation
 - `medium` Pairwise summation in the quadrature rules
 - `medium` Explicit worst-case iteration count for bisection
-- `medium` Cholesky success: a positive definite binary64 matrix of small enough condition number factors without `DIANA_ERR_SINGULAR`
+- `medium` Cholesky never `DIANA_ERR_SINGULAR` on a well-conditioned positive definite binary64 matrix
 - `medium` Overflow-free triangular and LU solve from a successful factorization
 - `medium` Horner polynomial evaluation
 - `medium` Free-threaded CPython
