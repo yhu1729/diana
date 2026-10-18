@@ -134,7 +134,7 @@ one line per idea, no design (a design is written only when an item is picked up
 | Lean 4 | `leanprover/lean4:v4.35.0` | matches Mathlib `lean-toolchain`; `verification/lean/lean-toolchain` |
 | Rocq | 9.2.0 | **not 9.3**: CompCert 3.18 opam caps `coq < 9.3~`. Homebrew `rocq 9.3` is unused; use the opam switch `4.14.1` |
 | VST | 2.17 | with CompCert 3.18 (its `clightgen` reports 3.17) |
-| Flocq | 4.2.2 | |
+| Flocq | 4.2.2 | also in CI: `verify_rocq` opam-installs it with Coquelicot |
 | Coquelicot | 3.4.5 | also in CI: `verify_rocq` opam-installs it on `mathcomp/mathcomp:2.6.0-rocq-prover-9.2` |
 | Frama-C | 32.1 | local opam switch pinned (`opam pin add frama-c 32.1`) to match CI (`framac/frama-c:32.1`); WP with `-wp-rte -wp-model +float`; Alt-Ergo 2.6.4 |
 | CMake | ≥ 3.25 | |
@@ -187,8 +187,10 @@ note/                 technical notes per topic, index by topic and by path (REA
 - Coverage: `uv sync --group test --group coverage && uv run pytest --cov=diana`; C and extension coverage via gcovr as in the `coverage_c`/`coverage_python` CI jobs
 - Lean: `cd verification/lean && lake exe cache get && lake build` (Mathlib pinned by `lake-manifest.json`)
 - Rocq: `cd verification/rocq && make -j4 && make check` (inside the opam switch, see `CONTRIBUTING.md`;
-  `-j` is passed through to the generated makefile, `make real` stays sequential).
-  Layers B and C-VST, the Rocq axiom gate, and the Clight AST are checked **only locally**; run the
+  `-j` is passed through to the generated makefile). `make real` (layer A) and `make float`
+  (layers A and B) take their files from `_CoqProject` and need no CompCert or VST; CI
+  `verify_rocq` runs `make float` and the spec gate `--prover rocq --layer A --layer B`.
+  Layer C-VST, its Rocq axiom gate, and the Clight AST are checked **only locally**; run the
   steps in `doc/verification/local.md` before committing a change to `src/`,
   `include/`, `verification/`, `spec/`, `script/axiom_allow.yaml` or `script/run_frama_c.sh`
 - Frama-C: `script/verify_frama_c.sh` (runs `script/run_frama_c.sh` and `script/check_frama_c.sh`
@@ -211,11 +213,12 @@ note/                 technical notes per topic, index by topic and by path (REA
   (stage `verify`, note CI-016), so a change to a stamped input needs a local verify run whose
   manifest and report are committed
 - Doc check: `uv run script/check_doc.py` (`--write` regenerates the index of `note/README.md`)
-- Spec gate: `uv run script/check_spec.py --run --strict` (runs both provers' check files, `--prover lean|rocq` to select one; a run of both provers rewrites the generated report `doc/verification/report.md`, stamped with the SHA-256 of `include/`, `spec/`, `src/`, `verification/`, `script/axiom_allow.yaml` and `script/run_frama_c.sh` and the tool versions (note GATE-009), a partial or structural run leaves it alone; commit it, CI does not regenerate it; `--no-report` to leave it alone on a full run)
+- Spec gate: `uv run script/check_spec.py --run --strict` (runs both provers' check files, `--prover lean|rocq` to select one, `--layer A|B|C` (repeatable) to check only those layers; a run of both provers on every layer rewrites the generated report `doc/verification/report.md`, stamped with the SHA-256 of `include/`, `spec/`, `src/`, `verification/`, `script/axiom_allow.yaml` and `script/run_frama_c.sh` and the tool versions (note GATE-009), a partial or structural run leaves it alone; commit it, CI does not regenerate it; `--no-report` to leave it alone on a full run)
   The default full strict gate also requires a unique positive Frama-C expectation count for the
   `acsl` file of each ACSL theorem; fresh WP execution and report checking remain in `script/dev.sh verify`.
   Lean CI uses `--run --strict --prover lean --no-report`, so missing Lean proofs fail the gate
-  without requiring Rocq-only layers or Frama-C coverage.
+  without requiring Rocq-only layers or Frama-C coverage; Rocq CI uses
+  `--run --strict --prover rocq --layer A --layer B --no-report` (note CI-013).
 - CI: GitLab CI (`.gitlab-ci.yml`) is primary and alone makes a release. The GitHub mirror runs
   `.github/workflows/` on every push: one workflow per `.change_*` list, with the GitLab job names,
   images (pinned by digest) and commands, plus macOS jobs and `test_python` on Python 3.12, 3.13
