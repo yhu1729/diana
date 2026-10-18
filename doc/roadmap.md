@@ -5,8 +5,8 @@ candidate, not a commitment or a design; it gets a design when someone picks it 
 is in `CHANGELOG.md`.
 
 Each idea carries a priority: `high` is an item for the next release, a prerequisite of one, or a
-small change that closes a known gap; `medium` is worth doing once its prerequisites exist; `low` is large for its
-value or far from the current proof tooling.
+small change that closes a known gap; `medium` is worth doing once its prerequisites exist; `low`
+is large for its value or far from the current proof tooling.
 
 ## Method
 
