@@ -50,7 +50,8 @@ int diana_py_status_exec(PyObject *m) {
       PyModule_AddIntConstant(m, "ERR_BRACKET", DIANA_ERR_BRACKET) < 0 ||
       PyModule_AddIntConstant(m, "ERR_MAXITER", DIANA_ERR_MAXITER) < 0 ||
       PyModule_AddIntConstant(m, "ERR_SINGULAR", DIANA_ERR_SINGULAR) < 0 ||
-      PyModule_AddIntConstant(m, "ERR_OVERFLOW", DIANA_ERR_OVERFLOW) < 0) {
+      PyModule_AddIntConstant(m, "ERR_OVERFLOW", DIANA_ERR_OVERFLOW) < 0 ||
+      PyModule_AddIntConstant(m, "ERR_CALLBACK", DIANA_ERR_CALLBACK) < 0) {
     return -1;
   }
   return 0;

@@ -8,6 +8,7 @@ ERR_BRACKET: Final[int]
 ERR_MAXITER: Final[int]
 ERR_SINGULAR: Final[int]
 ERR_OVERFLOW: Final[int]
+ERR_CALLBACK: Final[int]
 
 class BracketError(ValueError): ...
 class SingularError(ValueError): ...
