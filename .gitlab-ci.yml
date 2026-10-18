@@ -101,6 +101,7 @@ stages:
   - script/check_frama_c.sh
   - script/verify_frama_c.sh
   - script/job_count.sh
+  - script/fetch_alt_ergo.sh
 
 .change_lean: &change_lean
   - .gitlab-ci.yml
@@ -390,7 +391,15 @@ verify_frama_c:
     - job: test_gcc_release
       optional: true
       artifacts: false
+  cache:
+    key:
+      files: [script/fetch_alt_ergo.sh]
+    paths: [.cache/alt-ergo]
   script:
+    - script/fetch_alt_ergo.sh .cache/alt-ergo
+    - export PATH="$CI_PROJECT_DIR/.cache/alt-ergo:$PATH"
+    - why3 config detect > /dev/null
+    - alt-ergo --version
     - frama-c -version
     - script/verify_frama_c.sh
   artifacts:
