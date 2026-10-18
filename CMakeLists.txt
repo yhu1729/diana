@@ -70,6 +70,7 @@ add_library(diana ${diana_library_type}
     src/euler_step_unchecked.c
     src/forward_substitution.c
     src/fp_sqrt.c
+    src/lu.c
     src/newton.c
     src/newton_init.c
     src/newton_result.c
