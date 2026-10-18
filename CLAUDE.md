@@ -188,7 +188,7 @@ note/                 technical notes per topic, index by topic and by path (REA
   rows at a time, each row in its own `verification/frama-c/session/<row>` and `cache/<row>`,
   one `report.txt` in row order; all goals must prove and each count must match;
   `script/dev.sh verify` and CI both call it)
-- Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/<kernel>_aarch64_macos.v src/<kernel>.c` (today `back_substitution`, `bisection_init`, `bisection_mid`, `bisection_result`, `bisection_step`, `cholesky`, `euler_step`, `euler_step_unchecked`, `forward_substitution`, `fp_sqrt`, `newton_init`, `newton_result`, `newton_step`, `rk4_stage`, `rk4_stage_unchecked`, `rk4_step`, `rk4_step_unchecked`, `simpson` and `trapezoidal`) **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
+- Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/<kernel>_aarch64_macos.v src/<kernel>.c` (today `back_substitution`, `bisection_init`, `bisection_mid`, `bisection_result`, `bisection_step`, `cholesky`, `euler_step`, `euler_step_unchecked`, `forward_substitution`, `fp_sqrt`, `lu`, `newton_init`, `newton_result`, `newton_step`, `rk4_stage`, `rk4_stage_unchecked`, `rk4_step`, `rk4_step_unchecked`, `simpson` and `trapezoidal`) **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
 - Compiler comparison: `opam exec -- script/compare_compiler.sh` builds `src/*.c` with the corpus
   driver `test/c/test_compiler.c` once with `ccomp` and with each gcc/clang found
   (`DIANA_COMPARE_CC` to choose) at `-O0`/`-O2`/`-O3`, and fails on any byte of difference in the
@@ -256,6 +256,26 @@ suffix on overflow) and the `diana_fp_finite` copies (C5, C6), with the list and
 shared with Cholesky in the AST-free `VST/Matrix.v` and the models in `VST/Substitution.v`.
 Python `diana.forward_substitution(lower, b)` and `diana.back_substitution(lower, b)` (parameter
 `lower`: ruff rejects `l`).
+
+Unreleased (toward 1.0): LU factorization with partial pivoting `diana_lu(a, n, lu, piv)`
+(`src/lu.c`, `diana/lu.h`): `n×n` column-major, every entry of `a` read, the packed factor of
+`P·A = L·U` written to `lu` (`L` strictly below the diagonal, unit diagonal not stored, `U` on
+and above it) and `piv[k]` (`size_t`) the row interchanged with row `k` at step `k`, LAPACK's
+`getrf` from 0. Step `k` pivots on the first entry of largest magnitude (`v < 0.0 ? -v`, in line,
+not `diana_fp_abs`, note WP-012), interchanges whole rows, divides below the pivot and updates
+the trailing block, checking each update for overflow. A non-finite entry of `a` is
+`DIANA_ERR_ARG` with `lu` and `piv` untouched; a zero pivot column (`DIANA_ERR_SINGULAR`) and an
+overflowing update (`DIANA_ERR_ARG`) leave both partly written, the third exception to the
+write-nothing rule (API-032). Proved through every layer (`spec/lu.md`) on one model defined over
+a record of operations (`Diana.Real.LU.ops`, instantiated at the reals, at binary64 in
+`Diana.Float.LU` and at CompCert's operations in `VST/LU.v`), whose lemma `state_nstate` makes the
+pivoted factorization the unpivoted one of `P·A` for any operations: Lean and Rocq layer A (LU-A1
+to A6: `L·U = B` unpivoted, `P·A = L·U`, the interchanges a permutation, `|L| ≤ 1`, and a zero
+pivot exactly for a singular `A`), Flocq layer B (B1 to B4: finiteness and `|L̂| ≤ 1` on
+`DIANA_OK`, and the componentwise backward error `γ_{min(i,j)+1}·|L̂|·|Û|` plus underflow, reusing
+Cholesky's `dot_error` and the substitution `row_error`), WP the ACSL contract (C1, 157 goals),
+VST the kernel against the model through partial-state matrices (C2) and the `diana_fp_finite`
+copy (C3). Python `diana.lu(a)` returns `(lu, piv)`, an `array.array("d")` and a `list` of `int`.
 
 Unreleased experiment: opt-in one-pass kernels with no finiteness check (non-finite components
 written as computed, `DIANA_OK` for valid arguments): `diana_euler_step_unchecked`,
