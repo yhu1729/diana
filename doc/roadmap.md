@@ -41,7 +41,6 @@ Linear algebra:
 
 - `high` Dot product, norm, `axpy`
 - `medium` Compensated summation
-- `high` Forward and back substitution
 - `medium` Tridiagonal solve
 - `low` Householder QR
 - `low` Jacobi, Gauss–Seidel, conjugate gradient
