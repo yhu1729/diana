@@ -115,6 +115,8 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [API-027](api/API-027.md) | fact | Python version, status constants and status_str |
 | [API-028](api/API-028.md) | fact | Cholesky evaluation order, exits and what each exit writes |
 | [API-029](api/API-029.md) | fact | Python cholesky and the extension function cholesky(a, out) |
+| [API-030](api/API-030.md) | fact | Forward and back substitution evaluation order, exits and what each exit writes |
+| [API-031](api/API-031.md) | fact | Python forward_substitution, back_substitution and their extension functions |
 
 ### benchmark
 
@@ -240,6 +242,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [PROOF-007](proof/PROOF-007.md) | fact | Three models per kernel and how layers A, B and C compose |
 | [PROOF-008](proof/PROOF-008.md) | fact | RK4 rounding and C-code theorems, checked and unchecked |
 | [PROOF-009](proof/PROOF-009.md) | fact | Cholesky theorems, their hypotheses and the backward error bound |
+| [PROOF-010](proof/PROOF-010.md) | fact | Substitution theorems, their hypotheses and the error bounds |
 
 ### prover
 
@@ -321,6 +324,8 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [TEST-032](test/TEST-032.md) | fact | Newton callback wrapper cases |
 | [TEST-033](test/TEST-033.md) | fact | Cholesky C test values, rounding pins and failure cases |
 | [TEST-034](test/TEST-034.md) | fact | Cholesky Python tests against a binary64 reference and the B3 bound |
+| [TEST-035](test/TEST-035.md) | fact | Substitution C test values, rounding pins and failure cases |
+| [TEST-036](test/TEST-036.md) | fact | Substitution Python tests against a binary64 reference and the B bounds |
 
 ### verify
 
@@ -343,6 +348,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [VST-005](vst/VST-005.md) | fact | VST proofs are per function; no whole-program semax_prog links them |
 | [VST-006](vst/VST-006.md) | rule | Each fp.h helper copy in a Clight AST is a listed VST theorem |
 | [VST-007](vst/VST-007.md) | fact | VST funspecs exclude NULL and malformed-call paths; WP contracts cover them |
+| [VST-008](vst/VST-008.md) | fact | entailer! substitutes a WITH size equal to a list length |
 
 ### wp
 
@@ -394,12 +400,14 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `include/diana/rk4.h` | API-016, API-018 |
 | `include/diana/simpson.h` | API-014 |
 | `include/diana/status.h` | API-002 |
+| `include/diana/substitution.h` | API-030 |
 | `include/diana/trapezoidal.h` | API-013 |
 | `note/README.md` | STYLE-003 |
 | `pyproject.toml` | BUILD-002, BUILD-004, BUILD-006, BUILD-011, CI-012, PROVER-006, PYTHON-005, PYTHON-006, STYLE-005, STYLE-009, TEST-001 |
 | `python/ext/*.c` | PYTHON-001, PYTHON-006, STYLE-002 |
 | `python/ext/*.h` | PYTHON-001 |
 | `python/ext/.clang-tidy` | STYLE-007 |
+| `python/ext/back_substitution.c` | API-031 |
 | `python/ext/bisection_*.c` | API-023 |
 | `python/ext/bisection_exec.c` | PYTHON-003 |
 | `python/ext/bisection_init.c` | API-021, API-024, PYTHON-008, TEST-008, TEST-009 |
@@ -410,6 +418,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `python/ext/cholesky_exec.c` | API-029 |
 | `python/ext/convert_uint.c` | API-021 |
 | `python/ext/euler_step.c` | API-026, PYTHON-004 |
+| `python/ext/forward_substitution.c` | API-031 |
 | `python/ext/get_array.c` | API-020 |
 | `python/ext/module.c` | PYTHON-003, PYTHON-007 |
 | `python/ext/module.h` | API-004, PYTHON-004, PYTHON-007 |
@@ -424,6 +433,8 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `python/ext/rk4_step.c` | API-026, PYTHON-004 |
 | `python/ext/status_exec.c` | API-022, API-027, PYTHON-003 |
 | `python/ext/status_str.c` | API-021, API-027 |
+| `python/ext/substitution.c` | API-022, API-031, PYTHON-004 |
+| `python/ext/substitution_exec.c` | API-031 |
 | `python/ext/version.c` | API-027 |
 | `python/src/diana/*.py` | PYTHON-002 |
 | `python/src/diana/__init__.py` | API-027, PYTHON-007 |
@@ -436,6 +447,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `python/src/diana/_newton.py` | API-011, API-022, API-025 |
 | `python/src/diana/_rk4.py` | API-003, API-020, API-026, PYTHON-004 |
 | `python/src/diana/_simpson.py` | API-020 |
+| `python/src/diana/_substitution.py` | API-020, API-031 |
 | `python/src/diana/_trapezoidal.py` | API-020 |
 | `python/src/diana/py.typed` | PYTHON-002 |
 | `script/axiom_allow.yaml` | CI-012, GATE-005 |
@@ -459,8 +471,10 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `spec/rk4.md` | PROOF-006, PROOF-008 |
 | `spec/rk4_unchecked.md` | KERNEL-003, PROOF-008 |
 | `spec/simpson.md` | PROOF-004, TEST-014 |
+| `spec/substitution.md` | PROOF-010 |
 | `spec/trapezoidal.md` | PROOF-003 |
 | `src/*.c` | API-003, STYLE-002, TEST-006 |
+| `src/back_substitution.c` | API-003, API-004, API-030, FP-001, KERNEL-001, KERNEL-002, WP-011 |
 | `src/bisection.c` | API-006, API-009, KERNEL-004 |
 | `src/bisection_*.c` | FP-001, KERNEL-001 |
 | `src/bisection_acsl.h` | API-007, KERNEL-007, WP-001, WP-002, WP-006 |
@@ -474,6 +488,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `src/euler_step*.c` | FP-001, KERNEL-001 |
 | `src/euler_step.c` | API-004, API-015, KERNEL-002, PROOF-005, TEST-016 |
 | `src/euler_step_unchecked.c` | API-018, API-019, KERNEL-003, PROOF-005, TEST-018 |
+| `src/forward_substitution.c` | API-003, API-004, API-030, FP-001, KERNEL-001, KERNEL-002, WP-011 |
 | `src/fp.h` | API-001, FP-001, FP-002, FP-003, FP-005, KERNEL-005, VST-006 |
 | `src/fp_sqrt.c` | FP-006, KERNEL-001, KERNEL-005 |
 | `src/fp_sqrt.h` | FP-006, KERNEL-005, WP-003 |
@@ -491,6 +506,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `src/rk4_step_unchecked.c` | API-018, API-019, KERNEL-003, PROOF-008, TEST-024 |
 | `src/simpson.c` | API-004, API-014, FP-001, KERNEL-001, KERNEL-002, PROOF-004, TEST-013 |
 | `src/status_str.c` | API-002 |
+| `src/substitution_acsl.h` | KERNEL-007, WP-011 |
 | `src/trapezoidal.c` | API-004, API-013, FP-001, KERNEL-001, KERNEL-002, PROOF-003, TEST-010 |
 | `src/version.c` | API-002 |
 | `test/benchmark/unchecked.c` | API-019, BENCHMARK-001, BENCHMARK-002, BENCHMARK-003, BENCHMARK-005 |
@@ -505,6 +521,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `test/c/test_newton.c` | API-011, API-012, TEST-027, TEST-028, TEST-029, TEST-030, TEST-031, TEST-032 |
 | `test/c/test_rk4.c` | API-017, TEST-021, TEST-022, TEST-023, TEST-024, TEST-025 |
 | `test/c/test_simpson.c` | TEST-013, TEST-014 |
+| `test/c/test_substitution.c` | TEST-035 |
 | `test/c/test_trapezoidal.c` | TEST-010, TEST-011 |
 | `test/doc/test_example.py` | CI-009, FP-004, TEST-003 |
 | `test/install/.clang-tidy` | STYLE-007 |
@@ -518,23 +535,29 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `test/python/test_rk4.py` | TEST-022, TEST-023, TEST-025, TEST-026 |
 | `test/python/test_simpson.py` | TEST-013, TEST-014, TEST-015 |
 | `test/python/test_status.py` | API-027, BUILD-006 |
+| `test/python/test_substitution.py` | TEST-036 |
 | `test/python/test_trapezoidal.py` | TEST-010, TEST-011, TEST-012 |
 | `verification/clight/*.v` | PROVER-006, VST-001, VST-002, VST-003, VST-006 |
 | `verification/frama-c/expectation.txt` | CI-011, GATE-006, KERNEL-006, PROVER-005, WP-005, WP-007, WP-008 |
 | `verification/lean/Diana.lean` | GATE-003, KERNEL-006, PROVER-009 |
 | `verification/lean/Diana/Real/Bisection.lean` | WP-006 |
 | `verification/lean/Diana/Real/Cholesky.lean` | PROOF-009 |
+| `verification/lean/Diana/Real/Substitution.lean` | PROOF-010 |
 | `verification/lean/lake-manifest.json` | CI-015, PROVER-001, PROVER-009 |
 | `verification/lean/lakefile.toml` | CI-015, PROVER-001, PROVER-009 |
 | `verification/lean/lean-toolchain` | CI-012, CI-015, PROVER-001, PROVER-009 |
 | `verification/rocq/Makefile` | CI-013, GATE-003, KERNEL-006, PROVER-007, PROVER-008, VERIFY-005 |
 | `verification/rocq/_CoqProject` | GATE-003, KERNEL-006, PROVER-007, VST-001, VST-002, VST-004 |
 | `verification/rocq/theory/Float/Cholesky.v` | PROOF-009 |
+| `verification/rocq/theory/Float/Substitution.v` | PROOF-010 |
 | `verification/rocq/theory/Real/Bisection.v` | WP-006 |
 | `verification/rocq/theory/Real/Cholesky.v` | PROOF-009 |
+| `verification/rocq/theory/Real/Substitution.v` | PROOF-010 |
 | `verification/rocq/theory/VST/*.v` | VST-004, VST-007 |
+| `verification/rocq/theory/VST/BackSubstitution.v` | VST-008 |
 | `verification/rocq/theory/VST/BisectionInit.v` | VST-005 |
 | `verification/rocq/theory/VST/BisectionMid.v` | VST-005 |
 | `verification/rocq/theory/VST/BisectionResult.v` | VST-005 |
 | `verification/rocq/theory/VST/BisectionStep.v` | VST-005 |
+| `verification/rocq/theory/VST/ForwardSubstitution.v` | VST-008 |
 | `verification/rocq/theory/VST/FpSqrt.v` | FP-006, VST-005 |

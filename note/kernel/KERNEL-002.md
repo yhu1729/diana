@@ -9,6 +9,8 @@ path:
   - src/trapezoidal.c
   - src/simpson.c
   - src/cholesky.c
+  - src/forward_substitution.c
+  - src/back_substitution.c
 related: [KERNEL-003, API-003, FP-002]
 ---
 A checked kernel writes its output only once it knows the call succeeds, so `DIANA_ERR_ARG`
@@ -25,6 +27,11 @@ leaves every output untouched. The vector kernels do this in two passes without 
   writing (so `DIANA_ERR_ARG` leaves `l` untouched), but column `j` needs columns `0` to `j - 1`,
   so it writes as it goes and a failing pivot (`DIANA_ERR_SINGULAR`) leaves `l` partly written
   (API-028). Keeping `l` untouched would take a second `n*n` buffer.
+- `diana_forward_substitution` and `diana_back_substitution` are the other exception: they check
+  their arguments, every input entry and the diagonal before writing (so `DIANA_ERR_ARG` for an
+  input and `DIANA_ERR_SINGULAR` leave `x` untouched), but entry `i` needs the entries computed
+  before it, so an overflowing entry (`DIANA_ERR_ARG`) is found with `x` partly written
+  (API-030). Keeping `x` untouched would take a second `n`-vector.
 - Proved: `y_out` untouched on `DIANA_ERR_ARG` by WP (EULER-C1, RK4-C1, RK4-C2) and unchanged
   unless every component is finite by VST (EULER-C2, RK4-C3, RK4-C4).
 

@@ -18,9 +18,10 @@ private modules, so `diana.<name>` is the whole API.
   `_bisection.py`, `_euler.py` and `_rk4.py` drivers apply it to scalars they use in Python
   (calling `f`, computing `t0 + k*h`); `_newton.py` passes its scalars straight to the C type.
 - One private driver module per kernel: `_bisection.py` (`bisection`), `_newton.py` (`newton`),
-  `_trapezoidal.py`, `_simpson.py`, `_euler.py` (`euler_step`, `euler`), `_rk4.py`
-  (`rk4_stage`, `rk4_step`, `rk4`). The single-call array functions pass a buffer through and
-  copy any other iterable into `array.array("d")`; `euler` and `rk4` copy `y0` element by element.
+  `_trapezoidal.py`, `_simpson.py`, `_euler.py` (`euler_step`, `euler`), `_rk4.py` (`rk4_stage`,
+  `rk4_step`, `rk4`), `_cholesky.py` (`cholesky`), `_substitution.py` (`forward_substitution`,
+  `back_substitution`). The single-call array functions pass a buffer through and copy any other
+  iterable into `array.array("d")`; `euler` and `rk4` copy `y0` element by element.
 - `__init__.py` also takes `Bisection`, `Newton` and the status constants from `_diana`, aliases
   `version` and `status_str`, and sets `__version__ = version()`.
 - `_diana.pyi` is the type stub of the extension and `py.typed` marks the package as typed.
