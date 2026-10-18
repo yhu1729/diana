@@ -168,6 +168,8 @@ if(DIANA_BUILD_PYTHON)
         python/ext/euler_step.c
         python/ext/forward_substitution.c
         python/ext/get_array.c
+        python/ext/lu.c
+        python/ext/lu_exec.c
         python/ext/newton_exec.c
         python/ext/newton_init.c
         python/ext/newton_new.c
