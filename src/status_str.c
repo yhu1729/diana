@@ -14,6 +14,8 @@ const char *diana_status_str(diana_status s) {
     return "iteration limit reached";
   case DIANA_ERR_SINGULAR:
     return "zero derivative or pivot";
+  case DIANA_ERR_OVERFLOW:
+    return "result overflows";
   }
   return "unknown status";
 }
