@@ -6,35 +6,6 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
-### Added
-
-#### Verification
-
-- Provenance for the local-only layers. `script/dev.sh verify` records in
-  `verification/clight/manifest.txt` the SHA-256 of each Clight AST, of its source and of every
-  header the source includes from `include/` or `src/`, once the Clight check passes, and the
-  spec gate stamps `doc/verification/report.md` with the SHA-256 of the files git lists under
-  `include/`, `spec/`, `src/` and `verification/` and of `script/axiom_allow.yaml` and
-  `script/run_frama_c.sh` (the allowed axioms and the `SKIP` list), and with the versions of
-  Lean, Rocq, Flocq, Coquelicot, CompCert, VST, Frama-C and Alt-Ergo, whenever it rewrites the
-  report. The new `script/check_provenance.py` (standard library and git, no CompCert or prover)
-  fails when an AST, its source or a header changed after the manifest, when an input changed
-  after the stamp, or when a report cell is not `ok`; `script/dev.sh verify` runs it last, after checking that no input changed
-  while the provers ran, and the new CI job `verify_provenance` (stage `verify`, required for a
-  release) runs it on every change to those inputs, so a change committed without a local
-  verify run fails CI. Unit tests in `test/python/test_check_provenance.py`.
-
-### Changed
-
-#### Verification
-
-- `script/run_frama_c.sh` fails closed: the `SKIP` trust-boundary check now fails when the
-  "Undefined and unspecified functions" or "Specified-only functions" section of the
-  `frama-c -metrics` report is missing, duplicated or not in the expected form (entries that do
-  not add up to the count in the section header), where it used to find no function and pass. A
-  source argument (`*.c`, `*.h`, `*.i`) that is not a file, a run with no source file and a
-  failing `frama-c -metrics` run now also fail, instead of being dropped from the check.
-
 ## [1.0.0] - 2026-10-18
 
 The first stable release. The classical Runge–Kutta step joins the ODE methods, and linear algebra
@@ -103,8 +74,8 @@ of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and Rem
   interchanges `x[k]` and `x[piv[k]]` for `k = 0, ..., n - 1`, then solves with the unit
   lower-triangular `L` (no division) and the upper-triangular `U`, each row subtracting the rounded
   products in the order its unknowns were computed, so the two solves are
-  `diana_forward_substitution` with the unit lower factor and `diana_transpose_substitution` with the
-  transposed upper factor bit for bit. A NULL pointer, `n == 0`, an overflowing `n n`, a NaN or
+  `diana_forward_substitution` with the unit lower factor and `diana_transpose_substitution` with
+  the transposed upper factor bit for bit. A NULL pointer, `n == 0`, an overflowing `n n`, a NaN or
   infinite entry of `lu` or `b`, or a pivot row `piv[k] >= n` is `DIANA_ERR_ARG` and a zero diagonal
   entry of `U` `DIANA_ERR_SINGULAR`, all with `x` untouched; an entry of either solve that overflows
   is `DIANA_ERR_OVERFLOW` found with `x` partly written. Only `piv[k] < n` is checked: any such
@@ -175,15 +146,15 @@ of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and Rem
   operations in Python floats, the CHOLESKY-B3 bound in exact rationals, and agreement with
   `numpy.linalg.cholesky`.
 - `diana.forward_substitution(lower, b)` and `diana.transpose_substitution(lower, b)` return the
-  solution as a new `array.array("d")`, with `lower` in the column-major layout of
-  `diana.cholesky` and of length `len(b)**2` (module `diana._substitution`; extension functions
-  `diana._diana.forward_substitution(lower, b, out)` and `transpose_substitution`, sharing the argument
-  checks of `python/ext/substitution.c`). The parameter is `lower` because ruff rejects the name
-  `l`. A wrong length or a non-finite entry raises `ValueError`, an overflow
-  `diana.FloatOverflowError`, a zero diagonal entry
-  `diana.SingularError`. `test/python/test_substitution.py` checks bitwise agreement with the
-  operations in Python floats, the mirror identity, the SUBSTITUTION-B1 to B4 bounds in exact
-  rationals, and the Cholesky solve against `numpy.linalg.solve`.
+  solution as a new `array.array("d")`, with `lower` in the column-major layout of `diana.cholesky`
+  and of length `len(b)**2` (module `diana._substitution`; extension functions
+  `diana._diana.forward_substitution(lower, b, out)` and `transpose_substitution`, sharing the
+  argument checks of `python/ext/substitution.c`). The parameter is `lower` because ruff rejects the
+  name `l`. A wrong length or a non-finite entry raises `ValueError`, an overflow
+  `diana.FloatOverflowError`, a zero diagonal entry `diana.SingularError`.
+  `test/python/test_substitution.py` checks bitwise agreement with the operations in Python floats,
+  the mirror identity, the SUBSTITUTION-B1 to B4 bounds in exact rationals, and the Cholesky solve
+  against `numpy.linalg.solve`.
 - `diana.lu(a)` returns `(lu, piv)`, the packed factor as a new `array.array("d")` in the
   column-major layout of `a` and the pivot rows as a new `array.array("q")` (module `diana._lu`;
   extension function `diana._diana.lu(a, out)`, which writes the factor into `out` and returns the
@@ -231,22 +202,22 @@ of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and Rem
   AST's copy of `diana_fp_finite` (C4), on the committed ASTs `verification/clight/cholesky_aarch64_macos.v` and
   `fp_sqrt_aarch64_macos.v`. The VST proof of `diana_fp_sqrt` assumes CompCert's semantics of
   `__builtin_sqrt` as a funspec, a new item of `doc/verification/trust.md`.
-- Forward and transpose substitution through every layer (`spec/substitution.md`). Lean and Rocq prove
-  layer A: each solve satisfies its rows when the diagonal entry is nonzero (SUBSTITUTION-A1, A4),
-  the solution is unique (A2, A5), residuals bounded by `rho` put an approximate solution within
-  `M(L)^-1 rho` of it, `M(L)` the comparison matrix (A3, A6), and the two solves with the Cholesky
-  factor of a symmetric matrix with positive pivots solve `A x = b` (A7). Flocq proves, row by row
-  and needing only a finite computed entry and a nonzero diagonal entry, the backward error
+- Forward and transpose substitution through every layer (`spec/substitution.md`). Lean and Rocq
+  prove layer A: each solve satisfies its rows when the diagonal entry is nonzero (SUBSTITUTION-A1,
+  A4), the solution is unique (A2, A5), residuals bounded by `rho` put an approximate solution
+  within `M(L)^-1 rho` of it, `M(L)` the comparison matrix (A3, A6), and the two solves with the
+  Cholesky factor of a symmetric matrix with positive pivots solve `A x = b` (A7). Flocq proves, row
+  by row and needing only a finite computed entry and a nonzero diagonal entry, the backward error
   `|b[i] - sum_k L[i,k] x[k]| <= gamma_m sum_k |L[i,k] x[k]| + (1 + gamma_m)(m - 1 + |L[i,i]|) eta`
   with `m` the number of terms (B1, B3, Higham's `|dL| <= gamma_n |L|` with the underflow terms),
-  reusing Cholesky's `dot_error`, and the forward error through the comparison matrix (B2, B4).
-  VST proves both kernels against the Flocq models with CompCert's operations (C3, C4: each status
+  reusing Cholesky's `dot_error`, and the forward error through the comparison matrix (B2, B4). VST
+  proves both kernels against the Flocq models with CompCert's operations (C3, C4: each status
   exactly when the model gives it, the model solution on `DIANA_OK`, and the written prefix or
-  suffix on an overflow) and each AST's copy of `diana_fp_finite` (C5, C6), on the committed
-  ASTs `verification/clight/forward_substitution_aarch64_macos.v` and
-  `transpose_substitution_aarch64_macos.v`. The prefix-buffer lemmas, `lower_finite`, `lt_of_ltu` and
-  `no_overflow` of the Cholesky VST proof moved to the AST-free `VST/Matrix.v`, which both methods
-  import.
+  suffix on an overflow) and each AST's copy of `diana_fp_finite` (C5, C6), on the committed ASTs
+  `verification/clight/forward_substitution_aarch64_macos.v` and
+  `transpose_substitution_aarch64_macos.v`. The prefix-buffer lemmas, `lower_finite`, `lt_of_ltu`
+  and `no_overflow` of the Cholesky VST proof moved to the AST-free `VST/Matrix.v`, which both
+  methods import.
 - LU with partial pivoting through every layer (`spec/lu.md`). The model is one definition over a
   record of operations (`Diana.Real.LU.ops`), at the reals in layer A and at binary64 in layer B,
   and its structural lemma `state_nstate`, for any operations, makes the pivoted factorization the
@@ -324,6 +295,20 @@ of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and Rem
 - `script/run_frama_c.sh` also fails when a called function has neither a body nor a contract
   ("Undefined and unspecified functions" of the metrics plugin), the case WP would otherwise
   cover with a generated contract; `SKIP` cannot allow it.
+
+- Provenance for the local-only layers. `script/dev.sh verify` records in
+  `verification/clight/manifest.txt` the SHA-256 of each Clight AST, of its source and of every
+  header the source includes from `include/` or `src/`, once the Clight check passes, and the spec
+  gate stamps `doc/verification/report.md` with the SHA-256 of the files git lists under `include/`,
+  `spec/`, `src/` and `verification/` and of `script/axiom_allow.yaml` and `script/run_frama_c.sh`
+  (the allowed axioms and the `SKIP` list), and with the versions of Lean, Rocq, Flocq, Coquelicot,
+  CompCert, VST, Frama-C and Alt-Ergo, whenever it rewrites the report. The new
+  `script/check_provenance.py` (standard library and git, no CompCert or prover) fails when an AST,
+  its source or a header changed after the manifest, when an input changed after the stamp, or when
+  a report cell is not `ok`; `script/dev.sh verify` runs it last, after checking that no input
+  changed while the provers ran, and the new CI job `verify_provenance` (stage `verify`, required
+  for a release) runs it on every change to those inputs, so a change committed without a local
+  verify run fails CI. Unit tests in `test/python/test_check_provenance.py`.
 
 #### Tests and tooling
 
@@ -500,6 +485,13 @@ of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and Rem
   (`-exported_symbols_list` on macOS, a version script on Linux), so the private helpers
   `diana_bisection_mid` and `diana_fp_sqrt` are no longer part of its ABI; the ctest `symbol`
   checks the list against the public headers and the library's exports.
+
+- `script/run_frama_c.sh` fails closed: the `SKIP` trust-boundary check now fails when the
+  "Undefined and unspecified functions" or "Specified-only functions" section of the `frama-c
+  -metrics` report is missing, duplicated or not in the expected form (entries that do not add up to
+  the count in the section header), where it used to find no function and pass. A source argument
+  (`*.c`, `*.h`, `*.i`) that is not a file, a run with no source file and a failing `frama-c
+  -metrics` run now also fail, instead of being dropped from the check.
 
 ### Removed
 
