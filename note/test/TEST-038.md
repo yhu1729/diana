@@ -14,8 +14,11 @@ four numerical properties.
   without contraction: the kernel matches it bit for bit, pivots included, on seeded random
   matrices (`n` up to 31, scaled by 1, `1e-300`, `1e300`) and on 500 Hypothesis matrices of
   finite entries (`n` up to 6), where the reference's `"singular"` must be `SingularError`, its
-  `"overflow"` a `ValueError`, and success finite entries, `k <= piv[k] < n` and multipliers of
-  magnitude at most 1.
+  `"overflow"` a `FloatOverflowError`, and success finite entries, `k <= piv[k] < n` and
+  multipliers of magnitude at most 1.
+- The classes are separate: `test_overflow` expects exactly `FloatOverflowError` ("an update
+  overflows"), and `test_nonfinite` exactly `ValueError` ("non-finite") for a NaN or infinity at
+  each of the nine entries of a 3×3 matrix.
 - The B3 and B4 bounds (PROOF-011) hold in exact `Fraction` arithmetic on random matrices with
   `n = 2, 5, 10, 20` scaled by 1, `2⁻¹⁰⁰⁰` and `2¹⁰⁰⁰`.
 - Integer `U` with `L` in eighths below 1 and a random row order come back exactly for `n` up to

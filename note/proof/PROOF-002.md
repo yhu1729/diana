@@ -25,8 +25,9 @@ near a simple root (`spec/newton.md`); nothing bounds the binary64 run except `m
   of the stagnation stop. `u = 2⁻⁵³`, `η = 2⁻¹⁰⁷⁵`.
 - Layer C: WP (C1 to C3, no assumed contract) proves memory safety, the invariant (`x`, `dx`,
   `tol` finite, `tol ≥ 0`), `iter + 1`, the condition behind each status (`DIANA_OK` only with
-  `|dx| ≤ tol` or `x` unchanged, `DIANA_ERR_SINGULAR` only with `dfx = 0` and `fx ≠ 0`, ...) and
-  an unchanged state on `DIANA_ERR_ARG` and `DIANA_ERR_SINGULAR`. VST proves `result` (C4),
+  `|dx| ≤ tol` or `x` unchanged, `DIANA_ERR_SINGULAR` only with `dfx = 0` and `fx ≠ 0`,
+  `DIANA_ERR_OVERFLOW` only with `fx`, `dfx` finite and non-zero, ...) and an unchanged state on
+  `DIANA_ERR_ARG`, `DIANA_ERR_SINGULAR` and `DIANA_ERR_OVERFLOW`. VST proves `result` (C4),
   `init` and `step` against `c_init`, `c_step` (C5, C6), the stored `x` and `dx` equal to `fstep`
   and `fdiv` so B2 and B3 apply to them (C7), and the `src/fp.h` copies (C8 to C10).
 - Not proved: termination or convergence from an arbitrary `x₀`, or in binary64 at all; near a

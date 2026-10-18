@@ -15,8 +15,10 @@ Flocq over binary64, Frama-C WP and VST on the C — with a Python binding. Opt-
 RK4 kernels, one function per source file for every verified kernel, and the technical notes of
 `note/` complete it. From this release the public C API, the Python package and their documented
 behaviour follow Semantic Versioning. Breaking changes against 0.3.0: `diana/wrapper.h` is removed,
-the callback type `diana_bisection_fn` is renamed `diana_scalar_fn`, and the second attribute of
-`diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and Removed).
+the callback type `diana_bisection_fn` is renamed `diana_scalar_fn`, an overflow from finite inputs
+in Euler, the quadrature rules and Newton returns `DIANA_ERR_OVERFLOW` instead of `DIANA_ERR_ARG`,
+and the second attribute of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed
+and Removed).
 
 ### Added
 
@@ -37,50 +39,49 @@ the callback type `diana_bisection_fn` is renamed `diana_scalar_fn`, and the sec
   CompCert bitwise.
 - Forward and back substitution `diana_forward_substitution(l, n, b, x)` and
   `diana_back_substitution(l, n, b, x)` in `diana/substitution.h`: `l` holds a lower-triangular
-  `n×n` matrix `L` column-major, of which only the entries on or below the diagonal are read, so
-  the output of `diana_cholesky` goes in as it is; the first solves `L x = b`, the second
-  `L^T x = b`, and the two solve `A x = b` with the Cholesky factor of `A`. Row `i` subtracts the
-  rounded products from `b[i]` in the order their unknowns were computed (`k = 0, ..., i - 1`
-  forward, `k = n - 1` down to `i + 1` back) and divides by `L[i,i]`, which makes back
-  substitution forward substitution on the mirrored system bit for bit. A NULL pointer, `n == 0`,
-  an overflowing `n n` or a NaN or infinite entry of `b` or of the lower triangle is
-  `DIANA_ERR_ARG`, a zero diagonal entry `DIANA_ERR_SINGULAR`, both with `x` untouched; an entry of
-  the solution that overflows is `DIANA_ERR_ARG` found with `x` partly written, the second kernel
-  after `diana_cholesky` that writes before it knows the call succeeds. `x` must not overlap `l`
-  or `b`. Frama-C WP proves the ACSL contracts (109 and 110 goals, SUBSTITUTION-C1 and C2,
-  `spec/substitution.md`; the lemma `column_end` and the predicate `substitution_valid` are in
-  `src/substitution_acsl.h`); `test/c/test_substitution.c` covers both at 100% line and branch
-  coverage, and the compiler corpus has 270 cases per kernel, every gcc and clang build matching
-  CompCert bitwise.
+  `n×n` matrix `L` column-major, of which only the entries on or below the diagonal are read, so the
+  output of `diana_cholesky` goes in as it is; the first solves `L x = b`, the second `L^T x = b`,
+  and the two solve `A x = b` with the Cholesky factor of `A`. Row `i` subtracts the rounded
+  products from `b[i]` in the order their unknowns were computed (`k = 0, ..., i - 1` forward, `k =
+  n - 1` down to `i + 1` back) and divides by `L[i,i]`, which makes back substitution forward
+  substitution on the mirrored system bit for bit. A NULL pointer, `n == 0`, an overflowing `n n` or
+  a NaN or infinite entry of `b` or of the lower triangle is `DIANA_ERR_ARG`, a zero diagonal entry
+  `DIANA_ERR_SINGULAR`, both with `x` untouched; an entry of the solution that overflows is
+  `DIANA_ERR_OVERFLOW` found with `x` partly written, the second kernel after `diana_cholesky` that
+  writes before it knows the call succeeds. `x` must not overlap `l` or `b`. Frama-C WP proves the
+  ACSL contracts (109 and 110 goals, SUBSTITUTION-C1 and C2, `spec/substitution.md`; the lemma
+  `column_end` and the predicate `substitution_valid` are in `src/substitution_acsl.h`);
+  `test/c/test_substitution.c` covers both at 100% line and branch coverage, and the compiler corpus
+  has 270 cases per kernel, every gcc and clang build matching CompCert bitwise.
 - LU factorization with partial pivoting `diana_lu(a, n, lu, piv)` in `diana/lu.h`: `a` holds a
   square `n×n` matrix column-major (`a[i + j n] = A[i, j]`), every entry read; `lu` receives the
   packed factor of `P A = L U` in the same layout, `L` strictly below the diagonal (its unit
   diagonal not stored) and `U` on and above it, and `piv[k]` (`size_t`) the row interchanged with
-  row `k` at step `k`, as LAPACK's `getrf` counting from 0. Step `k` takes as pivot the first
-  entry of largest magnitude in column `k` on or below the diagonal, interchanges rows across all
-  columns, divides the entries below the pivot by it (a division, not a product with the
-  reciprocal) and subtracts the rounded products `L[i,k] U[k,j]` from the entries below and right
-  of it, so every entry is the Doolittle recurrence on `P A` in order `t = 0, 1, ...`.
-  `DIANA_ERR_ARG` for a NULL pointer, `n == 0`, an overflowing `n n` or a NaN or infinite entry of
-  `a` leaves `lu` and `piv` untouched; a zero pivot column returns `DIANA_ERR_SINGULAR` and an
-  update that overflows `DIANA_ERR_ARG`, both with `lu` and `piv` partly written. `lu` and `piv`
-  must not overlap `a` or each other. Frama-C WP proves the ACSL contract (157 goals, LU-C1,
-  `spec/lu.md`); `test/c/test_lu.c` covers it at 100% line and branch coverage, and the compiler
-  corpus has 260 LU cases, every gcc and clang build matching CompCert bitwise.
+  row `k` at step `k`, as LAPACK's `getrf` counting from 0. Step `k` takes as pivot the first entry
+  of largest magnitude in column `k` on or below the diagonal, interchanges rows across all columns,
+  divides the entries below the pivot by it (a division, not a product with the reciprocal) and
+  subtracts the rounded products `L[i,k] U[k,j]` from the entries below and right of it, so every
+  entry is the Doolittle recurrence on `P A` in order `t = 0, 1, ...`. `DIANA_ERR_ARG` for a NULL
+  pointer, `n == 0`, an overflowing `n n` or a NaN or infinite entry of `a` leaves `lu` and `piv`
+  untouched; a zero pivot column returns `DIANA_ERR_SINGULAR` and an update that overflows
+  `DIANA_ERR_OVERFLOW`, both with `lu` and `piv` partly written. `lu` and `piv` must not overlap `a`
+  or each other. Frama-C WP proves the ACSL contract (157 goals, LU-C1, `spec/lu.md`);
+  `test/c/test_lu.c` covers it at 100% line and branch coverage, and the compiler corpus has 260 LU
+  cases, every gcc and clang build matching CompCert bitwise.
 - LU solve `diana_lu_solve(lu, piv, n, b, x)` in `diana/lu_solve.h`: solves `A x = b` from the
   packed factor `lu` and pivot rows `piv` exactly as `diana_lu` writes them. It copies `b` to `x`,
   interchanges `x[k]` and `x[piv[k]]` for `k = 0, ..., n - 1`, then solves with the unit
-  lower-triangular `L` (no division) and the upper-triangular `U`, each row subtracting the
-  rounded products in the order its unknowns were computed, so the two solves are
+  lower-triangular `L` (no division) and the upper-triangular `U`, each row subtracting the rounded
+  products in the order its unknowns were computed, so the two solves are
   `diana_forward_substitution` with the unit lower factor and `diana_back_substitution` with the
   transposed upper factor bit for bit. A NULL pointer, `n == 0`, an overflowing `n n`, a NaN or
-  infinite entry of `lu` or `b`, or a pivot row `piv[k] >= n` is `DIANA_ERR_ARG` and a zero
-  diagonal entry of `U` `DIANA_ERR_SINGULAR`, all with `x` untouched; an entry of either solve
-  that overflows is `DIANA_ERR_ARG` found with `x` partly written. Only `piv[k] < n` is checked:
-  any such values are a sequence of interchanges. `x` must not overlap `lu`, `piv` or `b`.
-  Frama-C WP proves the ACSL contract (180 goals, LU-SOLVE-C1, `spec/lu_solve.md`);
-  `test/c/test_lu_solve.c` covers it at 100% line and branch coverage, and the compiler corpus has
-  292 cases, every gcc and clang build matching CompCert bitwise.
+  infinite entry of `lu` or `b`, or a pivot row `piv[k] >= n` is `DIANA_ERR_ARG` and a zero diagonal
+  entry of `U` `DIANA_ERR_SINGULAR`, all with `x` untouched; an entry of either solve that overflows
+  is `DIANA_ERR_OVERFLOW` found with `x` partly written. Only `piv[k] < n` is checked: any such
+  values are a sequence of interchanges. `x` must not overlap `lu`, `piv` or `b`. Frama-C WP proves
+  the ACSL contract (180 goals, LU-SOLVE-C1, `spec/lu_solve.md`); `test/c/test_lu_solve.c` covers it
+  at 100% line and branch coverage, and the compiler corpus has 292 cases, every gcc and clang build
+  matching CompCert bitwise.
 - `diana_fp_sqrt(x)` (`src/fp_sqrt.c`, private header `src/fp_sqrt.h`), the square root of the
   Cholesky pivots: `__builtin_sqrt`, which gcc, clang and CompCert compile to the IEEE square-root
   instruction, so no libm call. Its contract is the second `SKIP` entry of
@@ -91,15 +92,17 @@ the callback type `diana_bisection_fn` is renamed `diana_scalar_fn`, and the sec
   `y + h k` for stage 4, the coefficient computed once), and `diana_rk4_step(y, k1, k2, k3, k4, d,
   h, y_out)` writes `y + h ((k1 + k4) + 2 (k2 + k3)) / 6` in that operation order. Both check
   every component before writing any, so `y_out` is untouched on `DIANA_ERR_ARG` (a NULL pointer,
-  `d == 0`, a stage outside 2 to 4, a non-finite input or an overflow in any operation). Frama-C
-  WP proves the ACSL contracts (53 and 57 goals, RK4-C1 and C2, `spec/rk4.md`).
+  `d == 0`, a stage outside 2 to 4, a non-finite input) and on `DIANA_ERR_OVERFLOW` (finite inputs,
+  an overflow in any operation). Frama-C WP proves the ACSL contracts (78 and 105 goals, RK4-C1 and
+  C2, `spec/rk4.md`).
   `test/c/test_rk4.c` covers both functions at 100% line and branch coverage, and the
   compiler-comparison corpus has 544 RK4 cases; every gcc and clang build matches CompCert
   bitwise.
 - Callback wrapper `diana_rk4(fn, ctx, t0, h, nstep, y, d, work, done)` in `diana/rk4.h`, with
   the `diana_ode_fn` of `diana_euler` and a `work` of `5 d` doubles. Step `k` evaluates `fn` at
   `t0 + k h`, `t0 + (k + 0.5) h` (twice) and `t0 + (k + 1) h`, each computed from `k`. A failing
-  stage or step returns `DIANA_ERR_ARG` with `y` at the last good state. Unverified, like
+  stage or step returns its status (`DIANA_ERR_ARG` or `DIANA_ERR_OVERFLOW`) with `y` at the last
+  good state. Unverified, like
   `diana_euler`.
 - `diana_euler_step_unchecked(y, f, d, h, y_out)` in `diana/euler.h`, an opt-in explicit Euler
   step without the finiteness check, in its own source file `src/euler_step_unchecked.c`: it
@@ -111,7 +114,7 @@ the callback type `diana_bisection_fn` is renamed `diana_scalar_fn`, and the sec
   unconditionally (EULER-UNCHECKED-C2). `test/c/test_euler.c` covers it at 100% line and branch
   coverage, and the compiler corpus runs both steps on every Euler case, every gcc and clang
   build matching CompCert bitwise, NaN results included. On an Apple M4 Mac the unchecked kernel
-  is 2.8 to 4.8 times faster (0.10 to 0.19 ns per component against 0.44 to 0.52,
+  is 2.9 to 4.8 times faster (0.10 to 0.18 ns per component against 0.44 to 0.53,
   `script/benchmark.sh`).
 - `diana_rk4_stage_unchecked(y, k, d, h, stage, y_out)` and
   `diana_rk4_step_unchecked(y, k1, k2, k3, k4, d, h, y_out)` in `diana/rk4.h`, the opt-in RK4
@@ -125,8 +128,8 @@ the callback type `diana_bisection_fn` is renamed `diana_scalar_fn`, and the sec
   22 goals) and VST that each writes the binary64 model unconditionally (RK4-UNCHECKED-C3 and
   C4). `test/c/test_rk4.c` covers both at 100% line and branch coverage, and the compiler corpus
   runs the checked and unchecked functions on every RK4 case (544 more cases). On an Apple M4 Mac
-  the unchecked stage is 2.9 to 4.8 times faster (0.10 to 0.17 ns per component against 0.44 to
-  0.56) and the unchecked step 2.6 to 4.5 times (0.25 to 0.37 ns against 0.86 to 1.26,
+  the unchecked stage is 2.9 to 4.8 times faster (0.10 to 0.20 ns per component against 0.45 to
+  0.58) and the unchecked step 2.2 to 4.6 times (0.25 to 0.42 ns against 0.91 to 1.28,
   `script/benchmark.sh`).
 - `src/fp.h` asserts `FLT_EVAL_METHOD == 0` at compile time (`_Static_assert`, `<float.h>`), so
   a build that would evaluate `double` expressions in a wider format (x87) fails instead of
@@ -147,25 +150,27 @@ the callback type `diana_bisection_fn` is renamed `diana_scalar_fn`, and the sec
   `diana.cholesky` and of length `len(b)**2` (module `diana._substitution`; extension functions
   `diana._diana.forward_substitution(lower, b, out)` and `back_substitution`, sharing the argument
   checks of `python/ext/substitution.c`). The parameter is `lower` because ruff rejects the name
-  `l`. A wrong length, a non-finite entry or an overflow raises `ValueError`, a zero diagonal entry
+  `l`. A wrong length or a non-finite entry raises `ValueError`, an overflow
+  `diana.FloatOverflowError`, a zero diagonal entry
   `diana.SingularError`. `test/python/test_substitution.py` checks bitwise agreement with the
   operations in Python floats, the mirror identity, the SUBSTITUTION-B1 to B4 bounds in exact
   rationals, and the Cholesky solve against `numpy.linalg.solve`.
 - `diana.lu(a)` returns `(lu, piv)`, the packed factor as a new `array.array("d")` in the
-  column-major layout of `a` and the pivot rows as a `list` of `int` (module `diana._lu`;
-  extension function `diana._diana.lu(a, out)`, which writes the factor into `out` and returns
-  the pivots). A length that is not a square, a non-finite entry or an overflowing update raises
-  `ValueError`, a zero pivot column `diana.SingularError`. `test/python/test_lu.py` checks bitwise
-  agreement with the operations in Python floats, pivots included, the LU-B3 and B4 bounds in
-  exact rationals, exact recovery of a permuted integer factorization, and solves against
+  column-major layout of `a` and the pivot rows as a `list` of `int` (module `diana._lu`; extension
+  function `diana._diana.lu(a, out)`, which writes the factor into `out` and returns the pivots). A
+  length that is not a square or a non-finite entry raises `ValueError`, an overflowing update
+  `diana.FloatOverflowError`, a zero pivot column `diana.SingularError`. `test/python/test_lu.py`
+  checks bitwise agreement with the operations in Python floats, pivots included, the LU-B3 and B4
+  bounds in exact rationals, exact recovery of a permuted integer factorization, and solves against
   `numpy.linalg.solve`.
 - `diana.lu_solve(lu, piv, b)` returns the solution of `A x = b` as a new `array.array("d")`
   from the pair `diana.lu` returns, so `diana.lu_solve(*diana.lu(a), b)` solves the system
   (module `diana._lu_solve`; extension function `diana._diana.lu_solve(lu, piv, b, out)`). `piv`
   is any iterable of `int`, copied into a tuple before its items are converted, so an `__index__`
   that changes a `piv` list neither crashes the call nor changes the solve; a wrong length, a
-  non-finite entry, a pivot row not below `n` or an overflow raises `ValueError`, a negative pivot
-  row `OverflowError`, a zero diagonal entry of `U` `diana.SingularError`.
+  non-finite entry or a pivot row not below `n` raises `ValueError`, an overflow
+  `diana.FloatOverflowError`, a negative pivot row `OverflowError`, a zero diagonal entry of `U`
+  `diana.SingularError`.
   `test/python/test_lu_solve.py` checks bitwise agreement with the operations in Python floats and
   with the two substitution functions, the LU-SOLVE-B1 to B4 bounds in exact rationals, and the
   solve against `numpy.linalg.solve`.
@@ -424,6 +429,19 @@ the callback type `diana_bisection_fn` is renamed `diana_scalar_fn`, and the sec
 - `dianaConfigVersion.cmake` is `SameMajorVersion`-compatible instead of `SameMinorVersion`, as
   Semantic Versioning and the major-version `SOVERSION` require: `find_package(diana 1.0)`
   accepts every later 1.x release.
+- The new status `DIANA_ERR_OVERFLOW` (-5, "result overflows") reports a computed value that is
+  not finite although every input is, which `DIANA_ERR_ARG` reported before; `DIANA_ERR_ARG` now
+  means only an invalid argument or a NaN or infinite input, and it never leaves an output partly
+  written. Euler, RK4, the trapezoidal and Simpson rules tell the two apart only after a value
+  fails, by checking `h` and every input, so a successful call does the same work; Newton's step
+  returns it for an overflowing correction or iterate, and the substitution, LU and LU-solve
+  kernels for the overflow found with the output partly written. The ACSL contracts, the VST
+  postconditions (`euler_status`, `stage_status`, `rk4_status`, `trap_status`, `simpson_status`,
+  Newton's `c_step` and the matrix kernels' overflow cases) and the WP goal counts (Euler 74,
+  RK4 stage 78, RK4 step 105, trapezoidal 61, Simpson 78, Newton step 67) follow. Python raises the
+  new `diana.FloatOverflowError`, a `ValueError` and an `OverflowError` (so `except ValueError`
+  still catches it), and exposes `diana.ERR_OVERFLOW`; its name keeps `from diana import *` from
+  shadowing the built-in `OverflowError`.
 - A shared `libdiana` exports only the 25 public functions listed in `cmake/symbol.txt`
   (`-exported_symbols_list` on macOS, a version script on Linux), so the private helpers
   `diana_bisection_mid` and `diana_fp_sqrt` are no longer part of its ABI; the ctest `symbol`

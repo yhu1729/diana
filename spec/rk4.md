@@ -122,26 +122,30 @@ theorem:
     informal: >
       ACSL contract in src/rk4_stage.c, Frama-C WP float model with RTE: memory safety (only
       y[0 .. d−1] and k[0 .. d−1] are read, only y_out[0 .. d−1] is written, y_out separate from
-      both), no UB, termination of both loops, DIANA_OK only for non-NULL pointers with d ≥ 1 and
-      2 ≤ stage ≤ 4, and y_out untouched on DIANA_ERR_ARG. No assumed contract; that y_out is
-      finite on DIANA_OK is left to VST.
+      both), no UB, termination of the three loops, DIANA_OK and DIANA_ERR_OVERFLOW only for
+      non-NULL pointers with d ≥ 1 and 2 ≤ stage ≤ 4, DIANA_ERR_OVERFLOW only with h and every
+      y[j] and k[j] finite, and y_out untouched on DIANA_ERR_ARG and DIANA_ERR_OVERFLOW. No
+      assumed contract; that y_out is finite on DIANA_OK is left to VST.
     acsl: src/rk4_stage.c
   - id: RK4-C2
     layer: C
     informal: >
       ACSL contract in src/rk4_step.c, Frama-C WP float model with RTE: memory safety (only
       y[0 .. d−1] and the four slope arrays are read, only y_out[0 .. d−1] is written, y_out
-      separate from every input), no UB, termination of both loops, DIANA_OK only for non-NULL
-      pointers with d ≥ 1, and y_out untouched on DIANA_ERR_ARG. No assumed contract; that y_out
-      is finite on DIANA_OK is left to VST.
+      separate from every input), no UB, termination of the three loops, DIANA_OK and
+      DIANA_ERR_OVERFLOW only for non-NULL pointers with d ≥ 1, DIANA_ERR_OVERFLOW only with h,
+      every y[j] and every entry of the four slopes finite, and y_out untouched on DIANA_ERR_ARG
+      and DIANA_ERR_OVERFLOW. No assumed contract; that y_out is finite on DIANA_OK is left to
+      VST.
     acsl: src/rk4_step.c
   - id: RK4-C3
     layer: C
     informal: >
       diana_rk4_stage computes the binary64 model (VST, AArch64 macOS Clight AST): for y and k
       pointing to d ≥ 1 readable doubles, y_out to d writable doubles, the three disjoint, and
-      2 ≤ stage ≤ 4, it returns DIANA_OK and writes the model values when every component is
-      finite, and returns DIANA_ERR_ARG leaving y_out unchanged otherwise. The NULL, d = 0 and
+      2 ≤ stage ≤ 4, it returns stage_status s h ys ks: DIANA_OK, writing the model values, when
+      every component is finite; otherwise, leaving y_out unchanged, DIANA_ERR_OVERFLOW when h
+      and every y[j] and k[j] are finite and DIANA_ERR_ARG when not. The NULL, d = 0 and
       out-of-range stage paths are RK4-C1.
     rocq: Diana.VST.RK4Stage.body_diana_rk4_stage
   - id: RK4-C4
@@ -149,9 +153,10 @@ theorem:
     informal: >
       diana_rk4_step computes the binary64 model (VST, AArch64 macOS Clight AST): for y and the
       four slopes pointing to d ≥ 1 readable doubles and y_out to d writable doubles, the six
-      disjoint, it returns DIANA_OK and writes the model values when every component is finite,
-      and returns DIANA_ERR_ARG leaving y_out unchanged otherwise. The NULL and d = 0 paths are
-      RK4-C2.
+      disjoint, it returns rk4_status h ys k1s k2s k3s k4s: DIANA_OK, writing the model values,
+      when every component is finite; otherwise, leaving y_out unchanged, DIANA_ERR_OVERFLOW when
+      h, every y[j] and every slope entry are finite and DIANA_ERR_ARG when not. The NULL and
+      d = 0 paths are RK4-C2.
     rocq: Diana.VST.RK4Step.body_diana_rk4_step
   - id: RK4-C5
     layer: C
@@ -207,13 +212,14 @@ are only read and may overlap each other.
 grouping halves the rounding of the slope sum against summing left to right, and dividing the
 product by 6 matches `(h·s)/3` in the Simpson rule. Both functions make two passes, as
 `diana_euler_step` does: the first computes every component and checks it with
-`diana_fp_finite` without writing, and returns `DIANA_ERR_ARG` at the first non-finite one; the
-second recomputes each component, bit for bit the same, and writes it. A NaN or infinite input,
-or an overflow in any operation, is an error, since no operation turns an infinity or NaN into a
-finite value (the only divisor is the constant 6); underflow is not an error. An overflow of `h·s`
-is an error even when `h·s/6` would be finite. The opt-in one-pass variants without the check,
-`diana_rk4_stage_unchecked` and `diana_rk4_step_unchecked`, have their own spec,
-`spec/rk4_unchecked.md`.
+`diana_fp_finite` without writing, and stops at the first non-finite one; the second recomputes
+each component, bit for bit the same, and writes it. Only after a failure does the kernel test
+`h` and every input element: a NaN or infinite one is `DIANA_ERR_ARG`, and an overflow in any
+operation on finite inputs `DIANA_ERR_OVERFLOW`. Both are caught, since no operation turns an
+infinity or NaN into a finite value (the only divisor is the constant 6); underflow is not an
+error. An overflow of `h·s` is `DIANA_ERR_OVERFLOW` even when `h·s/6` would be finite. The opt-in
+one-pass variants without the check, `diana_rk4_stage_unchecked` and `diana_rk4_step_unchecked`,
+have their own spec, `spec/rk4_unchecked.md`.
 
 ## Proof sketch
 
@@ -271,17 +277,20 @@ is an error even when `h·s/6` would be finite. The opt-in one-pass variants wit
 - **C1, C2**: the `/*@ ... */` annotations in `src/rk4_stage.c` and `src/rk4_step.c`, one WP run
   per file, as for `src/euler_step.c` (EULER-C1): every
   early return happens before the second loop, and the only write is `y_out[i]` in that loop, so
-  `assigns y_out[0 .. d − 1]` and the error post-condition follow from the control flow; the loop
-  invariants are only the index bounds.
+  `assigns y_out[0 .. d − 1]` and the untouched output follow from the control flow; the
+  invariants of the two passes are only the index bounds, and the input loop inside the first
+  pass carries the finiteness of every input element below `j`, which gives the
+  `DIANA_ERR_OVERFLOW` post-condition.
 - **C3**: the Euler proof (EULER-C2) with the coefficient for the step. Six argument checks
   precede the loops (three NULL pointers and `d = 0`, excluded by the precondition, and
   `stage < 2` and `stage > 4`, false under `2 ≤ stage ≤ 4`); the branch
-  on `stage == 4` sets `c` to `c_coef stage h`, and the two loops then carry exactly the
+  on `stage == 4` sets `c` to `c_coef stage h`, and the three loops then carry exactly the
   invariants of `body_diana_euler_step` for `L = c_euler c ys ks`, reusing its list lemmas
   (`Znth_c_euler`, `forallb_sublist_succ`, `forallb_false`). Proof: `body_diana_rk4_stage` in
   `verification/rocq/theory/VST/RK4Stage.v`.
-- **C4**: the same two loops over `L = c_rk4 h ys k₁s k₂s k₃s k₄s`, with seven reads and
-  assignments per component in place of three; `Znth_c_rk4` names the stored value. Proof:
+- **C4**: the same three loops over `L = c_rk4 h ys k₁s k₂s k₃s k₄s`, with seven reads and
+  assignments per component in place of three and the input loop over five lists in place of
+  two; `Znth_c_rk4` names the stored value. Proof:
   `body_diana_rk4_step` in `verification/rocq/theory/VST/RK4Step.v`.
 - **C5, C6**: the constants `0.5`, `2` and `6` of the Clight AST (`Float.of_bits`) equal the
   Flocq constants by computation (`vm_compute` on `B2FF`), after which the models agree
@@ -334,8 +343,8 @@ is an error even when `h·s/6` would be finite. The opt-in one-pass variants wit
 | RK4-B3 | – | proved | – |
 | RK4-B4 | – | proved | – |
 | RK4-B5 | – | proved | – |
-| RK4-C1 | – | – | 53/53 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
-| RK4-C2 | – | – | 57/57 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
+| RK4-C1 | – | – | 78/78 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
+| RK4-C2 | – | – | 105/105 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
 | RK4-C3 | – | proved | – |
 | RK4-C4 | – | proved | – |
 | RK4-C5 | – | proved | – |

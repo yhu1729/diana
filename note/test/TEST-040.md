@@ -17,7 +17,10 @@ item.
   factors of seeded random matrices (`n` up to 31, right-hand sides scaled by 1, `1e-300` and
   `2⁹⁰⁰`) and on 500 Hypothesis systems of finite entries with random `piv[k] < n` (`n` up to 6),
   where the reference's `"singular"` must be `SingularError` and its `"overflow"` a
-  `ValueError`.
+  `FloatOverflowError`.
+- The classes are separate: `test_overflow` expects exactly `FloatOverflowError` ("the solution
+  overflows"), and `test_nonfinite_lu` and `test_nonfinite_rhs` exactly `ValueError`
+  ("non-finite").
 - For `n = 1` to 24 the solve equals `forward_substitution` with the unit lower factor on `P·b`
   followed by `back_substitution` with the transposed upper factor, bit for bit.
 - LU-SOLVE-B1 to B4 (PROOF-012) hold in exact `Fraction` arithmetic for `n = 1, 2, 5, 10, 20`,

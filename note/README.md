@@ -121,6 +121,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [API-033](api/API-033.md) | fact | Python lu and the extension function lu(a, out) |
 | [API-034](api/API-034.md) | fact | LU solve evaluation order, exits and what each exit writes |
 | [API-035](api/API-035.md) | fact | Python lu_solve and the extension function lu_solve(lu, piv, b, out) |
+| [API-036](api/API-036.md) | fact | Non-finite input versus overflow, classified only on the error path |
 
 ### benchmark
 
@@ -327,7 +328,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [TEST-028](test/TEST-028.md) | fact | Newton with tol 0 on x^2 - 2 ends in a two-cycle of adjacent doubles |
 | [TEST-029](test/TEST-029.md) | fact | Newton exact root and stagnation cases |
 | [TEST-030](test/TEST-030.md) | fact | Newton double root, step limit, cube root and cos fixed point |
-| [TEST-031](test/TEST-031.md) | fact | Newton singular and argument errors keep the state |
+| [TEST-031](test/TEST-031.md) | fact | Newton singular, argument and overflow errors keep the state |
 | [TEST-032](test/TEST-032.md) | fact | Newton callback wrapper cases |
 | [TEST-033](test/TEST-033.md) | fact | Cholesky C test values, rounding pins and failure cases |
 | [TEST-034](test/TEST-034.md) | fact | Cholesky Python tests against a binary64 reference and the B3 bound |
@@ -416,7 +417,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `include/diana/rk4.h` | API-016, API-018 |
 | `include/diana/scalar.h` | API-006, KERNEL-004 |
 | `include/diana/simpson.h` | API-014 |
-| `include/diana/status.h` | API-002 |
+| `include/diana/status.h` | API-002, API-036 |
 | `include/diana/substitution.h` | API-030 |
 | `include/diana/trapezoidal.h` | API-013 |
 | `note/README.md` | STYLE-003 |
@@ -511,7 +512,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `src/cholesky.c` | API-003, API-004, API-028, FP-001, KERNEL-001, KERNEL-002, WP-011 |
 | `src/euler.c` | API-006, API-017, KERNEL-004, TEST-019 |
 | `src/euler_step*.c` | FP-001, KERNEL-001 |
-| `src/euler_step.c` | API-004, API-015, KERNEL-002, PROOF-005, TEST-016 |
+| `src/euler_step.c` | API-004, API-015, API-036, KERNEL-002, PROOF-005, TEST-016 |
 | `src/euler_step_unchecked.c` | API-018, API-019, KERNEL-003, PROOF-005, TEST-018 |
 | `src/forward_substitution.c` | API-003, API-004, API-030, FP-001, KERNEL-001, KERNEL-002, WP-011 |
 | `src/fp.h` | API-001, FP-001, FP-002, FP-003, FP-005, KERNEL-005, VST-006 |
@@ -527,14 +528,14 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `src/newton_step.c` | API-010, API-011, PROOF-002, TEST-027, TEST-029, TEST-031 |
 | `src/rk4.c` | API-006, API-017, KERNEL-004, TEST-025 |
 | `src/rk4_st*.c` | FP-001, KERNEL-001 |
-| `src/rk4_stage.c` | API-004, API-016, KERNEL-002, PROOF-008, TEST-021 |
+| `src/rk4_stage.c` | API-004, API-016, API-036, KERNEL-002, PROOF-008, TEST-021 |
 | `src/rk4_stage_unchecked.c` | API-018, API-019, KERNEL-003, PROOF-008, TEST-024 |
-| `src/rk4_step.c` | API-004, API-016, KERNEL-002, PROOF-008, TEST-021 |
+| `src/rk4_step.c` | API-004, API-016, API-036, KERNEL-002, PROOF-008, TEST-021 |
 | `src/rk4_step_unchecked.c` | API-018, API-019, KERNEL-003, PROOF-008, TEST-024 |
-| `src/simpson.c` | API-004, API-014, FP-001, KERNEL-001, KERNEL-002, PROOF-004, TEST-013 |
+| `src/simpson.c` | API-004, API-014, API-036, FP-001, KERNEL-001, KERNEL-002, PROOF-004, TEST-013 |
 | `src/status_str.c` | API-002 |
 | `src/substitution_acsl.h` | KERNEL-007, WP-011 |
-| `src/trapezoidal.c` | API-004, API-013, FP-001, KERNEL-001, KERNEL-002, PROOF-003, TEST-010 |
+| `src/trapezoidal.c` | API-004, API-013, API-036, FP-001, KERNEL-001, KERNEL-002, PROOF-003, TEST-010 |
 | `src/version.c` | API-002 |
 | `test/benchmark/unchecked.c` | API-019, BENCHMARK-001, BENCHMARK-002, BENCHMARK-003, BENCHMARK-005 |
 | `test/c/.clang-tidy` | STYLE-007 |

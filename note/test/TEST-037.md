@@ -22,8 +22,9 @@ related: [API-032, TEST-006, TEST-038]
 - Small values: `-0/2 = -0` and subnormal entries are kept; `2⁻⁵³⁸·3·2⁻⁵³⁷` underflows to
   `2⁻¹⁰⁷³`, not an error.
 - `DIANA_ERR_SINGULAR`: `[0]`, a `-0` pivot column, a zero first column, `[1 2; 2 4]` and the 3×3
-  `1, …, 9`, whose last pivot is exactly 0. `DIANA_ERR_ARG` from overflow:
-  `DBL_MAX − 1·(−DBL_MAX)` at the first update, and a 3×3 whose fourth update overflows.
+  `1, …, 9`, whose last pivot is exactly 0. `DIANA_ERR_OVERFLOW` from a finite `a`, found after
+  `lu` is written: `DBL_MAX − 1·(−DBL_MAX)` at the first update, and a 3×3 whose fourth update
+  overflows.
 - `DIANA_ERR_ARG` with `lu` and `piv` untouched: each NULL, `n = 0`, `n = 2³²` and `SIZE_MAX`,
   and NaN, `inf`, `-inf` at each of the nine positions of a 3×3 matrix.
 - Line and branch coverage of `src/lu.c` is 100% (TEST-006).

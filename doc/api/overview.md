@@ -79,20 +79,21 @@ Every function returns a `diana_status` (`diana/status.h`), except `diana_status
 |---|---|---|
 | `DIANA_OK` | 0 | finished |
 | `DIANA_CONTINUE` | 1 | evaluate the function at the requested point and call `step` again |
-| `DIANA_ERR_ARG` | -1 | invalid argument, or a result that would not be finite |
+| `DIANA_ERR_ARG` | -1 | invalid argument, or an input that is NaN or infinite |
 | `DIANA_ERR_BRACKET` | -2 | bisection: `f(a)` and `f(b)` have the same sign |
 | `DIANA_ERR_MAXITER` | -3 | iteration limit reached before convergence |
 | `DIANA_ERR_SINGULAR` | -4 | Newton's method: zero derivative; Cholesky: a pivot that is not positive; substitution: a zero diagonal entry; LU: a zero pivot column; LU solve: a zero diagonal entry of `U` |
+| `DIANA_ERR_OVERFLOW` | -5 | every input is finite, but a computed value overflows |
 
 `diana_status_str(st)` returns a short message for a code, and `diana_version()` the version of
 the linked library (the header defines `DIANA_VERSION_STRING` and its parts).
 
-A call that fails with `DIANA_ERR_ARG`, `DIANA_ERR_BRACKET` or `DIANA_ERR_SINGULAR` changes no
-output and no state, with four exceptions, where each output entry needs the ones before it:
-the Cholesky factorization has already written part of its output when it finds a pivot that is
-not positive, forward and back substitution and the LU solve when an entry of the solution
-overflows, and the LU factorization when it finds a zero pivot column or an overflowing
-update. After
+A call that fails with `DIANA_ERR_ARG`, `DIANA_ERR_BRACKET`, `DIANA_ERR_SINGULAR` or
+`DIANA_ERR_OVERFLOW` changes no output and no state, with four exceptions, where each output
+entry needs the ones before it: the Cholesky factorization has already written part of its
+output when it finds a pivot that is not positive, forward and back substitution and the LU
+solve when an entry of the solution overflows, and the LU factorization when it finds a zero
+pivot column or an overflowing update. `DIANA_ERR_ARG` never writes anything. After
 `DIANA_ERR_MAXITER` the state holds the progress made so far. Check every status:
 
 ```c
@@ -129,7 +130,7 @@ The package mirrors the C API:
   `diana.rk4_step` call the array kernels, and `diana.euler` and `diana.rk4` loop over a
   callable.
 - `diana.version()` (also `diana.__version__`), `diana.status_str` and the constants `diana.OK`,
-  `CONTINUE`, `ERR_ARG`, `ERR_BRACKET`, `ERR_MAXITER` and `ERR_SINGULAR`.
+  `CONTINUE`, `ERR_ARG`, `ERR_BRACKET`, `ERR_MAXITER`, `ERR_SINGULAR` and `ERR_OVERFLOW`.
 
 Every function has a docstring (`help(diana.bisection)`).
 
@@ -150,6 +151,7 @@ An error status becomes an exception:
 | `DIANA_ERR_ARG` | `ValueError` (`TypeError` for an argument of the wrong type) |
 | `DIANA_ERR_BRACKET` | `diana.BracketError`, a `ValueError` |
 | `DIANA_ERR_SINGULAR` | `diana.SingularError`, a `ValueError` |
+| `DIANA_ERR_OVERFLOW` | `diana.FloatOverflowError`, both a `ValueError` and an `OverflowError` |
 | `DIANA_ERR_MAXITER` | `diana.MaxIterError`, a `RuntimeError`, raised by `diana.bisection` and `diana.newton` |
 
 ```python
@@ -157,7 +159,7 @@ An error status becomes an exception:
 ...     diana.trapezoidal([1.0, float("inf")], 0.5)
 ... except ValueError as e:
 ...     print(e)
-trapezoidal result is not finite
+trapezoidal input is not finite: a sample or h
 ```
 
 ### Array arguments
@@ -206,6 +208,7 @@ subinterpreters).
 [API-001](../../note/api/API-001.md) floating-point environment,
 [API-002](../../note/api/API-002.md) status codes,
 [API-003](../../note/api/API-003.md) what a failed call writes,
+[API-036](../../note/api/API-036.md) non-finite input versus overflow,
 [API-004](../../note/api/API-004.md) output pointers and overlap,
 [API-005](../../note/api/API-005.md) CMake package,
 [API-006](../../note/api/API-006.md) callback wrappers,

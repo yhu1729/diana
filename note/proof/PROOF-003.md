@@ -21,10 +21,12 @@ is relative to the absolute sum `A`, not to the result.
   `A = |y₀ + yₙ₋₁|/2 + Σ_{i=1}^{n−2} |yᵢ|`, `γₖ = k·u/(1 − k·u)`, `u = 2⁻⁵³`, `η = 2⁻¹⁰⁷⁵`.
 - Layer C: WP (C1, no assumed contract) proves memory safety, that only `y[0 .. n−1]` is read and
   only `*result` written, termination, `DIANA_OK` only for non-NULL arguments with `n ≥ 2` and
-  then `*result` finite, and `*result` untouched on `DIANA_ERR_ARG`. VST (C2) proves, for
-  `n ≥ 2` readable doubles and a separate writable `*result`, that the kernel returns `DIANA_OK`
-  and writes the binary64 model value when it is finite, and `DIANA_ERR_ARG` with `*result`
-  unchanged otherwise; C3 is the `diana_fp_finite` copy.
+  then `*result` finite, `DIANA_ERR_OVERFLOW` only with `h` and every sample finite, and
+  `*result` untouched on both errors. VST (C2) proves, for `n ≥ 2` readable doubles and a
+  separate writable `*result`, that the kernel returns `DIANA_OK` and writes the binary64 model
+  value when it is finite, and otherwise, `*result` unchanged, `DIANA_ERR_OVERFLOW` when `h` and
+  every sample are finite and `DIANA_ERR_ARG` when not (`trap_status`); C3 is the
+  `diana_fp_finite` copy.
 - Limits: B2 says little under cancellation (`|T| ≪ A`); `n·u < 1` holds for every `n < 2⁵³`;
   spacing is uniform. The end-to-end bound that adds A2, B2 and the sample errors is a
   derivation in the "Composition" section of `spec/trapezoidal.md`, not a listed theorem. WP

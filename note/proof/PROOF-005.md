@@ -23,10 +23,11 @@ per-step rounding error through the global bound.
   `y_i`, `f_i`, `h` and the product finite; B2 then
   `|r_i − (y_i + h·f_i)| ≤ u·|y_i + h·f_i| + (1 + u)·(u·|h·f_i| + η)`, `u = 2⁻⁵³`, `η = 2⁻¹⁰⁷⁵`.
 - Layer C: WP (C1, no assumed contract) proves memory safety, separation of `y_out`, termination,
-  `DIANA_OK` only for non-NULL pointers with `d ≥ 1`, and `y_out` untouched on `DIANA_ERR_ARG`;
-  not finiteness on `DIANA_OK`. VST (C2), for disjoint `y`, `f`, `y_out` with `d ≥ 1`: `DIANA_OK`
-  with the model values when all are finite, else `DIANA_ERR_ARG` with `y_out` unchanged. C3 is
-  the `diana_fp_finite` copy.
+  `DIANA_OK` only for non-NULL pointers with `d ≥ 1`, `DIANA_ERR_OVERFLOW` only with `h`, `y` and
+  `f` finite, and `y_out` untouched on both errors; not finiteness on `DIANA_OK`. VST (C2), for
+  disjoint `y`, `f`, `y_out` with `d ≥ 1`: `DIANA_OK` with the model values when all are finite,
+  else `y_out` unchanged and `DIANA_ERR_OVERFLOW` when `h`, `y` and `f` are finite,
+  `DIANA_ERR_ARG` when not (`euler_status`). C3 is the `diana_fp_finite` copy.
 - Unchecked: EULER-UNCHECKED-B1 a component is finite exactly when `h`, `y_i`, `f_i` are
   finite, `|∘(h·f_i)| < 2¹⁰²⁴` and `|∘(y_i + ∘(h·f_i))| < 2¹⁰²⁴` (`∘` rounding to nearest-even);
   EULER-UNCHECKED-C1 (WP) `DIANA_OK` exactly for valid arguments, `y_out` untouched on

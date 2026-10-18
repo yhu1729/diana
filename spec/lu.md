@@ -80,7 +80,8 @@ theorem:
       ACSL contract in src/lu.c, Frama-C WP float model with RTE: memory safety (only
       a[0 .. n·n−1] is read, only lu[0 .. n·n−1] and piv[0 .. n−1] are written, the three
       separate), no UB, no wrap of the size_t indices i + j·n, termination of all eight loops, a
-      status in {DIANA_OK, DIANA_ERR_ARG, DIANA_ERR_SINGULAR}, any status other than
+      status in {DIANA_OK, DIANA_ERR_ARG, DIANA_ERR_SINGULAR, DIANA_ERR_OVERFLOW}, any status
+      other than
       DIANA_ERR_ARG only for non-NULL pointers with n ≥ 1 and n·n ≤ SIZE_MAX, lu and piv
       untouched when an entry of a is not finite, and k ≤ piv[k] < n for every k on DIANA_OK.
     acsl: src/lu.c
@@ -93,8 +94,8 @@ theorem:
       DIANA_OK conditions of the B theorems hold, and then lu holds the model factor column-major
       and piv[k] the model pivot row of step k; DIANA_ERR_ARG with lu and piv unchanged when an
       entry of a is not finite; DIANA_ERR_SINGULAR when the first failing step has a pivot
-      magnitude equal to 0.0; DIANA_ERR_ARG when it has a nonzero pivot and an update that is
-      not finite. lu and piv have unspecified contents on the last two. The NULL, n = 0 and
+      magnitude equal to 0.0; DIANA_ERR_OVERFLOW when it has a nonzero pivot and an update that
+      is not finite. lu and piv have unspecified contents on the last two. The NULL, n = 0 and
       overflowing-n paths are C1.
     rocq: Diana.VST.LU.body_diana_lu
   - id: LU-C3
@@ -130,7 +131,8 @@ The binary64 model, and every layer that follows it, is the order of the C:
    - `d = lu[k + k·n]`, and `lu[i + k·n] = lu[i + k·n] / d` for `i > k`, a division rather than a
      product with `1/d`;
    - for each column `j > k` and row `i > k`, `t = lu[i + j·n] − lu[i + k·n]·lu[k + j·n]`, the
-     product rounded first; a non-finite `t` returns `DIANA_ERR_ARG`, else `lu[i + j·n] = t`.
+     product rounded first; a non-finite `t` returns `DIANA_ERR_OVERFLOW`, else
+     `lu[i + j·n] = t`.
 
 Every entry of `U` is thus `A[i, j]` of the interchanged matrix minus the rounded products
 `L[i, t]·U[t, j]`, `t = 0, …, i − 1`, subtracted in that order, and every entry of `L` that

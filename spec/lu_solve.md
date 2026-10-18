@@ -73,7 +73,8 @@ theorem:
       lu[0 .. n·n−1], piv[0 .. n−1] and b[0 .. n−1] are read, only x[0 .. n−1] is written, x
       separate from lu, piv and b), no UB, no wrap of the size_t indices i + k·n, every x[piv[k]]
       in bounds, termination of all ten loops, a status in {DIANA_OK, DIANA_ERR_ARG,
-      DIANA_ERR_SINGULAR}, any status other than DIANA_ERR_ARG only for non-NULL pointers with
+      DIANA_ERR_SINGULAR, DIANA_ERR_OVERFLOW}, any status other than DIANA_ERR_ARG only for
+      non-NULL pointers with
       n ≥ 1 and n·n ≤ SIZE_MAX, DIANA_ERR_ARG with x untouched when an entry of lu or b is not
       finite or a pivot row is not below n, x untouched on DIANA_ERR_SINGULAR, and every x[w]
       finite on DIANA_OK.
@@ -88,7 +89,7 @@ theorem:
       entry compares equal to 0.0 and every ŷᵢ and x̂ᵢ is finite, and then x holds x̂;
       DIANA_ERR_ARG with x unchanged when an entry is not finite or a pivot row is not below n;
       DIANA_ERR_SINGULAR with x unchanged when they pass and a diagonal entry is ±0; otherwise
-      DIANA_ERR_ARG with x holding ŷ₀, …, ŷᵢ₋₁ and the rest of P·b, ŷᵢ the first entry of the
+      DIANA_ERR_OVERFLOW with x holding ŷ₀, …, ŷᵢ₋₁ and the rest of P·b, ŷᵢ the first entry of the
       forward solve that is not finite, or ŷ₀, …, ŷᵢ and x̂ᵢ₊₁, …, x̂ₙ₋₁, x̂ᵢ the first entry of
       the back solve from the bottom that is not finite. The NULL, n = 0 and overflowing-n paths
       are C1.
@@ -124,9 +125,10 @@ The binary64 model, and every layer that follows it, is the order of the C:
    reordering of `b` (A1).
 3. Forward, for `i = 0, …, n − 1`: `s = x[i]`, `s = s − lu[i + k·n]·x[k]` for `k = 0, …, i − 1`,
    each product rounded before the subtraction, with no division by the unit diagonal; if `s` is
-   not finite, return `DIANA_ERR_ARG`; else `x[i] = s`.
+   not finite, return `DIANA_ERR_OVERFLOW` (every input is finite by now); else `x[i] = s`.
 4. Back, for `i = n − 1, …, 0`: `s = x[i]`, `s = s − lu[i + k·n]·x[k]` for `k = n − 1` down to
-   `i + 1`, `r = s / lu[i + i·n]`; if `r` is not finite, return `DIANA_ERR_ARG`; else `x[i] = r`.
+   `i + 1`, `r = s / lu[i + i·n]`; if `r` is not finite, return `DIANA_ERR_OVERFLOW`; else
+   `x[i] = r`.
 
 The forward and back solves are `diana_forward_substitution` with the unit lower factor and
 `diana_back_substitution` with the transposed upper factor bit for bit, as the division by one

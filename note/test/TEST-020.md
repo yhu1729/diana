@@ -11,8 +11,9 @@ exact arithmetic, first-order convergence of `diana.euler`, and the extension's 
 
 - Property (Hypothesis, 500 derandomized examples, no example database): `y` and `f` of equal
   length 1 to 20, any floats, any `h`. The result must equal `y[i] + h*f[i]` in Python floats
-  (product and sum rounded separately) bit for bit, and `ValueError` must be raised exactly when a
-  component is not finite.
+  (product and sum rounded separately) bit for bit. When a component is not finite the call must
+  raise `FloatOverflowError` if `h`, `y` and `f` are all finite and a plain `ValueError` ("input
+  is not finite") otherwise.
 - Rounding (seed 1729): 500 components with magnitudes `2^k`, `k` in `[-40, 40]`, and 500 with
   `k` in `[-1074, -1000]` (subnormal inputs), `h` uniform in `(-1, 1)`; each component must
   satisfy `|r - (y + h f)| <= u |y + h f| + (1 + u)(u |h f| + eta)` in `fractions.Fraction`.

@@ -29,6 +29,7 @@ related: [API-034, TEST-006, TEST-035, TEST-037, TEST-040]
 - `DIANA_ERR_ARG` with `x` untouched: each NULL, `n = 0`, `n = 2³²` and `SIZE_MAX`; NaN, `inf`,
   `-inf` at each of the nine positions of a 3×3 `lu` and each position of `b`; `piv[k] = 3` and
   `SIZE_MAX` at each position.
-- `DIANA_ERR_ARG` from overflow: forward `−DBL_MAX − 1·DBL_MAX` and `0 − (−inf) − inf`; back
-  `1e300 / 1e-300`, a product `1e300·1e300` and `DBL_MAX − (−1)·DBL_MAX`.
+- `DIANA_ERR_OVERFLOW` from finite `lu` and `b`, `x` partly written, nothing past `x[n - 1]`:
+  forward `−DBL_MAX − 1·DBL_MAX` and `0 − (−inf) − inf`; back `1e300 / 1e-300`, a product
+  `1e300·1e300` and `DBL_MAX − (−1)·DBL_MAX`.
 - Line and branch coverage of `src/lu_solve.c` is 100% (TEST-006).

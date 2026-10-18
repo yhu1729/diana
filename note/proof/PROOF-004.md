@@ -22,9 +22,11 @@ trapezoidal rule (PROOF-003).
   `S′ = y₀ + yₙ₋₁ + 4·Σ y₂ₖ₊₁ + 2·Σ y₂ₖ`, `A = |y₀ + yₙ₋₁| + 4·Σ|y₂ₖ₊₁| + 2·Σ|y₂ₖ|`,
   `p = (n − 1)/2`, `γₖ = k·u/(1 − k·u)`, `u = 2⁻⁵³`, `η = 2⁻¹⁰⁷⁵`.
 - Layer C: WP (C1, no assumed contract) proves memory safety, termination of both loops,
-  `DIANA_OK` only for non-NULL arguments with an odd `n ≥ 3` and then `*result` finite, and
-  `*result` untouched on `DIANA_ERR_ARG`. VST (C2) proves, for an odd `n ≥ 3` of readable doubles
-  and a separate writable `*result`, `DIANA_OK` with the binary64 model value when it is finite
-  and `DIANA_ERR_ARG` with `*result` unchanged otherwise; C3 is the `diana_fp_finite` copy.
+  `DIANA_OK` only for non-NULL arguments with an odd `n ≥ 3` and then `*result` finite,
+  `DIANA_ERR_OVERFLOW` only with `h` and every sample finite, and `*result` untouched on both
+  errors. VST (C2) proves, for an odd `n ≥ 3` of readable doubles and a separate writable
+  `*result`, `DIANA_OK` with the binary64 model value when it is finite, and otherwise, `*result`
+  unchanged, `DIANA_ERR_OVERFLOW` when `h` and every sample are finite and `DIANA_ERR_ARG` when
+  not (`simpson_status`); C3 is the `diana_fp_finite` copy.
 - Limits as for the trapezoidal rule: B2 is relative to `A`, not to the result; no listed theorem
   composes A2 with B2; WP states no value beyond finiteness.

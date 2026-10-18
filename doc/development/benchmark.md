@@ -8,14 +8,14 @@ at dimensions 64, 1024 and 16384.
 
 The figures quoted in the [Euler](../api/euler.md) and [RK4](../api/rk4.md) pages and in
 `CHANGELOG.md` come from one run, `script/benchmark.sh cc gcc-15` on an Apple M4 Mac on
-2026-10-17, with Apple clang 21 and GCC 15.3:
+2026-10-18, with Apple clang 21 and GCC 15.3:
 
 | Kernel | Checked (ns) | Unchecked (ns) | Speed-up |
 |---|---|---|---|
-| Euler step | 0.44–0.52 | 0.10–0.19 | 2.8–4.8× |
-| RK4 stage | 0.44–0.56 | 0.10–0.17 | 2.9–4.8× |
-| RK4 step | 0.86–1.26 | 0.25–0.37 | 2.6–4.5× |
-| whole RK4 step, with right-hand side | 2.8–3.7 | 0.8–2.0 | 1.7–3.5× |
+| Euler step | 0.44–0.53 | 0.10–0.18 | 2.9–4.8× |
+| RK4 stage | 0.45–0.58 | 0.10–0.20 | 2.9–4.8× |
+| RK4 step | 0.91–1.28 | 0.25–0.42 | 2.2–4.6× |
+| whole RK4 step, with right-hand side | 2.8–3.8 | 0.8–2.0 | 1.8–3.5× |
 
 The unchecked kernels gain because they make one pass with no branch, which the compilers
 vectorize; the checked ones make two passes. The numbers depend on the machine and the compiler,

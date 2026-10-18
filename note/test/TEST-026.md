@@ -12,8 +12,9 @@ extension's own `out` checks.
 
 - Property (Hypothesis, 500 derandomized examples each): vectors of equal length 1 to 20 of any
   floats. The stage must equal `y[i] + c*k[i]` (`c = 0.5*h`, or `h` at stage 4) and the step
-  `y[i] + h*((k1[i] + k4[i]) + 2.0*(k2[i] + k3[i]))/6.0` in Python floats bit for bit, with
-  `ValueError` exactly when a component is not finite.
+  `y[i] + h*((k1[i] + k4[i]) + 2.0*(k2[i] + k3[i]))/6.0` in Python floats bit for bit. When a
+  component is not finite the call must raise `FloatOverflowError` ("overflows") if `h` and every
+  input are finite and a plain `ValueError` ("input is not finite") otherwise.
 - Rounding (seed 1729): 500 components per case with magnitudes `2^k`, `k` in `[-40, 40]` or
   `[-1074, -1000]`. The stage (stages 2 and 4) is checked against RK4-B2/B3 for a random `h` and
   for `h = 3 * 2^-1074` and `-7 * 2^-1074`, where `h/2` rounds (`|fl(c) - c| <= eta` is asserted);

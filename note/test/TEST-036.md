@@ -14,7 +14,10 @@ numerical properties.
   floats (each operation rounded to binary64, no contraction): the kernels match them bit for bit
   on seeded random systems (`n` up to 31, `b` scaled by 1, `1e-300`, `2⁹⁰⁰`) and on 500
   Hypothesis systems of finite entries (`n` up to 6) per kernel, where `"singular"` must raise
-  `SingularError`, `"overflow"` a `ValueError` and success give finite entries.
+  `SingularError`, `"overflow"` a `FloatOverflowError` and success give finite entries.
+- The classes are separate: an overflow raises `FloatOverflowError` ("the solution overflows"),
+  and a NaN or infinity in `lower` or `b` raises exactly `ValueError` ("non-finite"), not a
+  subclass.
 - Back substitution equals forward substitution on the mirrored system bit for bit (`n` up to 24).
 - B1 and B3 (PROOF-010) hold in exact `Fraction` arithmetic, and so do B2 and B4: the error
   against the exact rational solution is at most the comparison-matrix solve of the row bounds;

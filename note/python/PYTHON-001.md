@@ -14,14 +14,16 @@ each named after its function without `diana_py_` (STYLE-002); all are listed in
 - `module.c`: the `PyModuleDef` (`m_size = -1`, PYTHON-003), the `version` method, and
   `PyInit__diana`, which calls each `diana_py_<kernel>_exec(m)` in turn and drops the module if
   one fails.
-- `module.h`: shared declarations, the exception pointers `diana_py_bracket_error` and
-  `diana_py_singular_error`, the `static inline` byte-range overlap test `diana_py_overlap`, and
-  the `static inline` `diana_py_square_side`, the side `n` of a column-major matrix of length
-  `n*n` (API-029).
-- `status_exec.c`: registers `status_str`, the status constants `OK` to `ERR_SINGULAR`, and
-  creates `BracketError` and `SingularError` (both `ValueError` subclasses).
+- `module.h`: shared declarations, the exception pointers `diana_py_bracket_error`,
+  `diana_py_singular_error` and `diana_py_float_overflow_error`, the `static inline` byte-range
+  overlap test `diana_py_overlap`, and the `static inline` `diana_py_square_side`, the side `n`
+  of a column-major matrix of length `n*n` (API-029).
+- `status_exec.c`: registers `status_str`, the status constants `OK` to `ERR_OVERFLOW`, and
+  creates `BracketError`, `SingularError` (both `ValueError` subclasses) and
+  `FloatOverflowError` (bases `ValueError` and `OverflowError`).
 - `raise.c` (`diana_py_raise`): `DIANA_ERR_ARG` raises `ValueError`, `DIANA_ERR_BRACKET`
-  `BracketError`, `DIANA_ERR_SINGULAR` `SingularError`, any other status `RuntimeError`; the
+  `BracketError`, `DIANA_ERR_SINGULAR` `SingularError`, `DIANA_ERR_OVERFLOW`
+  `FloatOverflowError`, any other status `RuntimeError`; the
   message is the caller's or `diana_status_str`.
 - `convert_uint.c`: the `O&` converter for `unsigned int` (`__index__`, `OverflowError` above
   `UINT_MAX`); `get_array.c`: the buffer check `diana_py_get_array` (API-020); `version.c`,
@@ -36,5 +38,5 @@ each named after its function without `diana_py_` (STYLE-002); all are listed in
   `substitution.c` (`diana_py_substitution`, the shared argument checks), registered with them by
   `substitution_exec.c`; the kernel type `diana_py_solve_fn` is in `module.h`.
 
-The extension is ordinary tested code, not verified; it may use libm (`newton_step.c` calls
-`isfinite`) and is compiled with the strict flags (BUILD-001).
+The extension is ordinary tested code, not verified; it may use libm (no file of it includes
+`<math.h>` today) and is compiled with the strict flags (BUILD-001).

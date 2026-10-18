@@ -12,9 +12,9 @@ conventions are in the [API overview](overview.md).
 
 - `diana_simpson(y, n, h, &result)` writes
   `(h/3)·(y[0] + 4·y[1] + 2·y[2] + 4·y[3] + … + 4·y[n−2] + y[n−1])` to `result`, for an odd
-  `n >= 3` samples spaced `h` apart. It returns `DIANA_OK`, or `DIANA_ERR_ARG` without writing
-  `result` for a `NULL` pointer, `n < 3` or an even `n`, or a result that is not finite: a NaN or
-  infinite sample or `h`, or an overflow in any intermediate step.
+  `n >= 3` samples spaced `h` apart. It returns `DIANA_OK`; `DIANA_ERR_ARG` for a `NULL` pointer,
+  `n < 3` or an even `n`, or a NaN or infinite sample or `h`; or `DIANA_ERR_OVERFLOW` when every
+  input is finite and an intermediate step overflows. Neither error writes `result`.
 
 The kernel sums the odd and the even interior samples separately, left to right, then forms
 `((y[0] + y[n−1]) + 4·odd) + 2·even`, multiplies by `h` and divides by 3, each operation rounded
@@ -57,7 +57,8 @@ even n: invalid argument
 
 `diana.simpson(y, h)` returns the same value as a `float`. `y` is an
 [array argument](overview.md#array-arguments) of at least three samples; an even number of
-samples or a non-finite result raises `ValueError`. On the samples of the
+samples or a NaN or infinite sample or `h` raises `ValueError`, and an overflow
+`diana.FloatOverflowError`. On the samples of the
 [trapezoidal examples](trapezoidal.md#python), the errors drop from `1.6e-4` and `1.4e-5` to
 `1.1e-8` and `9.5e-11`:
 
@@ -91,4 +92,5 @@ of undefined behaviour. Theorems: `spec/simpson.md`; status: the
 ## Technical notes
 
 [API-014](../../note/api/API-014.md) evaluation order and exits,
+[API-036](../../note/api/API-036.md) non-finite input versus overflow,
 [PROOF-004](../../note/proof/PROOF-004.md) what is proved, with the exact bounds.

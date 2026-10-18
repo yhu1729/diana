@@ -19,9 +19,10 @@ evaluate `f` and `f′` at `s.x` and pass both values back.
   Either output may be `NULL`.
 
 `init` returns `DIANA_ERR_ARG` for a `NULL` state, a NaN or infinite `x0` or `tol`, `tol < 0` or
-`max_iter == 0`; `step` returns it for a NaN or infinite `f(x)` or `f′(x)` and for a correction or
-iterate that overflows. A step that fails with `DIANA_ERR_ARG` or `DIANA_ERR_SINGULAR` leaves the
-state unchanged. Finding `√2` as the root of `x² − 2` from `x₀ = 2`:
+`max_iter == 0`; `step` returns it for a NaN or infinite `f(x)` or `f′(x)`, and
+`DIANA_ERR_OVERFLOW` for a correction or iterate that overflows. A step that fails with
+`DIANA_ERR_ARG`, `DIANA_ERR_SINGULAR` or `DIANA_ERR_OVERFLOW` leaves the state unchanged.
+Finding `√2` as the root of `x² − 2` from `x₀ = 2`:
 
 ```c
 #include <stdio.h>
@@ -162,8 +163,9 @@ attributes, `status`, `step(fx, dfx)` (returns the new status) and `result()`:
 (1.4142135623730951, 1.5947429102833119e-12)
 ```
 
-A zero derivative where `f(x)` is not zero raises `diana.SingularError`, and a non-finite value or
-an overflowing step raises `ValueError`; either leaves the state at the last iterate.
+A zero derivative where `f(x)` is not zero raises `diana.SingularError`, a non-finite value
+`ValueError`, and an overflowing step `diana.FloatOverflowError`; each leaves the state at the last
+iterate.
 `diana.newton` raises `diana.MaxIterError` when `max_iter` is reached first, with the `estimate`
 (the current iterate), its `uncertainty` (the last `|dx|`) and `iter`:
 

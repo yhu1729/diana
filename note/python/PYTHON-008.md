@@ -22,7 +22,7 @@ related: [PYTHON-001, API-022]
   reinitialization keeps the previous valid state.
 - `Bisection(...)` accepts `DIANA_OK` (already converged) or `DIANA_CONTINUE`; `Newton(...)`
   accepts only `DIANA_CONTINUE`.
-- A `step` that raises (`ValueError`, `SingularError`) leaves `status` unchanged, so the caller
-  may retry with another value; only a returned status is stored.
+- A `step` that raises (`ValueError`, `SingularError`, `FloatOverflowError`) leaves `status`
+  unchanged, so the caller may retry with another value; only a returned status is stored.
 - `max_iter` goes through `diana_py_convert_uint` (`OverflowError` above `UINT_MAX`); the
   defaults are 2100 for `Bisection` and 100 for `Newton`, which takes `tol` without a default.

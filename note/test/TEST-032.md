@@ -19,5 +19,7 @@ writes `*root` only when the iteration ends with `DIANA_OK` or `DIANA_ERR_MAXITE
   zero (`DIANA_ERR_SINGULAR`), and when the callback never writes `*dfx`, which the reset turns
   into a zero derivative (`DIANA_ERR_SINGULAR`).
 - A non-finite value on the second call returns `DIANA_ERR_ARG` with `*root` untouched and
-  `*iter == 1`, the completed steps.
+  `*iter == 1`, the completed steps. A callback that returns `DBL_MAX` with `*dfx = 1/2` (`steep`)
+  from `x0 = 2` overflows the first correction: `DIANA_ERR_OVERFLOW`, `*iter == 0`, `*root`
+  untouched.
 - `iter` may be NULL.

@@ -13,8 +13,9 @@ bound and the second order on `exp`.
 - Property (Hypothesis, 500 derandomized examples, no example database): any list of 2 to 40
   floats, NaN and infinities included, and any `h`, passed as a list and as a NumPy array. The
   result must equal the same evaluation in Python floats (halved endpoints, interior left to
-  right, product) bit for bit including the sign of zero, and `ValueError` ("not finite") must be
-  raised exactly when that evaluation is not finite.
+  right, product) bit for bit including the sign of zero. When that evaluation is not finite the
+  call must raise `FloatOverflowError` ("overflows") if `h` and every sample are finite and a
+  plain `ValueError` ("input is not finite") otherwise.
 - Rounding: `|r - T| <= gamma_n |h| A + (1 + gamma_(n-1)) |h| eta + eta` with `u = 2^-53`,
   `eta = 2^-1075`, `gamma_k = k u / (1 - k u)` and `T`, `A` in `fractions.Fraction`. Cases: 1000
   samples `uniform(-1, 1) * 2^k`, `k` in `[-20, 20]` (seed 1729), `h = 0.1`; `{DBL_TRUE_MIN, 0}`

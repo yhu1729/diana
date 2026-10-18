@@ -97,9 +97,9 @@ theorem:
       ACSL contract in src/forward_substitution.c, Frama-C WP float model with RTE: memory safety
       (only l[0 .. n·n−1] and b[0 .. n−1] are read, only x[0 .. n−1] is written, x separate from
       l and b), no UB, no wrap of the size_t indices i + k·n, termination of all six loops, a
-      status in {DIANA_OK, DIANA_ERR_ARG, DIANA_ERR_SINGULAR}, any status other than
-      DIANA_ERR_ARG only for non-NULL pointers with n ≥ 1 and n·n ≤ SIZE_MAX, x untouched on
-      DIANA_ERR_SINGULAR, and every x[p] finite on DIANA_OK.
+      status in {DIANA_OK, DIANA_ERR_ARG, DIANA_ERR_SINGULAR, DIANA_ERR_OVERFLOW}, any status
+      other than DIANA_ERR_ARG only for non-NULL pointers with n ≥ 1 and n·n ≤ SIZE_MAX, x
+      untouched on DIANA_ERR_SINGULAR, and every x[p] finite on DIANA_OK.
     acsl: src/forward_substitution.c
   - id: SUBSTITUTION-C2
     layer: C
@@ -116,7 +116,7 @@ theorem:
       entry of l on or below the diagonal and every b[i] is finite, no diagonal entry compares
       equal to 0.0 and every model entry x̂ᵢ is finite, and then x holds x̂; DIANA_ERR_ARG with x
       unchanged when an input entry is not finite; DIANA_ERR_SINGULAR with x unchanged when the
-      inputs are finite and a diagonal entry is ±0; otherwise DIANA_ERR_ARG with x̂₀, …, x̂ᵢ₋₁
+      inputs are finite and a diagonal entry is ±0; otherwise DIANA_ERR_OVERFLOW with x̂₀, …, x̂ᵢ₋₁
       written and the rest of x unchanged, x̂ᵢ the first entry that is not finite. The NULL, n = 0
       and overflowing-n paths are C1.
     rocq: Diana.VST.ForwardSubstitution.body_diana_forward_substitution
@@ -161,7 +161,7 @@ The binary64 model, and every layer that follows it, is the order of the C:
    entry wins over a zero diagonal.
 2. Forward, for `i = 0, …, n − 1`: `s = b[i]`, `s = s − l[i + k·n]·x[k]` for `k = 0, …, i − 1`,
    each product rounded before the subtraction, `r = s / l[i + i·n]`; if `r` is not finite, return
-   `DIANA_ERR_ARG`; else `x[i] = r`.
+   `DIANA_ERR_OVERFLOW` (every input is finite by now); else `x[i] = r`.
 3. Back, for `i = n − 1, …, 0`: `s = b[i]`, `s = s − l[k + i·n]·x[k]` for `k = n − 1` down to
    `i + 1`, then the same division and check. The products are subtracted in the order their
    unknowns were computed, which makes back substitution forward substitution on the mirrored

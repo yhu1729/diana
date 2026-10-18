@@ -17,8 +17,8 @@ right-hand sides. Shared conventions are in the [API overview](overview.md).
 - It returns `DIANA_OK`; `DIANA_ERR_ARG` without writing `x` for a `NULL` pointer, `n = 0`, an
   `n` whose `n·n` does not fit in `size_t`, a NaN or infinite entry of `lu` or `b`, or a pivot row
   `piv[k] >= n`; `DIANA_ERR_SINGULAR` without writing `x` when a diagonal entry of `U` is zero,
-  which `diana_lu` never returns; or `DIANA_ERR_ARG` when an entry of `y` or `x` overflows, after
-  which the contents of `x` are unspecified: the solve works in place in `x`.
+  which `diana_lu` never returns; or `DIANA_ERR_OVERFLOW` when an entry of `y` or `x` overflows,
+  after which the contents of `x` are unspecified: the solve works in place in `x`.
 
 The kernel copies `b` to `x`, interchanges `x[k]` and `x[piv[k]]` for `k = 0, 1, …, n−1`, then
 computes `y[i] = x[i] − L[i,0]·y[0] − … − L[i,i−1]·y[i−1]` (no division: the diagonal of `L` is
@@ -68,9 +68,9 @@ x = (0.75, 0.5, -1)
 `diana.lu_solve(lu, piv, b)` returns the solution as a new `array.array("d")`; `lu` and `b` are
 [array arguments](overview.md#array-arguments) and `piv` any iterable of `int`, so
 `diana.lu_solve(*diana.lu(a), b)` solves `A·x = b`. A length of `lu` other than `n·n` or of `piv`
-other than `n`, a NaN or infinite entry, a pivot row not below `n`, or an overflow raises
-`ValueError`; a negative pivot row `OverflowError`, and a zero on the diagonal of `U`
-`diana.SingularError`:
+other than `n`, a NaN or infinite entry, or a pivot row not below `n` raises `ValueError`; an
+overflow `diana.FloatOverflowError`, a negative pivot row the built-in `OverflowError`, and a zero
+on the diagonal of `U` `diana.SingularError`:
 
 ```python
 >>> import diana
@@ -86,7 +86,7 @@ True
 >>> diana.lu_solve(lu, [1, 3, 2], [3.0, 16.0, -10.0])
 Traceback (most recent call last):
   ...
-ValueError: lu or b has a non-finite entry, a pivot row is not below n, or the solution overflows
+ValueError: lu or b has a non-finite entry, or a pivot row is not below n
 ```
 
 ## Guarantees

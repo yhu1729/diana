@@ -25,7 +25,8 @@ related: [API-030, TEST-006, TEST-036]
   position; a NaN in `b` or below the diagonal with a zero diagonal is `DIANA_ERR_ARG` instead.
 - `DIANA_ERR_ARG` with `x` untouched: each NULL, `n = 0`, `n = 2³²` and `SIZE_MAX`, and NaN,
   `inf`, `-inf` at each of the six lower-triangle positions of a 3×3 `L` and each position of `b`.
-- `DIANA_ERR_ARG` from overflow: `1e300 / 1e-300`, a product `1e300·1e300`, a difference
-  `DBL_MAX − (−DBL_MAX)`, and `0 − (−inf) − inf = NaN` from two overflowing products.
+- `DIANA_ERR_OVERFLOW` (finite `L` and `b`, `x` partly written, nothing past `x[n - 1]`):
+  `1e300 / 1e-300`, a product `1e300·1e300`, a difference `DBL_MAX − (−DBL_MAX)`, and
+  `0 − (−inf) − inf = NaN` from two overflowing products.
 - Line and branch coverage of `src/forward_substitution.c` and `src/back_substitution.c` is 100%
   (TEST-006).

@@ -21,7 +21,10 @@ into `y`.
   `DIANA_ERR_ARG` with `done = 0` and no call.
 - Failure: a derivative that turns infinite on the third call stops with `DIANA_ERR_ARG` after two
   steps, `y` at the second state and three calls; `y' = -y` with `h = -2` from `DBL_MAX/2`
-  overflows (`y + 2y`) on the first step and leaves `y` unchanged, `done = 0`.
+  overflows (`y + 2y`) on the first step, `DIANA_ERR_OVERFLOW`, and leaves `y` unchanged,
+  `done = 0`. The wrapper passes the step's status through.
 - Python `diana.euler` gives the same exact paths and times, copies `y0` (a NumPy input is left
-  unchanged), calls nothing for `nstep = 0`, checks the callback's length, and raises
-  `ValueError` after exactly three calls when the third returns `inf`.
+  unchanged), calls nothing for `nstep = 0`, checks the callback's length, and raises a plain
+  `ValueError` ("not finite", not a `FloatOverflowError`) after exactly three calls when the third
+  returns `inf`. `test_euler_overflow`: `y' = y` from `2^1021` with `h = 1` doubles the state, and
+  the third step passes `DBL_MAX`, raising `FloatOverflowError` ("overflows").

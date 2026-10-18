@@ -43,17 +43,20 @@ theorem:
     layer: C
     informal: >
       ACSL contract in src/simpson.c, Frama-C WP float model with RTE: memory safety (only
-      y[0 .. n−1] is read, only *result is written), no UB, termination of both loops, DIANA_OK
-      only for non-NULL y and result with n ≥ 3 odd and then *result finite, and *result
-      untouched on DIANA_ERR_ARG. No assumed contract.
+      y[0 .. n−1] is read, only *result is written), no UB, termination of the three loops,
+      DIANA_OK only for non-NULL y and result with n ≥ 3 odd and then *result finite,
+      DIANA_ERR_OVERFLOW only for non-NULL y and result with n ≥ 3, h finite and every y[q]
+      finite, and *result untouched on DIANA_ERR_ARG and DIANA_ERR_OVERFLOW. No assumed
+      contract.
     acsl: src/simpson.c
   - id: SIMPSON-C2
     layer: C
     informal: >
       diana_simpson computes the binary64 model (VST, AArch64 macOS Clight AST): for y pointing to
       an odd number n ≥ 3 of readable doubles and a writable *result separate from them, it returns
-      DIANA_OK and writes the model value when that value is finite, and returns DIANA_ERR_ARG
-      leaving *result unchanged otherwise. The NULL, n < 3 and even-n paths are SIMPSON-C1.
+      simpson_status ys h: DIANA_OK, writing the model value, when that value is finite;
+      otherwise, leaving *result unchanged, DIANA_ERR_OVERFLOW when h and every sample are finite
+      and DIANA_ERR_ARG when not. The NULL, n < 3 and even-n paths are SIMPSON-C1.
     rocq: Diana.VST.Simpson.body_diana_simpson
   - id: SIMPSON-C3
     layer: C
@@ -79,7 +82,8 @@ The binary64 model, and every layer that follows it, is the order of the C:
 
 The two sums are independent, so fusing the loops would not change a bit. The products `4·sₒ` and
 `2·sₑ` are exact unless they overflow. The kernel checks only `r`: a NaN or infinite sample or `h`,
-or an overflow in any operation, makes `r` non-finite and the call returns `DIANA_ERR_ARG`. One
+or an overflow in any operation, makes `r` non-finite. Only then does it test `h` and every
+sample, and return `DIANA_ERR_ARG` for a non-finite one and `DIANA_ERR_OVERFLOW` otherwise. One
 range limit follows from the order: `h·s` can overflow when `h·S/3` would not (a test pins it).
 
 ## Proof sketch
@@ -114,7 +118,9 @@ range limit follows from the order: `h·s` can overflow when `h·S/3` would not 
   `forward_error`.
 - **C1**: the `/*@ ... */` annotations in `src/simpson.c`. With `p = n / 2`, the assertion
   `n == 2 * p + 1` (from `n` odd) gives the bounds `2k + 1 ≤ n − 2` and `2k ≤ n − 3` for the two
-  loops, whose invariants are only `0 <= k <= p` and `1 <= k <= p`. As for the trapezoidal rule, the
+  loops, whose invariants are only `0 <= k <= p` and `1 <= k <= p`; the input loop after a
+  non-finite result carries `\is_finite(y[q])` for `q < k`, which gives the `DIANA_ERR_OVERFLOW`
+  post-condition. As for the trapezoidal rule, the
   value of `*result` is not an ACSL post-condition (see "Why the functional contract is not in
   ACSL" in `spec/trapezoidal.md`); it is the VST theorem C2.
 - **C2**: two Clight loops over a read-only `tarray tdouble n` with a pair index `k` in `Int64`.
@@ -126,7 +132,8 @@ range limit follows from the order: `h·s` can overflow when `h·S/3` would not 
   floats, so the value passed to `diana_fp_finite` is `c_simpson ys h` by computation. As for the
   trapezoidal rule, `data_at` on the array makes `y` a valid pointer, which is why the NULL,
   `n < 3` and even-`n` paths are left to WP (C1). `diana_fp_finite` is re-specified for this AST
-  (`body_diana_fp_finite`). Proof: `body_diana_simpson` in
+  (`body_diana_fp_finite`). After a non-finite result the input loop is that of TRAPEZOIDAL-C2,
+  so every return meets `simpson_status`. Proof: `body_diana_simpson` in
   `verification/rocq/theory/VST/Simpson.v`.
 
 ## Model correspondence
@@ -154,6 +161,6 @@ range limit follows from the order: `h·s` can overflow when `h·S/3` would not 
 | SIMPSON-A2 | proved | proved | – |
 | SIMPSON-B1 | – | proved | – |
 | SIMPSON-B2 | – | proved | – |
-| SIMPSON-C1 | – | – | 58/58 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
+| SIMPSON-C1 | – | – | 78/78 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
 | SIMPSON-C2 | – | proved | – |
 | SIMPSON-C3 | – | proved | – |

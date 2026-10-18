@@ -33,10 +33,11 @@ Check order in the extension, each failure raising before the kernel runs:
 4. Overlap: `diana_py_overlap` compares the byte ranges `[buf, buf + len)` of `out` and each input
    and raises `ValueError` (`out must not overlap y or f`, `… y or k`, `… y or a slope`) for any
    shared byte, including `out` being an input. Inputs may alias each other.
-5. The C kernel; its error status goes through `diana_py_raise` (`ValueError`, or
-   `SingularError` from `cholesky`, the substitution functions and `lu_solve`). `out` is
-   untouched on every failure, the C kernel's own guarantee (KERNEL-002), except after
-   `SingularError` from `cholesky` (API-028) and an overflow in a substitution (API-030) or in
+5. The C kernel; its error status goes through `diana_py_raise` (`ValueError`;
+   `FloatOverflowError` from every function but `cholesky`; `SingularError` from `cholesky`, the
+   substitution functions, `lu` and `lu_solve`). `out` is untouched on every failure, the C
+   kernel's own guarantee (KERNEL-002), except after `SingularError` from `cholesky` (API-028)
+   or `lu`, and `FloatOverflowError` from a substitution (API-030), `lu` (API-032) or
    `lu_solve` (API-034), whose public drivers then discard `out`. `cholesky` checks the square
    length before the lengths (API-029), the substitution functions `len(lower) == len(b)**2`
    (API-031), `lu_solve` `len(lu) == len(b)**2` and converts `piv` after the overlap check

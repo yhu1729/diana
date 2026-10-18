@@ -25,9 +25,11 @@ arbitrary binary64 inputs, with `u = 2⁻⁵³`, `η = 2⁻¹⁰⁷⁵`.
 - B5: `|r_i − (y_i + h·S_i/6)| ≤ u·|y_i + h·S_i/6| + (1 + u)·(γ₄·|h|·A_i/6 + (1 + u)·η/6 + η)`,
   `S_i = k₁ᵢ + 2·k₂ᵢ + 2·k₃ᵢ + k₄ᵢ`, `A_i = |k₁ᵢ + k₄ᵢ| + 2·|k₂ᵢ + k₃ᵢ|`, `γ₄ = 4u/(1 − 4u)`.
 - C1, C2 (WP, no assumed contract): memory safety, separation of `y_out`, termination,
-  `DIANA_OK` only for valid arguments, `y_out` untouched on `DIANA_ERR_ARG`; not finiteness.
-  C3, C4 (VST), for disjoint arrays, `d ≥ 1` and `2 ≤ stage ≤ 4`: `DIANA_OK` with the C-order
-  model values when all are finite, else `DIANA_ERR_ARG` with `y_out` unchanged. C5, C6: those
+  `DIANA_OK` only for valid arguments, `DIANA_ERR_OVERFLOW` only with `h` and every input finite,
+  `y_out` untouched on both errors; not finiteness. C3, C4 (VST), for disjoint arrays, `d ≥ 1`
+  and `2 ≤ stage ≤ 4`: `DIANA_OK` with the C-order model values when all are finite, else
+  `y_out` unchanged and `DIANA_ERR_OVERFLOW` when `h` and every input are finite, `DIANA_ERR_ARG`
+  when not (`stage_status`, `rk4_status`). C5, C6: those
   models (`c_stage`, `c_rk4`) are the Flocq `frk4_stage`, `frk4_step`, so B1 to B5 apply to the
   written values. C7, C8: the `diana_fp_finite` copies.
 - Unchecked, no layer A of its own: RK4-UNCHECKED-B1, B2 a component is finite exactly when the

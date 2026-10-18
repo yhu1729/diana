@@ -20,10 +20,13 @@ stages with `diana_rk4_stage` and the step with `diana_rk4_step` in a work area 
   `1, 1.125, 1.125, 1.25, 1.25, 1.375, 1.375, 1.5` with the caller's `ctx`, and `y` ends at the
   exact `(1.5^2 - 1) / 2 = 0.625`, since RK4 is Simpson's rule for `y' = g(t)`.
 - Failure: an infinite slope at call 1, 2, 3 or 4 of the first step (from `t0 = 0`, `h = 1`)
-  fails the stage that uses `k1`, `k2` or `k3`, or the step for `k4`, with `y` unchanged and
-  `done = 0`; one at the second step's `k2` stops after one step at `y = 1/2`. `y' = -y` with
-  `h = -2` from `DBL_MAX/2` reaches `Y2 = DBL_MAX` and overflows in `Y3 = y + DBL_MAX`, leaving
-  `y` unchanged.
+  fails the stage that uses `k1`, `k2` or `k3`, or the step for `k4`, with `DIANA_ERR_ARG`, `y`
+  unchanged and `done = 0`; one at the second step's `k2` stops after one step at `y = 1/2`.
+  `y' = -y` with `h = -2` from `DBL_MAX/2` reaches `Y2 = DBL_MAX` and overflows in
+  `Y3 = y + DBL_MAX`: `DIANA_ERR_OVERFLOW`, `y` unchanged, `done = 0`.
 - `nstep = 0` calls nothing; NULL `fn`, `y` or `work` and `d = 0` are `DIANA_ERR_ARG`.
 - Python `diana.rk4` reproduces the exact paths, times and `0.625`, also when `f` returns the same
-  NumPy array on every call (the driver copies each slope), and stops after `fail + 1` calls.
+  NumPy array on every call (the driver copies each slope), and stops after `fail + 1` calls with
+  a plain `ValueError` ("not finite", not a `FloatOverflowError`). `test_rk4_overflow`:
+  `y' = y` from `DBL_MAX/2` with `h = 1` reaches the stage 4 point `y + k3 = (11/8) DBL_MAX` and
+  raises `FloatOverflowError` ("RK4 stage result overflows").

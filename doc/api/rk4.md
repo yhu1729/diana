@@ -23,9 +23,10 @@ and then `diana_rk4_step(y, k1, k2, k3, k4, d, h, y_out)` writes
 - `diana_rk4_stage(y, k, d, h, stage, y_out)` writes the stage point for `stage` 2, 3 or 4.
 - `diana_rk4_step(y, k1, k2, k3, k4, d, h, y_out)` writes the new state.
 
-Both return `DIANA_OK`, or `DIANA_ERR_ARG` without writing `y_out` for a `NULL` pointer,
-`d == 0`, a `stage` other than 2, 3 or 4, or a component that is not finite: a NaN or infinite
-input or `h`, or an overflow. Each checks every component before writing any. Every operation is
+Both return `DIANA_OK`; `DIANA_ERR_ARG` for a `NULL` pointer, `d == 0`, a `stage` other than 2,
+3 or 4, or a NaN or infinite input or `h`; or `DIANA_ERR_OVERFLOW` when every input is finite and
+a component overflows. Each checks every component before writing any, so neither error writes
+`y_out`. Every operation is
 rounded to binary64 in a fixed order, with no fused multiply-add. `y_out` must not overlap any
 input; the inputs may overlap each other.
 
@@ -93,7 +94,7 @@ checked functions.
 
 Use them only when the kernel itself is a measured cost and you check the state yourself: in the
 project's [benchmark](../development/benchmark.md) the unchecked stage ran 2.9 to 4.8 times and
-the unchecked step 2.6 to 4.5 times faster, saving 1.3 to 2.0 ns per component on a whole RK4
+the unchecked step 2.2 to 4.6 times faster, saving 1.4 to 2.0 ns per component on a whole RK4
 step. That saving is small next to four evaluations of a right-hand side that costs a few
 nanoseconds per component.
 
@@ -103,7 +104,7 @@ nanoseconds per component.
 in place, with the callback type `diana_ode_fn` of the [Euler wrapper](euler.md#callback-wrapper).
 Step `k` evaluates `fn` at `t0 + k·h`, twice at `t0 + (k + ½)·h`, and at `t0 + (k + 1)·h`. `work`
 holds `5·d` doubles and must not overlap `y`; `done` (may be `NULL`) receives the number of
-completed steps. When a stage or step fails, it returns `DIANA_ERR_ARG` with `y` at the last
+completed steps. When a stage or step fails, it returns that call's status with `y` at the last
 successful step. Exponential decay `y′ = −r·y` with the rate in `ctx`: each component is
 multiplied by `R(−0.1)¹⁰ = 0.367879774`, with `R(z) = 1 + z + z²/2 + z³/6 + z⁴/24`, against the
 exact `e⁻¹ = 0.367879441`:
@@ -149,8 +150,9 @@ y(0.5) = (0.367879774, 0.735759549, 1.471519098)
 
 - `diana.rk4_stage(y, k, h, stage)` and `diana.rk4_step(y, k1, k2, k3, k4, h)` return one checked
   call as a new `array.array("d")`. Every vector is an
-  [array argument](overview.md#array-arguments), all of the same length; a bad `stage` or a
-  non-finite component raises `ValueError`.
+  [array argument](overview.md#array-arguments), all of the same length; a bad `stage` or a NaN
+  or infinite input raises `ValueError`, and an overflowing component
+  `diana.FloatOverflowError`.
 - `diana.rk4(f, t0, y0, h, nstep)` takes `nstep` steps from a copy of `y0`, calling `f(t, y)` at
   the four stage times of each step, and returns the final state. Each result of `f` is copied,
   so `f` may return the same buffer every time; `f` must not modify `y`.
@@ -204,6 +206,7 @@ anything about the wrapper. Theorems: `spec/rk4.md` and `spec/rk4_unchecked.md`;
 ## Technical notes
 
 [API-016](../../note/api/API-016.md) evaluation order and exits,
+[API-036](../../note/api/API-036.md) non-finite input versus overflow,
 [API-017](../../note/api/API-017.md) ODE wrappers,
 [API-018](../../note/api/API-018.md) unchecked kernels,
 [API-019](../../note/api/API-019.md) when to use them,

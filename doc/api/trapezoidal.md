@@ -11,9 +11,9 @@ Shared conventions are in the [API overview](overview.md).
 
 - `diana_trapezoidal(y, n, h, &result)` writes
   `h·(y[0]/2 + y[1] + … + y[n−2] + y[n−1]/2)` to `result`, for `n >= 2` samples spaced `h` apart
-  (a negative `h` integrates in the opposite direction). It returns `DIANA_OK`, or
-  `DIANA_ERR_ARG` without writing `result` for a `NULL` pointer, `n < 2`, or a result that is not
-  finite: a NaN or infinite sample or `h`, or an overflow.
+  (a negative `h` integrates in the opposite direction). It returns `DIANA_OK`; `DIANA_ERR_ARG`
+  for a `NULL` pointer, `n < 2`, or a NaN or infinite sample or `h`; or `DIANA_ERR_OVERFLOW` when
+  every input is finite and the result overflows. Neither error writes `result`.
 
 The kernel halves the endpoint sum first, adds the interior samples left to right, and multiplies by
 `h` last, each operation rounded to binary64. `y` is only read and must not overlap `result`.
@@ -51,8 +51,8 @@ int main(void) {
 ## Python
 
 `diana.trapezoidal(y, h)` returns the same value as a `float`. `y` is an
-[array argument](overview.md#array-arguments) of at least two samples; a non-finite result raises
-`ValueError`.
+[array argument](overview.md#array-arguments) of at least two samples; a NaN or infinite sample
+or `h` raises `ValueError`, and an overflow `diana.FloatOverflowError`.
 
 ```python
 >>> import math
@@ -66,7 +66,7 @@ int main(void) {
 >>> diana.trapezoidal([1.0, float("nan")], 0.5)
 Traceback (most recent call last):
   ...
-ValueError: trapezoidal result is not finite
+ValueError: trapezoidal input is not finite: a sample or h
 ```
 
 A NumPy `float64` array is read in place:
@@ -92,4 +92,5 @@ cancel. Theorems: `spec/trapezoidal.md`; status: the
 ## Technical notes
 
 [API-013](../../note/api/API-013.md) evaluation order and exits,
+[API-036](../../note/api/API-036.md) non-finite input versus overflow,
 [PROOF-003](../../note/proof/PROOF-003.md) what is proved, with the exact bounds.

@@ -16,7 +16,7 @@ then `Lᵀ·x = y`. Shared conventions are in the [API overview](overview.md).
 - Both return `DIANA_OK`; `DIANA_ERR_ARG` without writing `x` for a `NULL` pointer, `n = 0`, an
   `n` whose `n·n` does not fit in `size_t`, or a NaN or infinite entry of `b` or on or below the
   diagonal of `l`; `DIANA_ERR_SINGULAR` without writing `x` when a diagonal entry is `±0`; and
-  `DIANA_ERR_ARG` when an entry of the solution overflows. Each entry needs the ones computed
+  `DIANA_ERR_OVERFLOW` when an entry of the solution overflows. Each entry needs the ones computed
   before it, so that last error is found with `x` partly written, and its contents are then
   unspecified.
 
@@ -68,8 +68,8 @@ zero diagonal: zero derivative or pivot
 
 `diana.forward_substitution(lower, b)` and `diana.back_substitution(lower, b)` return `x` as a
 new `array.array("d")`. `lower` and `b` are [array arguments](overview.md#array-arguments), the
-length of `lower` the square of that of `b`; a wrong length, a NaN or infinite entry, or an
-overflowing solution raises `ValueError`, and a zero diagonal entry raises
+length of `lower` the square of that of `b`; a wrong length or a NaN or infinite entry raises
+`ValueError`, an overflowing solution `diana.FloatOverflowError`, and a zero diagonal entry
 `diana.SingularError`. The factor from `diana.cholesky` goes in as it is; with NumPy, pass
 `L.ravel(order="F")`:
 

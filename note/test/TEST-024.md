@@ -13,7 +13,8 @@ bits wherever the checked ones succeed, and the IEEE results where they reject.
 
 - Failure position: `(1, 2, DBL_MAX)` with slope `(1, 1, DBL_MAX)` fails in the last component and
   `(DBL_MAX, 2, 3)` with `(DBL_MAX, 1, 1)` in the first (stage 4 with `h = 2`, step with `h = 1`);
-  all 100 output slots keep the sentinel, so the first pass rejects before the second writes.
+  both `DIANA_ERR_OVERFLOW`, and all 100 output slots keep the sentinel, so the first pass rejects
+  before the second writes.
 - Argument errors for all four functions: NULL `y`, `k` (or each of `k1 .. k4`) or `y_out`,
   `d == 0`, and for the stage numbers 0, 1, 5 and -3.
 - `stage_ok` and `step_ok` run the checked and the unchecked function on every successful case

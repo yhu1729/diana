@@ -40,17 +40,19 @@ theorem:
     informal: >
       ACSL contract in src/euler_step.c, Frama-C WP float model with RTE: memory safety (only
       y[0 .. d−1] and f[0 .. d−1] are read, only y_out[0 .. d−1] is written, y_out separate from
-      both), no UB, termination of both loops, DIANA_OK only for non-NULL pointers with d ≥ 1,
-      and y_out untouched on DIANA_ERR_ARG. No assumed contract; that y_out is finite on DIANA_OK
-      is left to VST.
+      both), no UB, termination of the three loops, DIANA_OK and DIANA_ERR_OVERFLOW only for
+      non-NULL pointers with d ≥ 1, DIANA_ERR_OVERFLOW only with h and every y[j] and f[j]
+      finite, and y_out untouched on DIANA_ERR_ARG and DIANA_ERR_OVERFLOW. No assumed contract;
+      that y_out is finite on DIANA_OK is left to VST.
     acsl: src/euler_step.c
   - id: EULER-C2
     layer: C
     informal: >
       diana_euler_step computes the binary64 model (VST, AArch64 macOS Clight AST): for y and f
       pointing to d ≥ 1 readable doubles and y_out to d writable doubles, the three disjoint, it
-      returns DIANA_OK and writes the model values when every component is finite, and returns
-      DIANA_ERR_ARG leaving y_out unchanged otherwise. The NULL and d = 0 paths are EULER-C1.
+      returns euler_status h ys fs: DIANA_OK, writing the model values, when every component is
+      finite; otherwise, leaving y_out unchanged, DIANA_ERR_OVERFLOW when h and every y[j] and
+      f[j] are finite and DIANA_ERR_ARG when not. The NULL and d = 0 paths are EULER-C1.
     rocq: Diana.VST.EulerStep.body_diana_euler_step
   - id: EULER-C3
     layer: C
@@ -71,11 +73,13 @@ integration is a loop of such steps in the caller.
 Each component is `fl(y[i] + fl(h·f[i]))`; the build disables contraction
 (`-ffp-contract=off`), so the product is rounded before the sum. The kernel makes two passes:
 the first computes every component and checks it with `diana_fp_finite` without writing, and
-returns `DIANA_ERR_ARG` at the first non-finite one; the second recomputes each component, bit
-for bit the same, and writes it. So `y_out` is untouched on every error without a scratch
-buffer, as the other kernels leave their outputs untouched. A NaN or infinite `y[i]`, `f[i]` or
-`h`, or an overflow in either operation, is an error; underflow is not. The opt-in one-pass step
-without the check, `diana_euler_step_unchecked`, has its own spec, `spec/euler_unchecked.md`.
+stops at the first non-finite one; the second recomputes each component, bit for bit the same,
+and writes it. So `y_out` is untouched on every error without a scratch buffer, as the other
+kernels leave their outputs untouched. Only after a failure does the kernel test `h`, then
+`y[j]` and `f[j]` for every `j`: a NaN or infinite one is `DIANA_ERR_ARG`, and an overflow in
+either operation on finite inputs `DIANA_ERR_OVERFLOW`; underflow is not an error. The opt-in
+one-pass step without the check, `diana_euler_step_unchecked`, has its own spec,
+`spec/euler_unchecked.md`.
 
 ## Proof sketch
 
@@ -100,12 +104,15 @@ without the check, `diana_euler_step_unchecked`, has its own spec, `spec/euler_u
   random inputs with subnormal products, the error reaches 99.995 % of it. Proof: `forward_error`.
 - **C1**: the `/*@ ... */` annotations in `src/euler_step.c`. Every early return happens before the
   second loop, and the only write is `y_out[i]` in that loop, so `assigns y_out[0 .. d − 1]` and
-  the error post-condition follow from the control flow; the loop invariants are only the index
-  bounds.
+  the untouched output follow from the control flow; the invariants of the two passes are only
+  the index bounds, and the input loop inside the first pass carries `\is_finite(y[p]) &&
+  \is_finite(f[p])` for `p < j`, which gives the `DIANA_ERR_OVERFLOW` post-condition at its exit.
 - **C2**: the first loop carries `forallb is_finite (sublist 0 i L)` for `L = c_euler h ys fs`
-  and calls `diana_fp_finite` on each component (`forward_call`); a non-finite component
-  returns at once, and `forallb_false` shows the whole list fails the check, so the
-  post-condition leaves `y_out` as it was. The second loop writes: its invariant holds
+  and calls `diana_fp_finite` on each component (`forward_call`); at a non-finite component
+  `forallb_false` shows the whole list fails the check, and the proof follows the calls on `h`
+  and, in the input loop, on each `y[j]` and `f[j]`, whose invariant carries `forallb is_finite`
+  over `sublist 0 j ys` and `sublist 0 j fs` (`forallb_sublist_succ`), so every return meets
+  `euler_status` with `y_out` as it was. The second loop writes: its invariant holds
   `y_out = map Vfloat (sublist 0 i L) ++ sublist i d os`, and each store is an `upd_Znth`
   that `list_solve` folds into the next prefix (`Znth_c_euler` names the stored value). The
   first VST proof in Diana that writes an array and calls a function inside a loop.
@@ -156,6 +163,6 @@ finiteness and the exact values together.
 | EULER-A2 | proved | proved | – |
 | EULER-B1 | – | proved | – |
 | EULER-B2 | – | proved | – |
-| EULER-C1 | – | – | 49/49 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
+| EULER-C1 | – | – | 74/74 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
 | EULER-C2 | – | proved | – |
 | EULER-C3 | – | proved | – |

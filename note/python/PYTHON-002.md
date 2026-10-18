@@ -12,7 +12,8 @@ related: [PYTHON-001, PYTHON-004, PYTHON-006, API-022]
 private modules, so `diana.<name>` is the whole API.
 
 - `_error.py` defines only `MaxIterError` (a `RuntimeError` with `estimate`, `uncertainty` and
-  `iter`); it re-exports `BracketError` and `SingularError`, which the extension creates.
+  `iter`); it re-exports `BracketError`, `SingularError` and `FloatOverflowError`, which the
+  extension creates.
 - `_convert.py` defines `real(x, name)`: `TypeError` unless the type has `__float__` or
   `__index__`, then `float(x)`, so a string is rejected as the C `d` converter rejects it. The
   `_bisection.py`, `_euler.py` and `_rk4.py` drivers apply it to scalars they use in Python

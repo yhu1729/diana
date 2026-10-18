@@ -11,7 +11,8 @@ related: [PYTHON-001, BUILD-001]
 ---
 The extension uses single-phase initialization: `PyModule_Create` on a `PyModuleDef` with
 `m_size = -1`, static `PyTypeObject`s for `Bisection` and `Newton`, and the process-global
-exception pointers `diana_py_bracket_error` and `diana_py_singular_error`. Multi-phase
+exception pointers `diana_py_bracket_error`, `diana_py_singular_error` and
+`diana_py_float_overflow_error`. Multi-phase
 initialization is not used because its slot table (`PyModuleDef_Slot`) stores the exec function
 in a `void *` member: converting a function pointer to an object pointer is not ISO C, and gcc
 rejects it under `-Wpedantic -Werror` even with an explicit `(void *)` cast (BUILD-001).
@@ -22,7 +23,7 @@ Consequences, observed with CPython 3.13 (`.python-version`):
   legacy subinterpreter loads it, and the module's state is process-global, so it is not
   subinterpreter-safe.
 - Deleting `diana._diana` from `sys.modules` and importing it again yields a new module object
-  holding the same `BracketError`, `SingularError`, `Bisection` and `Newton` objects: for
+  holding the same objects (the exception classes, `Bisection` and `Newton`): for
   `m_size = -1` CPython keeps a copy of the first module's dict and does not run `PyInit__diana`
   again. `importlib.reload` returns the same module object.
 

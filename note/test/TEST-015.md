@@ -13,8 +13,9 @@ the fourth order on `exp`.
 - Property (Hypothesis, 500 derandomized examples, no example database): lists of odd length
   `2p + 1`, `p` in 1..20 (3 to 41 samples), of any floats, and any `h`, as a list and as a NumPy
   array. The result must equal, bit for bit including the sign of zero, Python's
-  `h * (((y0 + yl) + 4.0 * so) + 2.0 * se) / 3.0` with both sums left to right from `0.0`, and
-  `ValueError` ("not finite") must be raised exactly when that value is not finite.
+  `h * (((y0 + yl) + 4.0 * so) + 2.0 * se) / 3.0` with both sums left to right from `0.0`. When
+  that value is not finite the call must raise `FloatOverflowError` ("overflows") if `h` and every
+  sample are finite and a plain `ValueError` ("input is not finite") otherwise.
 - Rounding: `|r - h S'/3| <= gamma_(p+5) |h| A / 3 + (1 + u) eta / 3 + eta`, `p = (n - 1)/2`,
   `A = |y0 + yl| + 4 sum|odd| + 2 sum|even|`, in `fractions.Fraction`. Cases: 1001 samples
   `uniform(-1, 1) * 2^k`, `k` in `[-20, 20]` (seed 1729), `h = 0.1`; 101 samples with `k` in

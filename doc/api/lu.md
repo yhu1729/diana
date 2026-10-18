@@ -19,9 +19,9 @@ the matrix is singular. Shared conventions are in the [API overview](overview.md
   as with LAPACK's `getrf` counting from 0.
 - It returns `DIANA_OK`; `DIANA_ERR_ARG` without writing `lu` or `piv` for a `NULL` pointer,
   `n = 0`, an `n` whose `n·n` does not fit in `size_t`, or a NaN or infinite entry of `a`;
-  `DIANA_ERR_SINGULAR` when every candidate pivot of a column is zero; or `DIANA_ERR_ARG` when an
-  update overflows. After the last two the contents of `lu` and `piv` are unspecified: each step
-  needs the steps before it, so the kernel writes as it goes.
+  `DIANA_ERR_SINGULAR` when every candidate pivot of a column is zero; or `DIANA_ERR_OVERFLOW`
+  when an update overflows. After the last two the contents of `lu` and `piv` are unspecified:
+  each step needs the steps before it, so the kernel writes as it goes.
 
 Step `k` scans column `k` from the diagonal down for the first entry of largest magnitude,
 interchanges its row with row `k` across all columns, divides the entries below the pivot by it,
@@ -71,9 +71,9 @@ singular: zero derivative or pivot
 `diana.lu(a)` returns `(lu, piv)`: the packed factor as a new `array.array("d")` in the same
 column-major layout, and the pivot rows as a `list` of `int`. `a` is an
 [array argument](overview.md#array-arguments) whose length `n·n` is a square; a length that is
-not, a NaN or infinite entry, or an update that overflows raises `ValueError`, and a zero pivot
-column raises `diana.SingularError`. With NumPy, pass `A.ravel(order="F")` and reshape the result
-with `order="F"`:
+not or a NaN or infinite entry raises `ValueError`, an update that overflows
+`diana.FloatOverflowError`, and a zero pivot column `diana.SingularError`. With NumPy, pass
+`A.ravel(order="F")` and reshape the result with `order="F"`:
 
 ```python
 >>> import diana

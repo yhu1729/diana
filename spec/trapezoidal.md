@@ -39,17 +39,19 @@ theorem:
     layer: C
     informal: >
       ACSL contract in src/trapezoidal.c, Frama-C WP float model with RTE: memory safety (only
-      y[0 .. n−1] is read, only *result is written), no UB, loop termination, DIANA_OK only for
-      non-NULL y and result with n ≥ 2 and then *result finite, and *result untouched on
-      DIANA_ERR_ARG. No assumed contract.
+      y[0 .. n−1] is read, only *result is written), no UB, termination of both loops, DIANA_OK
+      only for non-NULL y and result with n ≥ 2 and then *result finite, DIANA_ERR_OVERFLOW only
+      for non-NULL y and result with n ≥ 2, h finite and every y[q] finite, and *result untouched
+      on DIANA_ERR_ARG and DIANA_ERR_OVERFLOW. No assumed contract.
     acsl: src/trapezoidal.c
   - id: TRAPEZOIDAL-C2
     layer: C
     informal: >
       diana_trapezoidal computes the binary64 model (VST, AArch64 macOS Clight AST): for y
       pointing to n ≥ 2 readable doubles and a writable *result separate from them, it returns
-      DIANA_OK and writes the model value when that value is finite, and returns DIANA_ERR_ARG
-      leaving *result unchanged otherwise. The NULL and n < 2 paths are TRAPEZOIDAL-C1.
+      trap_status ys h: DIANA_OK, writing the model value, when that value is finite; otherwise,
+      leaving *result unchanged, DIANA_ERR_OVERFLOW when h and every sample are finite and
+      DIANA_ERR_ARG when not. The NULL and n < 2 paths are TRAPEZOIDAL-C1.
     rocq: Diana.VST.Trapezoidal.body_diana_trapezoidal
   - id: TRAPEZOIDAL-C3
     layer: C
@@ -105,17 +107,22 @@ which reverses the samples and negates the result, so the layer-A theorems take 
   Everything above except `half_error` and the two theorems is in
   `verification/rocq/theory/Float/Sum.v` (`Diana.Float.Sum`), for reuse by later kernels that
   sum samples.
-- **C1**: the `/*@ ... */` annotations in `src/trapezoidal.c`. The loop invariant is only
-  `1 <= i <= n - 1`; WP proves no value property beyond finiteness on `DIANA_OK`, see below.
-- **C2**: one Clight loop over a read-only `tarray tdouble n`; `size_t` is `tulong` on the target,
+- **C1**: the `/*@ ... */` annotations in `src/trapezoidal.c`. The sum loop's invariant is only
+  `1 <= i <= n - 1`, and the input loop that runs after a non-finite result carries
+  `\is_finite(y[q])` for `q < i`, which gives the `DIANA_ERR_OVERFLOW` post-condition; WP proves
+  no value property beyond finiteness on `DIANA_OK`, see below.
+- **C2**: the sum loop over a read-only `tarray tdouble n`; `size_t` is `tulong` on the target,
   so the index lives in `Int64`. `forward_for` with the invariant `s = c_sum ys i` at the test and
   `c_sum ys (i + 1)` before the increment; `c_sum_step` splits off one sample, and
   `unsigned_sub_one` turns the unsigned test `i < n - 1` into integer arithmetic. The
   precondition holds `data_at` on the array, which makes `y` a valid pointer, so the NULL
   comparison is decided; a NULL `y` has no `data_at`, which is why the NULL and `n < 2` paths are
   left to WP (C1). `diana_fp_finite` is re-specified for this AST (`body_diana_fp_finite`), reusing
-  the IEEE lemmas of `verification/rocq/theory/VST/Bisection.v`. Proof: `body_diana_trapezoidal`
-  in `verification/rocq/theory/VST/Trapezoidal.v`.
+  the IEEE lemmas of `verification/rocq/theory/VST/Bisection.v`. After a non-finite result the
+  proof follows the calls on `h` and, in the input loop, on each sample, whose invariant carries
+  `forallb is_finite (sublist 0 j ys)` (`forallb_sublist_succ` and `forallb_false` of
+  `VST/Euler.v`), so every return meets `trap_status`. Proof: `body_diana_trapezoidal` in
+  `verification/rocq/theory/VST/Trapezoidal.v`.
 
 ## Model correspondence
 
@@ -162,6 +169,6 @@ C assignment. The value claim is TRAPEZOIDAL-C2 (VST), on the same Flocq model a
 | TRAPEZOIDAL-A2 | proved | proved | – |
 | TRAPEZOIDAL-B1 | – | proved | – |
 | TRAPEZOIDAL-B2 | – | proved | – |
-| TRAPEZOIDAL-C1 | – | – | 41/41 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
+| TRAPEZOIDAL-C1 | – | – | 61/61 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
 | TRAPEZOIDAL-C2 | – | proved | – |
 | TRAPEZOIDAL-C3 | – | proved | – |
