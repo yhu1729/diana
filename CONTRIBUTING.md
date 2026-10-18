@@ -135,12 +135,16 @@ orders the steps.
 CI checks the C build, ctest, pytest, Frama-C WP, layer A in Lean with its axiom gate, and that
 layer A compiles in Rocq. It does **not** check layers B and C-VST, the Rocq axiom gate, or the
 Clight AST, because no CI image carries Flocq, CompCert, or VST. A green pipeline says nothing
-about those, so they are your responsibility before the commit lands.
+about those, so they are your responsibility before the commit lands; CI's `verify_provenance`
+only checks, from hashes, that the committed report and AST manifest were written for the sources
+committed and that the report is green.
 
 - Always: `script/dev.sh test` (ctest including the installed-consumer tests, pytest, ruff,
   `clang-format`, `clang-tidy`, and the documentation check `script/check_doc.py`).
-- After a change to `src/`, `include/`, `verification/`, or `spec/`: `script/dev.sh verify`, and
-  commit the report it rewrites, `doc/verification/report.md`. It runs the spec gate with
+- After a change to `src/`, `include/`, `verification/`, `spec/`, `script/axiom_allow.yaml`, or
+  `script/run_frama_c.sh`: `script/dev.sh verify`, and
+  commit the report and the AST manifest it rewrites, `doc/verification/report.md` and
+  `verification/clight/manifest.txt`. It runs the spec gate with
   `--strict`, so a theorem listed in `spec/` that no prover proves fails it, as does an ACSL
   specification without a valid Frama-C expectation entry. It also checks that the `ccomp` build
   of the kernels prints the same bits as gcc/clang builds on a fixed corpus
@@ -148,7 +152,8 @@ about those, so they are your responsibility before the commit lands.
 - After a change to a verified kernel or a header it includes, the Clight AST has to be
   regenerated, and only on the CompCert target it is named for (`bisection_init_aarch64_macos.v` is
   AArch64 macOS). `script/dev.sh verify` checks the AST of the current target and fails on a stale
-  one; `DIANA_CLIGHT_UPDATE=1` makes it overwrite instead. Nothing in CI notices staleness.
+  one; `DIANA_CLIGHT_UPDATE=1` makes it overwrite instead. CI notices staleness through the
+  manifest's hashes but cannot regenerate an AST.
 - Adding a method: give it a `spec/<method>.md` with its theorem IDs (`<METHOD>-<layer><n>`, such as
   `BISECTION-A1`, with `_` in the method written as `-`, such as `EULER-UNCHECKED-C1`), layer,
   informal statement, and per-prover constant name. `script/check_spec.py`
