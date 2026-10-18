@@ -35,12 +35,13 @@ that mirrors it.
 
 The GitHub repository is a push mirror of the GitLab project, and `.github/workflows/` runs a
 second pipeline over the same commits. GitLab stays the primary pipeline and the only one that
-makes a release. `ci.yml` holds every GitLab job but `style_git` and `release`, with the same job
+makes a release. `ci.yml` holds every GitLab job but `release`, with the same job
 names, images, commands and `needs`: the C builds wait for `style_c`, `test_install` and
 `verify_frama_c` for `test_gcc_release`, and each coverage job for its tests. Its first job,
 `change`, reads the `.change_*` lists of `.gitlab-ci.yml` with `script/ci_change.py`, so a job runs
-for the same changed files as on GitLab and the path lists exist once. `style_git.yml` runs
-`style_git` alone, never cancelled.
+for the same changed files as on GitLab and the path lists exist once. `style_git` checks every
+commit of a branch, as for a merge request, and on the default branch each push, whose runs are
+never cancelled.
 
 It closes two gaps GitLab leaves: macOS jobs (`test_macos_{debug,release}`, `test_install_macos`,
 `test_python_macos`) build and test on AArch64 macOS with Apple clang, and `test_python` runs every

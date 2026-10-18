@@ -173,7 +173,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [CI-016](ci/CI-016.md) | fact | verify_provenance checks the AST manifest, the report stamp and its status |
 | [CI-017](ci/CI-017.md) | fact | GitHub Actions mirror the GitLab pipeline and its needs graph in ci.yml |
 | [CI-018](ci/CI-018.md) | fact | The change job selects the GitHub jobs from the GitLab .change_* lists |
-| [CI-019](ci/CI-019.md) | fact | GitHub style_git passes the push range to check_commit.sh as GitLab variables |
+| [CI-019](ci/CI-019.md) | fact | GitHub style_git checks a range no cancelled run can skip |
 | [CI-020](ci/CI-020.md) | fact | GitHub Linux jobs run GitLab's images, pinned by digest, and its commands |
 | [CI-021](ci/CI-021.md) | fact | GitHub runs the Frama-C and Rocq images with docker run, as their own users |
 | [CI-022](ci/CI-022.md) | fact | GitHub verify_lean installs elan on stock Debian and caches Lean and Mathlib |
@@ -408,8 +408,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `.git-hooks/pre-push` | GIT-006 |
 | `.github/workflows/*.yml` | CI-025 |
 | `.github/workflows/c_test.yml` | CI-017, CI-020 |
-| `.github/workflows/ci.yml` | CI-016, CI-017, CI-018, CI-020, CI-021, CI-022, CI-023, CI-024, CI-026 |
-| `.github/workflows/style_git.yml` | CI-017, CI-019 |
+| `.github/workflows/ci.yml` | CI-016, CI-017, CI-018, CI-019, CI-020, CI-021, CI-022, CI-023, CI-024, CI-026 |
 | `.gitignore` | BUILD-011, VERIFY-005, WP-009 |
 | `.gitlab-ci.yml` | BENCHMARK-005, BUILD-007, CI-001, CI-002, CI-003, CI-004, CI-005, CI-006, CI-007, CI-008, CI-009, CI-010, CI-011, CI-012, CI-013, CI-014, CI-016, CI-018, COMPILER-004, GATE-007, PROVER-001, PROVER-005, PROVER-006, TEST-004, TEST-006, VERIFY-001 |
 | `.python-version` | CI-024 |

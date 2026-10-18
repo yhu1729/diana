@@ -221,8 +221,8 @@ note/                 technical notes per topic, index by topic and by path (REA
   `--run --strict --prover rocq --layer A --layer B --no-report` (note CI-013).
 - CI: GitLab CI (`.gitlab-ci.yml`) is primary and alone makes a release. The GitHub mirror runs
   `.github/workflows/ci.yml` on every push, with the GitLab job names, `needs`, images (pinned by
-  digest) and commands, plus macOS jobs and `test_python` on Python 3.12, 3.13 and 3.14, and
-  `style_git.yml`; its `change` job selects jobs from the `.change_*` lists of `.gitlab-ci.yml`
+  digest) and commands, plus macOS jobs and `test_python` on Python 3.12, 3.13 and 3.14; its
+  `change` job selects jobs from the `.change_*` lists of `.gitlab-ci.yml`
   (`script/ci_change.py`), so a list is edited in one place; caches keyed on their inputs; actions
   pinned to commit SHAs, `permissions: contents: read` (`doc/development/ci.md`, notes CI-017 to
   CI-026)

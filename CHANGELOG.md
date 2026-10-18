@@ -350,13 +350,14 @@ new size and layout), and the second attribute of `diana.MaxIterError` is `uncer
   list is written once — the style checks, ctest with gcc 14 and clang 18 in Debug with sanitizers
   and in Release, the install tests, pytest with the wheel checks, C and Python coverage as run
   artifacts, Frama-C WP, the Lean build and gate, the Rocq layers A and B, and the provenance check
-  of the AST manifest and the report; `style_git.yml` runs the commit check over the pushed range,
-  never cancelled. It adds what GitLab does not run: ctest, the install tests, pytest and the wheel
-  checks on AArch64 macOS with Apple clang, and `test_python` on Python 3.12, 3.13 and 3.14. It
-  caches the uv downloads, elan, Mathlib's packages and the Lean build, and the WP verdicts, each
-  under a key of its own inputs. Actions are pinned to commit SHAs and images to digests, the token
-  is read-only, and there is no release job; GitLab CI stays the primary pipeline, and its
-  `.change_style` list now includes `.github/workflows/`, since notes name those files.
+  of the AST manifest and the report, and the commit check of every commit of a branch, or of each
+  push to the default branch, whose runs are never cancelled. It adds what GitLab does not run:
+  ctest, the install tests, pytest and the wheel checks on AArch64 macOS with Apple clang, and
+  `test_python` on Python 3.12, 3.13 and 3.14. It caches the uv downloads, elan, Mathlib's packages
+  and the Lean build, and the WP verdicts, each under a key of its own inputs. Actions are pinned to
+  commit SHAs and images to digests, the token is read-only, and there is no release job; GitLab CI
+  stays the primary pipeline, and its `.change_style` list now includes `.github/workflows/`, since
+  notes name those files.
 - ctest `configure` (`test/c/test_configure.cmake`) reconfigures the project into a scratch
   directory and checks that every rejected floating-point flag fails configuration in
   `CMAKE_C_FLAGS` and its per-configuration variants while the strict flags and their safe
