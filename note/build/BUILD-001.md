@@ -5,7 +5,7 @@ kind: fact
 path:
   - cmake/warning.cmake
   - test/c/CMakeLists.txt
-related: [BUILD-007, FP-004]
+related: [BUILD-007, BUILD-013, FP-004]
 ---
 `diana_set_strict_flag(<target>)` in `cmake/warning.cmake` adds, as `PRIVATE` compile options:
 
@@ -15,7 +15,9 @@ related: [BUILD-007, FP-004]
 plus `-fexcess-precision=standard` when the compiler ID is `GNU`, and `-Werror` when
 `DIANA_WERROR` is ON (BUILD-007).
 
-- It applies to compiler IDs `GNU`, `Clang` and `AppleClang` only; other compilers get no option.
+- It applies to compiler IDs exactly `GNU`, `Clang` and `AppleClang` (an anchored match); another
+  compiler gets no option, and configuration refuses it unless `DIANA_ALLOW_UNKNOWN_COMPILER` is
+  ON (BUILD-013).
 - Targets: the library `diana` and the extension `_diana` (`CMakeLists.txt`), and every C test
   `test_<name>` (`diana_add_test` in `test/c/CMakeLists.txt`). The installed-consumer project in
   `test/install/` does not use it.

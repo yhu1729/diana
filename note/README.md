@@ -149,6 +149,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [BUILD-010](build/BUILD-010.md) | rule | Linux and macOS only |
 | [BUILD-011](build/BUILD-011.md) | fact | Source distribution contents |
 | [BUILD-012](build/BUILD-012.md) | rule | A shared libdiana exports only the functions listed in cmake/symbol.txt |
+| [BUILD-013](build/BUILD-013.md) | rule | Configuration refuses a C compiler other than gcc or clang |
 
 ### ci
 
@@ -206,6 +207,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [FP-004](fp/FP-004.md) | rule | Strict IEEE binary64 compile flags |
 | [FP-005](fp/FP-005.md) | rationale | Verified artifact versus shipped binary |
 | [FP-006](fp/FP-006.md) | fact | The square-root helper diana_fp_sqrt and its assumed semantics |
+| [FP-007](fp/FP-007.md) | rule | Configuration rejects fast-math and contraction flags |
 
 ### gate
 
@@ -351,6 +353,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [TEST-040](test/TEST-040.md) | fact | LU solve Python tests against a binary64 reference and the B bounds |
 | [TEST-041](test/TEST-041.md) | fact | Bisection and Newton status field and the rejection of a finished state |
 | [TEST-042](test/TEST-042.md) | fact | Provenance check unit tests run check_provenance.py on a temporary tree |
+| [TEST-043](test/TEST-043.md) | fact | ctest configure checks the compiler refusal and the flag guard |
 
 ### verify
 
@@ -418,13 +421,13 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `.python-version` | CI-024 |
 | `CHANGELOG.md` | BENCHMARK-004, CI-014, STYLE-004 |
 | `CLAUDE.md` | PROVER-001, STYLE-004 |
-| `CMakeLists.txt` | API-005, BUILD-002, BUILD-003, BUILD-004, BUILD-005, BUILD-006, BUILD-007, BUILD-008, BUILD-009, BUILD-010, BUILD-012, CI-003, CI-008, CI-023, FP-004, KERNEL-006, PYTHON-007, STYLE-008, STYLE-010, TEST-002 |
+| `CMakeLists.txt` | API-005, BUILD-002, BUILD-003, BUILD-004, BUILD-005, BUILD-006, BUILD-007, BUILD-008, BUILD-009, BUILD-010, BUILD-012, BUILD-013, CI-003, CI-008, CI-023, FP-004, FP-007, KERNEL-006, PYTHON-007, STYLE-008, STYLE-010, TEST-002, TEST-043 |
 | `CONTRIBUTING.md` | GIT-008, PROVER-002, PROVER-003, PROVER-005, VERIFY-001 |
 | `ci/docker/lean.Dockerfile` | CI-015 |
 | `cmake/check_symbol.cmake` | BUILD-012 |
 | `cmake/dianaConfig.cmake.in` | API-005, BUILD-009, TEST-002 |
 | `cmake/symbol.txt` | BUILD-012, KERNEL-006 |
-| `cmake/warning.cmake` | BUILD-001, BUILD-007, CI-008, COMPILER-001, FP-004, FP-005, STYLE-010, TEST-003 |
+| `cmake/warning.cmake` | BUILD-001, BUILD-007, BUILD-013, CI-008, COMPILER-001, FP-004, FP-005, STYLE-010, TEST-003 |
 | `doc/README.md` | STYLE-003 |
 | `doc/api/*.md` | TEST-003 |
 | `doc/api/euler.md` | BENCHMARK-004 |
@@ -566,12 +569,13 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `src/version.c` | API-002 |
 | `test/benchmark/unchecked.c` | API-019, BENCHMARK-001, BENCHMARK-002, BENCHMARK-003, BENCHMARK-005 |
 | `test/c/.clang-tidy` | STYLE-007 |
-| `test/c/CMakeLists.txt` | BUILD-001, COMPILER-010, KERNEL-006, TEST-001 |
+| `test/c/CMakeLists.txt` | BUILD-001, COMPILER-010, KERNEL-006, TEST-001, TEST-043 |
 | `test/c/check.h` | TEST-001 |
 | `test/c/test_*.c` | TEST-006 |
 | `test/c/test_bisection.c` | API-009, API-024, TEST-007, TEST-008, TEST-009, TEST-041 |
 | `test/c/test_cholesky.c` | TEST-033 |
 | `test/c/test_compiler.c` | COMPILER-001, COMPILER-005, COMPILER-006, COMPILER-007, COMPILER-008, COMPILER-009, COMPILER-010, COMPILER-011, FP-005, KERNEL-006 |
+| `test/c/test_configure.cmake` | FP-007, TEST-043 |
 | `test/c/test_euler.c` | API-017, TEST-016, TEST-017, TEST-018, TEST-019 |
 | `test/c/test_lu.c` | TEST-037 |
 | `test/c/test_lu_solve.c` | TEST-039 |

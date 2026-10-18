@@ -9,7 +9,8 @@ related: [BUILD-002, BUILD-009]
 With `DIANA_SANITIZER=ON` and a `GNU`, `Clang` or `AppleClang` compiler, `CMakeLists.txt` calls
 `add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)` before
 `add_library(diana)` and adds `target_link_options(diana PUBLIC -fsanitize=address,undefined)`.
-Another compiler gets a CMake `WARNING` and no sanitizer.
+Another compiler, which configures only with `DIANA_ALLOW_UNKNOWN_COMPILER` (BUILD-013), gets a
+CMake `WARNING` and no sanitizer.
 
 - `add_compile_options` is directory-scoped and reaches only targets created after the call, so
   it must precede `add_library(diana)`; it then instruments `diana`, the C tests under `test/c/`

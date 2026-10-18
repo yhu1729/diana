@@ -6,9 +6,9 @@ path:
   - CMakeLists.txt
   - pyproject.toml
   - script/dev.sh
-related: [BUILD-003, BUILD-005, BUILD-007, BUILD-008, BUILD-004, BUILD-012]
+related: [BUILD-003, BUILD-005, BUILD-007, BUILD-008, BUILD-004, BUILD-012, BUILD-013]
 ---
-`CMakeLists.txt` defines five options:
+`CMakeLists.txt` defines six options:
 
 - `DIANA_BUILD_TEST` (OFF): builds `test/c/` and registers it with ctest; outside scikit-build it
   also adds the `install` and `find_package` tests (BUILD-009).
@@ -18,6 +18,8 @@ related: [BUILD-003, BUILD-005, BUILD-007, BUILD-008, BUILD-004, BUILD-012]
 - `DIANA_BUILD_SHARED_LIB` (OFF): `add_library(diana SHARED)` instead of `STATIC` (BUILD-005).
 - `DIANA_WERROR` (OFF): adds `-Werror` through `diana_set_strict_flag` (BUILD-007).
 - `DIANA_SANITIZER` (OFF): ASan and UBSan (BUILD-008).
+- `DIANA_ALLOW_UNKNOWN_COMPILER` (OFF): configures with a C compiler other than gcc or clang,
+  without the strict options, instead of failing (BUILD-013).
 
 Other settings: C11 required without extensions, `CMAKE_EXPORT_COMPILE_COMMANDS ON`, and on
 `diana` `POSITION_INDEPENDENT_CODE ON` (a static `libdiana` links into the extension module) and

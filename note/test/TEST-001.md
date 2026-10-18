@@ -7,7 +7,7 @@ path:
   - test/c/check.h
   - pyproject.toml
   - script/dev.sh
-related: [TEST-002, TEST-003, TEST-004, TEST-005, COMPILER-010, BUILD-002]
+related: [TEST-002, TEST-003, TEST-004, TEST-005, TEST-043, COMPILER-010, BUILD-002]
 ---
 The C tests are ctest executables in `test/c/`; the Python tests are pytest modules in
 `test/python/` and `test/doc/`. `script/dev.sh test` runs both, then the lint checks.
@@ -17,7 +17,8 @@ The C tests are ctest executables in `test/c/`; the Python tests are pytest modu
   warning and floating-point flags, plus `-Werror` with `DIANA_WERROR`) and registers ctest test
   `<name>`. The tests are `status`, `bisection`, `cholesky`, `compiler` (the corpus driver,
   COMPILER-010), `euler`, `lu`, `lu_solve`, `newton`, `rk4`, `simpson`, `substitution` and
-  `trapezoidal`;
+  `trapezoidal`; the CMake script test `configure` (`test_configure.cmake`, TEST-043) reconfigures
+  the project to check the compiler refusal and the floating-point flag guard;
   outside scikit-build ctest also has `install` and `find_package` (TEST-002). `test/c/` is built
   only with `-DDIANA_BUILD_TEST=ON` (default OFF; the wheel build passes OFF).
 - `test/c/check.h` needs only `<stdio.h>`: `CHECK(cond)` and `CHECK_EQ_STATUS(got, want)` count a
