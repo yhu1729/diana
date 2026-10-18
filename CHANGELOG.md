@@ -309,6 +309,17 @@ of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and Rem
   changed while the provers ran, and the new CI job `verify_provenance` (stage `verify`, required
   for a release) runs it on every change to those inputs, so a change committed without a local
   verify run fails CI. Unit tests in `test/python/test_check_provenance.py`.
+- Layer B and the Rocq axiom gate of layers A and B in CI. `script/check_spec.py --layer A|B|C`
+  (repeatable) checks only the theorems of those layers and runs `make -s check_real`,
+  `check_float` or `check` for the highest one, so layers A and B need no CompCert or VST; with
+  `--strict`, a selection that names no constant to check fails. `verification/rocq/Makefile`
+  gains `float` (layers A and B), `check_real` and `check_float`, and `real` takes its files from
+  `_CoqProject` and builds them through the generated makefile instead of a hand-kept list.
+  `verify_rocq` (GitLab and the GitHub mirror) opam-installs Flocq 4.2.2 with Coquelicot, builds
+  layers A and B and runs `--run --strict --prover rocq --layer A --layer B`, so an `Admitted`
+  lemma, a disallowed axiom or a missing constant in `theory/Real/` or `theory/Float/` fails CI;
+  its path list adds `spec/`, `script/check_spec.py`, `script/check_provenance.py` and
+  `script/axiom_allow.yaml`. Only layer C-VST and the Clight ASTs remain local-only proofs.
 
 #### Tests and tooling
 
