@@ -146,6 +146,7 @@ static void put_state(const diana_bisection_state *s) {
   put_double(s->x);
   put_double(s->tol);
   printf(" %08x %08x", s->iter, s->max_iter);
+  put_status(s->status);
 }
 
 static uint64_t mix_state(uint64_t h, diana_status st,
@@ -158,7 +159,8 @@ static uint64_t mix_state(uint64_t h, diana_status st,
   h = mix(h, to_bits(s->x));
   h = mix(h, to_bits(s->tol));
   h = mix(h, (uint64_t)s->iter);
-  return mix(h, (uint64_t)s->max_iter);
+  h = mix(h, (uint64_t)s->max_iter);
+  return mix(h, (uint64_t)(unsigned)s->status);
 }
 
 static void set_sentinel(diana_bisection_state *s) {
@@ -170,6 +172,7 @@ static void set_sentinel(diana_bisection_state *s) {
   s->tol = 0.125;
   s->iter = 3u;
   s->max_iter = 9u;
+  s->status = DIANA_ERR_BRACKET;
 }
 
 typedef double (*bisection_fn)(double x, double c);
@@ -1038,6 +1041,7 @@ static void put_newton_state(const diana_newton_state *s) {
   put_double(s->dx);
   put_double(s->tol);
   printf(" %08x %08x", s->iter, s->max_iter);
+  put_status(s->status);
 }
 
 static uint64_t mix_newton_state(uint64_t h, diana_status st,
@@ -1047,7 +1051,8 @@ static uint64_t mix_newton_state(uint64_t h, diana_status st,
   h = mix(h, to_bits(s->dx));
   h = mix(h, to_bits(s->tol));
   h = mix(h, (uint64_t)s->iter);
-  return mix(h, (uint64_t)s->max_iter);
+  h = mix(h, (uint64_t)s->max_iter);
+  return mix(h, (uint64_t)(unsigned)s->status);
 }
 
 static void set_newton_sentinel(diana_newton_state *s) {
@@ -1056,6 +1061,7 @@ static void set_newton_sentinel(diana_newton_state *s) {
   s->tol = 0.125;
   s->iter = 3u;
   s->max_iter = 9u;
+  s->status = DIANA_ERR_BRACKET;
 }
 
 static void newton_init_case(const char *label, double x0, double tol,
