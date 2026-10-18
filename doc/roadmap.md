@@ -4,12 +4,9 @@ Ideas for future work, one line each, in no particular order within a section. A
 candidate, not a commitment or a design; it gets a design when someone picks it up. What is done
 is in `CHANGELOG.md`.
 
-Each idea carries a priority: `high` is a 1.0 item, a prerequisite of one, or a small change that
-closes a known gap; `medium` is worth doing once its prerequisites exist; `low` is large for its
+Each idea carries a priority: `high` is an item for the next release, a prerequisite of one, or a
+small change that closes a known gap; `medium` is worth doing once its prerequisites exist; `low` is large for its
 value or far from the current proof tooling.
-
-## Toward 1.0
-
 
 ## Method
 
