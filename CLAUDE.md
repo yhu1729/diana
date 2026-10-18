@@ -82,8 +82,9 @@ one line per idea, no design (a design is written only when an item is picked up
   skip list is the trust boundary between Frama-C and Rocq (the script fails when WP would assume
   the contract of a called, body-less function that is not in it, and on any called function
   with neither body nor contract); every entry needs a
-  `BISECTION-B*`-style theorem. ACSL predicates shared by the functions of a kernel go in a private
-  header (`src/bisection_acsl.h`, `src/newton_acsl.h`).
+  `BISECTION-B*`-style theorem. ACSL predicates and lemmas shared by the functions of a kernel go
+  in a private header (`src/bisection_acsl.h`, `src/newton_acsl.h`, `src/substitution_acsl.h`;
+  ACSL rejects `const` in a predicate's parameter types).
 - **Verified kernel shape:** reverse communication. A kernel is a pure state machine on a caller-owned
   struct (`init` / `step` / `result`) or a function over tabulated arrays. No function pointer in a
   verified kernel. Callback convenience wrappers (`diana_bisection`, `diana_euler`, `diana_newton`,
@@ -186,7 +187,7 @@ note/                 technical notes per topic, index by topic and by path (REA
   rows at a time, each row in its own `verification/frama-c/session/<row>` and `cache/<row>`,
   one `report.txt` in row order; all goals must prove and each count must match;
   `script/dev.sh verify` and CI both call it)
-- Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/<kernel>_aarch64_macos.v src/<kernel>.c` (today `bisection_init`, `bisection_mid`, `bisection_result`, `bisection_step`, `cholesky`, `euler_step`, `euler_step_unchecked`, `fp_sqrt`, `newton_init`, `newton_result`, `newton_step`, `rk4_stage`, `rk4_stage_unchecked`, `rk4_step`, `rk4_step_unchecked`, `simpson` and `trapezoidal`) **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
+- Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/<kernel>_aarch64_macos.v src/<kernel>.c` (today `back_substitution`, `bisection_init`, `bisection_mid`, `bisection_result`, `bisection_step`, `cholesky`, `euler_step`, `euler_step_unchecked`, `forward_substitution`, `fp_sqrt`, `newton_init`, `newton_result`, `newton_step`, `rk4_stage`, `rk4_stage_unchecked`, `rk4_step`, `rk4_step_unchecked`, `simpson` and `trapezoidal`) **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not checked in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others
 - Compiler comparison: `opam exec -- script/compare_compiler.sh` builds `src/*.c` with the corpus
   driver `test/c/test_compiler.c` once with `ccomp` and with each gcc/clang found
   (`DIANA_COMPARE_CC` to choose) at `-O0`/`-O2`/`-O3`, and fails on any byte of difference in the
@@ -224,8 +225,8 @@ exposes `diana.rk4_stage`, `diana.rk4_step` and the driver `diana.rk4` (copies e
 Unreleased (toward 1.0): Cholesky factorization `diana_cholesky(a, n, l)` (`src/cholesky.c`,
 `diana/cholesky.h`), `n×n` column-major (`a[i + j·n]`), only the lower triangle of `a` read, `L`
 written with a `+0` strict upper triangle; `DIANA_ERR_ARG` (checked before any write) leaves `l`
-untouched, a pivot that is not positive returns `DIANA_ERR_SINGULAR` with `l` partly written, the
-one exception to the write-nothing-on-error rule (KERNEL-002, API-003). The square root is the
+untouched, a pivot that is not positive returns `DIANA_ERR_SINGULAR` with `l` partly written, an
+exception to the write-nothing-on-error rule (KERNEL-002, API-003). The square root is the
 helper `diana_fp_sqrt` (`src/fp_sqrt.c`, `__builtin_sqrt`), the second `SKIP` entry. Proved
 through every layer (`spec/cholesky.md`): Lean and Rocq layer A (CHOLESKY-A1 to A3: `L·Lᵀ = A`,
 positive pivots iff symmetric positive definite), Flocq layer B (B1 the sqrt contract, B2
@@ -234,6 +235,26 @@ WP the ACSL contract (C1, 108 goals, nonlinear index bounds via the lemma `colum
 WP-011), VST the kernel against the Flocq model (C3), the helper (C2, assuming CompCert's
 `__builtin_sqrt` funspec) and the `diana_fp_finite` copy (C4). Python `diana.cholesky(a)` returns
 an `array.array("d")` (length a square, `SingularError` when not positive definite).
+
+Unreleased (toward 1.0): forward and back substitution `diana_forward_substitution(l, n, b, x)`
+(`L·x = b`) and `diana_back_substitution(l, n, b, x)` (`Lᵀ·x = b`) in `diana/substitution.h`
+(`src/forward_substitution.c`, `src/back_substitution.c`), reading only the lower triangle of the
+column-major `l`, so `diana_cholesky`'s output goes in as it is and the pair solves `A·x = b`.
+Products are subtracted in the order their unknowns were computed (back: `k = n−1` down to
+`i+1`), so back is forward on the mirrored system bit for bit. A non-finite input is
+`DIANA_ERR_ARG` and a `±0` diagonal entry `DIANA_ERR_SINGULAR`, both before any write; an
+overflowing entry is `DIANA_ERR_ARG` with `x` partly written, the second exception to the
+write-nothing rule (API-030); `x` must not overlap `l` or `b` (C tests at 100% line and branch
+coverage; 270 corpus cases each). Proved through every layer (`spec/substitution.md`): Lean and
+Rocq layer A (SUBSTITUTION-A1 to A7: each row solved, uniqueness, forward error from the residual
+through the comparison matrix `M(L)`, and the Cholesky solve of `A·x = b`; back via the mirrored
+system), Flocq layer B (B1 to B4: row-wise backward error `γₘ·Σ|L·x̂|` plus underflow, reusing
+Cholesky's `dot_error`, and forward error `M(L)⁻¹·ρ`), WP the ACSL contracts (C1, C2: 109 and 110
+goals, `column_end` again), VST both kernels against the Flocq models (C3, C4; written prefix or
+suffix on overflow) and the `diana_fp_finite` copies (C5, C6), with the list and `size_t` lemmas
+shared with Cholesky in the AST-free `VST/Matrix.v` and the models in `VST/Substitution.v`.
+Python `diana.forward_substitution(lower, b)` and `diana.back_substitution(lower, b)` (parameter
+`lower`: ruff rejects `l`).
 
 Unreleased experiment: opt-in one-pass kernels with no finiteness check (non-finite components
 written as computed, `DIANA_OK` for valid arguments): `diana_euler_step_unchecked`,
