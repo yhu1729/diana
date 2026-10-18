@@ -1,0 +1,152 @@
+name: c
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+    paths:
+      - .github/workflows/c.yml
+      - CMakeLists.txt
+      - cmake/**
+      - include/**
+      - src/**
+      - test/c/**
+      - test/install/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test_${{ matrix.cc }}_${{ matrix.config }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    container: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        cc: [gcc, clang]
+        config: [debug, release]
+        include:
+          - cc: gcc
+            image: gcc:14@sha256:6f37e44a9b41181de5dd97366ec732652f5d895a72b5549c64694efed50a97e8
+          - cc: clang
+            image: silkeh/clang:18@sha256:3914c93a02e866795aafc80737488e515b96390eff3d2787cf8c5095997baea9
+          - config: debug
+            build_type: Debug
+            sanitizer: 'ON'
+          - config: release
+            build_type: Release
+            sanitizer: 'OFF'
+    env:
+      CC: ${{ matrix.cc }}
+      BUILD_TYPE: ${{ matrix.build_type }}
+      SANITIZER: ${{ matrix.sanitizer }}
+    steps:
+      - run: apt-get update -qq && apt-get install -y -qq --no-install-recommends cmake ninja-build > /dev/null
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE="$BUILD_TYPE" -DDIANA_BUILD_TEST=ON -DDIANA_SANITIZER="$SANITIZER" -DDIANA_WERROR=ON -DDIANA_BUILD_PYTHON=OFF -DCMAKE_C_COMPILER="$CC"
+      - run: cmake --build build
+      - run: ctest --test-dir build --output-on-failure
+      - if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: testing-${{ matrix.cc }}-${{ matrix.config }}
+          path: build/Testing
+          retention-days: 7
+
+  test_macos:
+    name: test_macos_${{ matrix.config }}
+    runs-on: macos-15
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - config: debug
+            build_type: Debug
+            sanitizer: 'ON'
+          - config: release
+            build_type: Release
+            sanitizer: 'OFF'
+    env:
+      CC: clang
+      BUILD_TYPE: ${{ matrix.build_type }}
+      SANITIZER: ${{ matrix.sanitizer }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE="$BUILD_TYPE" -DDIANA_BUILD_TEST=ON -DDIANA_SANITIZER="$SANITIZER" -DDIANA_WERROR=ON -DDIANA_BUILD_PYTHON=OFF -DCMAKE_C_COMPILER="$CC"
+      - run: cmake --build build
+      - run: ctest --test-dir build --output-on-failure
+      - if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: testing-macos-${{ matrix.config }}
+          path: build/Testing
+          retention-days: 7
+
+  test_install:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    container: gcc:14@sha256:6f37e44a9b41181de5dd97366ec732652f5d895a72b5549c64694efed50a97e8
+    env:
+      CC: gcc
+    steps:
+      - run: apt-get update -qq && apt-get install -y -qq --no-install-recommends cmake ninja-build > /dev/null
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: cmake -S . -B build/install-custom -G Ninja -DCMAKE_BUILD_TYPE=Release -DDIANA_BUILD_TEST=ON -DDIANA_BUILD_PYTHON=OFF -DDIANA_WERROR=ON -DCMAKE_C_COMPILER="$CC" -DCMAKE_INSTALL_INCLUDEDIR=include/custom
+      - run: cmake --build build/install-custom
+      - run: ctest --test-dir build/install-custom --output-on-failure
+      - run: cmake -S . -B build/install-shared -G Ninja -DCMAKE_BUILD_TYPE=Release -DDIANA_BUILD_TEST=ON -DDIANA_BUILD_PYTHON=OFF -DDIANA_WERROR=ON -DCMAKE_C_COMPILER="$CC" -DDIANA_BUILD_SHARED_LIB=ON
+      - run: cmake --build build/install-shared
+      - run: ctest --test-dir build/install-shared --output-on-failure
+
+  test_install_macos:
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      CC: clang
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: cmake -S . -B build/install-custom -G Ninja -DCMAKE_BUILD_TYPE=Release -DDIANA_BUILD_TEST=ON -DDIANA_BUILD_PYTHON=OFF -DDIANA_WERROR=ON -DCMAKE_C_COMPILER="$CC" -DCMAKE_INSTALL_INCLUDEDIR=include/custom
+      - run: cmake --build build/install-custom
+      - run: ctest --test-dir build/install-custom --output-on-failure
+      - run: cmake -S . -B build/install-shared -G Ninja -DCMAKE_BUILD_TYPE=Release -DDIANA_BUILD_TEST=ON -DDIANA_BUILD_PYTHON=OFF -DDIANA_WERROR=ON -DCMAKE_C_COMPILER="$CC" -DDIANA_BUILD_SHARED_LIB=ON
+      - run: cmake --build build/install-shared
+      - run: ctest --test-dir build/install-shared --output-on-failure
+
+  coverage_c:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    container: ghcr.io/astral-sh/uv:python3.13-bookworm-slim@sha256:531f855bda2c73cd6ef67d56b733b357cea384185b3022bd09f05e002cd144ca
+    env:
+      UV_LINK_MODE: copy
+    steps:
+      - run: apt-get update -qq && apt-get install -y -qq --no-install-recommends build-essential cmake ninja-build > /dev/null
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DDIANA_BUILD_TEST=ON -DDIANA_WERROR=ON -DDIANA_BUILD_PYTHON=OFF -DCMAKE_C_FLAGS=--coverage -DCMAKE_EXE_LINKER_FLAGS=--coverage
+      - run: cmake --build build
+      - run: ctest --test-dir build --output-on-failure
+      - run: uv sync --only-group coverage
+      - run: mkdir -p coverage/c
+      - run: uv run --no-sync gcovr --root . --filter src/ --filter include/ --gcov-exclude-directories '.*/CMakeFiles/[0-9.]+/.*' --print-summary --cobertura coverage/c.xml --html-details coverage/c/index.html build
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage-c
+          path: coverage/
+          retention-days: 30
