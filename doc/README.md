@@ -15,8 +15,9 @@ listed in `spec/<method>.md`.
   quadrature over samples
 - [Explicit Euler step](api/euler.md) and [classical Runge–Kutta step](api/rk4.md): ordinary
   differential equations
-- [Cholesky factorization](api/cholesky.md) and
-  [forward and back substitution](api/substitution.md): linear algebra
+- [Cholesky factorization](api/cholesky.md),
+  [forward and back substitution](api/substitution.md) and
+  [LU factorization with partial pivoting](api/lu.md): linear algebra
 
 ## Understand the proofs
 
