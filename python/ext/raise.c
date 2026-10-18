@@ -13,6 +13,9 @@ void diana_py_raise(diana_status st, const char *msg) {
   case DIANA_ERR_SINGULAR:
     type = diana_py_singular_error;
     break;
+  case DIANA_ERR_OVERFLOW:
+    type = diana_py_float_overflow_error;
+    break;
   default:
     type = PyExc_RuntimeError;
     break;

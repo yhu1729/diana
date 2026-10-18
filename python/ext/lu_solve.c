@@ -89,8 +89,10 @@ PyObject *diana_py_lu_solve(PyObject *Py_UNUSED(self), PyObject *args,
     diana_py_raise(st, st == DIANA_ERR_SINGULAR
                            ? "matrix is singular: a diagonal entry of U is "
                              "zero"
-                           : "lu or b has a non-finite entry, a pivot row is "
-                             "not below n, or the solution overflows");
+                       : st == DIANA_ERR_OVERFLOW
+                           ? "the solution overflows"
+                           : "lu or b has a non-finite entry, or a pivot row "
+                             "is not below n");
     goto cleanup;
   }
   ret = Py_None;

@@ -33,8 +33,9 @@ def rk4_stage(
     into an ``array.array("d")``.
 
     Raises :class:`ValueError` for a ``stage`` other than 2, 3 or 4, for an empty ``y``, for ``y``
-    and ``k`` of different lengths, and when a component is not finite: a NaN or infinite
-    ``y[i]``, ``k[i]`` or ``h``, or an overflow.
+    and ``k`` of different lengths, and when a component is not finite because of a NaN or infinite
+    ``y[i]``, ``k[i]`` or ``h``; :class:`FloatOverflowError` (a :class:`ValueError` and an
+    :class:`OverflowError`) when every input is finite and a component overflows.
     """
     y = _samples(y)
     k = _samples(k)
@@ -57,7 +58,9 @@ def rk4_step(
     operation rounded in that order. The arguments are read as in :func:`rk4_stage`.
 
     Raises :class:`ValueError` for an empty ``y``, for arguments of different lengths, and when a
-    component is not finite: a NaN or infinite input, or an overflow in any operation.
+    component is not finite because of a NaN or infinite input; :class:`FloatOverflowError` (a
+    :class:`ValueError` and an :class:`OverflowError`) when every input is finite and any operation
+    overflows.
     """
     y = _samples(y)
     out = _output(y)

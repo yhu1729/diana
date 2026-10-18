@@ -19,8 +19,9 @@ def trapezoidal(y: Buffer | Iterable[float], h: float) -> float:
     C-contiguous, aligned and of native ``float64``: :class:`TypeError` for another element type,
     :class:`ValueError` otherwise. Any other iterable is first copied into an ``array.array("d")``.
 
-    Raises :class:`ValueError` for fewer than two samples and when the result is not finite: a
-    NaN or infinite sample or ``h``, or an overflow anywhere in the sum.
+    Raises :class:`ValueError` for fewer than two samples and for a NaN or infinite sample or ``h``;
+    :class:`FloatOverflowError` (a :class:`ValueError` and an :class:`OverflowError`) when every
+    input is finite and the result overflows anywhere in the sum.
     """
     if not isinstance(y, Buffer):
         y = array("d", y)

@@ -30,10 +30,11 @@ def lu(a: Buffer | Iterable[float]) -> tuple[array, list[int]]:
     pivot by it (``|L[i, k]| <= 1``), then subtracts ``L[i, k]*U[k, j]``, the product rounded
     first, from each entry below and right of the pivot.
 
-    Raises :class:`ValueError` for an empty ``a``, for a length that is not a square, for a NaN
-    or infinite entry and when an update overflows; :class:`SingularError` (a
-    :class:`ValueError`) when every candidate pivot of a column is zero; in exact arithmetic that
-    happens exactly when ``A`` is singular.
+    Raises :class:`ValueError` for an empty ``a``, for a length that is not a square and for a NaN
+    or infinite entry; :class:`FloatOverflowError` (a :class:`ValueError` and an
+    :class:`OverflowError`) when an update overflows; :class:`SingularError` (a :class:`ValueError`)
+    when every candidate pivot of a column is zero; in exact arithmetic that happens exactly when
+    ``A`` is singular.
     """
     if not isinstance(a, Buffer):
         a = array("d", a)

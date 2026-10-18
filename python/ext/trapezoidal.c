@@ -23,7 +23,9 @@ PyObject *diana_py_trapezoidal(PyObject *Py_UNUSED(self), PyObject *args,
   st =
       diana_trapezoidal((const double *)view.buf, (size_t)view.shape[0], h, &r);
   if (st != DIANA_OK) {
-    diana_py_raise(st, "trapezoidal result is not finite");
+    diana_py_raise(st, st == DIANA_ERR_OVERFLOW
+                           ? "trapezoidal result overflows"
+                           : "trapezoidal input is not finite: a sample or h");
     goto cleanup;
   }
   out = PyFloat_FromDouble(r);

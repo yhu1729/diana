@@ -10,6 +10,7 @@
 
 extern PyObject *diana_py_bracket_error;
 extern PyObject *diana_py_singular_error;
+extern PyObject *diana_py_float_overflow_error;
 
 void diana_py_raise(diana_status st, const char *msg);
 

@@ -59,7 +59,9 @@ PyObject *diana_py_rk4_step(PyObject *Py_UNUSED(self), PyObject *args,
                       (const double *)view[4].buf, (size_t)view[0].shape[0], h,
                       (double *)vo.buf);
   if (st != DIANA_OK) {
-    diana_py_raise(st, "RK4 step result is not finite");
+    diana_py_raise(st, st == DIANA_ERR_OVERFLOW
+                           ? "RK4 step result overflows"
+                           : "RK4 step input is not finite: y, a slope or h");
     goto cleanup;
   }
   ret = Py_None;

@@ -26,8 +26,9 @@ def euler_step(y: Buffer | Iterable[float], f: Buffer | Iterable[float], h: floa
     otherwise. Any other iterable is first copied into an ``array.array("d")``.
 
     Raises :class:`ValueError` for an empty ``y``, for ``y`` and ``f`` of different lengths, and
-    when a component is not finite: a NaN or infinite ``y[i]``, ``f[i]`` or ``h``, or an
-    overflow.
+    when a component is not finite because of a NaN or infinite ``y[i]``, ``f[i]`` or ``h``;
+    :class:`FloatOverflowError` (a :class:`ValueError` and an :class:`OverflowError`) when every
+    input is finite and a component overflows.
     """
     y = _samples(y)
     f = _samples(f)

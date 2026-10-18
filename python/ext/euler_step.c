@@ -46,7 +46,9 @@ PyObject *diana_py_euler_step(PyObject *Py_UNUSED(self), PyObject *args,
   st = diana_euler_step((const double *)vy.buf, (const double *)vf.buf,
                         (size_t)vy.shape[0], h, (double *)vo.buf);
   if (st != DIANA_OK) {
-    diana_py_raise(st, "Euler step result is not finite");
+    diana_py_raise(st, st == DIANA_ERR_OVERFLOW
+                           ? "Euler step result overflows"
+                           : "Euler step input is not finite: y, f or h");
     goto cleanup;
   }
   ret = Py_None;

@@ -31,8 +31,9 @@ def forward_substitution(lower: Buffer | Iterable[float], b: Buffer | Iterable[f
     rounded and subtracted in that order, then divided.
 
     Raises :class:`ValueError` for an empty ``b``, for a length of ``lower`` other than ``n*n``, for
-    a NaN or infinite entry of ``b`` or on or below the diagonal of ``lower``, and when an entry of
-    ``x`` overflows; :class:`SingularError` (a :class:`ValueError`) when a diagonal entry of
+    a NaN or infinite entry of ``b`` or on or below the diagonal of ``lower``;
+    :class:`FloatOverflowError` (a :class:`ValueError` and an :class:`OverflowError`) when an entry
+    of ``x`` overflows; :class:`SingularError` (a :class:`ValueError`) when a diagonal entry of
     ``L`` is zero.
     """
     lower = _samples(lower)

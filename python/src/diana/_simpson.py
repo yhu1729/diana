@@ -20,9 +20,10 @@ def simpson(y: Buffer | Iterable[float], h: float) -> float:
     :class:`TypeError` for another element type, :class:`ValueError` otherwise. Any other iterable
     is first copied into an ``array.array("d")``.
 
-    Raises :class:`ValueError` for fewer than three samples, for an even number of samples, and
-    when the result is not finite: a NaN or infinite sample or ``h``, or an overflow in any
-    operation, including ``h * s`` when ``h * s / 3`` alone would be finite.
+    Raises :class:`ValueError` for fewer than three samples, for an even number of samples and for a
+    NaN or infinite sample or ``h``; :class:`FloatOverflowError` (a :class:`ValueError` and an
+    :class:`OverflowError`) when every input is finite and any operation overflows, including ``h *
+    s`` when ``h * s / 3`` alone would be finite.
     """
     if not isinstance(y, Buffer):
         y = array("d", y)

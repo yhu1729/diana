@@ -1,11 +1,8 @@
-#include <math.h>
-
 #include "newton_object.h"
 
 PyObject *diana_py_newton_step(NewtonObject *self, PyObject *args) {
   double fx, dfx;
   diana_status st;
-  const char *msg;
   if (self->status == DIANA_ERR_ARG) {
     PyErr_SetString(PyExc_RuntimeError, "Newton state is not initialized");
     return NULL;
@@ -24,12 +21,11 @@ PyObject *diana_py_newton_step(NewtonObject *self, PyObject *args) {
     return NULL;
   }
   if (st == DIANA_ERR_ARG) {
-    if (!isfinite(fx) || !isfinite(dfx)) {
-      msg = "f(x) and f'(x) must be finite";
-    } else {
-      msg = "Newton step is not finite";
-    }
-    diana_py_raise(st, msg);
+    diana_py_raise(st, "f(x) and f'(x) must be finite");
+    return NULL;
+  }
+  if (st == DIANA_ERR_OVERFLOW) {
+    diana_py_raise(st, "Newton step overflows");
     return NULL;
   }
   self->status = (int)st;

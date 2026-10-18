@@ -50,8 +50,9 @@ PyObject *diana_py_substitution(PyObject *args, PyObject *kwds,
   if (st != DIANA_OK) {
     diana_py_raise(st, st == DIANA_ERR_SINGULAR
                            ? "matrix is singular: a diagonal entry is zero"
-                           : "lower or b has a non-finite entry, or the "
-                             "solution overflows");
+                       : st == DIANA_ERR_OVERFLOW
+                           ? "the solution overflows"
+                           : "lower or b has a non-finite entry");
     goto cleanup;
   }
   ret = Py_None;

@@ -51,8 +51,8 @@ PyObject *diana_py_lu(PyObject *Py_UNUSED(self), PyObject *args,
   if (st != DIANA_OK) {
     diana_py_raise(st, st == DIANA_ERR_SINGULAR
                            ? "matrix is singular: a pivot column is zero"
-                           : "a has a non-finite entry, or an update "
-                             "overflows");
+                       : st == DIANA_ERR_OVERFLOW ? "an update overflows"
+                                                  : "a has a non-finite entry");
     goto cleanup;
   }
   list = PyList_New(n);

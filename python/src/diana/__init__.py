@@ -23,12 +23,13 @@ from diana._diana import (
     ERR_ARG,
     ERR_BRACKET,
     ERR_MAXITER,
+    ERR_OVERFLOW,
     ERR_SINGULAR,
     OK,
     Bisection,
     Newton,
 )
-from diana._error import BracketError, MaxIterError, SingularError
+from diana._error import BracketError, FloatOverflowError, MaxIterError, SingularError
 from diana._euler import euler, euler_step
 from diana._lu import lu
 from diana._lu_solve import lu_solve
@@ -46,8 +47,10 @@ __all__ = [
     "ERR_BRACKET",
     "ERR_MAXITER",
     "ERR_SINGULAR",
+    "ERR_OVERFLOW",
     "Bisection",
     "BracketError",
+    "FloatOverflowError",
     "MaxIterError",
     "Newton",
     "SingularError",

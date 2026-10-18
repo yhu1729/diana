@@ -32,8 +32,9 @@ def lu_solve(
     computed.
 
     Raises :class:`ValueError` for an empty ``b``, for a length of ``lu`` other than ``n*n`` or of
-    ``piv`` other than ``n``, for a NaN or infinite entry of ``lu`` or ``b``, for a pivot row that
-    is not below ``n``, and when an entry of ``y`` or ``x`` overflows; :class:`OverflowError` for
+    ``piv`` other than ``n``, for a NaN or infinite entry of ``lu`` or ``b`` and for a pivot row
+    that is not below ``n``; :class:`FloatOverflowError` (a :class:`ValueError` and an
+    :class:`OverflowError`) when an entry of ``y`` or ``x`` overflows; :class:`OverflowError` for
     a negative pivot row and :class:`TypeError` for one that is not an integer;
     :class:`SingularError` (a :class:`ValueError`) when a diagonal entry of ``U`` is zero, which
     :func:`lu` never returns.

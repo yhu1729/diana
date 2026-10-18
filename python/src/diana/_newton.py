@@ -25,8 +25,9 @@ def newton(
     parameter-free stopping rule: with ``tol == 0`` the iteration commonly ends in a two-cycle
     of adjacent doubles around the root, and the default ``max_iter`` of 100 is a safety limit,
     not a convergence guarantee. A zero ``f'(x)`` with a non-zero ``f(x)`` raises
-    :class:`SingularError`; a non-finite ``f(x)`` or ``f'(x)``, or a correction or iterate that
-    overflows, raises :class:`ValueError`; either leaves the state at the last iterate.
+    :class:`SingularError`, a non-finite ``f(x)`` or ``f'(x)`` :class:`ValueError`, and a
+    correction or iterate that overflows :class:`FloatOverflowError` (also a
+    :class:`ValueError`); each leaves the state at the last iterate.
     """
     state = Newton(x0, tol, max_iter)
     status = state.status

@@ -51,7 +51,9 @@ PyObject *diana_py_rk4_stage(PyObject *Py_UNUSED(self), PyObject *args,
   st = diana_rk4_stage((const double *)vy.buf, (const double *)vk.buf,
                        (size_t)vy.shape[0], h, stage, (double *)vo.buf);
   if (st != DIANA_OK) {
-    diana_py_raise(st, "RK4 stage result is not finite");
+    diana_py_raise(st, st == DIANA_ERR_OVERFLOW
+                           ? "RK4 stage result overflows"
+                           : "RK4 stage input is not finite: y, k or h");
     goto cleanup;
   }
   ret = Py_None;
