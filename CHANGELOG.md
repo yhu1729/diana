@@ -418,6 +418,9 @@ is removed, and the second attribute of `diana.MaxIterError` is `uncertainty` in
   the image `latest` named when pinned.
 - `.change_style_c` and `.change_any` no longer list `.clang-tidy` and `.editorconfig`, which no
   CI job reads (`clang-tidy` runs only in `script/dev.sh test`, EditorConfig only in editors).
+- `dianaConfigVersion.cmake` is `SameMajorVersion`-compatible instead of `SameMinorVersion`, as
+  Semantic Versioning and the major-version `SOVERSION` require: `find_package(diana 1.0)`
+  accepts every later 1.x release.
 
 ### Removed
 

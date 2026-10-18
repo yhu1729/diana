@@ -111,7 +111,7 @@ if(NOT DEFINED SKBUILD)
         ${CMAKE_CURRENT_BINARY_DIR}/dianaConfig.cmake
         INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/diana)
     write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/dianaConfigVersion.cmake
-        COMPATIBILITY SameMinorVersion)
+        COMPATIBILITY SameMajorVersion)
     install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/dianaConfig.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/dianaConfigVersion.cmake

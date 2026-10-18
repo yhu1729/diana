@@ -67,7 +67,8 @@ cmake --build build
 area 5.5
 ```
 
-`find_package` accepts any release with the same major and minor version.
+`find_package` accepts any release with the same major version that is not older than the one
+requested.
 
 ### Status codes
 

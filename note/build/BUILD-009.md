@@ -18,7 +18,7 @@ whose paths all follow `GNUInstallDirs`.
 - The library goes to `CMAKE_INSTALL_LIBDIR`, with `VERSION` = the project version and
   `SOVERSION` = its major version (set only when `SKBUILD` is not defined).
 - `dianaTargets.cmake` (namespace `diana::`), `dianaConfig.cmake` and `dianaConfigVersion.cmake`
-  (`SameMinorVersion`) go to `${CMAKE_INSTALL_LIBDIR}/cmake/diana`.
+  (`SameMajorVersion`) go to `${CMAKE_INSTALL_LIBDIR}/cmake/diana`.
 - With `DIANA_BUILD_TEST=ON`, ctest `install` installs the build tree into `install-test/` and
   `find_package` builds and runs `test/install/` against it, forwarding the C compiler, build
   type, `CMAKE_EXE_LINKER_FLAGS` and any `CMAKE_OSX_ARCHITECTURES`, `CMAKE_OSX_SYSROOT` and
