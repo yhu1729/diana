@@ -21,6 +21,6 @@ The version is written in several places, and two checks tie the main ones toget
 - Install test: `test/install/main.c` fails unless the linked `diana_version()` equals the
   `DIANA_VERSION_STRING` of the installed header.
 
-Not checked: `version` in `verification/lean/lakefile.toml`, and the `find_package(diana 0.3 ...)`
+Not checked: `version` in `verification/lean/lakefile.toml`, and the `find_package(diana 1.0 ...)`
 requests in `test/install/CMakeLists.txt` and the `doc/api/` example, which follow the minor
 version because the installed package is `SameMinorVersion`-compatible (BUILD-009).

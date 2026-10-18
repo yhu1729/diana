@@ -25,7 +25,7 @@ is tested the way a user consumes it.
 - No sanitizer option is passed: with `DIANA_SANITIZER=ON` the `diana` target has the `PUBLIC`
   link option `-fsanitize=address,undefined`, which the installed `dianaTargets` export hands to
   the consumer.
-- `test/install/CMakeLists.txt` calls `find_package(diana 0.3 CONFIG REQUIRED)` and links
+- `test/install/CMakeLists.txt` calls `find_package(diana 1.0 CONFIG REQUIRED)` and links
   `diana::diana`. The version file uses `SameMinorVersion`, so a minor version bump fails this
   test until the requested version is raised (the `doc/api` CMake example is checked separately,
   TEST-003).
