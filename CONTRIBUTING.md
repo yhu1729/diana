@@ -133,11 +133,12 @@ orders the steps.
 ## Before you commit
 
 CI checks the C build, ctest, pytest, Frama-C WP, layer A in Lean with its axiom gate, and that
-layer A compiles in Rocq. It does **not** check layers B and C-VST, the Rocq axiom gate, or the
-Clight AST, because no CI image carries Flocq, CompCert, or VST. A green pipeline says nothing
-about those, so they are your responsibility before the commit lands; CI's `verify_provenance`
-only checks, from hashes, that the committed report and AST manifest were written for the sources
-committed and that the report is green.
+layer A compiles in Rocq; the GitHub mirror runs the same checks again, and the C and Python tests
+also on macOS and on every supported Python version. It does **not** check layers B and C-VST, the
+Rocq axiom gate, or the Clight AST, because no CI image carries Flocq, CompCert, or VST. A green
+pipeline says nothing about those, so they are your responsibility before the commit lands; CI's
+`verify_provenance` only checks, from hashes, that the committed report and AST manifest were
+written for the sources committed and that the report is green.
 
 - Always: `script/dev.sh test` (ctest including the installed-consumer tests, pytest, ruff,
   `clang-format`, `clang-tidy`, and the documentation check `script/check_doc.py`).
@@ -182,7 +183,8 @@ The subject is `<type>[(scope)]: <summary>`, with the type one of
 `commit-msg` hook checks that form when you commit. `script/check_commit.sh` checks the history:
 the `pre-push` hook runs it on the commits the remote does not have yet, and the `style_git` CI job
 on the commits since the previous pipeline of the branch (the merge request's commits in a merge
-request pipeline, the whole history when there is no previous pipeline). It rejects:
+request pipeline, the whole history when there is no previous pipeline; on the GitHub mirror, the
+commits of the push). It rejects:
 
 - a merge commit: rebase onto the target instead, so history stays linear;
 - a subject not of the form above, longer than 50 characters, or containing `a`, `an` or `the`;
@@ -208,6 +210,8 @@ The rest is convention:
 Work on a branch off `main` and open a merge request on
 [GitLab](https://gitlab.com/yhu1729/diana). Merge-request pipelines keep the path filters, so a
 job runs only when a file it depends on changes; when you add a job, or a file an existing job
-reads, extend the matching `.change_*` list at the top of `.gitlab-ci.yml`. Report a bug or
-discuss a method before implementing it at
+reads, extend the matching `.change_*` list at the top of `.gitlab-ci.yml` and the `paths:` of the
+GitHub workflow in `.github/workflows/` that mirrors it. The GitHub repository is a mirror of the
+GitLab project and runs those workflows on every push. Report a bug or discuss a method before
+implementing it at
 [Issues](https://gitlab.com/yhu1729/diana/-/issues).
