@@ -1,5 +1,5 @@
 From VST.floyd Require Import proofauto.
-From Diana.Clight Require Import back_substitution_aarch64_macos.
+From Diana.Clight Require Import transpose_substitution_aarch64_macos.
 From Diana.VST Require Bisection.
 From Diana.VST Require Import Matrix Substitution Tactic.
 
@@ -14,8 +14,8 @@ Definition fp_finite_spec :=
   POST [ tint ]
     PROP () RETURN (Vint (if Binary.is_finite 53 1024 x then Int.one else Int.zero)) SEP ().
 
-Definition back_substitution_spec :=
-  DECLARE _diana_back_substitution
+Definition transpose_substitution_spec :=
+  DECLARE _diana_transpose_substitution
   WITH shl : share, shb : share, shx : share, l : val, b : val, x : val,
        ll : list float, bl : list float, n : Z, ox : list val
   PRE [ tptr tdouble, tulong, tptr tdouble, tptr tdouble ]
@@ -43,7 +43,7 @@ Definition back_substitution_spec :=
          data_at shx (tarray tdouble n) xs x).
 
 Definition Gprog : funspecs :=
-  ltac:(with_library prog [fp_finite_spec; back_substitution_spec]).
+  ltac:(with_library prog [fp_finite_spec; transpose_substitution_spec]).
 
 Lemma body_diana_fp_finite : semax_body Vprog Gprog f_diana_fp_finite fp_finite_spec.
 Proof.
@@ -62,8 +62,8 @@ Proof.
   - forward.
 Qed.
 
-Lemma body_diana_back_substitution :
-  semax_body Vprog Gprog f_diana_back_substitution back_substitution_spec.
+Lemma body_diana_transpose_substitution :
+  semax_body Vprog Gprog f_diana_transpose_substitution transpose_substitution_spec.
 Proof.
   start_function.
   assert (Hn0 : n <= Int64.max_unsigned) by nia.

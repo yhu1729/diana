@@ -42,7 +42,7 @@ Definition ffwd (L : nat -> nat -> b64) (b : nat -> b64) (i : nat) : b64 := fsol
 Definition fmirror (L : nat -> nat -> b64) (n p q : nat) : b64 := L (n - 1 - q)%nat (n - 1 - p)%nat.
 Definition fmirrorv (b : nat -> b64) (n p : nat) : b64 := b (n - 1 - p)%nat.
 
-(* The binary64 model of diana_back_substitution: forward substitution on the mirrored system,
+(* The binary64 model of diana_transpose_substitution: forward substitution on the mirrored system,
    which is the C's order, the products subtracted from k = n - 1 down to i + 1 (fbwd_eq). *)
 Definition fbwd (L : nat -> nat -> b64) (b : nat -> b64) (n i : nat) : b64 :=
   ffwd (fmirror L n) (fmirrorv b n) (n - 1 - i).

@@ -33,8 +33,6 @@ theory/Float/Trapezoidal.v
 theory/VST/Tactic.v
 theory/VST/Matrix.v
 theory/VST/Bisection.v
-../clight/back_substitution_aarch64_macos.v
-theory/VST/BackSubstitution.v
 ../clight/bisection_init_aarch64_macos.v
 theory/VST/BisectionInit.v
 ../clight/bisection_mid_aarch64_macos.v
@@ -77,5 +75,7 @@ theory/VST/RK4StepUnchecked.v
 ../clight/simpson_aarch64_macos.v
 theory/VST/Simpson.v
 theory/VST/Substitution.v
+../clight/transpose_substitution_aarch64_macos.v
+theory/VST/TransposeSubstitution.v
 ../clight/trapezoidal_aarch64_macos.v
 theory/VST/Trapezoidal.v
