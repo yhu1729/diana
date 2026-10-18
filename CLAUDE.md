@@ -221,7 +221,7 @@ and Rocq its layer A (RK4-A1 to A7: increment jets, order conditions, local trun
 order-4 global bound; shared modules `Diana.Real.Taylor` and `OneStep.one_step_pow`; Lean takes
 Fréchet derivatives, Rocq curve derivatives plus multilinearity), and Flocq its layer B (RK4-B1 to B5: finiteness, the `fl(h/2)` coefficient, stage and step error),
 and VST both functions against the Flocq models (RK4-C3 to C6); the
-unverified wrapper `diana_rk4` (work `5d`) loops over them with a `diana_ode_fn`, and Python
+unverified wrapper `diana_rk4` (`work` of `lwork >= 5d` doubles) loops over them with a `diana_ode_fn`, and Python
 exposes `diana.rk4_stage`, `diana.rk4_step` and the driver `diana.rk4` (copies each slope).
 
 v1.0.0: Cholesky factorization `diana_cholesky(a, n, l)` (`src/cholesky.c`,
@@ -333,6 +333,8 @@ finite inputs, `DIANA_ERR_ARG` only an invalid argument or a NaN or infinite inp
 leaves an output partly written. Euler, RK4 and the quadrature rules classify only after a value
 fails (`h`, then every input element), Newton's step and the matrix kernels return it at their
 overflow checks. Python raises `diana.FloatOverflowError` (a `ValueError` and an `OverflowError`).
+The ODE wrappers take `lwork` after `work` and stop with `DIANA_ERR_CALLBACK` (-6) when the
+`int`-returning `diana_ode_fn` returns non-zero; the scalar callbacks still signal by a NaN.
 
 The 1.0.0 release preparation sets 1.0.0 in CMake, the header macros, `pyproject.toml`, `uv.lock`,
 the `find_package` consumer and its documentation, and the Lean package, marks the Python package

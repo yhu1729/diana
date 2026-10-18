@@ -101,10 +101,10 @@ iteration limit reached after 4 steps: root 1.4375, width 0.125
 ## Callback wrapper
 
 `diana_bisection(f, ctx, a, b, tol, max_iter, &root, &iter)` runs the same loop over a callback
-`double f(double x, void *ctx)` (`diana_scalar_fn`, `diana/scalar.h`), which must return a finite value. `root`
-receives the estimate on `DIANA_OK` and `DIANA_ERR_MAXITER`; `iter` (may be `NULL`) receives the
-number of steps. `ctx` passes parameters to the callback without globals. The cube root of 10 as
-the root of `x³ − c` with `c` in `ctx`:
+`double f(double x, void *ctx)` (`diana_scalar_fn`, `diana/scalar.h`), which must return a finite
+value. `root` receives the estimate on `DIANA_OK` and `DIANA_ERR_MAXITER`; `iter` (may be `NULL`)
+receives the number of steps. `ctx` passes parameters to the callback without globals. The cube root
+of 10 as the root of `x³ − c` with `c` in `ctx`:
 
 ```c
 #include <stdio.h>

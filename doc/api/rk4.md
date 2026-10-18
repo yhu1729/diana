@@ -100,11 +100,13 @@ nanoseconds per component.
 
 ## Callback wrapper
 
-`diana_rk4(fn, ctx, t0, h, nstep, y, d, work, &done)` takes `nstep` RK4 steps from `y(t0) = y`,
-in place, with the callback type `diana_ode_fn` of the [Euler wrapper](euler.md#callback-wrapper).
-Step `k` evaluates `fn` at `t0 + k·h`, twice at `t0 + (k + ½)·h`, and at `t0 + (k + 1)·h`. `work`
-holds `5·d` doubles and must not overlap `y`; `done` (may be `NULL`) receives the number of
-completed steps. When a stage or step fails, it returns that call's status with `y` at the last
+`diana_rk4(fn, ctx, t0, h, nstep, y, d, work, lwork, &done)` takes `nstep` RK4 steps from
+`y(t0) = y`, in place, with the callback type `diana_ode_fn` of the
+[Euler wrapper](euler.md#callback-wrapper), whose non-zero return stops it with
+`DIANA_ERR_CALLBACK`. Step `k` evaluates `fn` at `t0 + k·h`, twice at `t0 + (k + ½)·h`, and at
+`t0 + (k + 1)·h`. `work` holds `lwork` doubles, at least `5·d` (else `DIANA_ERR_ARG` before any
+call), and must not overlap `y`; `done` (may be `NULL`) receives the number of completed steps.
+When a stage, the step or the callback fails, it returns that status with `y` at the last
 successful step. Exponential decay `y′ = −r·y` with the rate in `ctx`: each component is
 multiplied by `R(−0.1)¹⁰ = 0.367879774`, with `R(z) = 1 + z + z²/2 + z³/6 + z⁴/24`, against the
 exact `e⁻¹ = 0.367879441`:
@@ -120,19 +122,21 @@ struct decay {
   double rate;
 };
 
-static void decay(double t, const double *y, double *dy, size_t d, void *ctx) {
+static int decay(double t, const double *y, double *dy, size_t d, void *ctx) {
   const struct decay *p = ctx;
   (void)t;
   for (size_t i = 0; i < d; ++i) {
     dy[i] = -p->rate * y[i];
   }
+  return 0;
 }
 
 int main(void) {
   struct decay p = {2.0};
   double y[D] = {1.0, 2.0, 4.0}, work[5 * D];
   unsigned done;
-  diana_status st = diana_rk4(decay, &p, 0.0, 0.05, 10u, y, D, work, &done);
+  diana_status st =
+      diana_rk4(decay, &p, 0.0, 0.05, 10u, y, D, work, 5 * D, &done);
   if (st != DIANA_OK) {
     fprintf(stderr, "rk4: %s after %u steps\n", diana_status_str(st), done);
     return 1;

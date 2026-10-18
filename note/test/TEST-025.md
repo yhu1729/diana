@@ -24,7 +24,11 @@ stages with `diana_rk4_stage` and the step with `diana_rk4_step` in a work area 
   unchanged and `done = 0`; one at the second step's `k2` stops after one step at `y = 1/2`.
   `y' = -y` with `h = -2` from `DBL_MAX/2` reaches `Y2 = DBL_MAX` and overflows in
   `Y3 = y + DBL_MAX`: `DIANA_ERR_OVERFLOW`, `y` unchanged, `done = 0`.
-- `nstep = 0` calls nothing; NULL `fn`, `y` or `work` and `d = 0` are `DIANA_ERR_ARG`.
+- `nstep = 0` calls nothing; NULL `fn`, `y` or `work`, `d = 0`, `lwork = 9` for `d = 2`, and
+  `d = SIZE_MAX/5 + 1` are `DIANA_ERR_ARG` with no call (`test_wrapper_work_size`).
+- `test_wrapper_callback`: a callback returning 1 at call 1, 2, 3 or 4 of the first step stops
+  with `DIANA_ERR_CALLBACK`, `y = 0`, `done = 0`; at call 5, after one step of `y' = t` from 0
+  with `h = 1`, `y = 1/2` and `done = 1`.
 - Python `diana.rk4` reproduces the exact paths, times and `0.625`, also when `f` returns the same
   NumPy array on every call (the driver copies each slope), and stops after `fail + 1` calls with
   a plain `ValueError` ("not finite", not a `FloatOverflowError`). `test_rk4_overflow`:

@@ -26,8 +26,8 @@ is tested the way a user consumes it.
   link option `-fsanitize=address,undefined`, which the installed `dianaTargets` export hands to
   the consumer.
 - `test/install/CMakeLists.txt` calls `find_package(diana 1.0 CONFIG REQUIRED)` and links
-  `diana::diana`. The version file uses `SameMajorVersion`, so only a major version bump fails
-  this test until the requested version is raised (the `doc/api` CMake example is checked separately,
+  `diana::diana`. The version file uses `SameMajorVersion`, so only a major version bump fails this
+  test until the requested version is raised (the `doc/api` CMake example is checked separately,
   TEST-003).
 - `test/install/main.c` solves `x*x - 2` on `[0, 2]` with `diana_bisection` (`tol = 1e-12`, 100
   steps), checks the root to `1e-12` and that `diana_version()` equals the header's

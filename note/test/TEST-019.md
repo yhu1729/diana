@@ -17,8 +17,11 @@ into `y`.
 - Rotation `y' = (y2, -y1)` from `(1, 0)` with `h = 1`: `(1, -1)`, `(0, -2)`, `(-2, -2)`.
 - `y' = t` from `t0 = 1`, `y = 0`, `h = 1/4`, four steps: `fn` is called at `1, 1.25, 1.5, 1.75`
   with the caller's `ctx`, and `y = (1 + 1.25 + 1.5 + 1.75) / 4 = 1.375`.
-- `nstep = 0` calls nothing and leaves `y`; NULL `fn`, `y` or `work` and `d = 0` are
-  `DIANA_ERR_ARG` with `done = 0` and no call.
+- `nstep = 0` calls nothing and leaves `y`; NULL `fn`, `y` or `work`, `d = 0`, `lwork = 3`
+  for `d = 2`, and `d = SIZE_MAX/2 + 1` (whose `2d` wraps) are `DIANA_ERR_ARG` with `done = 0`
+  and no call (`test_wrapper_work_size`).
+- `test_wrapper_callback`: `y' = t` from 0 with `h = 1` and a callback that returns 1 on its third
+  call gives `DIANA_ERR_CALLBACK`, `done = 2`, `y = 1` (after `0` and `1`), three calls.
 - Failure: a derivative that turns infinite on the third call stops with `DIANA_ERR_ARG` after two
   steps, `y` at the second state and three calls; `y' = -y` with `h = -2` from `DBL_MAX/2`
   overflows (`y + 2y`) on the first step, `DIANA_ERR_OVERFLOW`, and leaves `y` unchanged,

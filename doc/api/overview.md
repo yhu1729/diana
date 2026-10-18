@@ -84,17 +84,18 @@ Every function returns a `diana_status` (`diana/status.h`), except `diana_status
 | `DIANA_ERR_MAXITER` | -3 | iteration limit reached before convergence |
 | `DIANA_ERR_SINGULAR` | -4 | Newton's method: zero derivative; Cholesky: a pivot that is not positive; substitution: a zero diagonal entry; LU: a zero pivot column; LU solve: a zero diagonal entry of `U` |
 | `DIANA_ERR_OVERFLOW` | -5 | every input is finite, but a computed value overflows |
+| `DIANA_ERR_CALLBACK` | -6 | an ODE wrapper's callback returned non-zero |
 
 `diana_status_str(st)` returns a short message for a code, and `diana_version()` the version of
 the linked library (the header defines `DIANA_VERSION_STRING` and its parts).
 
 A call that fails with `DIANA_ERR_ARG`, `DIANA_ERR_BRACKET`, `DIANA_ERR_SINGULAR` or
-`DIANA_ERR_OVERFLOW` changes no output and no state, with four exceptions, where each output
-entry needs the ones before it: the Cholesky factorization has already written part of its
-output when it finds a pivot that is not positive, forward and back substitution and the LU
-solve when an entry of the solution overflows, and the LU factorization when it finds a zero
-pivot column or an overflowing update. `DIANA_ERR_ARG` never writes anything. After
-`DIANA_ERR_MAXITER` the state holds the progress made so far. Check every status:
+`DIANA_ERR_OVERFLOW` changes no output and no state, with four exceptions, where each output entry
+needs the ones before it: the Cholesky factorization has already written part of its output when it
+finds a pivot that is not positive, forward and back substitution and the LU solve when an entry of
+the solution overflows, and the LU factorization when it finds a zero pivot column or an overflowing
+update. `DIANA_ERR_ARG` never writes anything. After `DIANA_ERR_MAXITER` and `DIANA_ERR_CALLBACK`
+the state holds the progress made so far. Check every status:
 
 ```c
 const double y[] = {1.0}; /* one sample: no panel */
@@ -130,7 +131,8 @@ The package mirrors the C API:
   `diana.rk4_step` call the array kernels, and `diana.euler` and `diana.rk4` loop over a
   callable.
 - `diana.version()` (also `diana.__version__`), `diana.status_str` and the constants `diana.OK`,
-  `CONTINUE`, `ERR_ARG`, `ERR_BRACKET`, `ERR_MAXITER`, `ERR_SINGULAR` and `ERR_OVERFLOW`.
+  `CONTINUE`, `ERR_ARG`, `ERR_BRACKET`, `ERR_MAXITER`, `ERR_SINGULAR`, `ERR_OVERFLOW` and
+  `ERR_CALLBACK` (only the C wrappers return it; Python callables raise their own exceptions).
 
 Every function has a docstring (`help(diana.bisection)`).
 

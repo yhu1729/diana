@@ -71,12 +71,14 @@ That saving is small next to a right-hand side that costs a few nanoseconds per 
 
 ## Callback wrapper
 
-`diana_euler(fn, ctx, t0, h, nstep, y, d, work, &done)` takes `nstep` steps from `y(t0) = y`, in
-place, with a callback `void fn(double t, const double *y, double *dy, size_t d, void *ctx)`
-(`diana_ode_fn` in `diana/ode.h`) that writes `F(t, y)` to every component of `dy`. Step `k`
-evaluates `fn` at `t0 + k·h`. `work` holds `2·d` doubles and must not overlap `y`; `done` (may be
-`NULL`) receives the number of completed steps. When a step fails, it returns that step's status
-with `y` at the last successful step. Exponential decay `y′ = −r·y` with the rate in `ctx`: each
+`diana_euler(fn, ctx, t0, h, nstep, y, d, work, lwork, &done)` takes `nstep` steps from
+`y(t0) = y`, in place, with a callback `int fn(double t, const double *y, double *dy, size_t d,
+void *ctx)` (`diana_ode_fn` in `diana/ode.h`) that writes `F(t, y)` to every component of `dy`
+and returns 0, or any other value to stop the integration with `DIANA_ERR_CALLBACK`. Step `k`
+evaluates `fn` at `t0 + k·h`. `work` holds `lwork` doubles, at least `2·d` (else
+`DIANA_ERR_ARG` before any call), and must not overlap `y`; `done` (may be `NULL`) receives the
+number of completed steps. When a step or the callback fails, it returns that status with `y` at
+the last successful step. Exponential decay `y′ = −r·y` with the rate in `ctx`: each
 component is multiplied by `(1 − 0.02)⁵⁰ = 0.364170`, against the exact `e⁻¹ = 0.367879`:
 
 ```c
@@ -90,19 +92,21 @@ struct decay {
   double rate;
 };
 
-static void decay(double t, const double *y, double *dy, size_t d, void *ctx) {
+static int decay(double t, const double *y, double *dy, size_t d, void *ctx) {
   const struct decay *p = ctx;
   (void)t;
   for (size_t i = 0; i < d; ++i) {
     dy[i] = -p->rate * y[i];
   }
+  return 0;
 }
 
 int main(void) {
   struct decay p = {2.0};
   double y[D] = {1.0, 2.0, 4.0}, work[2 * D];
   unsigned done;
-  diana_status st = diana_euler(decay, &p, 0.0, 0.01, 50u, y, D, work, &done);
+  diana_status st =
+      diana_euler(decay, &p, 0.0, 0.01, 50u, y, D, work, 2 * D, &done);
   if (st != DIANA_OK) {
     fprintf(stderr, "euler: %s after %u steps\n", diana_status_str(st), done);
     return 1;

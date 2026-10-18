@@ -17,8 +17,9 @@ RK4 kernels, one function per source file for every verified kernel, and the tec
 behaviour follow Semantic Versioning. Breaking changes against 0.3.0: `diana/wrapper.h` is removed,
 the callback type `diana_bisection_fn` is renamed `diana_scalar_fn`, an overflow from finite inputs
 in Euler, the quadrature rules and Newton returns `DIANA_ERR_OVERFLOW` instead of `DIANA_ERR_ARG`,
-and the second attribute of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed
-and Removed).
+`diana_euler` and `diana_rk4` take the work length `lwork` and an `int`-returning callback, and the
+second attribute of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and
+Removed).
 
 ### Added
 
@@ -98,8 +99,8 @@ and Removed).
   `test/c/test_rk4.c` covers both functions at 100% line and branch coverage, and the
   compiler-comparison corpus has 544 RK4 cases; every gcc and clang build matches CompCert
   bitwise.
-- Callback wrapper `diana_rk4(fn, ctx, t0, h, nstep, y, d, work, done)` in `diana/rk4.h`, with
-  the `diana_ode_fn` of `diana_euler` and a `work` of `5 d` doubles. Step `k` evaluates `fn` at
+- Callback wrapper `diana_rk4(fn, ctx, t0, h, nstep, y, d, work, lwork, done)` in `diana/rk4.h`,
+  with the `diana_ode_fn` of `diana_euler` and a `work` of `lwork >= 5 d` doubles. Step `k` evaluates `fn` at
   `t0 + k h`, `t0 + (k + 0.5) h` (twice) and `t0 + (k + 1) h`, each computed from `k`. A failing
   stage or step returns its status (`DIANA_ERR_ARG` or `DIANA_ERR_OVERFLOW`) with `y` at the last
   good state. Unverified, like
@@ -442,6 +443,13 @@ and Removed).
   new `diana.FloatOverflowError`, a `ValueError` and an `OverflowError` (so `except ValueError`
   still catches it), and exposes `diana.ERR_OVERFLOW`; its name keeps `from diana import *` from
   shadowing the built-in `OverflowError`.
+- `diana_euler` and `diana_rk4` take the length `lwork` of `work` after it and return
+  `DIANA_ERR_ARG` before any call when it is below `2 d` or `5 d` (tested without forming the
+  product, so a huge `d` cannot wrap), and `diana_ode_fn` returns `int`: a non-zero return stops
+  the wrapper with the new status `DIANA_ERR_CALLBACK` (-6, "callback failed") and `y` at the
+  last completed step. Python exposes `diana.ERR_CALLBACK`; its drivers loop in Python and never
+  return it. The scalar callbacks keep their `double` return, a NaN or infinity stopping them with
+  `DIANA_ERR_ARG`.
 - A shared `libdiana` exports only the 25 public functions listed in `cmake/symbol.txt`
   (`-exported_symbols_list` on macOS, a version script on Linux), so the private helpers
   `diana_bisection_mid` and `diana_fp_sqrt` are no longer part of its ABI; the ctest `symbol`
