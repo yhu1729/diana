@@ -84,6 +84,8 @@ corpus, so far run only on AArch64 macOS.
   pivoting), a forward error bound on them, and that a nonsingular binary64 matrix factors
   without `DIANA_ERR_SINGULAR` or an overflow; the backward error relative to `|L|·|U|` is
   proved.
+- A forward error bound on the LU solve, and that a solve with the factors of a successful
+  factorization never overflows; the residual bound relative to `|L|·|U|·|x|` is proved.
 
 ## Technical notes
 
