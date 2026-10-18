@@ -45,6 +45,7 @@ PyObject *diana_py_euler_step(PyObject *self, PyObject *args, PyObject *kwds);
 PyObject *diana_py_forward_substitution(PyObject *self, PyObject *args,
                                         PyObject *kwds);
 PyObject *diana_py_lu(PyObject *self, PyObject *args, PyObject *kwds);
+PyObject *diana_py_lu_solve(PyObject *self, PyObject *args, PyObject *kwds);
 PyObject *diana_py_rk4_stage(PyObject *self, PyObject *args, PyObject *kwds);
 PyObject *diana_py_rk4_step(PyObject *self, PyObject *args, PyObject *kwds);
 PyObject *diana_py_simpson(PyObject *self, PyObject *args, PyObject *kwds);
@@ -57,6 +58,7 @@ int diana_py_bisection_exec(PyObject *m);
 int diana_py_cholesky_exec(PyObject *m);
 int diana_py_euler_exec(PyObject *m);
 int diana_py_lu_exec(PyObject *m);
+int diana_py_lu_solve_exec(PyObject *m);
 int diana_py_newton_exec(PyObject *m);
 int diana_py_rk4_exec(PyObject *m);
 int diana_py_simpson_exec(PyObject *m);

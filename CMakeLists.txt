@@ -171,6 +171,8 @@ if(DIANA_BUILD_PYTHON)
         python/ext/get_array.c
         python/ext/lu.c
         python/ext/lu_exec.c
+        python/ext/lu_solve.c
+        python/ext/lu_solve_exec.c
         python/ext/newton_exec.c
         python/ext/newton_init.c
         python/ext/newton_new.c
