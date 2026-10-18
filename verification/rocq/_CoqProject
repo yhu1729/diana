@@ -27,6 +27,7 @@ theory/Float/Simpson.v
 theory/Float/Substitution.v
 theory/Float/Trapezoidal.v
 theory/VST/Tactic.v
+theory/VST/Matrix.v
 theory/VST/Bisection.v
 ../clight/bisection_init_aarch64_macos.v
 theory/VST/BisectionInit.v
