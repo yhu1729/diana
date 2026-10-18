@@ -196,8 +196,9 @@ def test_argument_error_before_singular():
 def test_nonfinite_lu(p, v):
     lu = list(LU3)
     lu[p] = v
-    with pytest.raises(ValueError, match="non-finite"):
+    with pytest.raises(ValueError, match="non-finite") as info:
         diana.lu_solve(lu, PIV3, B3)
+    assert info.type is ValueError
 
 
 @pytest.mark.parametrize("p", range(3))
@@ -205,8 +206,9 @@ def test_nonfinite_lu(p, v):
 def test_nonfinite_rhs(p, v):
     b = list(B3)
     b[p] = v
-    with pytest.raises(ValueError, match="non-finite"):
+    with pytest.raises(ValueError, match="non-finite") as info:
         diana.lu_solve(LU3, PIV3, b)
+    assert info.type is ValueError
 
 
 @pytest.mark.parametrize("p", range(3))
@@ -263,9 +265,9 @@ def test_pivot_snapshot():
     ids=["forward-difference", "forward-nan", "quotient", "product", "difference"],
 )
 def test_overflow(lu, b):
-    with pytest.raises(ValueError, match="overflows") as info:
+    with pytest.raises(diana.FloatOverflowError, match="the solution overflows") as info:
         diana.lu_solve(lu, list(range(len(b))), b)
-    assert not isinstance(info.value, diana.SingularError)
+    assert info.type is diana.FloatOverflowError
 
 
 @pytest.mark.parametrize(
@@ -390,7 +392,7 @@ def test_matches_binary64_any(case):
         with pytest.raises(diana.SingularError):
             diana.lu_solve(lu, piv, b)
     elif want == "overflow":
-        with pytest.raises(ValueError, match="overflows"):
+        with pytest.raises(diana.FloatOverflowError, match="overflows"):
             diana.lu_solve(lu, piv, b)
     else:
         r = diana.lu_solve(lu, piv, b)

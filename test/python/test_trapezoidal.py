@@ -116,15 +116,30 @@ def test_too_few_samples(y):
         ([1.0, 2.0, 3.0], math.nan),
         ([1.0, 2.0, 3.0], math.inf),
         ([0.0, 0.0, 0.0], -math.inf),
+        # the sum overflows before a later sample that is not finite
+        ([DBL_MAX, DBL_MAX, DBL_MAX, math.nan, 0.0], 1.0),
+        ([0.0, DBL_MAX, DBL_MAX, -math.inf, 0.0], 1.0),
+    ],
+)
+def test_nonfinite_input(y, h):
+    with pytest.raises(ValueError, match="input is not finite") as info:
+        diana.trapezoidal(y, h)
+    assert not isinstance(info.value, diana.FloatOverflowError)
+
+
+@pytest.mark.parametrize(
+    ("y", "h"),
+    [
         ([DBL_MAX, DBL_MAX], 1.0),
         ([DBL_MAX, DBL_MAX], 0.0),
         ([DBL_MAX, DBL_MAX, 0.0], 1.0),
         ([DBL_MAX, 0.0], 4.0),
         (np.array([DBL_MAX, 0.0]), -4.0),
+        ([DBL_MAX, DBL_MAX, DBL_MAX, 1.0, 0.0], 1.0),
     ],
 )
-def test_nonfinite_result(y, h):
-    with pytest.raises(ValueError, match="not finite"):
+def test_overflow(y, h):
+    with pytest.raises(diana.FloatOverflowError, match="result overflows"):
         diana.trapezoidal(y, h)
 
 
@@ -216,9 +231,13 @@ def test_matches_sequential_binary64(y, h):
     for samples in (y, np.array(y)):
         if math.isfinite(want):
             assert same(diana.trapezoidal(samples, h), want)
-        else:
-            with pytest.raises(ValueError, match="not finite"):
+        elif math.isfinite(h) and all(math.isfinite(v) for v in y):
+            with pytest.raises(diana.FloatOverflowError, match="overflows"):
                 diana.trapezoidal(samples, h)
+        else:
+            with pytest.raises(ValueError, match="input is not finite") as info:
+                diana.trapezoidal(samples, h)
+            assert not isinstance(info.value, diana.FloatOverflowError)
 
 
 def scaled(seed, n, low, high):

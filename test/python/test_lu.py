@@ -194,9 +194,9 @@ def test_singular(a):
     ids=["first", "late"],
 )
 def test_overflow(a):
-    with pytest.raises(ValueError, match="overflows") as info:
+    with pytest.raises(diana.FloatOverflowError, match="an update overflows") as info:
         diana.lu(a)
-    assert not isinstance(info.value, diana.SingularError)
+    assert info.type is diana.FloatOverflowError
 
 
 @pytest.mark.parametrize("p", range(9))
@@ -204,8 +204,9 @@ def test_overflow(a):
 def test_nonfinite(p, v):
     a = list(A3)
     a[p] = v
-    with pytest.raises(ValueError, match="non-finite"):
+    with pytest.raises(ValueError, match="non-finite") as info:
         diana.lu(a)
+    assert info.type is ValueError
 
 
 @pytest.mark.parametrize(
@@ -317,7 +318,7 @@ def test_matches_binary64_any(a):
         with pytest.raises(diana.SingularError):
             diana.lu(a)
     elif want == "overflow":
-        with pytest.raises(ValueError, match="overflows"):
+        with pytest.raises(diana.FloatOverflowError, match="overflows"):
             diana.lu(a)
     else:
         r, piv = diana.lu(a)

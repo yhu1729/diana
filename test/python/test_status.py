@@ -37,9 +37,20 @@ def test_status_value():
     assert (diana.ERR_ARG, diana.ERR_BRACKET, diana.ERR_MAXITER) == (-1, -2, -3)
     assert diana.ERR_SINGULAR == -4
     assert diana.status_str(diana.ERR_SINGULAR) == "zero derivative or pivot"
+    assert diana.ERR_OVERFLOW == diana._diana.ERR_OVERFLOW == -5
+    assert diana.status_str(diana.ERR_OVERFLOW) == "result overflows"
 
 
 def test_exception_hierarchy():
     assert issubclass(diana.BracketError, ValueError)
     assert issubclass(diana.MaxIterError, RuntimeError)
     assert issubclass(diana.SingularError, ValueError)
+    assert issubclass(diana.FloatOverflowError, ValueError)
+    assert issubclass(diana.FloatOverflowError, OverflowError)
+    assert not issubclass(diana.FloatOverflowError, diana.SingularError)
+    assert diana.FloatOverflowError is diana._diana.FloatOverflowError
+
+
+def test_export():
+    assert {"ERR_OVERFLOW", "FloatOverflowError"} <= set(diana.__all__)
+    assert all(hasattr(diana, name) for name in diana.__all__)

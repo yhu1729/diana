@@ -99,18 +99,45 @@ def test_tol_required():
 
 
 @pytest.mark.parametrize(
-    ("f", "x0", "match"),
-    [
-        (lambda x: (math.nan, 1.0), 0.0, "must be finite"),
-        (lambda x: (1.0, math.inf), 0.0, "must be finite"),
-        (lambda x: (sys.float_info.max, 0.5), 0.0, "step is not finite"),
-        (lambda x: (1.0, sys.float_info.min * sys.float_info.epsilon), 0.0, "step is not finite"),
-        (lambda x: (sys.float_info.max, 1.0), -sys.float_info.max, "step is not finite"),
-    ],
+    "f", [lambda x: (math.nan, 1.0), lambda x: (1.0, math.inf), lambda x: (-math.inf, 0.0)]
 )
-def test_step_error(f, x0, match):
-    with pytest.raises(ValueError, match=match):
+def test_step_nonfinite(f):
+    with pytest.raises(ValueError, match="must be finite") as info:
+        diana.newton(f, 0.0, 0.0)
+    assert not isinstance(info.value, diana.FloatOverflowError)
+
+
+@pytest.mark.parametrize(
+    ("f", "x0"),
+    [
+        (lambda x: (sys.float_info.max, 0.5), 0.0),
+        (lambda x: (1.0, sys.float_info.min * sys.float_info.epsilon), 0.0),
+        (lambda x: (sys.float_info.max, 1.0), -sys.float_info.max),
+    ],
+    ids=["correction", "correction-subnormal", "iterate"],
+)
+def test_step_overflow(f, x0):
+    with pytest.raises(diana.FloatOverflowError, match="Newton step overflows"):
         diana.newton(f, x0, 0.0)
+
+
+@pytest.mark.parametrize(
+    ("x0", "fx0", "fx", "dfx"),
+    [(1.0, -1.0, sys.float_info.max, 0.5), (-(2.0**1023), 2.0**1022, sys.float_info.max, 1.0)],
+    ids=["correction", "iterate"],
+)
+def test_overflow_keeps_state(x0, fx0, fx, dfx):
+    # A step with f(x) = fx0 moves x0 by -fx0, the overflowing step changes nothing, and a step
+    # with f(x) = -fx0 returns to x0.
+    s = diana.Newton(x0, 0.0)
+    assert s.step(fx0, 1.0) == diana.CONTINUE
+    before = (s.x, s.dx, s.tol, s.iter, s.max_iter, s.status, s.result())
+    with pytest.raises(diana.FloatOverflowError, match="Newton step overflows"):
+        s.step(fx, dfx)
+    assert (s.x, s.dx, s.tol, s.iter, s.max_iter, s.status, s.result()) == before
+    assert s.status == diana.CONTINUE
+    assert s.step(-fx0, 1.0) == diana.CONTINUE
+    assert (s.x, s.dx, s.iter) == (x0, -fx0, 2)
 
 
 @pytest.mark.parametrize("dfx", [0.0, -0.0])

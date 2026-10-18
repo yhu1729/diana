@@ -232,8 +232,9 @@ def test_argument_error_before_singular(solve):
 def test_nonfinite_lower(solve, p, v):
     lower = list(L3)
     lower[p] = v
-    with pytest.raises(ValueError, match="non-finite"):
+    with pytest.raises(ValueError, match="non-finite") as info:
         solve(lower, [1.0, 2.0, 3.0])
+    assert info.type is ValueError
 
 
 @pytest.mark.parametrize("solve", SOLVES, ids=SOLVE_IDS)
@@ -242,8 +243,9 @@ def test_nonfinite_lower(solve, p, v):
 def test_nonfinite_rhs(solve, p, v):
     b = [1.0, 2.0, 3.0]
     b[p] = v
-    with pytest.raises(ValueError, match="non-finite"):
+    with pytest.raises(ValueError, match="non-finite") as info:
         solve(L3, b)
+    assert info.type is ValueError
 
 
 @pytest.mark.parametrize(
@@ -268,9 +270,9 @@ def test_nonfinite_rhs(solve, p, v):
     ids=["quotient-f", "quotient-b", "product", "difference-f", "difference-b", "nan-f", "nan-b"],
 )
 def test_overflow(solve, lower, b):
-    with pytest.raises(ValueError, match="overflows") as info:
+    with pytest.raises(diana.FloatOverflowError, match="the solution overflows") as info:
         solve(lower, b)
-    assert info.type is ValueError
+    assert info.type is diana.FloatOverflowError
 
 
 @pytest.mark.parametrize("solve", SOLVES, ids=SOLVE_IDS)
@@ -392,7 +394,7 @@ def test_matches_binary64_any(solve, case):
         with pytest.raises(diana.SingularError):
             solve(lower, b)
     elif want == "overflow":
-        with pytest.raises(ValueError, match="overflows"):
+        with pytest.raises(diana.FloatOverflowError, match="overflows"):
             solve(lower, b)
     else:
         r = solve(lower, b)

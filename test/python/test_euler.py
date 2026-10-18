@@ -82,22 +82,43 @@ def test_step_zero_step_and_underflow():
         ([1.0, 1.0], [1.0, 1.0], math.inf),
         ([1.0], [math.inf], 0.0),
         ([math.inf], [-math.inf], 1.0),
-        ([0.0], [DBL_MAX], 2.0),
-        ([DBL_MAX], [DBL_MAX], 1.0),
-        ([1.0, 2.0, DBL_MAX], [1.0, 1.0, DBL_MAX], 1.0),
+        # the first component overflows, a later input is not finite
+        ([DBL_MAX, 1.0, math.nan], [DBL_MAX, 1.0, 1.0], 1.0),
+        ([DBL_MAX, 1.0, 1.0], [DBL_MAX, 1.0, -math.inf], 1.0),
     ],
 )
 def test_step_nonfinite(y, f, h):
-    with pytest.raises(ValueError, match="not finite"):
+    with pytest.raises(ValueError, match="input is not finite") as info:
+        diana.euler_step(y, f, h)
+    assert not isinstance(info.value, diana.FloatOverflowError)
+
+
+@pytest.mark.parametrize(
+    ("y", "f", "h"),
+    [
+        ([0.0], [DBL_MAX], 2.0),
+        ([DBL_MAX], [DBL_MAX], 1.0),
+        ([1.0, 2.0, DBL_MAX], [1.0, 1.0, DBL_MAX], 1.0),
+        ([DBL_MAX, 1.0, 1.0], [DBL_MAX, 1.0, 1.0], 1.0),
+    ],
+)
+def test_step_overflow(y, f, h):
+    with pytest.raises(diana.FloatOverflowError, match="result overflows"):
         diana.euler_step(y, f, h)
 
 
-def test_step_failure_leaves_out():
+@pytest.mark.parametrize(
+    ("last", "error"),
+    [(1.0, diana.FloatOverflowError), (math.nan, ValueError)],
+    ids=["overflow", "nonfinite"],
+)
+def test_step_failure_leaves_out(last, error):
     out = array.array("d", [42.0, 42.0, 42.0])
-    with pytest.raises(ValueError, match="not finite"):
+    with pytest.raises(error) as info:
         diana._diana.euler_step(
-            array.array("d", [1.0, 2.0, DBL_MAX]), array.array("d", [1.0, 1.0, DBL_MAX]), 1.0, out
+            array.array("d", [DBL_MAX, 2.0, last]), array.array("d", [DBL_MAX, 1.0, 1.0]), 1.0, out
         )
+    assert info.type is error
     assert list(out) == [42.0, 42.0, 42.0]
 
 
@@ -191,9 +212,13 @@ def test_step_matches_binary64(yf, h):
     if all(math.isfinite(v) for v in want):
         r = diana.euler_step(y, f, h)
         assert all(same(a, b) for a, b in zip(r, want, strict=True))
-    else:
-        with pytest.raises(ValueError, match="not finite"):
+    elif all(math.isfinite(v) for v in [*y, *f, h]):
+        with pytest.raises(diana.FloatOverflowError, match="overflows"):
             diana.euler_step(y, f, h)
+    else:
+        with pytest.raises(ValueError, match="input is not finite") as info:
+            diana.euler_step(y, f, h)
+        assert not isinstance(info.value, diana.FloatOverflowError)
 
 
 def test_step_rounding_error_bound():
@@ -285,9 +310,16 @@ def test_euler_callback_errors():
         calls.append(t)
         return [math.inf] if len(calls) == 3 else [1.0]
 
-    with pytest.raises(ValueError, match="not finite"):
+    with pytest.raises(ValueError, match="not finite") as info:
         diana.euler(blow, 0.0, [0.0], 1.0, 5)
+    assert not isinstance(info.value, diana.FloatOverflowError)
     assert len(calls) == 3
+
+
+def test_euler_overflow():
+    # the third step doubles 2^1023 past DBL_MAX, every input being finite
+    with pytest.raises(diana.FloatOverflowError, match="overflows"):
+        diana.euler(lambda t, y: list(y), 0.0, [2.0**1021], 1.0, 5)
 
 
 def test_euler_rotation_convergence():

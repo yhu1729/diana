@@ -120,14 +120,29 @@ def test_zero_step_and_underflow():
         ([1.0, 1.0], [1.0, 1.0], math.inf, 4),
         ([1.0], [math.inf], 0.0, 4),
         ([math.inf], [-math.inf], 2.0, 2),
+        # the first component overflows, a later input is not finite
+        ([DBL_MAX, 1.0, math.nan], [DBL_MAX, 1.0, 1.0], 2.0, 3),
+        ([DBL_MAX, 1.0, 1.0], [DBL_MAX, 1.0, math.inf], 2.0, 2),
+    ],
+)
+def test_stage_nonfinite(y, k, h, stage):
+    with pytest.raises(ValueError, match="input is not finite") as info:
+        diana.rk4_stage(y, k, h, stage)
+    assert not isinstance(info.value, diana.FloatOverflowError)
+
+
+@pytest.mark.parametrize(
+    ("y", "k", "h", "stage"),
+    [
         ([0.0], [DBL_MAX], 2.0, 4),
         ([0.0], [4.0], DBL_MAX, 2),
         ([DBL_MAX], [DBL_MAX], 2.0, 3),
         ([1.0, 2.0, DBL_MAX], [1.0, 1.0, DBL_MAX], 2.0, 4),
+        ([DBL_MAX, 1.0, 1.0], [DBL_MAX, 1.0, 1.0], 2.0, 2),
     ],
 )
-def test_stage_nonfinite(y, k, h, stage):
-    with pytest.raises(ValueError, match="not finite"):
+def test_stage_overflow(y, k, h, stage):
+    with pytest.raises(diana.FloatOverflowError, match="result overflows"):
         diana.rk4_stage(y, k, h, stage)
 
 
@@ -141,6 +156,17 @@ def test_stage_nonfinite(y, k, h, stage):
         ([1.0], [1.0], [1.0], [1.0], [math.nan], 1.0),
         ([1.0], [1.0], [1.0], [1.0], [1.0], math.inf),
         ([0.0], [math.inf], [0.0], [0.0], [0.0], 0.0),
+    ],
+)
+def test_step_nonfinite(y, k1, k2, k3, k4, h):
+    with pytest.raises(ValueError, match="input is not finite") as info:
+        diana.rk4_step(y, k1, k2, k3, k4, h)
+    assert not isinstance(info.value, diana.FloatOverflowError)
+
+
+@pytest.mark.parametrize(
+    ("y", "k1", "k2", "k3", "k4", "h"),
+    [
         ([0.0], [0.0], [DBL_MAX], [DBL_MAX], [0.0], 1.0),
         ([0.0], [0.0], [DBL_MAX], [0.0], [0.0], 1.0),
         ([0.0], [DBL_MAX], [DBL_MAX / 2], [0.0], [0.0], 1.0),
@@ -149,20 +175,40 @@ def test_stage_nonfinite(y, k, h, stage):
         ([1.0, 2.0, DBL_MAX], [1.0, 1.0, DBL_MAX], [0.0] * 3, [0.0] * 3, [0.0] * 3, 1.0),
     ],
 )
-def test_step_nonfinite(y, k1, k2, k3, k4, h):
-    with pytest.raises(ValueError, match="not finite"):
+def test_step_overflow(y, k1, k2, k3, k4, h):
+    with pytest.raises(diana.FloatOverflowError, match="result overflows"):
         diana.rk4_step(y, k1, k2, k3, k4, h)
 
 
-def test_failure_leaves_out():
-    y = array.array("d", [1.0, 2.0, DBL_MAX])
-    k = array.array("d", [1.0, 1.0, DBL_MAX])
+@pytest.mark.parametrize("position", range(5))
+def test_step_overflow_then_nonfinite(position):
+    # The first component overflows with finite inputs; a NaN later in any argument makes the
+    # failure a non-finite input.
+    args = [[DBL_MAX, 1.0, 1.0], [DBL_MAX, 1.0, 1.0], [0.0] * 3, [0.0] * 3, [0.0] * 3]
+    with pytest.raises(diana.FloatOverflowError):
+        diana.rk4_step(*args, 6.0)
+    args[position][2] = math.nan
+    with pytest.raises(ValueError, match="input is not finite") as info:
+        diana.rk4_step(*args, 6.0)
+    assert not isinstance(info.value, diana.FloatOverflowError)
+
+
+@pytest.mark.parametrize(
+    ("last", "error"),
+    [(1.0, diana.FloatOverflowError), (math.nan, ValueError)],
+    ids=["overflow", "nonfinite"],
+)
+def test_failure_leaves_out(last, error):
+    y = array.array("d", [DBL_MAX, 2.0, last])
+    k = array.array("d", [DBL_MAX, 1.0, 1.0])
     out = array.array("d", [42.0] * 3)
-    with pytest.raises(ValueError, match="not finite"):
+    with pytest.raises(error) as info:
         diana._diana.rk4_stage(y, k, 2.0, 4, out)
+    assert info.type is error
     assert list(out) == [42.0] * 3
-    with pytest.raises(ValueError, match="not finite"):
+    with pytest.raises(error) as info:
         diana._diana.rk4_step(y, k, k, k, k, 1.0, out)
+    assert info.type is error
     assert list(out) == [42.0] * 3
 
 
@@ -289,9 +335,13 @@ def test_stage_matches_binary64(yk, h, stage):
     if all(math.isfinite(v) for v in want):
         r = diana.rk4_stage(y, k, h, stage)
         assert all(same(a, b) for a, b in zip(r, want, strict=True))
-    else:
-        with pytest.raises(ValueError, match="not finite"):
+    elif all(math.isfinite(v) for v in [*y, *k, h]):
+        with pytest.raises(diana.FloatOverflowError, match="overflows"):
             diana.rk4_stage(y, k, h, stage)
+    else:
+        with pytest.raises(ValueError, match="input is not finite") as info:
+            diana.rk4_stage(y, k, h, stage)
+        assert not isinstance(info.value, diana.FloatOverflowError)
 
 
 @settings(database=None, derandomize=True, max_examples=500)
@@ -301,9 +351,13 @@ def test_step_matches_binary64(v, h):
     if all(math.isfinite(x) for x in want):
         r = diana.rk4_step(*v, h)
         assert all(same(a, b) for a, b in zip(r, want, strict=True))
-    else:
-        with pytest.raises(ValueError, match="not finite"):
+    elif math.isfinite(h) and all(math.isfinite(x) for a in v for x in a):
+        with pytest.raises(diana.FloatOverflowError, match="overflows"):
             diana.rk4_step(*v, h)
+    else:
+        with pytest.raises(ValueError, match="input is not finite") as info:
+            diana.rk4_step(*v, h)
+        assert not isinstance(info.value, diana.FloatOverflowError)
 
 
 U = Fraction(1, 2**53)
@@ -451,9 +505,16 @@ def test_rk4_callback_errors(fail):
         calls.append(t)
         return [math.inf] if len(calls) == fail + 1 else [1.0]
 
-    with pytest.raises(ValueError, match="not finite"):
+    with pytest.raises(ValueError, match="not finite") as info:
         diana.rk4(blow, 0.0, [0.0], 1.0, 5)
+    assert not isinstance(info.value, diana.FloatOverflowError)
     assert len(calls) == fail + 1
+
+
+def test_rk4_overflow():
+    # y' = y from DBL_MAX / 2 with h = 1: the stage 4 point y + k3 = (11/8) DBL_MAX overflows.
+    with pytest.raises(diana.FloatOverflowError, match="RK4 stage result overflows"):
+        diana.rk4(lambda t, y: list(y), 0.0, [DBL_MAX / 2], 1.0, 1)
 
 
 def test_rk4_callback_length():
