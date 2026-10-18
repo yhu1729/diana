@@ -11,6 +11,12 @@ fi
 proved=$(echo "$summary" | sed -E 's/.*Proved goals: *([0-9]+) *\/ *([0-9]+).*/\1/')
 total=$(echo "$summary" | sed -E 's/.*Proved goals: *([0-9]+) *\/ *([0-9]+).*/\2/')
 echo "$summary"
+alt_ergo=2.6.4
+other=$(sed -nE 's/^ +Alt-Ergo ([^:]+):.*/\1/p' "$report" | grep -vxF "$alt_ergo" | head -1 || true)
+if [ -n "$other" ]; then
+    echo "WP ran Alt-Ergo $other; the toolchain pins $alt_ergo" >&2
+    exit 1
+fi
 if [ "$proved" != "$total" ]; then
     echo "WP: $proved of $total goals proved" >&2
     exit 1
