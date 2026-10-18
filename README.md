@@ -20,7 +20,8 @@ states precisely what is proven, by which tool, and what is only tested.
 - Composite trapezoidal and Simpson rules over tabulated samples.
 - Cholesky factorization of a symmetric positive definite matrix, and forward and back
   substitution with its triangular factor.
-- LU factorization with partial pivoting of a square matrix.
+- LU factorization with partial pivoting of a square matrix, and the solve of `A·x = b` with its
+  factors.
 - Explicit Euler step, with a loop over a callback.
 - Classical Runge–Kutta (RK4) step, with a loop over a callback.
 - Newton's method, as a state machine the caller drives, and as a function taking a callback.
