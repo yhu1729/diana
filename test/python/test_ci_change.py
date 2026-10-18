@@ -1,4 +1,5 @@
 import importlib.util
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -101,6 +102,7 @@ def init_repo(tmp_path):
     return run, first, run("rev-parse", "HEAD")
 
 
+@pytest.mark.skipif(shutil.which("git") is None, reason="git is not installed")
 def test_push_range(cc, tmp_path, monkeypatch):
     run, first, second = init_repo(tmp_path)
     monkeypatch.setattr(cc, "ROOT", tmp_path)
