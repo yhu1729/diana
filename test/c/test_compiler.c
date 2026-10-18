@@ -1696,6 +1696,184 @@ static void test_lu(void) {
   }
 }
 
+static void lu_solve_case(const char *label, const double *lu,
+                          const size_t *piv, size_t n, const double *b) {
+  static double x[MATRIX + 1u];
+  size_t m = n <= MATRIX ? n : 0u;
+  size_t i;
+  diana_status st;
+
+  for (i = 0u; i < MATRIX + 1u; ++i) {
+    x[i] = SENTINEL;
+  }
+  st = diana_lu_solve(lu, piv, n, b, x);
+  put_head("lu_solve", label);
+  printf(" %llu", (unsigned long long)n);
+  put_array(lu, lu == (const double *)0 ? 0u : m * m);
+  put_index(piv, piv == (const size_t *)0 ? 0u : m);
+  put_array(b, b == (const double *)0 ? 0u : m);
+  put_status(st);
+  put_array(x, m + 1u);
+  printf("\n");
+}
+
+static void test_lu_solve(void) {
+  static const double one[1] = {4.0};
+  static const size_t piv1[1] = {0u};
+  static const double one_b[1] = {2.0};
+  /* the factor of [2 1 1; 4 -6 0; -2 7 2] */
+  static const double exact3[9] = {4.0, 0.5, -0.5, -6.0, 4.0,
+                                   1.0, 0.0, 1.0,  1.0};
+  static const size_t exact_piv[3] = {1u, 1u, 2u};
+  static const double exact_b[3] = {3.0, 16.0, -10.0};
+  static const size_t identity_piv[3] = {0u, 1u, 2u};
+  static const double identity[9] = {1.0, 0.0, 0.0, 0.0, 1.0,
+                                     0.0, 0.0, 0.0, 1.0};
+  static const size_t forward_piv[3] = {1u, 2u, 2u};
+  static const size_t backward_piv[3] = {0u, 0u, 1u};
+  static const double count_b[3] = {1.0, 2.0, 3.0};
+  static const size_t piv2[2] = {0u, 1u};
+  static const double signed_zero[4] = {-2.0, 0.0, 0.0, 4.0};
+  static const double zero_b[2] = {0.0, 0.0};
+  static const double fma_lower[4] = {1.0, 0x1.0000000000001p0, 0.0, 1.0};
+  static const double fma_upper[4] = {1.0, 0.0, 0x1.0000000000001p0, 1.0};
+  static const double fma_forward_b[2] = {0x1.0000000000001p0,
+                                          0x1.0000000000003p0};
+  static const double fma_back_b[2] = {0x1.0000000000003p0,
+                                       0x1.0000000000001p0};
+  static const double order_lower[9] = {1.0, 0.0, 1.0, 0.0, 1.0,
+                                        1.0, 0.0, 0.0, 1.0};
+  static const double order_upper[9] = {1.0, 0.0, 0.0, 1.0, 1.0,
+                                        0.0, 1.0, 0.0, 1.0};
+  static const double order_forward_b[3] = {-1.0, -0x1p-53, 0x1p-53};
+  static const double order_back_b[3] = {0x1p-53, -0x1p-53, -1.0};
+  static const double three[1] = {3.0};
+  static const double five[1] = {5.0};
+  static const double two[1] = {2.0};
+  static const double half[1] = {0.5};
+  static const double true_min[1] = {VAL_TRUE_MIN};
+  static const double big[4] = {VAL_MAX, VAL_HALF_MAX, 0.0, VAL_MAX};
+  static const double big_b[2] = {VAL_MAX, VAL_HALF_MAX};
+  static const double forward_sum[4] = {1.0, 1.0, 0.0, 1.0};
+  static const double forward_sum_b[2] = {VAL_MAX, -VAL_MAX};
+  static const double forward_nan[9] = {1.0,   0.0, -1e300, 0.0, 1.0,
+                                        1e300, 0.0, 0.0,    1.0};
+  static const double forward_nan_b[3] = {1e300, 1e300, 0.0};
+  static const double tiny[1] = {1e-300};
+  static const double huge[1] = {1e300};
+  static const double product[4] = {1.0, 0.0, 1e300, 1.0};
+  static const double product_b[2] = {0.0, 1e300};
+  static const double difference[4] = {1.0, 0.0, -1.0, 1.0};
+  static const double difference_b[2] = {VAL_MAX, VAL_MAX};
+  static double lu[MATRIX * MATRIX];
+  static double a[MATRIX * MATRIX];
+  static size_t piv[MATRIX];
+  static double b[MATRIX];
+  static double out[1] = {SENTINEL};
+  diana_status st;
+  unsigned k;
+  size_t n;
+  size_t i;
+
+  lu_solve_case("null_lu", (const double *)0, exact_piv, 3u, exact_b);
+  lu_solve_case("null_piv", exact3, (const size_t *)0, 3u, exact_b);
+  lu_solve_case("null_b", exact3, exact_piv, 3u, (const double *)0);
+  st = diana_lu_solve(exact3, exact_piv, 3u, exact_b, (double *)0);
+  put_head("lu_solve", "null_x");
+  put_status(st);
+  printf("\n");
+  lu_solve_case("empty", exact3, exact_piv, 0u, exact_b);
+  st = diana_lu_solve((const double *)0, (const size_t *)0, 0u,
+                      (const double *)0, out);
+  put_head("lu_solve", "all_null");
+  put_status(st);
+  put_double(out[0]);
+  printf("\n");
+  lu_solve_case("size_overflow", exact3, exact_piv, (size_t)1 << 32, exact_b);
+  lu_solve_case("size_max", exact3, exact_piv, (size_t)-1, exact_b);
+  lu_solve_case("one", one, piv1, 1u, one_b);
+  lu_solve_case("exact", exact3, exact_piv, 3u, exact_b);
+  lu_solve_case("interchange", identity, forward_piv, 3u, count_b);
+  lu_solve_case("interchange_below", identity, backward_piv, 3u, count_b);
+  lu_solve_case("signed_zero", signed_zero, piv2, 2u, zero_b);
+  lu_solve_case("fma_forward", fma_lower, piv2, 2u, fma_forward_b);
+  lu_solve_case("fma_back", fma_upper, piv2, 2u, fma_back_b);
+  lu_solve_case("order_forward", order_lower, identity_piv, 3u,
+                order_forward_b);
+  lu_solve_case("order_back", order_upper, identity_piv, 3u, order_back_b);
+  lu_solve_case("division", three, piv1, 1u, five);
+  lu_solve_case("underflow_tie", two, piv1, 1u, true_min);
+  lu_solve_case("subnormal", half, piv1, 1u, true_min);
+  lu_solve_case("big", big, piv2, 2u, big_b);
+  lu_solve_case("forward_overflow", forward_sum, piv2, 2u, forward_sum_b);
+  lu_solve_case("forward_nan", forward_nan, identity_piv, 3u, forward_nan_b);
+  lu_solve_case("quotient_overflow", tiny, piv1, 1u, huge);
+  lu_solve_case("product_overflow", product, piv2, 2u, product_b);
+  lu_solve_case("difference_overflow", difference, piv2, 2u, difference_b);
+  for (i = 0u; i < 3u; ++i) {
+    memcpy(lu, exact3, sizeof exact3);
+    lu[i + 3u * i] = 0.0;
+    lu_solve_case("zero_diagonal", lu, exact_piv, 3u, exact_b);
+    lu[i + 3u * i] = -0.0;
+    lu_solve_case("negative_zero_diagonal", lu, exact_piv, 3u, exact_b);
+    memcpy(b, exact_b, sizeof exact_b);
+    b[i] = VAL_QNAN;
+    lu_solve_case("zero_diagonal_nan_b", lu, exact_piv, 3u, b);
+    memcpy(piv, exact_piv, sizeof exact_piv);
+    piv[i] = 3u;
+    lu_solve_case("pivot_row_n", exact3, piv, 3u, exact_b);
+    lu_solve_case("zero_diagonal_pivot_row_n", lu, piv, 3u, exact_b);
+    piv[i] = (size_t)-1;
+    lu_solve_case("pivot_row_max", exact3, piv, 3u, exact_b);
+    memcpy(b, exact_b, sizeof exact_b);
+    b[i] = VAL_QNAN;
+    lu_solve_case("nan_b", exact3, exact_piv, 3u, b);
+    b[i] = VAL_SNAN;
+    lu_solve_case("snan_b", exact3, exact_piv, 3u, b);
+    b[i] = VAL_INF;
+    lu_solve_case("inf_b", exact3, exact_piv, 3u, b);
+    b[i] = -VAL_INF;
+    lu_solve_case("negative_inf_b", exact3, exact_piv, 3u, b);
+  }
+  for (i = 0u; i < 9u; ++i) {
+    memcpy(lu, exact3, sizeof exact3);
+    lu[i] = VAL_QNAN;
+    lu_solve_case("nan", lu, exact_piv, 3u, exact_b);
+    lu[i] = VAL_SNAN;
+    lu_solve_case("snan", lu, exact_piv, 3u, exact_b);
+    lu[i] = VAL_INF;
+    lu_solve_case("inf", lu, exact_piv, 3u, exact_b);
+    lu[i] = -VAL_INF;
+    lu_solve_case("negative_inf", lu, exact_piv, 3u, exact_b);
+  }
+
+  for (k = 0u; k < RANDOM_ARRAY; ++k) {
+    int mixed = (int)(k % 2u);
+    n = 1u + (size_t)rng_below(MATRIX);
+    for (i = 0u; i < n; ++i) {
+      b[i] = random_value(mixed);
+      piv[i] = (size_t)rng_below((unsigned)n);
+    }
+    if (k % 4u >= 2u) {
+      for (i = 0u; i < n * n; ++i) {
+        a[i] = random_bounded(0);
+      }
+      for (i = 0u; i < n; ++i) {
+        b[i] = random_bounded(0);
+      }
+      if (diana_lu(a, n, lu, piv) != DIANA_OK) {
+        memcpy(lu, a, n * n * sizeof *lu);
+      }
+      lu_solve_case("factor", lu, piv, n, b);
+    } else {
+      for (i = 0u; i < n * n; ++i) {
+        lu[i] = random_value(mixed);
+      }
+      lu_solve_case("random", lu, piv, n, b);
+    }
+  }
+}
+
 int main(void) {
   test_bisection();
   test_trapezoidal();
@@ -1706,6 +1884,7 @@ int main(void) {
   test_cholesky();
   test_substitution();
   test_lu();
+  test_lu_solve();
   printf("end %u\n", case_count);
   if (fflush(stdout) != 0 || ferror(stdout)) {
     return 1;
