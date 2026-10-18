@@ -139,6 +139,14 @@ endif()
 if(DIANA_BUILD_TEST)
     enable_testing()
     add_subdirectory(test/c)
+    set(diana_symbol_check -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR})
+    if(DIANA_BUILD_SHARED_LIB)
+        list(APPEND diana_symbol_check -DNM=${CMAKE_NM} -DLIBRARY=$<TARGET_FILE:diana>
+             -DAPPLE=${APPLE})
+    endif()
+    add_test(NAME symbol
+        COMMAND ${CMAKE_COMMAND} ${diana_symbol_check}
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/check_symbol.cmake)
     if(NOT DEFINED SKBUILD)
         set(DIANA_INSTALL_TEST_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/install-test)
         set(DIANA_INSTALL_TEST_OPTION
