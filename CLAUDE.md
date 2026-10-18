@@ -228,138 +228,31 @@ note/                 technical notes per topic, index by topic and by path (REA
 
 ## Status
 
-See `CHANGELOG.md`. v0.1.0: scaffolding and bisection end-to-end. Layers A and B are complete for the kernel, Frama-C WP proves all 162 goals, and VST covers `bisection_mid`, the `src/fp.h` helpers and `diana_bisection_result`; VST for `diana_bisection_init`/`diana_bisection_step` is deferred. v0.2.0 completes M1 (trapezoidal, Simpson, Euler): `diana_trapezoidal` (tabulated; C tests at 100% line and branch coverage; Python `diana.trapezoidal` over the buffer protocol) with its ACSL contract proved by WP (61 goals) and `spec/trapezoidal.md`; Lean and Rocq (Coquelicot) prove its layer A (TRAPEZOIDAL-A1/A2) and Flocq its layer B (TRAPEZOIDAL-B1/B2); VST proves the C against the Flocq model (TRAPEZOIDAL-C2, `trapezoidal_aarch64_macos.v`), so the full strict spec gate passes. Simpson follows the same path: `diana_simpson` (tabulated, odd `n >= 3`; C tests at 100% line and branch coverage; Python `diana.simpson` over the buffer protocol) with its ACSL contract proved by WP (78 goals) and `spec/simpson.md`; Lean and Rocq prove its layer A (SIMPSON-A1/A2), Flocq its layer B (SIMPSON-B1/B2), and VST the C against the Flocq model (SIMPSON-C2, `simpson_aarch64_macos.v`), so Simpson is proved through every layer and the full strict spec gate passes; Euler follows the same path through every layer: `diana_euler_step` (out of place, all buffers separate, two passes so `y_out` is untouched on error; C tests at 100% line and branch coverage) with its ACSL contract proved by WP (74 goals) and `spec/euler.md`, the unverified callback wrapper `diana_euler`, and Python `diana.euler_step` and `diana.euler`; Flocq proves its layer B (EULER-B1/B2) and VST the C against the Flocq model (EULER-C2, `euler_aarch64_macos.v`, the first VST proof that writes an array); Lean and Rocq prove its layer A (EULER-A1/A2) on the shared modules `Diana.Real.OneStep` (discrete Grönwall for one-step methods) and, in Rocq, `Diana.Real.Vector` (max norm over `nat → R`); the shared proof modules `Diana.Real.Quadrature` (Lean, Rocq) and `Diana.Float.Sum` (Rocq) hold the lemmas Simpson reuses from the trapezoidal proofs. v0.3.0: VST proves `diana_bisection_init` and `diana_bisection_step` against the C-order models `c_init`/`c_step` (BISECTION-C8/C9 since the renumbering below), `c_step` writes the Flocq `fstep` (C10), and `init` and every `DIANA_CONTINUE` step establish the layer-B invariant (C11/C12), so bisection is proved through every layer and every kernel function has a VST proof. Newton's method opens M2: `diana_newton_init`/`step`/`result` (reverse communication; `step` takes `f(x)` and `f'(x)`; a zero derivative is the new `DIANA_ERR_SINGULAR` (-4, Python `SingularError`, a `ValueError`; reserved for zero pivots in Cholesky and LU too) and an overflowing step `DIANA_ERR_OVERFLOW` since 1.0.0, both with the state unchanged; C tests at 100% line and branch coverage), the unverified wrapper `diana_newton`, Python `diana.Newton`/`diana.newton` (`tol` required), WP proves its ACSL contracts (NEWTON-C1 to C3), Lean and Rocq its layer A (NEWTON-A1/A2, quadratic one-step bound and convergence), Flocq its layer B (NEWTON-B1 to B3, including the half-ulp meaning of the stagnation stop), and VST the C against the C-order models and the Flocq `fstep` (NEWTON-C4 to C7).
+Current state only; history is `CHANGELOG.md`. The theorem status, WP goal counts and tool
+versions of the last local run are in the generated `doc/verification/report.md`, the source of
+truth: never copy its figures here. Theorems and proof notes per method: `spec/<method>.md`.
 
-The 0.3.0 release preparation also aligns the package, CMake, header and consumer versions,
-specifies the runtime floating-point environment, and makes the extension stubs match the
-read-only state fields and positional-only `step` arguments.
+Every method is proved through every layer: A in Lean and Rocq, B in Flocq, C by Frama-C WP and
+by VST against the Flocq model.
 
-v1.0.0 (release notes in `CHANGELOG.md`, not yet tagged): the classical Runge–Kutta step RK4 in reverse communication,
-`diana_rk4_stage` (the point of stage 2, 3 or 4: `y + (h/2)·k` or `y + h·k`) and
-`diana_rk4_step` (`y + h·((k₁ + k₄) + 2·(k₂ + k₃))/6`), both two-pass like Euler (C tests at 100%
-line and branch coverage); WP proves the ACSL contracts (RK4-C1/C2, `spec/rk4.md`), Lean
-and Rocq its layer A (RK4-A1 to A7: increment jets, order conditions, local truncation
-`(M₅/120 + N₄/24)·h⁵`, Lipschitz increment, convergence from consistency, autonomization, and the
-order-4 global bound; shared modules `Diana.Real.Taylor` and `OneStep.one_step_pow`; Lean takes
-Fréchet derivatives, Rocq curve derivatives plus multilinearity), and Flocq its layer B (RK4-B1 to B5: finiteness, the `fl(h/2)` coefficient, stage and step error),
-and VST both functions against the Flocq models (RK4-C3 to C6); the
-unverified wrapper `diana_rk4` (`work` of `lwork >= 5d` doubles) loops over them with a `diana_ode_fn`, and Python
-exposes `diana.rk4_stage`, `diana.rk4_step` and the driver `diana.rk4` (copies each slope).
+| Method | Kernel | Spec |
+|---|---|---|
+| Bisection | `diana_bisection_init`/`step`/`result`, helper `diana_bisection_mid` | `bisection` |
+| Newton | `diana_newton_init`/`step`/`result` | `newton` |
+| Trapezoidal, Simpson | `diana_trapezoidal`, `diana_simpson` | `trapezoidal`, `simpson` |
+| Euler, RK4 | `diana_euler_step`, `diana_rk4_stage`, `diana_rk4_step` | `euler`, `rk4` |
+| Cholesky | `diana_cholesky`, helper `diana_fp_sqrt` | `cholesky` |
+| Substitution | `diana_forward_substitution`, `diana_transpose_substitution` | `substitution` |
+| LU | `diana_lu`, `diana_lu_solve` | `lu`, `lu_solve` |
 
-v1.0.0: Cholesky factorization `diana_cholesky(a, n, l)` (`src/cholesky.c`,
-`diana/cholesky.h`), `n×n` column-major (`a[i + j·n]`), only the lower triangle of `a` read, `L`
-written with a `+0` strict upper triangle; `DIANA_ERR_ARG` (checked before any write) leaves `l`
-untouched, a pivot that is not positive returns `DIANA_ERR_SINGULAR` with `l` partly written, an
-exception to the write-nothing-on-error rule (KERNEL-002, API-003). The square root is the
-helper `diana_fp_sqrt` (`src/fp_sqrt.c`, `__builtin_sqrt`), the second `SKIP` entry. Proved
-through every layer (`spec/cholesky.md`): Lean and Rocq layer A (CHOLESKY-A1 to A3: `L·Lᵀ = A`,
-positive pivots iff symmetric positive definite), Flocq layer B (B1 the sqrt contract, B2
-finiteness on `DIANA_OK`, B3 the componentwise backward error `γⱼ₊₂·Σ|L̂ᵢₖL̂ⱼₖ|` plus underflow),
-WP the ACSL contract (C1, 108 goals, nonlinear index bounds via the lemma `column_end`, note
-WP-011), VST the kernel against the Flocq model (C3), the helper (C2, assuming CompCert's
-`__builtin_sqrt` funspec) and the `diana_fp_finite` copy (C4). Python `diana.cholesky(a)` returns
-an `array.array("d")` (length a square, `SingularError` when not positive definite).
+The opt-in `_unchecked` Euler and RK4 kernels have layers B and C only (`euler_unchecked`,
+`rk4_unchecked`). The callback wrappers and the Python binding are tested, not verified.
 
-v1.0.0: forward and transpose substitution `diana_forward_substitution(l, n, b, x)`
-(`L·x = b`) and `diana_transpose_substitution(l, n, b, x)` (`Lᵀ·x = b`) in `diana/substitution.h`
-(`src/forward_substitution.c`, `src/transpose_substitution.c`), reading only the lower triangle of the
-column-major `l`, so `diana_cholesky`'s output goes in as it is and the pair solves `A·x = b`.
-Products are subtracted in the order their unknowns were computed (back: `k = n−1` down to
-`i+1`), so back is forward on the mirrored system bit for bit. A non-finite input is
-`DIANA_ERR_ARG` and a `±0` diagonal entry `DIANA_ERR_SINGULAR`, both before any write; an
-overflowing entry is `DIANA_ERR_OVERFLOW` with `x` partly written, the second exception to the
-write-nothing rule (API-030); `x` must not overlap `l` or `b` (C tests at 100% line and branch
-coverage; 270 corpus cases each). Proved through every layer (`spec/substitution.md`): Lean and
-Rocq layer A (SUBSTITUTION-A1 to A7: each row solved, uniqueness, forward error from the residual
-through the comparison matrix `M(L)`, and the Cholesky solve of `A·x = b`; back via the mirrored
-system), Flocq layer B (B1 to B4: row-wise backward error `γₘ·Σ|L·x̂|` plus underflow, reusing
-Cholesky's `dot_error`, and forward error `M(L)⁻¹·ρ`), WP the ACSL contracts (C1, C2: 109 and 110
-goals, `column_end` again), VST both kernels against the Flocq models (C3, C4; written prefix or
-suffix on overflow) and the `diana_fp_finite` copies (C5, C6), with the list and `size_t` lemmas
-shared with Cholesky in the AST-free `VST/Matrix.v` and the models in `VST/Substitution.v`.
-Python `diana.forward_substitution(lower, b)` and `diana.transpose_substitution(lower, b)` (parameter
-`lower`: ruff rejects `l`).
+Layers B and C-VST, the Rocq axiom gate, the Clight AST check and the `ccomp` comparison run only
+locally (note VERIFY-001); CI builds layer A, runs WP, and `verify_provenance` checks only that
+the committed report and AST manifest match the sources. What each layer assumes:
+`doc/verification/trust.md`.
 
-v1.0.0: LU factorization with partial pivoting `diana_lu(a, n, lu, piv)`
-(`src/lu.c`, `diana/lu.h`): `n×n` column-major, every entry of `a` read, the packed factor of
-`P·A = L·U` written to `lu` (`L` strictly below the diagonal, unit diagonal not stored, `U` on
-and above it) and `piv[k]` (`size_t`) the row interchanged with row `k` at step `k`, LAPACK's
-`getrf` from 0. Step `k` pivots on the first entry of largest magnitude (`v < 0.0 ? -v`, in line,
-not `diana_fp_abs`, note WP-012), interchanges whole rows, divides below the pivot and updates
-the trailing block, checking each update for overflow. A non-finite entry of `a` is
-`DIANA_ERR_ARG` with `lu` and `piv` untouched; a zero pivot column (`DIANA_ERR_SINGULAR`) and an
-overflowing update (`DIANA_ERR_OVERFLOW`) leave both partly written, the third exception to the
-write-nothing rule (API-032). Proved through every layer (`spec/lu.md`) on one model defined over
-a record of operations (`Diana.Real.LU.ops`, instantiated at the reals, at binary64 in
-`Diana.Float.LU` and at CompCert's operations in `VST/LU.v`), whose lemma `state_nstate` makes the
-pivoted factorization the unpivoted one of `P·A` for any operations: Lean and Rocq layer A (LU-A1
-to A6: `L·U = B` unpivoted, `P·A = L·U`, the interchanges a permutation, `|L| ≤ 1`, and a zero
-pivot exactly for a singular `A`), Flocq layer B (B1 to B4: finiteness and `|L̂| ≤ 1` on
-`DIANA_OK`, and the componentwise backward error `γ_{min(i,j)+1}·|L̂|·|Û|` plus underflow, reusing
-Cholesky's `dot_error` and the substitution `row_error`), WP the ACSL contract (C1, 157 goals),
-VST the kernel against the model through partial-state matrices (C2) and the `diana_fp_finite`
-copy (C3). Python `diana.lu(a)` returns `(lu, piv)`, an `array.array("d")` and an `array.array("q")`.
-
-v1.0.0: LU solve `diana_lu_solve(lu, piv, n, b, x)` (`src/lu_solve.c`,
-`diana/lu_solve.h`, its own method `lu_solve`): solves `A·x = b` from `lu` and `piv` as `diana_lu`
-writes them, out of place (`x` separate from `lu`, `piv` and `b`, solved in place in `x`). It
-copies `b` to `x`, interchanges `x[k]` and `x[piv[k]]` for `k = 0, …, n−1`, then a unit lower
-solve with no division and an upper back solve (`k = n−1` down to `i+1`), bit for bit the two
-substitution kernels on the unpacked factors. A non-finite entry of `lu` or `b` or a
-`piv[k] >= n` (the only pivot check: any such values are interchanges) is `DIANA_ERR_ARG` and a
-`±0` diagonal entry of `U` `DIANA_ERR_SINGULAR`, both before any write; an overflowing entry of
-either solve is `DIANA_ERR_OVERFLOW` with `x` partly written, the fourth exception to the
-write-nothing rule (API-034). Proved through every layer (`spec/lu_solve.md`): Lean and Rocq
-layer A (LU-SOLVE-A1 to A3: the interchanges a permutation, `L·U·x = P·b`, and `A·x = b` with
-the factors of `diana_lu`, on `Substitution.fwd`/`bwd` and `LU.pivot_product`, `pperm_perm`
-making LU's row order the interchanges), Flocq layer B (B1 to B4: row backward errors of both
-solves, the factored-system residual, and the end-to-end residual with LU-B3/B4, Higham's
-Theorem 9.4 componentwise), WP the ACSL contract (C1, 180 goals), VST the kernel against the
-Flocq models (C2, `P·b` as `c_pb` because of VST-008) and the `diana_fp_finite` copy (C3).
-Python `diana.lu_solve(lu, piv, b)` returns an `array.array("d")`, `piv` any iterable of `int`.
-
-v1.0.0 experiment: opt-in one-pass kernels with no finiteness check (non-finite components
-written as computed, `DIANA_OK` for valid arguments): `diana_euler_step_unchecked`,
-`diana_rk4_stage_unchecked` and `diana_rk4_step_unchecked`, one per source file
-(`src/euler_step_unchecked.c`, `src/rk4_stage_unchecked.c`, `src/rk4_step_unchecked.c`). The
-checked two-pass kernels stay the default and the wrappers and Python keep them. Each has its own
-verification artifacts and spec (`spec/euler_unchecked.md`, `spec/rk4_unchecked.md`): WP proves
-the contracts (EULER-UNCHECKED-C1, RK4-UNCHECKED-C1/C2; 19, 21 and 22 goals), VST that each writes
-the model unconditionally (EULER-UNCHECKED-C2, RK4-UNCHECKED-C3/C4; `VST/EulerStepUnchecked.v`,
-`VST/RK4StageUnchecked.v`, `VST/RK4StepUnchecked.v`), and Flocq that a written component is finite
-exactly when its inputs are finite and no operation overflows (EULER-UNCHECKED-B1,
-RK4-UNCHECKED-B1/B2).
-
-v1.0.0 restructuring: `src/bisection.c`, `src/newton.c` and `src/rk4.c` are split into one
-function per source file (`bisection_mid`, `bisection_init`, `bisection_step`, `bisection_result`;
-`newton_init`, `newton_step`, `newton_result`; `rk4_stage`, `rk4_step`), each with its own WP row,
-Clight AST and VST file (`VST/BisectionInit.v`, …); `VST/Bisection.v`, `VST/Newton.v` and
-`VST/RK4.v` keep only the AST-free models, model theorems and shared lemmas. The midpoint helper is
-now the external `diana_bisection_mid` (a `SKIP` entry, no WP row of its own), and the
-`init`, `step` and `result` proofs take its funspec from `VST/BisectionMid.v`. The C layers are
-renumbered with one ACSL theorem per source file: BISECTION-C1 to C12, NEWTON-C1 to C7, RK4-C1 to
-C6. Every copy of a `src/fp.h` helper that `clightgen` emits into a kernel's AST is a listed VST
-theorem of that kernel's spec (BISECTION-C13, NEWTON-C8 to C10, EULER-C3, RK4-C7/C8,
-TRAPEZOIDAL-C3, SIMPSON-C3), since a caller's `semax_body` would not reveal an admitted copy.
-`src/fp.h` also asserts `FLT_EVAL_METHOD == 0` at compile time.
-
-v1.0.0 file structure: the callback wrappers moved from `src/wrapper/` to `src/bisection.c`,
-`src/euler.c`, `src/newton.c` and `src/rk4.c`, their declarations from the removed `diana/wrapper.h`
-to the method headers, and `diana_ode_fn` to the new `diana/ode.h`; the verified Euler step is
-`src/euler_step.c` (AST `euler_step_aarch64_macos.v`, proved in `VST/EulerStep.v`; `VST/Euler.v` keeps the AST-free model `c_euler`), `src/status.c`
-is split into `src/status_str.c` and `src/version.c`, and `python/ext/` into one file per function
-(26 files), so every implementation file defines one function.
-
-v1.0.0 status split: `DIANA_ERR_OVERFLOW` (-5) is a computed value that is not finite from
-finite inputs, `DIANA_ERR_ARG` only an invalid argument or a NaN or infinite input, so it never
-leaves an output partly written. Euler, RK4 and the quadrature rules classify only after a value
-fails (`h`, then every input element), Newton's step and the matrix kernels return it at their
-overflow checks. Python raises `diana.FloatOverflowError` (a `ValueError` and an `OverflowError`).
-The bisection and Newton states end with a `status` field that `init` and `step` write; `step`
-rejects a state whose status is not `DIANA_CONTINUE` with `DIANA_ERR_ARG`, unchanged.
-The ODE wrappers take `lwork` after `work` and stop with `DIANA_ERR_CALLBACK` (-6) when the
-`int`-returning `diana_ode_fn` returns non-zero; the scalar callbacks still signal by a NaN.
-
-The 1.0.0 release preparation sets 1.0.0 in CMake, the header macros, `pyproject.toml`, `uv.lock`,
-the `find_package` consumer and its documentation, and the Lean package, marks the Python package
-`Production/Stable`, and dates the `CHANGELOG.md` section; the `v1.0.0` tag is not created yet.
+Version 1.0.0 is set everywhere (note BUILD-006) and its `CHANGELOG.md` section is dated, but the
+`v1.0.0` tag is held: create it only on an explicit request (CI `release` runs only on a version
+tag, note CI-014).

@@ -9,8 +9,8 @@ path:
 related: [TEST-001, COMPILER-010, CI-002]
 ---
 Each method's `test/c/test_<method>.c` keeps its kernel files and callback wrapper at 100% line and
-branch coverage (the convention recorded per method in `CLAUDE.md` and `CHANGELOG.md`). Nothing
-fails automatically when coverage drops: CI only reports it.
+branch coverage (the convention recorded per method in `CHANGELOG.md`). Nothing fails
+automatically when coverage drops: CI only reports it.
 
 - `coverage_c` (stage `report`) configures a Debug build with `-DCMAKE_C_FLAGS=--coverage
   -DCMAKE_EXE_LINKER_FLAGS=--coverage -DDIANA_BUILD_PYTHON=OFF`, runs the whole ctest suite, and
