@@ -32,7 +32,7 @@ trust statement shorter.
 - `medium` Compensated summation
 - `medium` Pairwise summation in the quadrature rules
 - `medium` Explicit worst-case iteration count for bisection
-- `medium` Cholesky never `DIANA_ERR_SINGULAR` on a well-conditioned positive definite binary64 matrix
+- `medium` Cholesky never `DIANA_ERR_SINGULAR` on a well-conditioned positive definite matrix
 - `medium` Overflow-free triangular and LU solve from a successful factorization
 - `medium` Horner polynomial evaluation
 - `medium` Free-threaded CPython
