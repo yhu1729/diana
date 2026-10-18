@@ -23,6 +23,23 @@ All notable changes to this project are documented here. The format follows
   CHOLESKY-C1, `spec/cholesky.md`); `test/c/test_cholesky.c` covers it at 100% line and branch
   coverage, and the compiler corpus has 248 Cholesky cases, every gcc and clang build matching
   CompCert bitwise.
+- Forward and back substitution `diana_forward_substitution(l, n, b, x)` and
+  `diana_back_substitution(l, n, b, x)` in `diana/substitution.h`: `l` holds a lower-triangular
+  `n×n` matrix `L` column-major, of which only the entries on or below the diagonal are read, so
+  the output of `diana_cholesky` goes in as it is; the first solves `L x = b`, the second
+  `L^T x = b`, and the two solve `A x = b` with the Cholesky factor of `A`. Row `i` subtracts the
+  rounded products from `b[i]` in the order their unknowns were computed (`k = 0, ..., i - 1`
+  forward, `k = n - 1` down to `i + 1` back) and divides by `L[i,i]`, which makes back
+  substitution forward substitution on the mirrored system bit for bit. A NULL pointer, `n == 0`,
+  an overflowing `n n` or a NaN or infinite entry of `b` or of the lower triangle is
+  `DIANA_ERR_ARG`, a zero diagonal entry `DIANA_ERR_SINGULAR`, both with `x` untouched; an entry of
+  the solution that overflows is `DIANA_ERR_ARG` found with `x` partly written, the second kernel
+  after `diana_cholesky` that writes before it knows the call succeeds. `x` must not overlap `l`
+  or `b`. Frama-C WP proves the ACSL contracts (109 and 110 goals, SUBSTITUTION-C1 and C2,
+  `spec/substitution.md`; the lemma `column_end` and the predicate `substitution_valid` are in
+  `src/substitution_acsl.h`); `test/c/test_substitution.c` covers both at 100% line and branch
+  coverage, and the compiler corpus has 270 cases per kernel, every gcc and clang build matching
+  CompCert bitwise.
 - `diana_fp_sqrt(x)` (`src/fp_sqrt.c`, private header `src/fp_sqrt.h`), the square root of the
   Cholesky pivots: `__builtin_sqrt`, which gcc, clang and CompCert compile to the IEEE square-root
   instruction, so no libm call. Its contract is the second `SKIP` entry of
@@ -84,6 +101,15 @@ All notable changes to this project are documented here. The format follows
   `diana.SingularError`. `test/python/test_cholesky.py` checks bitwise agreement with the
   operations in Python floats, the CHOLESKY-B3 bound in exact rationals, and agreement with
   `numpy.linalg.cholesky`.
+- `diana.forward_substitution(lower, b)` and `diana.back_substitution(lower, b)` return the
+  solution as a new `array.array("d")`, with `lower` in the column-major layout of
+  `diana.cholesky` and of length `len(b)**2` (module `diana._substitution`; extension functions
+  `diana._diana.forward_substitution(lower, b, out)` and `back_substitution`, sharing the argument
+  checks of `python/ext/substitution.c`). The parameter is `lower` because ruff rejects the name
+  `l`. A wrong length, a non-finite entry or an overflow raises `ValueError`, a zero diagonal entry
+  `diana.SingularError`. `test/python/test_substitution.py` checks bitwise agreement with the
+  operations in Python floats, the mirror identity, the SUBSTITUTION-B1 to B4 bounds in exact
+  rationals, and the Cholesky solve against `numpy.linalg.solve`.
 - `diana.rk4_stage(y, k, h, stage)` and `diana.rk4_step(y, k1, k2, k3, k4, h)` return a new
   `array.array("d")` from the kernels, reading float64 buffers in place and copying other iterables
   (module `diana._rk4`; extension functions `diana._diana.rk4_stage` and `rk4_step` with an explicit
@@ -112,6 +138,22 @@ All notable changes to this project are documented here. The format follows
   AST's copy of `diana_fp_finite` (C4), on the committed ASTs `verification/clight/cholesky_aarch64_macos.v` and
   `fp_sqrt_aarch64_macos.v`. The VST proof of `diana_fp_sqrt` assumes CompCert's semantics of
   `__builtin_sqrt` as a funspec, a new item of `doc/verification/trust.md`.
+- Forward and back substitution through every layer (`spec/substitution.md`). Lean and Rocq prove
+  layer A: each solve satisfies its rows when the diagonal entry is nonzero (SUBSTITUTION-A1, A4),
+  the solution is unique (A2, A5), residuals bounded by `rho` put an approximate solution within
+  `M(L)^-1 rho` of it, `M(L)` the comparison matrix (A3, A6), and the two solves with the Cholesky
+  factor of a symmetric matrix with positive pivots solve `A x = b` (A7). Flocq proves, row by row
+  and needing only a finite computed entry and a nonzero diagonal entry, the backward error
+  `|b[i] - sum_k L[i,k] x[k]| <= gamma_m sum_k |L[i,k] x[k]| + (1 + gamma_m)(m - 1 + |L[i,i]|) eta`
+  with `m` the number of terms (B1, B3, Higham's `|dL| <= gamma_n |L|` with the underflow terms),
+  reusing Cholesky's `dot_error`, and the forward error through the comparison matrix (B2, B4).
+  VST proves both kernels against the Flocq models with CompCert's operations (C3, C4: each status
+  exactly when the model gives it, the model solution on `DIANA_OK`, and the written prefix or
+  suffix on an overflow) and each AST's copy of `diana_fp_finite` (C5, C6), on the committed
+  ASTs `verification/clight/forward_substitution_aarch64_macos.v` and
+  `back_substitution_aarch64_macos.v`. The prefix-buffer lemmas, `lower_finite`, `lt_of_ltu` and
+  `no_overflow` of the Cholesky VST proof moved to the AST-free `VST/Matrix.v`, which both methods
+  import.
 - Lean and Rocq prove RK4 layer A (`spec/rk4.md`, RK4-A1 to A7): the step-size derivatives of the
   increment through third order as explicit jets (A1), the order conditions
   `Phi(0) = G`, `Phi'(0) = E2/2`, `Phi''(0) = E3/3`, `Phi'''(0) = E4/4` without symmetry of the
