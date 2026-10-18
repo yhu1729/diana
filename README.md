@@ -18,7 +18,8 @@ states precisely what is proven, by which tool, and what is only tested.
 
 - Bisection, as a state machine the caller drives, and as a function taking a callback.
 - Composite trapezoidal and Simpson rules over tabulated samples.
-- Cholesky factorization of a symmetric positive definite matrix.
+- Cholesky factorization of a symmetric positive definite matrix, and forward and back
+  substitution with its triangular factor.
 - Explicit Euler step, with a loop over a callback.
 - Classical Runge–Kutta (RK4) step, with a loop over a callback.
 - Newton's method, as a state machine the caller drives, and as a function taking a callback.
