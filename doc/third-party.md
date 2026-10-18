@@ -16,7 +16,7 @@ shipped, so the conditions are met; they still have to be stated.
 | Tool | Condition | How Diana complies |
 |---|---|---|
 | CompCert 3.18 | INRIA Non-Commercial License Agreement: free for research, teaching, personal and evaluation use only | Used only to generate and check the Clight AST in a local opam switch. No CI image and no release artifact contains CompCert, and `ccomp` is never shipped ([trust statement](verification/trust.md)). |
-| Alt-Ergo 2.6.4 | dual: `LicenseRef-OCamlpro-Non-Commercial` and Apache-2.0 | Used only as the local/CI proof oracle for Frama-C WP. Not shipped. |
+| Alt-Ergo 2.6.4 | dual: `LicenseRef-OCamlpro-Non-Commercial` and Apache-2.0 | Used only as the local/CI proof oracle for Frama-C WP; CI downloads the static release binary, checked against its SHA-256. Not shipped. |
 
 The `verification/clight/*.v` files are committed `clightgen` output, so they are the only files
 in the tree derived from CompCert. They are excluded from the sdist (`verification/**` in

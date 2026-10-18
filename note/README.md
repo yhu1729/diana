@@ -396,6 +396,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [WP-010](wp/WP-010.md) | procedure | Clear a row's WP cache after a Failed goal caused by a Why3 anomaly |
 | [WP-011](wp/WP-011.md) | rationale | Nonlinear index bounds proved through the column_end lemma and assertions |
 | [WP-012](wp/WP-012.md) | rationale | LU computes the pivot magnitude in line rather than with diana_fp_abs |
+| [WP-013](wp/WP-013.md) | rule | WP runs only with the pinned Alt-Ergo 2.6.4, in CI too |
 
 ## By path
 
@@ -408,9 +409,9 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `.git-hooks/pre-push` | GIT-006 |
 | `.github/workflows/*.yml` | CI-025 |
 | `.github/workflows/c_test.yml` | CI-017, CI-020 |
-| `.github/workflows/ci.yml` | CI-016, CI-017, CI-018, CI-019, CI-020, CI-021, CI-022, CI-023, CI-024, CI-026 |
+| `.github/workflows/ci.yml` | CI-016, CI-017, CI-018, CI-019, CI-020, CI-021, CI-022, CI-023, CI-024, CI-026, WP-013 |
 | `.gitignore` | BUILD-011, VERIFY-005, WP-009 |
-| `.gitlab-ci.yml` | BENCHMARK-005, BUILD-007, CI-001, CI-002, CI-003, CI-004, CI-005, CI-006, CI-007, CI-008, CI-009, CI-010, CI-011, CI-012, CI-013, CI-014, CI-016, CI-018, COMPILER-004, GATE-007, PROVER-001, PROVER-005, PROVER-006, TEST-004, TEST-006, VERIFY-001 |
+| `.gitlab-ci.yml` | BENCHMARK-005, BUILD-007, CI-001, CI-002, CI-003, CI-004, CI-005, CI-006, CI-007, CI-008, CI-009, CI-010, CI-011, CI-012, CI-013, CI-014, CI-016, CI-018, COMPILER-004, GATE-007, PROVER-001, PROVER-005, PROVER-006, TEST-004, TEST-006, VERIFY-001, WP-013 |
 | `.python-version` | CI-024 |
 | `CHANGELOG.md` | BENCHMARK-004, CI-014, STYLE-004 |
 | `CLAUDE.md` | PROVER-001, STYLE-004 |
@@ -500,13 +501,14 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `script/benchmark.sh` | BENCHMARK-001, BENCHMARK-002, BENCHMARK-003, BENCHMARK-004, BENCHMARK-005, COMPILER-003 |
 | `script/check_commit.sh` | CI-005, CI-019, GIT-001, GIT-002, GIT-003, GIT-004, GIT-007 |
 | `script/check_doc.py` | CI-007, STYLE-003 |
-| `script/check_frama_c.sh` | WP-007, WP-010 |
+| `script/check_frama_c.sh` | WP-007, WP-010, WP-013 |
 | `script/check_provenance.py` | CI-016, GATE-009, TEST-042, VST-009 |
 | `script/check_spec.py` | CI-007, CI-012, CI-013, GATE-001, GATE-002, GATE-003, GATE-004, GATE-006, GATE-007, GATE-008, GATE-009, TEST-005, VERIFY-005 |
 | `script/check_wheel.py` | BUILD-004, BUILD-007, BUILD-010, CI-003, CI-009, CI-023, TEST-004 |
 | `script/ci_change.py` | CI-018 |
 | `script/compare_compiler.sh` | COMPILER-001, COMPILER-002, COMPILER-003, COMPILER-004, COMPILER-008, COMPILER-011, FP-004, FP-005 |
 | `script/dev.sh` | BENCHMARK-005, BUILD-002, BUILD-003, BUILD-007, BUILD-010, COMPILER-002, COMPILER-004, GATE-007, PROVER-003, PROVER-008, PYTHON-005, STYLE-008, TEST-001, VERIFY-001, VERIFY-002, VERIFY-003, VERIFY-004, VST-001, VST-002, VST-003, VST-009 |
+| `script/fetch_alt_ergo.sh` | CI-011, WP-013 |
 | `script/job_count.sh` | CI-011, VERIFY-003, WP-008 |
 | `script/run_frama_c.sh` | GATE-009, PROVER-004, WP-003, WP-004, WP-007, WP-009, WP-010 |
 | `script/verify_frama_c.sh` | CI-011, WP-008 |

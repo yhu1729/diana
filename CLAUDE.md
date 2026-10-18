@@ -136,7 +136,7 @@ one line per idea, no design (a design is written only when an item is picked up
 | VST | 2.17 | with CompCert 3.18 (its `clightgen` reports 3.17) |
 | Flocq | 4.2.2 | also in CI: `verify_rocq` opam-installs it with Coquelicot |
 | Coquelicot | 3.4.5 | also in CI: `verify_rocq` opam-installs it on `mathcomp/mathcomp:2.6.0-rocq-prover-9.2` |
-| Frama-C | 32.1 | local opam switch pinned (`opam pin add frama-c 32.1`) to match CI (`framac/frama-c:32.1`); WP with `-wp-rte -wp-model +float`; Alt-Ergo 2.6.4 |
+| Frama-C | 32.1 | local opam switch pinned (`opam pin add frama-c 32.1`) to match CI (`framac/frama-c:32.1`); WP with `-wp-rte -wp-model +float`; Alt-Ergo 2.6.4, also in CI, where `script/fetch_alt_ergo.sh` replaces the image's 2.5.4, and `script/check_frama_c.sh` rejects another version (note WP-013) |
 | CMake | ≥ 3.25 | |
 | Python | managed by `uv` (`.python-version`) | |
 | clang-format | 23.1.3 | PyPI wheel in the uv `lint` group |

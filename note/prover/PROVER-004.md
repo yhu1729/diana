@@ -12,5 +12,6 @@ Why3 1.8.2 accepts Alt-Ergo `2.6.x` (driver `alt_ergo_26`) and Z3 only up to `4.
 Homebrew Z3 5.x on the development Mac is found but gets no configuration.
 
 The project therefore uses Alt-Ergo alone: `script/run_frama_c.sh` passes `-wp-prover alt-ergo`,
-and in the WP report the only prover besides WP's own `Qed` simplifier is `Alt-Ergo 2.6.4`.
+and in the WP report the only prover besides WP's own `Qed` simplifier is `Alt-Ergo 2.6.4`, which
+`script/check_frama_c.sh` requires (WP-013).
 Rerun `why3 config detect` after installing or upgrading a prover.

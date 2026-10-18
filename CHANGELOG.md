@@ -542,6 +542,10 @@ new size and layout), and the second attribute of `diana.MaxIterError` is `uncer
 - The version tag pattern of `workflow:` and of the `release` job is anchored,
   `^v\d+\.\d+\.\d+$`, so a pre-release tag such as `v1.0.0-rc1` starts no pipeline and no
   release.
+- CI `verify_frama_c` runs WP with the pinned Alt-Ergo 2.6.4, which `script/fetch_alt_ergo.sh`
+  installs from the static release binary checked against its SHA-256, instead of the image's
+  2.5.4, which timed out on ten goals of the substitution and LU kernels;
+  `script/check_frama_c.sh` rejects a report from another Alt-Ergo version.
 
 ## [0.3.0] - 2026-10-16
 
