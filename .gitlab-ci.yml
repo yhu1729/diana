@@ -53,6 +53,7 @@ stages:
   - uv.lock
   - README.md
   - CONTRIBUTING.md
+  - CLAUDE.md
   - doc/**/*
   - note/**/*
   - include/**/*
