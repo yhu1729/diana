@@ -1575,6 +1575,127 @@ static void test_substitution(void) {
   }
 }
 
+#define INDEX_SENTINEL ((size_t)42)
+
+static void put_index(const size_t *p, size_t n) {
+  size_t i;
+  printf(" [");
+  for (i = 0u; i < n; ++i) {
+    printf(" %016llx", (unsigned long long)p[i]);
+  }
+  printf(" ]");
+}
+
+static void lu_case(const char *label, const double *a, size_t n) {
+  static double out[MATRIX * MATRIX + 1u];
+  static size_t piv[MATRIX + 1u];
+  size_t m = n <= MATRIX ? n : 0u;
+  size_t i;
+  diana_status st;
+
+  for (i = 0u; i < MATRIX * MATRIX + 1u; ++i) {
+    out[i] = SENTINEL;
+  }
+  for (i = 0u; i < MATRIX + 1u; ++i) {
+    piv[i] = INDEX_SENTINEL;
+  }
+  st = diana_lu(a, n, out, piv);
+  put_head("lu", label);
+  printf(" %llu", (unsigned long long)n);
+  put_array(a, a == (const double *)0 ? 0u : m * m);
+  put_status(st);
+  put_array(out, m * m + 1u);
+  put_index(piv, m + 1u);
+  printf("\n");
+}
+
+static void test_lu(void) {
+  static const double one[1] = {-5.0};
+  static const double exact3[9] = {2.0,  -3.0, 3.0, 2.0, 1.0,
+                                   -9.0, 1.0,  0.0, 6.0};
+  static const double pivot[4] = {1.0, -3.0, 2.0, 4.0};
+  static const double tie[4] = {1.0, -1.0, 1.0, 1.0};
+  static const double division[4] = {5.0, 3.0, 1.0, 1.0};
+  static const double fma[4] = {1.0, 0x1.fffffffffffffp-1, 0x1.0000000000001p0,
+                                2.0};
+  static const double order[9] = {1.0,     0.0,     0x1p-27, 0.0, 1.0,
+                                  0x1p-27, 0x1p-27, 0x1p-27, 1.0};
+  static const double signed_zero[4] = {2.0, -0.0, VAL_TRUE_MIN, 0x1p-1060};
+  static const double underflow[4] = {1.0, 0x1p-538, 0x1.8p-536, 0x1p-1060};
+  static const double big[4] = {VAL_MAX, VAL_HALF_MAX, VAL_HALF_MAX, VAL_MAX};
+  static const double zero[4] = {0.0, 0.0, 0.0, 0.0};
+  static const double negative_zero[4] = {-0.0, 0.0, 0.0, 1.0};
+  static const double column[4] = {0.0, 0.0, 1.0, 1.0};
+  static const double rank_one[4] = {1.0, 2.0, 2.0, 4.0};
+  static const double last[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  static const double overflow[4] = {1.0, 1.0, -VAL_MAX, VAL_MAX};
+  static const double overflow_late[9] = {1.0,     0.5,      -1.0, 1.0,     1.0,
+                                          VAL_MAX, -VAL_MAX, 0.0,  -VAL_MAX};
+  static double a[MATRIX * MATRIX];
+  static double out[1] = {SENTINEL};
+  static size_t piv[1] = {INDEX_SENTINEL};
+  diana_status st;
+  unsigned k;
+  size_t n;
+  size_t i;
+
+  lu_case("null_a", (const double *)0, 2u);
+  st = diana_lu(exact3, 3u, (double *)0, piv);
+  put_head("lu", "null_lu");
+  put_status(st);
+  put_index(piv, 1u);
+  printf("\n");
+  st = diana_lu(exact3, 3u, out, (size_t *)0);
+  put_head("lu", "null_piv");
+  put_status(st);
+  put_double(out[0]);
+  printf("\n");
+  lu_case("empty", exact3, 0u);
+  st = diana_lu((const double *)0, 0u, (double *)0, (size_t *)0);
+  put_head("lu", "all_null");
+  put_status(st);
+  printf("\n");
+  lu_case("size_overflow", exact3, (size_t)1 << 32);
+  lu_case("size_max", exact3, (size_t)-1);
+  lu_case("one", one, 1u);
+  lu_case("exact", exact3, 3u);
+  lu_case("pivot", pivot, 2u);
+  lu_case("tie", tie, 2u);
+  lu_case("division", division, 2u);
+  lu_case("fma", fma, 2u);
+  lu_case("order", order, 3u);
+  lu_case("signed_zero", signed_zero, 2u);
+  lu_case("underflow", underflow, 2u);
+  lu_case("big", big, 2u);
+  lu_case("zero", zero, 2u);
+  lu_case("negative_zero", negative_zero, 2u);
+  lu_case("column", column, 2u);
+  lu_case("rank_one", rank_one, 2u);
+  lu_case("last", last, 3u);
+  lu_case("overflow", overflow, 2u);
+  lu_case("overflow_late", overflow_late, 3u);
+  for (i = 0u; i < 9u; ++i) {
+    memcpy(a, exact3, sizeof exact3);
+    a[i] = VAL_QNAN;
+    lu_case("nan", a, 3u);
+    a[i] = VAL_SNAN;
+    lu_case("snan", a, 3u);
+    a[i] = VAL_INF;
+    lu_case("inf", a, 3u);
+    a[i] = -VAL_INF;
+    lu_case("negative_inf", a, 3u);
+  }
+
+  for (k = 0u; k < RANDOM_ARRAY; ++k) {
+    int mixed = (int)(k % 2u);
+    n = 1u + (size_t)rng_below(MATRIX);
+    for (i = 0u; i < n * n; ++i) {
+      a[i] = k % 4u >= 2u ? random_bounded(0) : random_value(mixed);
+    }
+    lu_case(k % 4u >= 2u ? "bounded" : "random", a, n);
+  }
+}
+
 int main(void) {
   test_bisection();
   test_trapezoidal();
@@ -1584,6 +1705,7 @@ int main(void) {
   test_newton();
   test_cholesky();
   test_substitution();
+  test_lu();
   printf("end %u\n", case_count);
   if (fflush(stdout) != 0 || ferror(stdout)) {
     return 1;

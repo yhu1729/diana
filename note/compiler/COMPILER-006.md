@@ -9,7 +9,7 @@ related: [COMPILER-005, COMPILER-007, TEST-008, TEST-022]
 Besides seeded random inputs (COMPILER-007), the corpus runs every public kernel function on the
 cases below. Current case lines: `bisection_*` 161, `trapezoidal` 283, `simpson` 284, `euler`
 and `euler_unchecked` 248 each, `rk4_stage*` 274 each, `rk4_step*` 270 each, `newton_*` 152,
-`cholesky` 248, `forward_substitution` and `back_substitution` 270 each.
+`cholesky` 248, `forward_substitution` and `back_substitution` 270 each, `lu` 260.
 
 - Bisection `init`: NULL state; NaN and an infinity in each argument, a signalling NaN `fa`;
   `a > b`; negative `tol`; `max_iter = 0`; `|a|` or `|b|` one ulp past `DBL_MAX/2` and
@@ -51,3 +51,9 @@ and `euler_unchecked` 248 each, `rk4_stage*` 274 each, `rk4_step*` 270 each, `ne
   position with and without a NaN in `b`, and NaN, sNaN and `±inf` at each lower-triangle position
   of a 3×3 `L` and each position of `b`; the random systems (`n` from 1 to 8) alternate raw entries
   with diagonally dominant ones of random sign.
+- LU: every argument error (each NULL, `n = 0`, `n = 2^32`, `SIZE_MAX`), a 1×1 matrix, the ctest
+  pivoting, tie, division, FMA and subtraction-order pins, a signed-zero multiplier, a product
+  that underflows, `DBL_MAX` entries, each kind of zero pivot (all zero, `-0`, a zero column,
+  rank one, the last pivot), an update overflowing in the first and in a later column, and NaN,
+  sNaN and `±inf` at each position of a 3×3 matrix; the random matrices (`n` from 1 to 8)
+  alternate raw entries with entries bounded by `DBL_MAX/2`.
