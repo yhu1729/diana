@@ -39,6 +39,8 @@ def test_status_value():
     assert diana.status_str(diana.ERR_SINGULAR) == "zero derivative or pivot"
     assert diana.ERR_OVERFLOW == diana._diana.ERR_OVERFLOW == -5
     assert diana.status_str(diana.ERR_OVERFLOW) == "result overflows"
+    assert diana.ERR_CALLBACK == diana._diana.ERR_CALLBACK == -6
+    assert diana.status_str(diana.ERR_CALLBACK) == "callback failed"
 
 
 def test_exception_hierarchy():
@@ -52,5 +54,5 @@ def test_exception_hierarchy():
 
 
 def test_export():
-    assert {"ERR_OVERFLOW", "FloatOverflowError"} <= set(diana.__all__)
+    assert {"ERR_CALLBACK", "ERR_OVERFLOW", "FloatOverflowError"} <= set(diana.__all__)
     assert all(hasattr(diana, name) for name in diana.__all__)
