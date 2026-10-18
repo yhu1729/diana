@@ -78,6 +78,8 @@ corpus, so far run only on AArch64 macOS.
 - A bound on the rounding error accumulated over many ODE steps.
 - A forward error bound on the Cholesky factor, and that a positive definite binary64 matrix
   factors without `DIANA_ERR_SINGULAR`; the backward error is proved.
+- That a triangular system with a nonzero diagonal solves without overflow; when it does, the
+  backward error and a forward error bound through the comparison matrix are proved.
 
 ## Technical notes
 
