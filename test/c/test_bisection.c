@@ -322,7 +322,46 @@ static int same_state(const diana_bisection_state *p,
                       const diana_bisection_state *q) {
   return p->a == q->a && p->b == q->b && p->fa == q->fa && p->fb == q->fb &&
          p->x == q->x && p->tol == q->tol && p->iter == q->iter &&
-         p->max_iter == q->max_iter;
+         p->max_iter == q->max_iter && p->status == q->status;
+}
+
+/* The state records the last status: init and step write DIANA_OK,
+   DIANA_CONTINUE or DIANA_ERR_MAXITER into it, and step rejects, unchanged, a
+   state whose status is not DIANA_CONTINUE (finished, or zero-initialized,
+   which reads as DIANA_OK). */
+static void test_status_field(void) {
+  diana_bisection_state s, before;
+  diana_bisection_state zero = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0u, 0u, DIANA_OK};
+
+  CHECK_EQ_STATUS(diana_bisection_init(&s, 0.0, 2.0, -1.0, 1.0, 0.0, 2u),
+                  DIANA_CONTINUE);
+  CHECK(s.status == DIANA_CONTINUE);
+  CHECK_EQ_STATUS(diana_bisection_step(&s, -1.0), DIANA_CONTINUE);
+  CHECK(s.status == DIANA_CONTINUE);
+  CHECK_EQ_STATUS(diana_bisection_step(&s, -1.0), DIANA_ERR_MAXITER);
+  CHECK(s.status == DIANA_ERR_MAXITER);
+  before = s;
+  CHECK_EQ_STATUS(diana_bisection_step(&s, 1.0), DIANA_ERR_ARG);
+  CHECK(same_state(&s, &before));
+
+  CHECK_EQ_STATUS(diana_bisection_init(&s, 0.0, 2.0, -1.0, 1.0, 0.0, 10u),
+                  DIANA_CONTINUE);
+  CHECK_EQ_STATUS(diana_bisection_step(&s, 0.0), DIANA_OK);
+  CHECK(s.status == DIANA_OK);
+  before = s;
+  CHECK_EQ_STATUS(diana_bisection_step(&s, 1.0), DIANA_ERR_ARG);
+  CHECK(same_state(&s, &before));
+
+  CHECK_EQ_STATUS(diana_bisection_init(&s, 0.0, 2.0, 0.0, 1.0, 0.0, 10u),
+                  DIANA_OK);
+  CHECK(s.status == DIANA_OK);
+  CHECK_EQ_STATUS(diana_bisection_init(&s, 0.0, 2.0, -1.0, 1.0, 4.0, 10u),
+                  DIANA_OK);
+  CHECK(s.status == DIANA_OK);
+
+  before = zero;
+  CHECK_EQ_STATUS(diana_bisection_step(&zero, 1.0), DIANA_ERR_ARG);
+  CHECK(same_state(&zero, &before));
 }
 
 static void test_error_keeps_state(void) {
@@ -374,6 +413,7 @@ int main(void) {
   test_adjacent_termination();
   test_worst_case_step_count();
   test_error_keeps_state();
+  test_status_field();
   test_evaluation_count();
   test_evaluation_order();
   return check_report("bisection");

@@ -53,7 +53,42 @@ static double steep(double x, double *dfx, void *ctx) {
 static int same_state(const diana_newton_state *p,
                       const diana_newton_state *q) {
   return p->x == q->x && p->dx == q->dx && p->tol == q->tol &&
-         p->iter == q->iter && p->max_iter == q->max_iter;
+         p->iter == q->iter && p->max_iter == q->max_iter &&
+         p->status == q->status;
+}
+
+/* The state records the last status: init writes DIANA_CONTINUE, step
+   DIANA_OK, DIANA_CONTINUE or DIANA_ERR_MAXITER, and an error keeps it; step
+   rejects, unchanged, a state whose status is not DIANA_CONTINUE (finished, or
+   zero-initialized, which reads as DIANA_OK). */
+static void test_status_field(void) {
+  diana_newton_state s, before;
+  diana_newton_state zero = {0.0, 0.0, 0.0, 0u, 0u, DIANA_OK};
+
+  CHECK_EQ_STATUS(diana_newton_init(&s, 2.0, 0.0, 1u), DIANA_CONTINUE);
+  CHECK(s.status == DIANA_CONTINUE);
+  CHECK_EQ_STATUS(diana_newton_step(&s, 1.0, 0.0), DIANA_ERR_SINGULAR);
+  CHECK(s.status == DIANA_CONTINUE);
+  CHECK_EQ_STATUS(diana_newton_step(&s, DBL_MAX, 0.5), DIANA_ERR_OVERFLOW);
+  CHECK(s.status == DIANA_CONTINUE);
+  CHECK_EQ_STATUS(diana_newton_step(&s, 2.0, 4.0), DIANA_ERR_MAXITER);
+  CHECK(s.status == DIANA_ERR_MAXITER);
+  before = s;
+  CHECK_EQ_STATUS(diana_newton_step(&s, 1.0, 1.0), DIANA_ERR_ARG);
+  CHECK(same_state(&s, &before));
+
+  CHECK_EQ_STATUS(diana_newton_init(&s, 2.0, 0.0, 10u), DIANA_CONTINUE);
+  CHECK_EQ_STATUS(diana_newton_step(&s, 2.0, 4.0), DIANA_CONTINUE);
+  CHECK(s.status == DIANA_CONTINUE);
+  CHECK_EQ_STATUS(diana_newton_step(&s, 0.0, 1.0), DIANA_OK);
+  CHECK(s.status == DIANA_OK);
+  before = s;
+  CHECK_EQ_STATUS(diana_newton_step(&s, 1.0, 1.0), DIANA_ERR_ARG);
+  CHECK(same_state(&s, &before));
+
+  before = zero;
+  CHECK_EQ_STATUS(diana_newton_step(&zero, 1.0, 1.0), DIANA_ERR_ARG);
+  CHECK(same_state(&zero, &before));
 }
 
 /* x^2 - 2 from 2: f'' = 2 and f' >= 2 sqrt(2) on [sqrt(2), 2], so each error
@@ -330,6 +365,7 @@ int main(void) {
   test_double_root();
   test_max_iter();
   test_error();
+  test_status_field();
   test_wrapper();
   test_wrapper_error();
   return check_report("newton");
