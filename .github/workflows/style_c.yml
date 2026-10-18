@@ -1,0 +1,40 @@
+name: style_c
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+    paths:
+      - .github/workflows/style_c.yml
+      - .clang-format
+      - pyproject.toml
+      - uv.lock
+      - include/**
+      - src/**
+      - test/c/**
+      - test/install/**
+      - python/ext/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  style_c:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    container: ghcr.io/astral-sh/uv:python3.13-bookworm-slim@sha256:531f855bda2c73cd6ef67d56b733b357cea384185b3022bd09f05e002cd144ca
+    env:
+      UV_LINK_MODE: copy
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: uv --version
+      - run: uv sync --only-group lint
+      - run: uv run --no-sync clang-format --version
+      - run: find include src test/c test/install python/ext -name '*.[ch]' -print0 | xargs -0 uv run --no-sync clang-format --dry-run --Werror
