@@ -10,6 +10,7 @@ value or far from the current proof tooling.
 
 ## Toward 1.0
 
+- `high` Solve with the LU factors: row interchanges, then unit lower and upper triangular solves
 
 ## Method
 
