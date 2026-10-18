@@ -71,6 +71,7 @@ add_library(diana ${diana_library_type}
     src/forward_substitution.c
     src/fp_sqrt.c
     src/lu.c
+    src/lu_solve.c
     src/newton.c
     src/newton_init.c
     src/newton_result.c
