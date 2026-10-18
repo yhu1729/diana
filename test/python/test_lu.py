@@ -102,13 +102,13 @@ def test_container(make):
     assert type(r) is array.array
     assert r.typecode == "d"
     assert list(r) == LU3
-    assert type(piv) is list
-    assert piv == PIV3
+    assert type(piv) is array.array and piv.typecode == "q"
+    assert list(piv) == PIV3
 
 
 def test_keyword_and_inputs_kept():
     a = np.array(A3)
-    assert diana.lu(a=a) == (array.array("d", LU3), PIV3)
+    assert diana.lu(a=a) == (array.array("d", LU3), array.array("q", PIV3))
     assert list(a) == A3
 
 
@@ -123,15 +123,18 @@ def test_numpy_layout():
 
 
 def test_one_by_one():
-    assert diana.lu([-5.0]) == (array.array("d", [-5.0]), [0])
-    assert diana.lu([DBL_MAX]) == (array.array("d", [DBL_MAX]), [0])
+    assert diana.lu([-5.0]) == (array.array("d", [-5.0]), array.array("q", [0]))
+    assert diana.lu([DBL_MAX]) == (array.array("d", [DBL_MAX]), array.array("q", [0]))
 
 
 def test_pivot_choice():
     # the first entry of largest magnitude: |1| = |-1| keeps row 0
-    assert diana.lu([1.0, -1.0, 1.0, 1.0]) == (array.array("d", [1.0, -1.0, 1.0, 2.0]), [0, 1])
+    assert diana.lu([1.0, -1.0, 1.0, 1.0]) == (
+        array.array("d", [1.0, -1.0, 1.0, 2.0]),
+        array.array("q", [0, 1]),
+    )
     r, piv = diana.lu([1.0, -3.0, 2.0, 4.0])
-    assert piv == [1, 1]
+    assert list(piv) == [1, 1]
     assert list(r) == [-3.0, 1.0 / -3.0, 4.0, 2.0 - (1.0 / -3.0) * 4.0]
 
 
@@ -299,7 +302,7 @@ def test_matches_binary64_random():
             assert isinstance(want, tuple)
             r, piv = diana.lu(a)
             assert all(same(x, y) for x, y in zip(r, want[0], strict=True))
-            assert piv == want[1]
+            assert list(piv) == want[1]
 
 
 matrix = st.integers(1, 6).flatmap(
@@ -323,7 +326,7 @@ def test_matches_binary64_any(a):
     else:
         r, piv = diana.lu(a)
         assert all(same(x, y) for x, y in zip(r, want[0], strict=True))
-        assert piv == want[1]
+        assert list(piv) == want[1]
         assert all(math.isfinite(x) for x in r)
         assert all(k <= p < n for k, p in enumerate(piv))
         assert all(abs(r[i + j * n]) <= 1.0 for j in range(n) for i in range(j + 1, n))

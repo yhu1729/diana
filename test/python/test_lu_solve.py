@@ -121,7 +121,7 @@ def test_keyword_and_inputs_kept():
 
 
 def test_after_lu():
-    assert diana.lu(A3) == (array.array("d", LU3), PIV3)
+    assert diana.lu(A3) == (array.array("d", LU3), array.array("q", PIV3))
     assert list(diana.lu_solve(*diana.lu(A3), B3)) == X3
     a = np.array([[2.0, 1.0, 1.0], [4.0, -6.0, 0.0], [-2.0, 7.0, 2.0]])
     assert np.array_equal(
