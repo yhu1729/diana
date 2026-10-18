@@ -19,7 +19,7 @@ hashes no longer match the commit or a status is not `ok`.
 |---|---|
 | `include/` | `e795618767e2e60c043a11ed4f5097a4948668161b16a6231b3bc8587ea61730` |
 | `script/axiom_allow.yaml` | `8803f7c820be21b1f381da50165e037f7ae297fbb3ae3a060acca7d34e678181` |
-| `script/run_frama_c.sh` | `3ca1907f389bf28891ff6e1079db40c956d918c45ec87a0767e288870c7bce54` |
+| `script/run_frama_c.sh` | `0d8f4ba6b49f2b8393c52ecca92217af8945074c4f01393acc02cd5ac730715b` |
 | `spec/` | `75e2bd58da032b4bac6a6e6c18f665ae2cf8d5caf6982d18c5ef90edefafcaf2` |
 | `src/` | `f02253502d28163eb3b2917101e93b8bd2c7c8a27b860607a2193b198557e57d` |
 | `verification/` | `3425bfb082e310b109badaa6b46592503ae3849527e57c666ff1e95a63334100` |
