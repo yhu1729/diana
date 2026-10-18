@@ -1,4 +1,3 @@
-src/back_substitution.c 110
 src/bisection_init.c 93
 src/bisection_result.c 19
 src/bisection_step.c 81
@@ -16,4 +15,5 @@ src/rk4_stage_unchecked.c 21
 src/rk4_step.c 105
 src/rk4_step_unchecked.c 22
 src/simpson.c 78
+src/transpose_substitution.c 110
 src/trapezoidal.c 61
