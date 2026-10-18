@@ -47,6 +47,7 @@ stages:
 
 .change_style: &change_style
   - .gitlab-ci.yml
+  - .github/workflows/**/*
   - .python-version
   - pyproject.toml
   - uv.lock
