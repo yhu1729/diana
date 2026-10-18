@@ -36,7 +36,8 @@ one line per idea, no design (a design is written only when an item is picked up
     builds it). Split a change that touches the library, its test and its doc into one commit each.
   - **Check:** `script/check_commit.sh` enforces every rule above except size and wording beyond
     articles; the `pre-push` hook runs it on unpushed commits and the `style_git` CI job on the
-    commits since the branch's previous pipeline. Link both hooks once per clone (`CONTRIBUTING.md`).
+    commits since the branch's previous pipeline (on the GitHub mirror, the commits of the push).
+    Link both hooks once per clone (`CONTRIBUTING.md`).
 - **Living document:** update `CHANGELOG.md` (`Unreleased` section, Keep a Changelog), this file,
   the affected `doc/` page and the affected notes in the same commit as any change that affects them.
 - **Python:** `uv` manages the interpreter and environment (`uv sync` at the repo root; `.python-version`
@@ -153,6 +154,7 @@ verification/lean/    Lake project              verification/rocq/  Real/ Float/
 verification/clight/  committed clightgen out  test/benchmark/      timing driver
 verification/frama-c/ WP goal count/session/cache
 script/               check_spec, dev, frama_c   ci/docker/          prover image
+.github/workflows/    GitHub Actions mirror of the GitLab jobs (.gitlab-ci.yml is primary)
 doc/                  human docs: api/, development/, verification/ (trust, report)
 note/                 technical notes per topic, index by topic and by path (README.md)
 ```
@@ -212,6 +214,12 @@ note/                 technical notes per topic, index by topic and by path (REA
   `acsl` file of each ACSL theorem; fresh WP execution and report checking remain in `script/dev.sh verify`.
   Lean CI uses `--run --strict --prover lean --no-report`, so missing Lean proofs fail the gate
   without requiring Rocq-only layers or Frama-C coverage.
+- CI: GitLab CI (`.gitlab-ci.yml`) is primary and alone makes a release. The GitHub mirror runs
+  `.github/workflows/` on every push: one workflow per `.change_*` list, with the GitLab job names,
+  images (pinned by digest) and commands, plus macOS jobs and `test_python` on Python 3.12, 3.13
+  and 3.14; actions pinned to commit SHAs, `permissions: contents: read`. A change to a
+  `.change_*` list changes the matching workflow's `paths:` too (note CI-018;
+  `doc/development/ci.md`, notes CI-017 to CI-025)
 
 ## Status
 
