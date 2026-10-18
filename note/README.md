@@ -169,6 +169,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [CI-013](ci/CI-013.md) | fact | verify_rocq compiles layer A only, with Coquelicot on the MathComp image |
 | [CI-014](ci/CI-014.md) | fact | release runs on a version tag once every test and verify job passes |
 | [CI-015](ci/CI-015.md) | procedure | Build the Lean CI image from ci/docker/lean.Dockerfile |
+| [CI-016](ci/CI-016.md) | fact | verify_provenance checks the AST manifest, the report stamp and its status |
 
 ### compiler
 
@@ -209,6 +210,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [GATE-006](gate/GATE-006.md) | fact | When and how the gate rewrites doc/verification/report.md |
 | [GATE-007](gate/GATE-007.md) | fact | Exit status of the spec gate with --strict and --prover |
 | [GATE-008](gate/GATE-008.md) | fact | What the spec gate does not check |
+| [GATE-009](gate/GATE-009.md) | fact | The report stamp records input digests and tool versions |
 
 ### git
 
@@ -339,6 +341,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [TEST-039](test/TEST-039.md) | fact | LU solve C test values, rounding pins and failure cases |
 | [TEST-040](test/TEST-040.md) | fact | LU solve Python tests against a binary64 reference and the B bounds |
 | [TEST-041](test/TEST-041.md) | fact | Bisection and Newton status field and the rejection of a finished state |
+| [TEST-042](test/TEST-042.md) | fact | Provenance check unit tests run check_provenance.py on a temporary tree |
 
 ### verify
 
@@ -362,6 +365,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [VST-006](vst/VST-006.md) | rule | Each fp.h helper copy in a Clight AST is a listed VST theorem |
 | [VST-007](vst/VST-007.md) | fact | VST funspecs exclude NULL and malformed-call paths; WP contracts cover them |
 | [VST-008](vst/VST-008.md) | fact | entailer! substitutes a WITH size equal to a list length |
+| [VST-009](vst/VST-009.md) | fact | verification/clight/manifest.txt records the files each AST was checked against |
 
 ### wp
 
@@ -390,7 +394,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `.git-hooks/commit-msg` | GIT-001, GIT-006 |
 | `.git-hooks/pre-push` | GIT-006 |
 | `.gitignore` | BUILD-011, VERIFY-005, WP-009 |
-| `.gitlab-ci.yml` | BENCHMARK-005, BUILD-007, CI-001, CI-002, CI-003, CI-004, CI-005, CI-006, CI-007, CI-008, CI-009, CI-010, CI-011, CI-012, CI-013, CI-014, COMPILER-004, GATE-007, PROVER-001, PROVER-005, PROVER-006, TEST-004, TEST-006, VERIFY-001 |
+| `.gitlab-ci.yml` | BENCHMARK-005, BUILD-007, CI-001, CI-002, CI-003, CI-004, CI-005, CI-006, CI-007, CI-008, CI-009, CI-010, CI-011, CI-012, CI-013, CI-014, CI-016, COMPILER-004, GATE-007, PROVER-001, PROVER-005, PROVER-006, TEST-004, TEST-006, VERIFY-001 |
 | `CHANGELOG.md` | BENCHMARK-004, CI-014, STYLE-004 |
 | `CLAUDE.md` | PROVER-001, STYLE-004 |
 | `CMakeLists.txt` | API-005, BUILD-002, BUILD-003, BUILD-004, BUILD-005, BUILD-006, BUILD-007, BUILD-008, BUILD-009, BUILD-010, BUILD-012, CI-003, CI-008, FP-004, KERNEL-006, PYTHON-007, STYLE-008, STYLE-010, TEST-002 |
@@ -405,7 +409,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `doc/api/euler.md` | BENCHMARK-004 |
 | `doc/api/rk4.md` | BENCHMARK-004 |
 | `doc/roadmap.md` | STYLE-004 |
-| `doc/verification/report.md` | GATE-006 |
+| `doc/verification/report.md` | CI-016, GATE-006, GATE-009 |
 | `include/diana/*.h` | KERNEL-001 |
 | `include/diana/bisection.h` | API-007 |
 | `include/diana/cholesky.h` | API-028 |
@@ -475,17 +479,18 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `python/src/diana/_substitution.py` | API-020, API-031 |
 | `python/src/diana/_trapezoidal.py` | API-020 |
 | `python/src/diana/py.typed` | PYTHON-002 |
-| `script/axiom_allow.yaml` | CI-012, GATE-005 |
+| `script/axiom_allow.yaml` | CI-012, GATE-005, GATE-009 |
 | `script/benchmark.sh` | BENCHMARK-001, BENCHMARK-002, BENCHMARK-003, BENCHMARK-004, BENCHMARK-005, COMPILER-003 |
 | `script/check_commit.sh` | CI-005, GIT-001, GIT-002, GIT-003, GIT-004, GIT-007 |
 | `script/check_doc.py` | CI-007, STYLE-003 |
 | `script/check_frama_c.sh` | WP-007, WP-010 |
-| `script/check_spec.py` | CI-007, CI-012, GATE-001, GATE-002, GATE-003, GATE-004, GATE-006, GATE-007, GATE-008, TEST-005, VERIFY-005 |
+| `script/check_provenance.py` | CI-016, GATE-009, TEST-042, VST-009 |
+| `script/check_spec.py` | CI-007, CI-012, GATE-001, GATE-002, GATE-003, GATE-004, GATE-006, GATE-007, GATE-008, GATE-009, TEST-005, VERIFY-005 |
 | `script/check_wheel.py` | BUILD-004, BUILD-007, BUILD-010, CI-003, CI-009, TEST-004 |
 | `script/compare_compiler.sh` | COMPILER-001, COMPILER-002, COMPILER-003, COMPILER-004, COMPILER-008, COMPILER-011, FP-004, FP-005 |
-| `script/dev.sh` | BENCHMARK-005, BUILD-002, BUILD-003, BUILD-007, BUILD-010, COMPILER-002, COMPILER-004, GATE-007, PROVER-003, PROVER-008, PYTHON-005, STYLE-008, TEST-001, VERIFY-001, VERIFY-002, VERIFY-003, VERIFY-004, VST-001, VST-002, VST-003 |
+| `script/dev.sh` | BENCHMARK-005, BUILD-002, BUILD-003, BUILD-007, BUILD-010, COMPILER-002, COMPILER-004, GATE-007, PROVER-003, PROVER-008, PYTHON-005, STYLE-008, TEST-001, VERIFY-001, VERIFY-002, VERIFY-003, VERIFY-004, VST-001, VST-002, VST-003, VST-009 |
 | `script/job_count.sh` | CI-011, VERIFY-003, WP-008 |
-| `script/run_frama_c.sh` | PROVER-004, WP-003, WP-004, WP-007, WP-009, WP-010 |
+| `script/run_frama_c.sh` | GATE-009, PROVER-004, WP-003, WP-004, WP-007, WP-009, WP-010 |
 | `script/verify_frama_c.sh` | CI-011, WP-008 |
 | `spec/*.md` | GATE-001, GATE-002, GATE-008, PROOF-007, VST-004, VST-006 |
 | `spec/bisection.md` | PROOF-001, TEST-008 |
@@ -559,6 +564,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `test/install/CMakeLists.txt` | API-005, BUILD-009, CI-009, TEST-002 |
 | `test/install/main.c` | API-005, BUILD-006, BUILD-009, TEST-002 |
 | `test/python/test_bisection.py` | API-024, TEST-007, TEST-008, TEST-009 |
+| `test/python/test_check_provenance.py` | TEST-042 |
 | `test/python/test_check_spec.py` | TEST-005 |
 | `test/python/test_cholesky.py` | TEST-034 |
 | `test/python/test_euler.py` | TEST-016, TEST-017, TEST-019, TEST-020 |
@@ -570,7 +576,8 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `test/python/test_status.py` | API-027, BUILD-006 |
 | `test/python/test_substitution.py` | TEST-036 |
 | `test/python/test_trapezoidal.py` | TEST-010, TEST-011, TEST-012 |
-| `verification/clight/*.v` | PROVER-006, VST-001, VST-002, VST-003, VST-006 |
+| `verification/clight/*.v` | PROVER-006, VST-001, VST-002, VST-003, VST-006, VST-009 |
+| `verification/clight/manifest.txt` | CI-016, VST-009 |
 | `verification/frama-c/expectation.txt` | CI-011, GATE-006, KERNEL-006, PROVER-005, WP-005, WP-007, WP-008 |
 | `verification/lean/Diana.lean` | GATE-003, KERNEL-006, PROVER-009 |
 | `verification/lean/Diana/Real/Bisection.lean` | WP-006 |
