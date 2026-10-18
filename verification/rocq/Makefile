@@ -15,6 +15,7 @@ real:
 	rocq compile -R theory Diana theory/Real/RK4.v
 	rocq compile -R theory Diana theory/Real/Simpson.v
 	rocq compile -R theory Diana theory/Real/Substitution.v
+	rocq compile -R theory Diana theory/Real/LU.v
 	rocq compile -R theory Diana theory/Real/Trapezoidal.v
 
 check: all

@@ -14,6 +14,7 @@ theory/Real/Taylor.v
 theory/Real/RK4.v
 theory/Real/Simpson.v
 theory/Real/Substitution.v
+theory/Real/LU.v
 theory/Real/Trapezoidal.v
 theory/Float/Bisection.v
 theory/Float/Cholesky.v
