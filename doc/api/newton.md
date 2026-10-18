@@ -14,12 +14,14 @@ evaluate `f` and `f′` at `s.x` and pass both values back.
 - `diana_newton_step(&s, f(s.x), f′(s.x))` applies the correction `dx = f(x)/f′(x)`. It returns
   `DIANA_CONTINUE` with the new iterate in `s.x`; `DIANA_OK` when `|dx| <= tol`, when `f(x)` is
   exactly zero, or when the correction no longer changes `x`; `DIANA_ERR_MAXITER` after
-  `max_iter` steps; and `DIANA_ERR_SINGULAR` when `f′(x)` is zero and `f(x)` is not.
+  `max_iter` steps; and `DIANA_ERR_SINGULAR` when `f′(x)` is zero and `f(x)` is not. Once the
+  run has finished, a further `step` is rejected.
 - `diana_newton_result(&s, &root, &dx)` gives the current iterate and the last correction.
   Either output may be `NULL`.
 
 `init` returns `DIANA_ERR_ARG` for a `NULL` state, a NaN or infinite `x0` or `tol`, `tol < 0` or
-`max_iter == 0`; `step` returns it for a NaN or infinite `f(x)` or `f′(x)`, and
+`max_iter == 0`; `step` returns it for a NaN or infinite `f(x)` or `f′(x)` or a state whose
+`status` is not `DIANA_CONTINUE` (a finished run, or a zero-initialized struct), and
 `DIANA_ERR_OVERFLOW` for a correction or iterate that overflows. A step that fails with
 `DIANA_ERR_ARG`, `DIANA_ERR_SINGULAR` or `DIANA_ERR_OVERFLOW` leaves the state unchanged.
 Finding `√2` as the root of `x² − 2` from `x₀ = 2`:
@@ -56,6 +58,7 @@ root 1.4142135623730949, dx 1.57e-16, 6 steps
 | `dx` | last correction applied to `x` (0 before the first step) |
 | `tol` | stop once `|dx| <= tol` |
 | `iter`, `max_iter` | steps taken so far, and the limit |
+| `status` | `DIANA_CONTINUE` while the run goes on, then the `DIANA_OK` or `DIANA_ERR_MAXITER` that ended it |
 
 Always pass a positive tolerance. With `tol = 0` the iteration usually never stops by itself: in
 binary64 the computed `f(x)` at the double nearest the root is rarely exactly zero, and the
@@ -150,8 +153,8 @@ pair `(f(x), f′(x))`. `tol` is required, for the reason above.
 0.7390851332151607
 ```
 
-`diana.Newton(x0, tol, max_iter=100)` is the state machine, with the C fields as read-only
-attributes, `status`, `step(fx, dfx)` (returns the new status) and `result()`:
+`diana.Newton(x0, tol, max_iter=100)` is the state machine, with the C fields, `status` among
+them, as read-only attributes, `step(fx, dfx)` (returns the new status) and `result()`:
 
 ```python
 >>> s = diana.Newton(2.0, 1e-6)

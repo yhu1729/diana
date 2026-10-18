@@ -68,7 +68,8 @@ one line per idea, no design (a design is written only when an item is picked up
   with one private driver module per kernel (`_bisection.py`, `_newton.py`) re-exported by `__init__.py`, and
   `_convert.py` (`real`, the scalar check the bisection, Euler and RK4 drivers apply: a string is
   rejected as the C `d` converter rejects it; `diana.newton` passes its scalars to `Newton` directly).
-  `Bisection` and `Newton` start with status `ERR_ARG` until initialization succeeds; `step` and `result` reject
+  `Bisection` and `Newton` start with status `ERR_ARG` (their `status` is the C state's `status`
+  field) until initialization succeeds; `step` and `result` reject
   uninitialized objects, and a failed reinitialization preserves the previous state. `Newton` takes `tol`
   without a default (no parameter-free stopping rule; `tol = 0` commonly ends in a two-cycle of adjacent doubles).
   An array kernel reads a buffer in place (`PyBUF_RECORDS_RO`, the extension's `out` buffer `PyBUF_RECORDS`; native float64, one-dimensional,
@@ -333,6 +334,8 @@ finite inputs, `DIANA_ERR_ARG` only an invalid argument or a NaN or infinite inp
 leaves an output partly written. Euler, RK4 and the quadrature rules classify only after a value
 fails (`h`, then every input element), Newton's step and the matrix kernels return it at their
 overflow checks. Python raises `diana.FloatOverflowError` (a `ValueError` and an `OverflowError`).
+The bisection and Newton states end with a `status` field that `init` and `step` write; `step`
+rejects a state whose status is not `DIANA_CONTINUE` with `DIANA_ERR_ARG`, unchanged.
 The ODE wrappers take `lwork` after `work` and stop with `DIANA_ERR_CALLBACK` (-6) when the
 `int`-returning `diana_ode_fn` returns non-zero; the scalar callbacks still signal by a NaN.
 

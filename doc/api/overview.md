@@ -114,8 +114,9 @@ invalid argument
 
 The verified kernels never call your code. The iterative methods (bisection, Newton) are state
 machines: you evaluate the function at the point the state asks for and pass the value back,
-which leaves you free to log, stop early, or evaluate the function elsewhere. The ODE steps take
-slopes you have computed. All take caller-owned memory and allocate nothing.
+which leaves you free to log, stop early, or evaluate the function elsewhere. The state's `status`
+field says whether the run goes on, and `step` rejects a finished state with `DIANA_ERR_ARG`. The
+ODE steps take slopes you have computed. All take caller-owned memory and allocate nothing.
 
 For convenience, each iterative and ODE method also has a wrapper that runs the loop over a C
 callback with a `void *ctx` argument for its parameters: `diana_bisection`, `diana_newton`,

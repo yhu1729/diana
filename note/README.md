@@ -338,6 +338,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [TEST-038](test/TEST-038.md) | fact | LU Python tests against a binary64 reference and the B3 and B4 bounds |
 | [TEST-039](test/TEST-039.md) | fact | LU solve C test values, rounding pins and failure cases |
 | [TEST-040](test/TEST-040.md) | fact | LU solve Python tests against a binary64 reference and the B bounds |
+| [TEST-041](test/TEST-041.md) | fact | Bisection and Newton status field and the rejection of a finished state |
 
 ### verify
 
@@ -508,7 +509,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `src/bisection_mid.c` | API-008, KERNEL-005, PROOF-001, WP-003, WP-005 |
 | `src/bisection_mid.h` | KERNEL-005, WP-002, WP-003, WP-004, WP-005 |
 | `src/bisection_result.c` | API-004, API-008, PROOF-001, WP-001 |
-| `src/bisection_step.c` | API-007, API-008, PROOF-001, WP-006 |
+| `src/bisection_step.c` | API-007, API-008, PROOF-001, TEST-041, WP-006 |
 | `src/cholesky.c` | API-003, API-004, API-028, FP-001, KERNEL-001, KERNEL-002, WP-011 |
 | `src/euler.c` | API-006, API-017, KERNEL-004, TEST-019 |
 | `src/euler_step*.c` | FP-001, KERNEL-001 |
@@ -525,7 +526,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `src/newton_acsl.h` | API-010, KERNEL-007, WP-001, WP-002 |
 | `src/newton_init.c` | API-010, PROOF-002 |
 | `src/newton_result.c` | API-004, API-010, PROOF-002 |
-| `src/newton_step.c` | API-010, API-011, PROOF-002, TEST-027, TEST-029, TEST-031 |
+| `src/newton_step.c` | API-010, API-011, PROOF-002, TEST-027, TEST-029, TEST-031, TEST-041 |
 | `src/rk4.c` | API-006, API-017, KERNEL-004, TEST-025 |
 | `src/rk4_st*.c` | FP-001, KERNEL-001 |
 | `src/rk4_stage.c` | API-004, API-016, API-036, KERNEL-002, PROOF-008, TEST-021 |
@@ -542,13 +543,13 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `test/c/CMakeLists.txt` | BUILD-001, COMPILER-010, KERNEL-006, TEST-001 |
 | `test/c/check.h` | TEST-001 |
 | `test/c/test_*.c` | TEST-006 |
-| `test/c/test_bisection.c` | API-009, API-024, TEST-007, TEST-008, TEST-009 |
+| `test/c/test_bisection.c` | API-009, API-024, TEST-007, TEST-008, TEST-009, TEST-041 |
 | `test/c/test_cholesky.c` | TEST-033 |
 | `test/c/test_compiler.c` | COMPILER-001, COMPILER-005, COMPILER-006, COMPILER-007, COMPILER-008, COMPILER-009, COMPILER-010, COMPILER-011, FP-005, KERNEL-006 |
 | `test/c/test_euler.c` | API-017, TEST-016, TEST-017, TEST-018, TEST-019 |
 | `test/c/test_lu.c` | TEST-037 |
 | `test/c/test_lu_solve.c` | TEST-039 |
-| `test/c/test_newton.c` | API-011, API-012, TEST-027, TEST-028, TEST-029, TEST-030, TEST-031, TEST-032 |
+| `test/c/test_newton.c` | API-011, API-012, TEST-027, TEST-028, TEST-029, TEST-030, TEST-031, TEST-032, TEST-041 |
 | `test/c/test_rk4.c` | API-017, TEST-021, TEST-022, TEST-023, TEST-024, TEST-025 |
 | `test/c/test_simpson.c` | TEST-013, TEST-014 |
 | `test/c/test_substitution.c` | TEST-035 |

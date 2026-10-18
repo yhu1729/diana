@@ -16,15 +16,17 @@ state asks for, `s.x`, and pass the value back.
 - `diana_bisection_step(&s, f(s.x))` keeps the half that brackets a root. It returns
   `DIANA_CONTINUE` with the next point in `s.x`, `DIANA_OK` once the bracket is no wider than
   `tol` (or `f(s.x)` is zero, or no double is left between the endpoints), or
-  `DIANA_ERR_MAXITER` after `max_iter` steps. Call it only after `DIANA_CONTINUE`.
+  `DIANA_ERR_MAXITER` after `max_iter` steps. Once the run has finished, a further `step` is
+  rejected.
 - `diana_bisection_result(&s, &root, &width)` gives the midpoint of the bracket and its width.
   Either output may be `NULL`. Use it for the answer: after `DIANA_OK`, `s.x` is not necessarily
   the midpoint.
 
 `init` returns `DIANA_ERR_ARG` for a `NULL` state, a NaN or infinite argument, `a > b`, `|a|` or
 `|b|` above `DBL_MAX/2`, `tol < 0` or `max_iter == 0`, and `DIANA_ERR_BRACKET` when `f(a)` and
-`f(b)` have the same sign; `step` returns `DIANA_ERR_ARG` for a non-finite `f(s.x)`. A rejected
-call leaves the state unchanged. Finding `√2` as the root of `x² − 2` in `[0, 2]`:
+`f(b)` have the same sign; `step` returns `DIANA_ERR_ARG` for a non-finite `f(s.x)`, and for a
+state whose `status` is not `DIANA_CONTINUE`: a finished run, or a zero-initialized struct. A
+rejected call leaves the state unchanged. Finding `√2` as the root of `x² − 2` in `[0, 2]`:
 
 ```c
 #include <stdio.h>
@@ -65,6 +67,7 @@ through the functions:
 | `x` | point at which to evaluate `f` next |
 | `tol` | stop once `b - a <= tol` |
 | `iter`, `max_iter` | steps taken so far, and the limit |
+| `status` | `DIANA_CONTINUE` while the run goes on, then the `DIANA_OK` or `DIANA_ERR_MAXITER` that ended it |
 
 With `tol = 0` the loop runs until the endpoints are adjacent doubles. Because you see every
 point before `f` is evaluated there, you can trace the run; after `DIANA_ERR_MAXITER` the state
@@ -157,8 +160,8 @@ default `tol = 0` stops at adjacent doubles, within one ulp of the root, and the
 1.5707963267948966
 ```
 
-`diana.Bisection(a, b, fa, fb, tol=0.0, max_iter=2100)` is the state machine, with the C fields
-as read-only attributes, `status`, `step(fx)` (returns the new status) and `result()`:
+`diana.Bisection(a, b, fa, fb, tol=0.0, max_iter=2100)` is the state machine, with the C fields,
+`status` among them, as read-only attributes, `step(fx)` (returns the new status) and `result()`:
 
 ```python
 >>> def f(x):

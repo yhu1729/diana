@@ -57,18 +57,23 @@ theorem:
     informal: >
       ACSL contract in src/bisection_init.c, Frama-C WP float model with RTE: memory safety, no
       UB, the bracket predicate (strict sign change or collapsed root) on DIANA_OK and
-      DIANA_CONTINUE with Next as well on DIANA_CONTINUE, and the state unchanged when init reports
-      an error. The only assumed contract is diana_bisection_mid (src/bisection_mid.h,
+      DIANA_CONTINUE with Next as well on DIANA_CONTINUE, the status field equal to the result on
+      DIANA_OK and DIANA_CONTINUE, and the state, status field included, unchanged when init
+      reports an error. The only assumed contract is diana_bisection_mid (src/bisection_mid.h,
       -wp-skip-fct), discharged by BISECTION-B1.
     acsl: src/bisection_init.c
   - id: BISECTION-C3
     layer: C
     informal: >
-      ACSL contract in src/bisection_step.c, Frama-C WP float model with RTE: memory safety, no
-      UB, the bracket predicate preserved and nested, iter increments, Next and iter < max_iter on
-      DIANA_CONTINUE, and the state unchanged when step reports DIANA_ERR_ARG (a step that reports
-      DIANA_ERR_MAXITER has halved the bracket and incremented iter). The only assumed contract is
-      diana_bisection_mid, discharged by BISECTION-B1.
+      ACSL contract in src/bisection_step.c, Frama-C WP float model with RTE, for a valid state
+      that satisfies the bracket predicate, Next and iter < max_iter whenever its status field is
+      DIANA_CONTINUE: memory safety, no UB, the bracket predicate preserved and nested, iter
+      increments, Next and iter < max_iter on DIANA_CONTINUE, every result other than
+      DIANA_ERR_ARG only from the status DIANA_CONTINUE and with the status field equal to it (so
+      any other status gives DIANA_ERR_ARG), and the state, status field included, unchanged
+      when step reports DIANA_ERR_ARG (a step that reports DIANA_ERR_MAXITER has halved the
+      bracket and incremented iter). The only assumed contract is diana_bisection_mid,
+      discharged by BISECTION-B1.
     acsl: src/bisection_step.c
   - id: BISECTION-C4
     layer: C
@@ -94,7 +99,8 @@ theorem:
     layer: C
     informal: >
       diana_bisection_result writes the model midpoint and the rounded width to non-NULL root and
-      width (VST, AArch64 macOS Clight AST). The NULL output paths are BISECTION-C4.
+      width, whatever the status field holds (VST, AArch64 macOS Clight AST). The NULL output
+      paths are BISECTION-C4.
     rocq: Diana.VST.BisectionResult.body_diana_bisection_result
   - id: BISECTION-C8
     layer: C
@@ -103,17 +109,19 @@ theorem:
       (VST, AArch64 macOS Clight AST): for s pointing to a writable state with any contents, it
       returns the c_init status (DIANA_ERR_ARG, DIANA_ERR_BRACKET, DIANA_OK or DIANA_CONTINUE),
       writes the c_init state (iter = 0; x the model midpoint, or the endpoint a zero f-value
-      collapses onto) on DIANA_OK and DIANA_CONTINUE, and leaves *s unchanged on an error. The NULL
-      path is BISECTION-C2.
+      collapses onto) with the status field set to the returned status on DIANA_OK and
+      DIANA_CONTINUE, and leaves *s unchanged on an error. The NULL path is BISECTION-C2.
     rocq: Diana.VST.BisectionInit.body_diana_bisection_init
   - id: BISECTION-C9
     layer: C
     informal: >
       diana_bisection_step computes c_step (VST, AArch64 macOS Clight AST): for s pointing to a
-      writable state, it returns the c_step status (DIANA_ERR_ARG for a non-finite fx, DIANA_OK for
-      a zero fx, the tolerance and the stagnation exits, DIANA_ERR_MAXITER, DIANA_CONTINUE) and
-      writes the c_step state, which is *s unchanged on DIANA_ERR_ARG and otherwise has iter
-      incremented as unsigned C arithmetic. The NULL path is BISECTION-C3.
+      writable state whose status field is not DIANA_CONTINUE, it returns DIANA_ERR_ARG with *s
+      unchanged; when the status field is DIANA_CONTINUE, it returns the c_step status
+      (DIANA_ERR_ARG for a non-finite fx, DIANA_OK for a zero fx, the tolerance and the stagnation
+      exits, DIANA_ERR_MAXITER, DIANA_CONTINUE) and writes the c_step state, which is *s unchanged
+      on DIANA_ERR_ARG and otherwise has iter incremented as unsigned C arithmetic and the status
+      field set to the returned status. The NULL path is BISECTION-C3.
     rocq: Diana.VST.BisectionStep.body_diana_bisection_step
   - id: BISECTION-C10
     layer: C
@@ -190,12 +198,15 @@ replaces the midpoint by `0.5 * (a + b)` in binary64 round-to-nearest-even.
 - **C2 to C4**: the `/*@ ... */` annotations in `src/bisection_init.c`, `src/bisection_step.c` and
   `src/bisection_result.c`, one WP run per file, with the predicates `bisection_bracket`,
   `bisection_next` and `bisection_unchanged` shared from `src/bisection_acsl.h` so the
-  postcondition of `init` and `step` is literally the precondition of `step` and `result`. Each
-  call to `diana_bisection_mid` uses its contract in `src/bisection_mid.h`, the only assumed one
-  (`-wp-skip-fct` where it is defined, so `src/bisection_mid.c` has no WP goal and no expectation
-  row). The kernel calls no libm function: finiteness and absolute value are implemented in
-  `src/fp.h` with IEEE arithmetic (`x == x && x - x == 0`, conditional negation) and verified by
-  WP from `\is_finite`.
+  postcondition of `init` and `step` is literally the precondition of `step` and `result`.
+  `bisection_unchanged` covers the `status` field too, and the precondition of `step` asks the
+  bracket, Next and `iter < max_iter` only of a state whose `status` is `DIANA_CONTINUE`, the
+  status `init` and `step` write when they return it; any other state, finished or
+  zero-initialized, takes the `DIANA_ERR_ARG` exit. Each call to `diana_bisection_mid` uses its
+  contract in `src/bisection_mid.h`, the only assumed one (`-wp-skip-fct` where it is defined, so
+  `src/bisection_mid.c` has no WP goal and no expectation row). The kernel calls no libm
+  function: finiteness and absolute value are implemented in `src/fp.h` with IEEE arithmetic
+  (`x == x && x - x == 0`, conditional negation) and verified by WP from `\is_finite`.
 - **C5/C6**: the `src/fp.h` helpers. `clightgen` does not inline them despite `static inline`, so
   each is a real Clight function with its own funspec in the AST of every source that calls it
   (`bisection_init`: both, `bisection_step`: `diana_fp_finite`), and each VST file proves the
@@ -219,15 +230,20 @@ replaces the midpoint by `0.5 * (a + b)` in binary64 round-to-nearest-even.
   and `max_iter` as CompCert `int`), written as the C evaluates: CompCert `Float.cmp` for every
   comparison, the short-circuit `||`/`&&` chains in source order, unsigned `iter + 1u`, and
   `iter >= max_iter` as `negb (Int.ltu iter max_iter)`. The funspecs take the state as
-  `data_at` of a concrete field tuple (`cstate_repr`, destructed at the start of the proof), so field
-  reads and stores stay concrete instead of unfolding into nested projections. Each short-circuit
-  temporary is joined by `forward_if` on its value, and the branch obligations are closed by case
-  analysis on the finiteness and comparison bits (`bool_solve`). Before each `return` the
-  postcondition is rewritten to the concrete status and state (`init_post`, `step_post`): left to
-  VST's `forward`, the entailment simplifies the unreduced model and does not terminate. `c_keep`,
-  `c_mid` and `c_abs` stay `Opaque` during symbolic execution. `init` keeps the caller's contents
-  until every error exit has passed, then weakens `data_at` to `data_at_` for the stores, so an
-  error leaves `*s` unchanged.
+  `data_at` of a concrete field tuple (`cstate_repr c st`, the model state `c` and the status
+  field `st`, destructed at the start of the proof), so field reads and stores stay concrete
+  instead of unfolding into nested projections. The models leave the status field out: `init`'s
+  postcondition stores the `c_init` status in it on success (`init_repr`), and `step`'s
+  funspec, over any `st`, returns `step_result st c fx` with the state `step_repr st c fx`, which
+  are `-1` and `cstate_repr c st` unless `st` is 1, and otherwise the `c_step` result and state
+  with the result in the status field unless it is `-1`; the proof first branches on
+  `Int.eq st Int.one`. Each short-circuit temporary is joined by `forward_if` on its value, and
+  the branch obligations are closed by case analysis on the finiteness and comparison bits
+  (`bool_solve`). Before each `return` the postcondition is rewritten to the concrete status and
+  state (`init_post`, `step_post`): left to VST's `forward`, the entailment simplifies the
+  unreduced model and does not terminate. `c_keep`, `c_mid` and `c_abs` stay `Opaque` during
+  symbolic execution. `init` keeps the caller's contents until every error exit has passed, then
+  weakens `data_at` to `data_at_` for the stores, so an error leaves `*s` unchanged.
 - **C10**: `c_step` and `fstep` take the same branches once `fx` and `fa` are finite:
   `Float.cmp Ceq fx 0` is `B2R fx = 0`, `Float.cmp Cgt x 0` is `fpos x`, `Float.cmp Cle` is `fle`,
   and `Float.sub`/`c_mid` are `fwidth`/`mid` at CompCert's NaN-payload function.
@@ -266,10 +282,11 @@ replaces the midpoint by `0.5 * (a + b)` in binary64 round-to-nearest-even.
   `Float.add`/`Float.mul` are Flocq's `Bplus`/`Bmult` with CompCert's NaN-payload function, so the
   model instantiates directly. `c_half` is the literal `0.5` as emitted by clightgen, and `c_mid` is
   the C midpoint `Float.mul c_half (Float.add a b)`. `c_max` is `DBL_MAX / 2.0` as the C computes
-  it, a run-time division of two literals. `cstate` is `diana_bisection_state`: the layer-B `state`
-  with `iter` and `max_iter` as CompCert `int`, laid out by `cstate_repr` (`cstate_repr_state_repr`
-  relates it to the `state_repr` of C7). `c_keep` is the C's sign test `(fx > 0.0) == (s->fa > 0.0)`
-  and the endpoint it replaces, the analogue of `fkeep`.
+  it, a run-time division of two literals. `cstate` is `diana_bisection_state` without its
+  `status` field: the layer-B `state` with `iter` and `max_iter` as CompCert `int`, laid out with
+  the status `st` by `cstate_repr c st` (`cstate_repr_state_repr` relates it to the `state_repr`
+  of C7, which takes the status as a `Z`). `c_keep` is the C's sign test
+  `(fx > 0.0) == (s->fa > 0.0)` and the endpoint it replaces, the analogue of `fkeep`.
 
 ## Tolerance rationale
 
@@ -287,8 +304,8 @@ a root in reals and within `tol/2 + 1 ulp` in binary64.
 | BISECTION-B3 | – | proved | – |
 | BISECTION-B4 | – | proved | – |
 | BISECTION-C1 | – | proved | – |
-| BISECTION-C2 | – | – | 84/84 goals (Frama-C 32.1, Alt-Ergo 2.6.4), diana_bisection_mid assumed |
-| BISECTION-C3 | – | – | 71/71 goals (Frama-C 32.1, Alt-Ergo 2.6.4), diana_bisection_mid assumed |
+| BISECTION-C2 | – | – | 93/93 goals (Frama-C 32.1, Alt-Ergo 2.6.4), diana_bisection_mid assumed |
+| BISECTION-C3 | – | – | 81/81 goals (Frama-C 32.1, Alt-Ergo 2.6.4), diana_bisection_mid assumed |
 | BISECTION-C4 | – | – | 19/19 goals (Frama-C 32.1, Alt-Ergo 2.6.4), diana_bisection_mid assumed |
 | BISECTION-C5 | – | proved | – |
 | BISECTION-C6 | – | proved | – |

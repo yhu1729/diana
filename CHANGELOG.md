@@ -17,9 +17,9 @@ RK4 kernels, one function per source file for every verified kernel, and the tec
 behaviour follow Semantic Versioning. Breaking changes against 0.3.0: `diana/wrapper.h` is removed,
 the callback type `diana_bisection_fn` is renamed `diana_scalar_fn`, an overflow from finite inputs
 in Euler, the quadrature rules and Newton returns `DIANA_ERR_OVERFLOW` instead of `DIANA_ERR_ARG`,
-`diana_euler` and `diana_rk4` take the work length `lwork` and an `int`-returning callback, and the
-second attribute of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and
-Removed).
+`diana_euler` and `diana_rk4` take the work length `lwork` and an `int`-returning callback, the
+bisection and Newton states gain a `status` field (a new size and layout), and the second attribute
+of `diana.MaxIterError` is `uncertainty` instead of `width` (see Changed and Removed).
 
 ### Added
 
@@ -100,11 +100,10 @@ Removed).
   compiler-comparison corpus has 544 RK4 cases; every gcc and clang build matches CompCert
   bitwise.
 - Callback wrapper `diana_rk4(fn, ctx, t0, h, nstep, y, d, work, lwork, done)` in `diana/rk4.h`,
-  with the `diana_ode_fn` of `diana_euler` and a `work` of `lwork >= 5 d` doubles. Step `k` evaluates `fn` at
-  `t0 + k h`, `t0 + (k + 0.5) h` (twice) and `t0 + (k + 1) h`, each computed from `k`. A failing
-  stage or step returns its status (`DIANA_ERR_ARG` or `DIANA_ERR_OVERFLOW`) with `y` at the last
-  good state. Unverified, like
-  `diana_euler`.
+  with the `diana_ode_fn` of `diana_euler` and a `work` of `lwork >= 5 d` doubles. Step `k`
+  evaluates `fn` at `t0 + k h`, `t0 + (k + 0.5) h` (twice) and `t0 + (k + 1) h`, each computed from
+  `k`. A failing stage or step returns its status (`DIANA_ERR_ARG` or `DIANA_ERR_OVERFLOW`) with `y`
+  at the last good state. Unverified, like `diana_euler`.
 - `diana_euler_step_unchecked(y, f, d, h, y_out)` in `diana/euler.h`, an opt-in explicit Euler
   step without the finiteness check, in its own source file `src/euler_step_unchecked.c`: it
   rejects NULL pointers and `d == 0` like `diana_euler_step`, then writes every component in one
@@ -443,6 +442,13 @@ Removed).
   new `diana.FloatOverflowError`, a `ValueError` and an `OverflowError` (so `except ValueError`
   still catches it), and exposes `diana.ERR_OVERFLOW`; its name keeps `from diana import *` from
   shadowing the built-in `OverflowError`.
+- `diana_bisection_state` and `diana_newton_state` end with a `diana_status status` field: a
+  successful `init` writes its status, `step` writes `DIANA_OK` or `DIANA_ERR_MAXITER` when it
+  ends the iteration, and `step` on a state whose status is not `DIANA_CONTINUE` (finished, or
+  zero-initialized) returns `DIANA_ERR_ARG` with the state unchanged instead of violating its
+  precondition. The ACSL contracts and the VST specifications of `init`, `step` and `result` carry
+  the field (WP goals: bisection init 93, step 81; Newton init 38, step 75); the C-order models and
+  the layer-B chain are unchanged. The Python objects read their `status` from the field.
 - `diana_euler` and `diana_rk4` take the length `lwork` of `work` after it and return
   `DIANA_ERR_ARG` before any call when it is below `2 d` or `5 d` (tested without forming the
   product, so a huge `d` cannot wrap), and `diana_ode_fn` returns `int`: a non-zero return stops

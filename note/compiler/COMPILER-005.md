@@ -17,11 +17,13 @@ itself show up in the comparison.
   Arrays are printed as ` [ ... ]`. A case prints the inputs of a call, then its status and
   outputs.
 - Output buffers and state structs are filled with sentinels first (42.0, and fixed state
-  values), so a slot or field a kernel leaves alone is visible.
-- Bisection and Newton runs print the `init` line, then `  step <n>` with the full state after
-  each step (or only a digest, COMPILER-007), `  again` for one more `step` after
-  `DIANA_ERR_MAXITER` (bisection), and `  end <steps> <digest>` with the final status, state and
-  `result` outputs. A loop stops after 4096 steps at most.
+  values), so a slot or field a kernel leaves alone is visible. The state's `status` field is
+  neither given a sentinel nor printed; the status each call returns is printed.
+- Bisection and Newton runs print the `init` line, then `  step <n>` with the state after each
+  step (or only a digest, COMPILER-007), `  again` for one more `step` after
+  `DIANA_ERR_MAXITER` (bisection; it returns `DIANA_ERR_ARG` with the state unchanged), and
+  `  end <steps> <digest>` with the final status, state and `result` outputs. A loop stops after
+  4096 steps at most.
 - The last line is `end <case count>`; `script/compare_compiler.sh` treats an output without it
   as truncated. `main` returns non-zero only if flushing stdout fails.
 - Current size: 3804 cases in 8794 lines. `tail -n 1` of the output gives the case count, and the

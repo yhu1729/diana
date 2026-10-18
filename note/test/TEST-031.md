@@ -6,10 +6,11 @@ path:
   - test/c/test_newton.c
   - test/python/test_newton.py
   - src/newton_step.c
-related: [TEST-009, TEST-029, API-002, API-022]
+related: [TEST-009, TEST-029, TEST-041, API-002, API-022]
 ---
 Every rejected Newton call leaves the state unchanged: `test_error` in `test/c/test_newton.c`
-compares all five fields after each rejection.
+compares all six fields, `status` included (`same_state`), after each rejection; the rejection of
+a finished or zero-initialized state is `test_status_field` (TEST-041).
 
 - `DIANA_ERR_SINGULAR`: `dfx = 0` or `-0` with a non-zero `fx` (`1` and `-1`). Python raises
   `SingularError` (a `ValueError`, message containing `f'(x) is zero`) and the object keeps

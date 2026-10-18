@@ -16,8 +16,9 @@ each named after its function without `diana_py_` (STYLE-002); all are listed in
   one fails.
 - `module.h`: shared declarations, the exception pointers `diana_py_bracket_error`,
   `diana_py_singular_error` and `diana_py_float_overflow_error`, the `static inline` byte-range
-  overlap test `diana_py_overlap`, and the `static inline` `diana_py_square_side`, the side `n`
-  of a column-major matrix of length `n*n` (API-029).
+  overlap test `diana_py_overlap`, the `static inline` `diana_py_square_side`, the side `n` of a
+  column-major matrix of length `n*n` (API-029), and `_Static_assert(sizeof(diana_status) ==
+  sizeof(int))`, since the `status` members read the C state's field as `Py_T_INT`.
 - `status_exec.c`: registers `status_str`, the status constants `OK` to `ERR_OVERFLOW`, and
   creates `BracketError`, `SingularError` (both `ValueError` subclasses) and
   `FloatOverflowError` (bases `ValueError` and `OverflowError`).
@@ -30,7 +31,8 @@ each named after its function without `diana_py_` (STYLE-002); all are listed in
   `status_str.c`: the two module functions.
 - Per kernel, `<kernel>_exec.c` holds the static method, member and type tables and registers
   them. The state types have `<kernel>_new.c`, `_init.c`, `_step.c`, `_result.c` and the object
-  struct in `bisection_object.h` / `newton_object.h`; the array functions are `trapezoidal.c`,
+  struct in `bisection_object.h` / `newton_object.h`, which holds only `PyObject_HEAD` and the C
+  state `s` (its `status` field is the attribute, API-023); the array functions are `trapezoidal.c`,
   `simpson.c`, `euler_step.c`, `rk4_stage.c`, `rk4_step.c`, `cholesky.c`,
   `forward_substitution.c`, `back_substitution.c`, `lu.c` and `lu_solve.c`, the two that
   allocate (the pivot rows, with `PyMem_New`). `forward_substitution.c` and

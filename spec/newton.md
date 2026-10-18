@@ -53,19 +53,22 @@ theorem:
     informal: >
       ACSL contract in src/newton_init.c, Frama-C WP float model with RTE: memory safety, no UB,
       the state invariant (x, dx and tol finite, tol ≥ 0) established with x = x0, dx = 0,
-      tol, iter = 0 and max_iter > 0 on DIANA_CONTINUE, and the state unchanged when init reports
-      DIANA_ERR_ARG. No assumed contract.
+      tol, iter = 0, max_iter > 0 and the status field DIANA_CONTINUE on DIANA_CONTINUE, and the
+      state, status field included, unchanged when init reports DIANA_ERR_ARG. No assumed
+      contract.
     acsl: src/newton_init.c
   - id: NEWTON-C2
     layer: C
     informal: >
-      ACSL contract in src/newton_step.c, Frama-C WP float model with RTE: memory safety, no UB,
-      the state invariant preserved, iter increments, DIANA_OK only with |dx| ≤ tol or x
-      unchanged, DIANA_CONTINUE only with |dx| > tol, x changed and iter < max_iter,
-      DIANA_ERR_MAXITER only with iter = max_iter, DIANA_ERR_SINGULAR only with dfx = 0 and
-      fx ≠ 0, DIANA_ERR_OVERFLOW only with fx and dfx finite and non-zero, and the state
-      unchanged when step reports DIANA_ERR_ARG, DIANA_ERR_SINGULAR or DIANA_ERR_OVERFLOW. No
-      assumed contract.
+      ACSL contract in src/newton_step.c, Frama-C WP float model with RTE, for a valid state
+      that satisfies the invariant and iter < max_iter whenever its status field is
+      DIANA_CONTINUE: memory safety, no UB, the state invariant preserved, iter increments,
+      DIANA_OK only with |dx| ≤ tol or x unchanged, DIANA_CONTINUE only with |dx| > tol, x
+      changed and iter < max_iter, DIANA_ERR_MAXITER only with iter = max_iter, these three only
+      from the status DIANA_CONTINUE and with the status field equal to the result,
+      DIANA_ERR_SINGULAR only with dfx = 0 and fx ≠ 0, DIANA_ERR_OVERFLOW only with fx and dfx
+      finite and non-zero, and the state, status field included, unchanged when step reports
+      DIANA_ERR_ARG, DIANA_ERR_SINGULAR or DIANA_ERR_OVERFLOW. No assumed contract.
     acsl: src/newton_step.c
   - id: NEWTON-C3
     layer: C
@@ -77,8 +80,9 @@ theorem:
   - id: NEWTON-C4
     layer: C
     informal: >
-      diana_newton_result writes the iterate and the last correction to non-NULL root and dx
-      (VST, AArch64 macOS Clight AST). The NULL output paths are NEWTON-C3.
+      diana_newton_result writes the iterate and the last correction to non-NULL root and dx,
+      whatever the status field holds (VST, AArch64 macOS Clight AST). The NULL output paths are
+      NEWTON-C3.
     rocq: Diana.VST.NewtonResult.body_diana_newton_result
   - id: NEWTON-C5
     layer: C
@@ -86,19 +90,21 @@ theorem:
       diana_newton_init computes c_init, the model of every exit in the C's evaluation order
       (VST, AArch64 macOS Clight AST): for s pointing to a writable state with any contents, it
       returns the c_init status (DIANA_ERR_ARG or DIANA_CONTINUE), writes x0, dx = 0, tol,
-      iter = 0 and max_iter on DIANA_CONTINUE, and leaves *s unchanged on DIANA_ERR_ARG. The NULL
-      path is NEWTON-C1.
+      iter = 0, max_iter and the status field DIANA_CONTINUE on DIANA_CONTINUE, and leaves *s
+      unchanged on DIANA_ERR_ARG. The NULL path is NEWTON-C1.
     rocq: Diana.VST.NewtonInit.body_diana_newton_init
   - id: NEWTON-C6
     layer: C
     informal: >
       diana_newton_step computes c_step (VST, AArch64 macOS Clight AST): for s pointing to a
-      writable state, it returns the c_step status (DIANA_ERR_ARG for a non-finite fx or dfx,
-      DIANA_ERR_OVERFLOW for a non-finite correction or iterate, DIANA_ERR_SINGULAR for a zero
-      dfx, DIANA_OK for a zero fx, the tolerance and the stagnation stops, DIANA_ERR_MAXITER,
-      DIANA_CONTINUE) and writes the c_step state, which is *s unchanged on DIANA_ERR_ARG,
-      DIANA_ERR_SINGULAR and DIANA_ERR_OVERFLOW and otherwise has iter incremented as unsigned C
-      arithmetic. The NULL path is NEWTON-C2.
+      writable state whose status field is not DIANA_CONTINUE, it returns DIANA_ERR_ARG with *s
+      unchanged; when the status field is DIANA_CONTINUE, it returns the c_step status
+      (DIANA_ERR_ARG for a non-finite fx or dfx, DIANA_ERR_OVERFLOW for a non-finite correction
+      or iterate, DIANA_ERR_SINGULAR for a zero dfx, DIANA_OK for a zero fx, the tolerance and the
+      stagnation stops, DIANA_ERR_MAXITER, DIANA_CONTINUE) and writes the c_step state, which is
+      *s unchanged on DIANA_ERR_ARG, DIANA_ERR_SINGULAR and DIANA_ERR_OVERFLOW and otherwise has
+      iter incremented as unsigned C arithmetic and the status field set to the returned status.
+      The NULL path is NEWTON-C2.
     rocq: Diana.VST.NewtonStep.body_diana_newton_step
   - id: NEWTON-C7
     layer: C
@@ -138,16 +144,18 @@ in binary64 round-to-nearest-even, and checks each for finiteness.
 
 ## Operation order
 
-1. a `NULL` state, or a NaN or infinite `fx` or `dfx`, is `DIANA_ERR_ARG`, state unchanged;
-2. `fx = 0` is tested next: an exact zero converges with `dx = 0` and `iter + 1`, whatever the
-   finite `f′(x)`;
+1. a `NULL` state, a state whose `status` is not `DIANA_CONTINUE`, or a NaN or infinite `fx` or
+   `dfx` is `DIANA_ERR_ARG`, state unchanged;
+2. `fx = 0` is tested next: an exact zero converges with `dx = 0`, `iter + 1` and
+   `status = DIANA_OK`, whatever the finite `f′(x)`;
 3. `dfx = 0` (either sign) is `DIANA_ERR_SINGULAR`, state unchanged: the step is undefined;
 4. `dx = fl(fx / dfx)`, rejected (`DIANA_ERR_OVERFLOW`, state unchanged) when not finite, which
    covers a subnormal `dfx` against a large `fx`; `fx` and `dfx` are finite and non-zero here,
    so only an overflow is left;
 5. `x′ = fl(x − dx)`, rejected the same way when not finite;
 6. the state is updated (`iter + 1`, `dx`, `x′`), then `DIANA_OK` if `x′ = x` or `|dx| ≤ tol`,
-   `DIANA_ERR_MAXITER` if `iter ≥ max_iter`, else `DIANA_CONTINUE`.
+   `DIANA_ERR_MAXITER` if `iter ≥ max_iter`, else `DIANA_CONTINUE`; the first two are also
+   written to `status`, which otherwise stays `DIANA_CONTINUE`.
 
 ## Proof sketch
 
@@ -173,18 +181,26 @@ in binary64 round-to-nearest-even, and checks each for finiteness.
   monotone). Proof: `stagnation`.
 - **C1 to C3**: the `/*@ ... */` annotations in `src/newton_init.c`, `src/newton_step.c` and
   `src/newton_result.c`, one WP run per file, with the predicates `newton_state` and
-  `newton_unchanged` shared from `src/newton_acsl.h`. The value of `x′` is not an ACSL
-  post-condition (see "Why the functional contract is not in ACSL" in `spec/trapezoidal.md`); it
-  is the VST theorem C7 through C6. `|dx| ≤ tol` and `x′ = x` are post-conditions because WP
-  decides the C comparisons on finite doubles exactly, with `diana_fp_abs` specified by `\abs`.
+  `newton_unchanged` (which covers the `status` field) shared from `src/newton_acsl.h`; the
+  precondition of `step` asks `newton_state` and `iter < max_iter` only of a state whose `status`
+  is `DIANA_CONTINUE`, so a finished or zero-initialized state is a defined `DIANA_ERR_ARG`. The
+  value of `x′` is not an ACSL post-condition (see "Why the functional contract is not in ACSL"
+  in `spec/trapezoidal.md`); it is the VST theorem C7 through C6. `|dx| ≤ tol` and `x′ = x` are
+  post-conditions because WP decides the C comparisons on finite doubles exactly, with
+  `diana_fp_abs` specified by `\abs`.
 - **C4 to C6**: as BISECTION-C7 to C9: `c_init` and `c_step` are total models over `cstate` (the
-  five fields with `iter` and `max_iter` as CompCert `int`) in the C's evaluation order, the
-  funspecs take the state as `data_at` of a concrete field tuple, each short-circuit temporary is
-  joined by `forward_if` on its value, and before each `return` the postcondition is rewritten to
-  the concrete status and state (`init_post`, `step_post`). `init` keeps the caller's contents
-  until the error exits have passed. The `src/fp.h` helpers are re-specified for each AST that
-  calls them (`diana_fp_finite` for `init` and `step`, `diana_fp_abs` for `step`) with the lemmas
-  of `verification/rocq/theory/VST/Bisection.v`.
+  five fields before `status`, with `iter` and `max_iter` as CompCert `int`) in the C's
+  evaluation order, the funspecs take the state as `data_at` of a concrete field tuple
+  (`cstate_repr c st`, with the status field `st`), each short-circuit temporary is joined by
+  `forward_if` on its value, and before each `return` the postcondition is rewritten to the
+  concrete status and state (`init_post`, `step_post`). `init`'s postcondition stores the
+  `c_init` status in the status field on success; `step`'s funspec, over any `st`, returns
+  `step_result st c fx dfx` with the state `step_repr st c fx dfx`: `-1` and `*s` unchanged
+  unless `st` is 1, otherwise the `c_step` result and state with the status field
+  `step_status st z` for the result `z`, which is `z` when `z` is 0, 1 or -3 and `st` otherwise.
+  `init` keeps the caller's contents until the error exits have passed. The `src/fp.h` helpers
+  are re-specified for each AST that calls them (`diana_fp_finite` for `init` and `step`,
+  `diana_fp_abs` for `step`) with the lemmas of `verification/rocq/theory/VST/Bisection.v`.
 - **C7**: CompCert's `Float.div` and `Float.sub` are Flocq's `Bdiv` and `Bminus` at
   `Float.binop_nan`, so after the error exits `c_step`'s `x` and `dx` are `fstep` and `fdiv` of
   `Diana.Float.Newton` by unfolding.
@@ -202,10 +218,11 @@ in binary64 round-to-nearest-even, and checks each for finiteness.
 - **Layer C, VST** (one file per source, `verification/rocq/theory/VST/NewtonInit.v`,
   `NewtonStep.v` and `NewtonResult.v`, against the Clight ASTs
   `verification/clight/newton_<function>_aarch64_macos.v`, CompCert target AArch64 macOS; the
-  models are in `VST/Newton.v`): `cstate` is
-  `diana_newton_state`; `c_init` and `c_step` use CompCert's `Float.cmp`, `Float.div`,
-  `Float.sub`, the conditional negation `c_abs` of `Diana.VST.Bisection` for `diana_fp_abs`,
-  unsigned `iter + 1u`, and `iter >= max_iter` as `negb (Int.ltu iter max_iter)`.
+  models are in `VST/Newton.v`): `cstate` is `diana_newton_state` without its `status` field,
+  laid out with the status `st` by `cstate_repr c st`; `c_init` and `c_step` use CompCert's
+  `Float.cmp`, `Float.div`, `Float.sub`, the conditional negation `c_abs` of
+  `Diana.VST.Bisection` for `diana_fp_abs`, unsigned `iter + 1u`, and `iter >= max_iter` as
+  `negb (Int.ltu iter max_iter)`.
 
 ## What the theorems do not say
 
@@ -227,8 +244,8 @@ in binary64 round-to-nearest-even, and checks each for finiteness.
 | NEWTON-B1 | – | proved | – |
 | NEWTON-B2 | – | proved | – |
 | NEWTON-B3 | – | proved | – |
-| NEWTON-C1 | – | – | 36/36 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
-| NEWTON-C2 | – | – | 67/67 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
+| NEWTON-C1 | – | – | 38/38 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
+| NEWTON-C2 | – | – | 75/75 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
 | NEWTON-C3 | – | – | 13/13 goals (Frama-C 32.1, Alt-Ergo 2.6.4), no assumed contract |
 | NEWTON-C4 | – | proved | – |
 | NEWTON-C5 | – | proved | – |

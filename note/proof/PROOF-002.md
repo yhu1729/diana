@@ -26,10 +26,13 @@ near a simple root (`spec/newton.md`); nothing bounds the binary64 run except `m
 - Layer C: WP (C1 to C3, no assumed contract) proves memory safety, the invariant (`x`, `dx`,
   `tol` finite, `tol ≥ 0`), `iter + 1`, the condition behind each status (`DIANA_OK` only with
   `|dx| ≤ tol` or `x` unchanged, `DIANA_ERR_SINGULAR` only with `dfx = 0` and `fx ≠ 0`,
-  `DIANA_ERR_OVERFLOW` only with `fx`, `dfx` finite and non-zero, ...) and an unchanged state on
-  `DIANA_ERR_ARG`, `DIANA_ERR_SINGULAR` and `DIANA_ERR_OVERFLOW`. VST proves `result` (C4),
-  `init` and `step` against `c_init`, `c_step` (C5, C6), the stored `x` and `dx` equal to `fstep`
-  and `fdiv` so B2 and B3 apply to them (C7), and the `src/fp.h` copies (C8 to C10).
+  `DIANA_ERR_OVERFLOW` only with `fx`, `dfx` finite and non-zero, ...), `status` equal to the
+  result of `init` and of a `step` returning `DIANA_OK`, `DIANA_CONTINUE` or `DIANA_ERR_MAXITER`,
+  and an unchanged state, `status` included, on `DIANA_ERR_ARG`, `DIANA_ERR_SINGULAR` and
+  `DIANA_ERR_OVERFLOW`. VST proves `result` for any `status` (C4), `init` and `step` against
+  `c_init`, `c_step` (C5, C6; `step` on a state whose `status` is not `DIANA_CONTINUE` returns
+  `DIANA_ERR_ARG` unchanged), the stored `x` and `dx` equal to `fstep` and `fdiv` so B2 and B3
+  apply to them (C7), and the `src/fp.h` copies (C8 to C10).
 - Not proved: termination or convergence from an arbitrary `x₀`, or in binary64 at all; near a
   simple root the iterates commonly two-cycle (API-011). Multiple roots (`m = 0`) are outside
   H2. Errors in the caller's `f(x)`, `f′(x)` are the caller's: B2 covers the kernel's two

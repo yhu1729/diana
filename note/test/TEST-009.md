@@ -7,12 +7,13 @@ path:
   - test/python/test_bisection.py
   - python/ext/bisection_init.c
   - python/ext/bisection_step.c
-related: [API-003, TEST-007, TEST-031]
+related: [API-003, TEST-007, TEST-031, TEST-041]
 ---
 A rejected `diana_bisection_init` or `diana_bisection_step` leaves every field of the state
-unchanged. `test_error_keeps_state` in `test/c/test_bisection.c` compares all eight fields after a
-bracket error and an argument error from `init` on a running state, and after a NaN `fx` to
-`step`.
+unchanged. `test_error_keeps_state` in `test/c/test_bisection.c` compares all nine fields,
+`status` included (`same_state`), after a bracket error and an argument error from `init` on a
+running state, and after a NaN `fx` to `step`; `test_status_field` adds `step` on a finished and
+on a zero-initialized state (TEST-041).
 
 - The Python binding depends on it: `Bisection.__init__` calls `diana_bisection_init` directly on
   the object's state and `step` calls `diana_bisection_step`; on an error both raise without

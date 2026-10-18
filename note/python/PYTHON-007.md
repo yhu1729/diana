@@ -11,8 +11,9 @@ path:
 related: [PYTHON-001, PYTHON-002, PYTHON-004, PYTHON-005, KERNEL-006, API-020]
 ---
 1. One file per extension function, `python/ext/<function>.c` defining `diana_py_<function>`.
-   A state type gets `<kernel>_new.c` (status `DIANA_ERR_ARG` until initialized), `_init.c`,
-   `_step.c`, `_result.c` and `<kernel>_object.h` with the object struct and their declarations.
+   A state type gets `<kernel>_new.c` (sets the C state's `status` to `DIANA_ERR_ARG`, not
+   initialized), `_init.c`, `_step.c`, `_result.c` and `<kernel>_object.h` with the object struct
+   and their declarations.
    Read arrays with `diana_py_get_array`, map a failed status with `diana_py_raise`.
 2. `python/ext/<kernel>_exec.c`: the static method (and member and type) tables with their
    docstrings, and `int diana_py_<kernel>_exec(PyObject *m)`, which registers them

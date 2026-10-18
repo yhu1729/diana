@@ -14,10 +14,11 @@ private header `src/<method>_acsl.h` that the method's sources include.
 - `src/bisection_acsl.h`: `bisection_next` (finite `x` strictly inside `(a, b)`),
   `bisection_bracket(s, m)` (finite endpoints and values, `a <= b`, both within `±m`, a strict
   sign change or a collapsed root with `fa == fb == 0`, `tol >= 0`) and
-  `bisection_unchanged{L1, L2}` (every state field equal at both labels). Included by
-  `src/bisection_init.c`, `src/bisection_step.c` and `src/bisection_result.c`.
+  `bisection_unchanged{L1, L2}` (every state field, `status` included, equal at both labels).
+  Included by `src/bisection_init.c`, `src/bisection_step.c` and `src/bisection_result.c`.
 - `src/newton_acsl.h`: `newton_state` (valid pointer, finite `x`, `dx` and `tol`, `tol >= 0`) and
-  `newton_unchanged{L1, L2}`. Included by `src/newton_init.c` and `src/newton_step.c`.
+  `newton_unchanged{L1, L2}` (every field, `status` included). Included by `src/newton_init.c`
+  and `src/newton_step.c`.
 - `src/substitution_acsl.h`: the lemma `column_end` (WP-011) and `substitution_valid(l, n, b, x)`
   (`l[0 .. n*n-1]` and `b[0 .. n-1]` readable, `x[0 .. n-1]` writable and separate from both).
   Included by `src/forward_substitution.c` and `src/back_substitution.c`. ACSL rejects `const` in
