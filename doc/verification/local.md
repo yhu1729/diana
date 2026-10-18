@@ -1,9 +1,9 @@
 # Local verification
 
-CI builds and tests the code, runs Frama-C, and checks layer A in Lean and Rocq. Everything that
-needs Flocq, CompCert or VST — layer B, the VST proofs, the Rocq axiom gate, the Clight ASTs and
-the compiler comparison — runs only on a developer machine, in the opam switch that
-`CONTRIBUTING.md` sets up. A green pipeline says nothing about those. So after any change to
+CI builds and tests the code, runs Frama-C, checks layer A in Lean, and checks layers A and B in
+Rocq with their axioms. Everything that needs CompCert or VST — the VST proofs and their axioms,
+the Clight ASTs and the compiler comparison — runs only on a developer machine, in the opam
+switch that `CONTRIBUTING.md` sets up. A green pipeline says nothing about those. So after any change to
 `src/`, `include/`, `verification/` or `spec/`, to the allowed axioms `script/axiom_allow.yaml`
 or to `script/run_frama_c.sh`, run
 
@@ -45,6 +45,7 @@ On an Apple M4 a warm run takes about four minutes and a cold one about five and
 | Step | Command |
 |---|---|
 | Rocq proofs | `cd verification/rocq && make -j4` (then `make check` prints the axioms; it needs the file the spec gate generates) |
+| Rocq layers A and B, as CI | `cd verification/rocq && make float`, then `uv run script/check_spec.py --run --strict --prover rocq --layer A --layer B --no-report` |
 | Lean proofs | `cd verification/lean && lake exe cache get && lake build` |
 | Frama-C | `script/verify_frama_c.sh` |
 | Compiler comparison | `opam exec -- script/compare_compiler.sh` |
@@ -63,4 +64,5 @@ On an Apple M4 a warm run takes about four minutes and a cold one about five and
 [GATE-009](../../note/gate/GATE-009.md) the report stamp,
 [CI-016](../../note/ci/CI-016.md) the provenance check in CI,
 [PROVER-007](../../note/prover/PROVER-007.md) Rocq build targets,
+[CI-013](../../note/ci/CI-013.md) layers A and B in CI,
 [PROVER-008](../../note/prover/PROVER-008.md) Rocq memory cap.
