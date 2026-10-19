@@ -45,6 +45,8 @@ All notable changes to this project are documented here. The format follows
 - The Python array check `diana_py_get_array` skips the alignment test for an empty buffer, whose
   pointer may be a dummy: an empty `array.array` is accepted where the minimum length is 0, which
   only the norms allow.
+- `DIANA_SANITIZER=ON` compiles with `-fno-sanitize-recover=undefined`, so a UBSan report aborts
+  the test instead of being printed and ignored (note BUILD-008).
 
 ## [1.0.0] - 2026-10-18
 

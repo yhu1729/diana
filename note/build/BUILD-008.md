@@ -7,8 +7,11 @@ path:
 related: [BUILD-002, BUILD-009]
 ---
 With `DIANA_SANITIZER=ON` and a `GNU`, `Clang` or `AppleClang` compiler, `CMakeLists.txt` calls
-`add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)` before
-`add_library(diana)` and adds `target_link_options(diana PUBLIC -fsanitize=address,undefined)`.
+`add_compile_options(-fsanitize=address,undefined -fno-sanitize-recover=undefined
+-fno-omit-frame-pointer)` before `add_library(diana)` and adds
+`target_link_options(diana PUBLIC -fsanitize=address,undefined)`. `-fno-sanitize-recover=undefined`
+makes the first UBSan report abort the process: by default UBSan prints `runtime error` and
+continues, so a sanitized test would still exit 0 (AddressSanitizer aborts by default).
 Another compiler, which configures only with `DIANA_ALLOW_UNKNOWN_COMPILER` (BUILD-013), gets a
 CMake `WARNING` and no sanitizer.
 

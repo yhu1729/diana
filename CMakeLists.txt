@@ -54,7 +54,8 @@ include(GNUInstallDirs)
 
 if(DIANA_SANITIZER)
     if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
-        add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
+        add_compile_options(-fsanitize=address,undefined -fno-sanitize-recover=undefined
+            -fno-omit-frame-pointer)
     else()
         message(WARNING "DIANA_SANITIZER is only supported with gcc or clang")
     endif()
