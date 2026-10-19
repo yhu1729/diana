@@ -606,6 +606,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `test/install/CMakeLists.txt` | API-005, BUILD-009, CI-009, TEST-002 |
 | `test/install/main.c` | API-005, BUILD-006, BUILD-009, TEST-002 |
 | `test/python/test_bisection.py` | API-024, TEST-007, TEST-008, TEST-009 |
+| `test/python/test_check_commit.py` | GIT-007 |
 | `test/python/test_check_provenance.py` | TEST-042 |
 | `test/python/test_check_spec.py` | TEST-005 |
 | `test/python/test_cholesky.py` | TEST-034 |

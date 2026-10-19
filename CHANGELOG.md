@@ -76,6 +76,10 @@ All notable changes to this project are documented here. The format follows
   `style_git` range as note CI-019 does, and `CLAUDE.md` records that `v1.0.0` is tagged.
 - Tests cover `Bisection.step` with a non-finite value, `status_str` with a non-integer and a value
   below `INT_MIN`, and `lu_solve` with a non-iterable `piv` and a `piv` whose iterator raises.
+- `script/check_commit.sh` fails when `git log` fails: the log is written to a temporary file
+  before `awk` reads it, so a range that names no commit exits with git's status instead of
+  reporting `0 commit(s) checked` and success. `test/python/test_check_commit.py` runs the
+  script on a temporary repository.
 
 ## [1.0.0] - 2026-10-18
 

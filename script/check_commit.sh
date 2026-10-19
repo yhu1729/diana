@@ -17,7 +17,10 @@ if [ "$#" -eq 0 ]; then
     fi
 fi
 echo "checking $*"
-git log --reverse --format='%x1e%h%x1f%at%x1f%ct%x1f%cn <%ce>%x1f%P%x1f%B' "$@" | awk '
+log=$(mktemp "${TMPDIR:-/tmp}/diana-commit.XXXXXX")
+trap 'rm -f "$log"' EXIT
+git log --reverse --format='%x1e%h%x1f%at%x1f%ct%x1f%cn <%ce>%x1f%P%x1f%B' "$@" > "$log"
+awk '
     BEGIN { RS = "\036"; FS = "\037"; max_subject = 50 }
     function fail(reason) {
         print hash " " subject ": " reason > "/dev/stderr"
@@ -52,4 +55,4 @@ git log --reverse --format='%x1e%h%x1f%at%x1f%ct%x1f%cn <%ce>%x1f%P%x1f%B' "$@" 
         print count + 0 " commit(s) checked"
         exit status
     }
-'
+' "$log"
