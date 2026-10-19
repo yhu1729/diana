@@ -4,7 +4,10 @@
 Prints one ``<list>=true|false`` line per ``.change_<list>`` anchor of ``.gitlab-ci.yml``, for
 ``$GITHUB_OUTPUT``. Every list is true for a tag push, a manual run, a change to the CI definition
 itself, or a push whose base cannot be found; otherwise a list is true when a file changed since
-the base matches one of its patterns, with GitLab's ``rules:changes`` glob semantics.
+the base matches one of its patterns, with GitLab's ``rules:changes`` glob semantics. The base is
+the previous head of a push to the default branch, whose runs are never cancelled, and the merge
+base with the default branch for any other branch, so that a run which supersedes a cancelled one
+covers the cancelled run's changes too.
 """
 
 from __future__ import annotations
@@ -90,10 +93,11 @@ def changed_files(
     if event != "push" or ref.startswith("refs/tags/"):
         return None
     base = None
-    known = before and not ZERO.match(before)
-    if known and git("cat-file", "-e", f"{before}^{{commit}}") is not None:
-        base = git("merge-base", before, sha)
-    if base is None and default_branch:
+    if not default_branch or ref == f"refs/heads/{default_branch}":
+        known = before and not ZERO.match(before)
+        if known and git("cat-file", "-e", f"{before}^{{commit}}") is not None:
+            base = git("merge-base", before, sha)
+    else:
         base = git("merge-base", f"origin/{default_branch}", sha)
     if base is None:
         return None

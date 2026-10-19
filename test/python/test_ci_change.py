@@ -99,21 +99,52 @@ def init_repo(tmp_path):
     (tmp_path / "src" / "lu.c").write_text("int x;\n")
     run("add", "src/lu.c")
     run("commit", "-q", "-m", "b")
-    return run, first, run("rev-parse", "HEAD")
+    second = run("rev-parse", "HEAD")
+    (tmp_path / "doc").mkdir()
+    (tmp_path / "doc" / "a.md").write_text("# a\n")
+    run("add", "doc/a.md")
+    run("commit", "-q", "-m", "c")
+    return run, first, second, run("rev-parse", "HEAD")
 
 
 @pytest.mark.skipif(shutil.which("git") is None, reason="git is not installed")
-def test_push_range(cc, tmp_path, monkeypatch):
-    run, first, second = init_repo(tmp_path)
+def test_push_range_on_the_default_branch(cc, tmp_path, monkeypatch):
+    run, first, second, third = init_repo(tmp_path)
     monkeypatch.setattr(cc, "ROOT", tmp_path)
-    assert cc.changed_files("push", "refs/heads/main", first, second, "") == ["src/lu.c"]
-    # a new branch (before all zeros) compares with the default branch it forked from
+    run("update-ref", "refs/remotes/origin/main", third)
+    # each push compares with its previous head, as no run there is cancelled
+    assert cc.changed_files("push", "refs/heads/main", first, second, "main") == ["src/lu.c"]
+    assert cc.changed_files("push", "refs/heads/main", second, third, "main") == ["doc/a.md"]
+    # with no default branch name the previous head is still the base
+    assert cc.changed_files("push", "refs/heads/main", second, third, "") == ["doc/a.md"]
+    # a first push (before all zeros) or an unknown old head (a force push) runs every job,
+    # never the empty diff with the branch's own tip
+    assert cc.changed_files("push", "refs/heads/main", "0" * 40, third, "main") is None
+    assert cc.changed_files("push", "refs/heads/main", "1" * 40, third, "main") is None
+    assert cc.changed_files("push", "refs/heads/main", "0" * 40, third, "") is None
+
+
+@pytest.mark.skipif(shutil.which("git") is None, reason="git is not installed")
+def test_push_range_on_a_branch(cc, tmp_path, monkeypatch):
+    run, first, second, third = init_repo(tmp_path)
+    monkeypatch.setattr(cc, "ROOT", tmp_path)
     run("update-ref", "refs/remotes/origin/main", first)
-    assert cc.changed_files("push", "refs/heads/x", "0" * 40, second, "main") == ["src/lu.c"]
-    # an unknown old head (a force push) also falls back to the default branch
-    assert cc.changed_files("push", "refs/heads/x", "1" * 40, second, "main") == ["src/lu.c"]
-    # with neither, every job runs
-    assert cc.changed_files("push", "refs/heads/x", "0" * 40, second, "") is None
+    # every push compares with the merge base of the default branch, whatever `before` is, so
+    # the run that cancels the run of the src/ push still sees src/lu.c
+    for before in ("0" * 40, "1" * 40, first, second):
+        assert cc.changed_files("push", "refs/heads/x", before, third, "main") == [
+            "doc/a.md",
+            "src/lu.c",
+        ]
+    # a branch at the default branch's tip has changed nothing
+    run("update-ref", "refs/remotes/origin/main", third)
+    assert cc.changed_files("push", "refs/heads/x", second, third, "main") == []
+    # without a default branch name only the previous head is known
+    assert cc.changed_files("push", "refs/heads/x", second, third, "") == ["doc/a.md"]
+    assert cc.changed_files("push", "refs/heads/x", "0" * 40, third, "") is None
+    # a default branch missing from the clone runs every job
+    run("update-ref", "-d", "refs/remotes/origin/main")
+    assert cc.changed_files("push", "refs/heads/x", second, third, "main") is None
 
 
 def test_main_prints_one_line_per_list(cc, capsys):

@@ -80,6 +80,12 @@ All notable changes to this project are documented here. The format follows
   before `awk` reads it, so a range that names no commit exits with git's status instead of
   reporting `0 commit(s) checked` and success. `test/python/test_check_commit.py` runs the
   script on a temporary repository.
+- The GitHub `change` job selects the jobs of a branch push from the files changed since the merge
+  base with the default branch, the range `style_git` checks, instead of since the previous push:
+  a newer push cancels the run it supersedes, so a `src/` push followed by a documentation push
+  left the branch head green with the C, WP and proof jobs never run. A push to the default
+  branch, whose runs are never cancelled, still diffs against its previous head, and a first or
+  forced push there now runs every job instead of none.
 
 ## [1.0.0] - 2026-10-18
 
