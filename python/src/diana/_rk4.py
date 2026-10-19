@@ -32,6 +32,8 @@ def rk4_stage(
     for another element type, :class:`ValueError` otherwise. Any other iterable is first copied
     into an ``array.array("d")``.
 
+    ``stage`` is converted as a C ``int``: :class:`TypeError` for a non-integer,
+    :class:`OverflowError` beyond the C range.
     Raises :class:`ValueError` for a ``stage`` other than 2, 3 or 4, for an empty ``y``, for ``y``
     and ``k`` of different lengths, and when a component is not finite because of a NaN or infinite
     ``y[i]``, ``k[i]`` or ``h``; :class:`FloatOverflowError` (a :class:`ValueError` and an

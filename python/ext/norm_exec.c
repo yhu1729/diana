@@ -11,8 +11,8 @@ static PyMethodDef norm_method[] = {
      "norm_2(x) -> float\n\nEuclidean norm sqrt(x[0]**2 + ... + x[n-1]**2) of "
      "a one-dimensional, C-contiguous, aligned buffer x of native float64, "
      "read in place, computed as m * sqrt(s) with m = max |x[i]| and s the sum "
-     "of the squares of x[i] / m, so no square overflows or underflows; 0.0 "
-     "for an empty x."},
+     "of the squares of x[i] / m, so no quotient or square overflows (a square "
+     "may underflow, below the rounding of s >= 1); 0.0 for an empty x."},
     {"norm_inf", (PyCFunction)(void (*)(void))diana_py_norm_inf,
      METH_VARARGS | METH_KEYWORDS,
      "norm_inf(x) -> float\n\nMaximum norm max |x[i]|, exact, of a "

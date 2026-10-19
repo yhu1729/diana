@@ -139,7 +139,7 @@ def test_norm_2_order():
     ],
 )
 def test_norm_2_scale(x, want):
-    # No square overflows or underflows: the naive sqrt(sum of squares) would overflow on the
+    # No quotient or square overflows: the naive sqrt(sum of squares) would overflow on the
     # large vectors and return 0 on the small ones.
     assert diana.norm_2(x) == want
 

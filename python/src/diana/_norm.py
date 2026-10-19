@@ -34,9 +34,10 @@ def norm_2(x: Buffer | Iterable[float]) -> float:
     """Return the Euclidean norm ``sqrt(x[0]**2 + ... + x[n-1]**2)``.
 
     The norm is computed as ``m * sqrt(s)``, ``m = max |x[i]|`` at its first index ``k`` and
-    ``s = 1 + (x[i]/m)**2 + ...`` over the other indices in order, so no square overflows or
-    underflows: the result overflows only when the norm is about ``DBL_MAX`` or more, and is
-    nonzero for every nonzero ``x``. Arguments as for :func:`norm_1`.
+    ``s = 1 + (x[i]/m)**2 + ...`` over the other indices in order, so no quotient or square
+    overflows (a square may underflow, below the rounding of ``s >= 1``): the result overflows
+    only when the norm is about ``DBL_MAX`` or more, and is nonzero for every nonzero ``x``.
+    Arguments as for :func:`norm_1`.
 
     Raises :class:`ValueError` for a NaN or infinite entry; :class:`FloatOverflowError` (a
     :class:`ValueError` and an :class:`OverflowError`) when every entry is finite and the result

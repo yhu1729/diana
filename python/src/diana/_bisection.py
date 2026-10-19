@@ -25,7 +25,9 @@ def bisection(
     taken, in which case :class:`MaxIterError` is raised with the current estimate. The default
     ``max_iter`` covers the worst case of ``tol == 0``: 2098 steps for ``|a|, |b| <= DBL_MAX/2``.
     ``a``, ``b``, ``tol`` and every value ``f`` returns must be real numbers (``__float__`` or
-    ``__index__``; a string is not converted): :class:`TypeError` otherwise.
+    ``__index__``; a string is not converted): :class:`TypeError` otherwise. ``max_iter`` must be
+    an integer (``__index__``) from 1 to the C ``UINT_MAX``: :class:`TypeError` for a
+    non-integer, :class:`OverflowError` when negative or too large, :class:`ValueError` for 0.
     """
     a = real(a, "a")
     b = real(b, "b")

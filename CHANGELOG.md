@@ -66,6 +66,10 @@ All notable changes to this project are documented here. The format follows
   that is not iterable at all gets the message `piv must be an iterable of int`.
 - `PyInit__diana` releases the exception classes it has created when a later step of the
   initialization fails.
+- Docstrings: `diana.rk4_stage` names the `OverflowError` and `TypeError` a bad `stage` raises;
+  `diana.bisection` and `diana.newton` the `OverflowError` a negative or too large `max_iter`
+  raises; the 2-norm says that a square may underflow harmlessly, not that none does. The stub
+  marks `Bisection` and `Newton` `@final`, as the types are not subclassable.
 
 ## [1.0.0] - 2026-10-18
 

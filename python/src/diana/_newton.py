@@ -27,7 +27,9 @@ def newton(
     not a convergence guarantee. A zero ``f'(x)`` with a non-zero ``f(x)`` raises
     :class:`SingularError`, a non-finite ``f(x)`` or ``f'(x)`` :class:`ValueError`, and a
     correction or iterate that overflows :class:`FloatOverflowError` (also a
-    :class:`ValueError`); each leaves the state at the last iterate.
+    :class:`ValueError`); each leaves the state at the last iterate. ``max_iter`` must be an
+    integer (``__index__``) from 1 to the C ``UINT_MAX``: :class:`TypeError` for a non-integer,
+    :class:`OverflowError` when negative or too large, :class:`ValueError` for 0.
     """
     state = Newton(x0, tol, max_iter)
     status = state.status

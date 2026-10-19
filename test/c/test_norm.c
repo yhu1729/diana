@@ -101,7 +101,8 @@ static void test_norm_2_tie(void) {
   check_ok(diana_norm_2, x, 2u, 4.0 * sqrt(2.0));
 }
 
-/* Scaling by the largest entry: no overflow or underflow in the squares. */
+/* Scaling by the largest entry: no quotient or square overflows, and a
+   square that underflows is below the rounding of s >= 1. */
 static void test_norm_2_scale(void) {
   const double big[1] = {-DBL_MAX};
   const double big2[2] = {1e300, -1e300};
