@@ -105,7 +105,7 @@ one line per idea, no design (a design is written only when an item is picked up
   `src/fp.h` are compiled into every file that includes them), static data such as a method table or
   type object stays with the function that registers it (`python/ext/bisection_exec.c`), and a
   helper several files call is a function and file of its own (`src/bisection_mid.c`).
-  `PyInit__diana` is in `python/ext/module.c`; the tests are exempt. Each verified source file has
+  `PyInit__diana` is in `python/ext/module.c`; the tests and `benchmark/` are exempt. Each verified source file has
   its own WP expectation row, Clight AST and VST file (`VST/BisectionInit.v`); the C-order models
   and lemmas the VST files of a method share are in the AST-free `VST/<Method>.v`, and a spec's
   `kernel` lists its source files. A variant of a method, such as the `_unchecked` kernels, gets its
@@ -155,7 +155,7 @@ python/ext/           CPython extension         test/doc/           doc/api exam
 test/c/               ctest                     test/python/        pytest
 test/install/         find_package consumer     spec/               theorem list per method
 verification/lean/    Lake project              verification/rocq/  Real/ Float/ VST/
-verification/clight/  committed clightgen out  test/benchmark/      timing driver
+verification/clight/  committed clightgen out  benchmark/           benchmark suite (local)
 verification/frama-c/ WP goal count/session/cache
 script/               check_spec, dev, frama_c   ci/docker/          prover image
 .github/workflows/    GitHub Actions mirror of the GitLab jobs (.gitlab-ci.yml is primary)
@@ -183,9 +183,11 @@ note/                 technical notes per topic, index by topic and by path (REA
   respect `CMAKE_INSTALL_INCLUDEDIR` in the exported target. Linux and macOS only, no Windows
   branch anywhere. Sanitized installations export their runtime link options; macOS install tests
   inherit the architecture list, SDK, and deployment target.
-- Benchmark: `script/benchmark.sh [cc...]` builds Release with each compiler and times the checked
-  against the unchecked kernels (`test/benchmark/unchecked.c`); the figures in the docs are its output
-  (`doc/development/benchmark.md`), so re-run it and update them together
+- Benchmark: `script/benchmark.sh [cc...]` builds Release with each compiler and runs the suite
+  `benchmark/` (every kernel and wrapper, the checked against the unchecked ODE kernels; CMake
+  option `DIANA_BUILD_BENCHMARK`, on in `script/dev.sh config`, never in CI), writing
+  `build/benchmark/result/<date>-<machine>-<compiler>.txt` (`DIANA_BENCHMARK_DIR`); results stay
+  local and no timing is quoted in `doc/` or `note/` (note BENCHMARK-002)
 - Coverage: `uv sync --group test --group coverage && uv run pytest --cov=diana`; C and extension coverage via gcovr as in the `coverage_c`/`coverage_python` CI jobs
 - Lean: `cd verification/lean && lake exe cache get && lake build` (Mathlib pinned by `lake-manifest.json`)
 - Rocq: `cd verification/rocq && make -j4 && make check` (inside the opam switch, see `CONTRIBUTING.md`;
