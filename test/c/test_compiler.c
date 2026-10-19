@@ -1881,6 +1881,116 @@ static void test_lu_solve(void) {
   }
 }
 
+typedef diana_status (*norm_fn)(const double *x, size_t n, double *result);
+
+static void norm_run(const char *kernel, norm_fn f, const char *label,
+                     const double *x, size_t n) {
+  double r = SENTINEL;
+  diana_status st = f(x, n, &r);
+  put_head(kernel, label);
+  put_array(x, x == (const double *)0 ? 0u : n);
+  put_status(st);
+  put_double(r);
+  printf("\n");
+}
+
+static void norm_case(const char *label, const double *x, size_t n) {
+  norm_run("norm_1", diana_norm_1, label, x, n);
+  norm_run("norm_2", diana_norm_2, label, x, n);
+  norm_run("norm_inf", diana_norm_inf, label, x, n);
+}
+
+static void test_norm(void) {
+  static const double ramp[5] = {1.0, -3.0, 5.0, -7.0, 9.0};
+  static const double triple[2] = {3.0, -4.0};
+  static const double tie[2] = {-4.0, 4.0};
+  static const double zero[4] = {0.0, -0.0, 0.0, -0.0};
+  static const double negative_zero[1] = {-0.0};
+  static const double sum_order[3] = {0x1p53, 1.0, -1.0};
+  static const double subnormal[4] = {VAL_TRUE_MIN, -VAL_TRUE_MIN, 0x1.8p-1073,
+                                      -0x1p-1060};
+  static const double subnormal_max[2] = {VAL_NORM_MIN, -VAL_TRUE_MIN};
+  static const double big[3] = {VAL_MAX, -VAL_MAX, VAL_MAX};
+  static const double big_tie[2] = {VAL_MAX, 0x1p970};
+  static const double big_below[2] = {VAL_MAX, 0x1p969};
+  static const double big_edge[2] = {VAL_MAX, 0x1.fffffffffffffp997};
+  static const double big_small[2] = {VAL_TRUE_MIN, -VAL_MAX};
+  static const double half_max[2] = {VAL_HALF_MAX, VAL_HALF_MAX};
+  static const double scale[2] = {1e300, -1e-300};
+  static const double third[5] = {0.1, 0.2, 0.3, 0.4, 0.5};
+  static double x[CAPACITY];
+  diana_status st;
+  unsigned k;
+  size_t i;
+  size_t n;
+
+  st = diana_norm_1(ramp, 5u, (double *)0);
+  put_head("norm_1", "null_result");
+  put_status(st);
+  printf("\n");
+  st = diana_norm_2(ramp, 5u, (double *)0);
+  put_head("norm_2", "null_result");
+  put_status(st);
+  printf("\n");
+  st = diana_norm_inf(ramp, 5u, (double *)0);
+  put_head("norm_inf", "null_result");
+  put_status(st);
+  printf("\n");
+  norm_case("null", (const double *)0, 3u);
+  norm_case("null_empty", (const double *)0, 0u);
+  for (n = 0u; n <= 5u; ++n) {
+    norm_case("length", ramp, n);
+  }
+  norm_case("triple", triple, 2u);
+  norm_case("tie", tie, 2u);
+  norm_case("zero", zero, 4u);
+  norm_case("negative_zero", negative_zero, 1u);
+  norm_case("sum_order", sum_order, 3u);
+  norm_case("subnormal", subnormal, 4u);
+  norm_case("subnormal_max", subnormal_max, 2u);
+  norm_case("big", big, 3u);
+  norm_case("big_1", big, 1u);
+  norm_case("big_tie", big_tie, 2u);
+  norm_case("big_below", big_below, 2u);
+  norm_case("big_edge", big_edge, 2u);
+  norm_case("big_small", big_small, 2u);
+  norm_case("half_max", half_max, 2u);
+  norm_case("scale", scale, 2u);
+  norm_case("third", third, 5u);
+  for (i = 0u; i < 17u; ++i) {
+    x[i] = i == 16u ? 1.0 : 0x1p-27;
+  }
+  norm_case("square_order", x, 17u);
+  for (i = 0u; i < 17u; ++i) {
+    x[i] = i == 0u ? 1.0 : 0x1p-27;
+  }
+  norm_case("square_order_first", x, 17u);
+  for (i = 0u; i < 5u; ++i) {
+    memcpy(x, ramp, sizeof ramp);
+    x[i] = VAL_QNAN;
+    norm_case("nan", x, 5u);
+    x[i] = VAL_SNAN;
+    norm_case("snan", x, 5u);
+    x[i] = VAL_INF;
+    norm_case("inf", x, 5u);
+    x[i] = -VAL_INF;
+    norm_case("negative_inf", x, 5u);
+    memcpy(x, big, sizeof big);
+    x[3] = VAL_MAX;
+    x[4] = VAL_MAX;
+    x[i] = VAL_QNAN;
+    norm_case("overflow_nan", x, 5u);
+  }
+  for (k = 0u; k < RANDOM_ARRAY; ++k) {
+    int mixed = (int)(k % 2u);
+    n = (size_t)rng_below(CAPACITY);
+    for (i = 0u; i < n; ++i) {
+      x[i] = random_value(mixed);
+    }
+    norm_case("random", x, n);
+  }
+}
+
 int main(void) {
   test_bisection();
   test_trapezoidal();
@@ -1892,6 +2002,7 @@ int main(void) {
   test_substitution();
   test_lu();
   test_lu_solve();
+  test_norm();
   printf("end %u\n", case_count);
   if (fflush(stdout) != 0 || ferror(stdout)) {
     return 1;
