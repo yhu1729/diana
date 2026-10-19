@@ -15,9 +15,10 @@ matrix is not positive definite. Shared conventions are in the [API overview](ov
   It returns `DIANA_OK`; `DIANA_ERR_ARG` without writing `l` for a `NULL` pointer, `n = 0`, an
   `n` whose `n·n` does not fit in `size_t`, or a NaN or infinite entry on or below the diagonal;
   or `DIANA_ERR_SINGULAR` when a pivot is not positive, the matrix not being positive definite
-  to working precision. After `DIANA_ERR_SINGULAR` the contents of `l` are unspecified: unlike
-  every other Diana kernel, this one cannot check before it writes, since each column needs the
-  columns before it.
+  to working precision. After `DIANA_ERR_SINGULAR` the contents of `l` are unspecified: the
+  factorization cannot check before it writes, since each column needs the columns before it
+  (the LU factorization and the triangular solves have the same limit on their overflow and
+  singular paths).
 
 Column `j` is computed from columns `0` to `j − 1`: the pivot `A[j,j] − L[j,0]² − … − L[j,j−1]²`
 subtracts the rounded products in that order, `L[j,j]` is its correctly rounded square root, and

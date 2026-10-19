@@ -70,6 +70,10 @@ All notable changes to this project are documented here. The format follows
   `diana.bisection` and `diana.newton` the `OverflowError` a negative or too large `max_iter`
   raises; the 2-norm says that a square may underflow harmlessly, not that none does. The stub
   marks `Bisection` and `Newton` `@final`, as the types are not subclassable.
+- `doc/api/overview.md` lists every Python array function and states that the extension holds
+  the GIL and is not free-threading safe; `doc/api/cholesky.md` no longer claims to be the only
+  kernel that writes before it can fail; `CONTRIBUTING.md` and `CLAUDE.md` describe the GitHub
+  `style_git` range as note CI-019 does, and `CLAUDE.md` records that `v1.0.0` is tagged.
 
 ## [1.0.0] - 2026-10-18
 

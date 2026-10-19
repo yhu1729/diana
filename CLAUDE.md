@@ -36,7 +36,8 @@ one line per idea, no design (a design is written only when an item is picked up
     builds it). Split a change that touches the library, its test and its doc into one commit each.
   - **Check:** `script/check_commit.sh` enforces every rule above except size and wording beyond
     articles; the `pre-push` hook runs it on unpushed commits and the `style_git` CI job on the
-    commits since the branch's previous pipeline (on the GitHub mirror, the commits of the push).
+    commits since the branch's previous pipeline (on the GitHub mirror, the commits of the push on
+  the default branch, every commit since the merge base with it elsewhere, note CI-019).
     Link both hooks once per clone (`CONTRIBUTING.md`).
 - **Living document:** update `CHANGELOG.md` (`Unreleased` section, Keep a Changelog), this file,
   the affected `doc/` page and the affected notes in the same commit as any change that affects them.
@@ -256,6 +257,7 @@ Layer C-VST, its Rocq axiom gate, the Clight AST check and the `ccomp` compariso
 `verify_provenance` checks only that the committed report and AST manifest match the sources. What
 each layer assumes: `doc/verification/trust.md`.
 
-Version 1.0.0 is set everywhere (note BUILD-006) and its `CHANGELOG.md` section is dated, but the
-`v1.0.0` tag is held: create it only on an explicit request (CI `release` runs only on a version
+Version 1.0.0 is set everywhere (note BUILD-006), its `CHANGELOG.md` section is dated and the
+annotated tag `v1.0.0` exists (on `6ea338e`); the norms and everything after are `Unreleased`.
+Create or push a version tag only on an explicit request (CI `release` runs only on a version
 tag, note CI-014).

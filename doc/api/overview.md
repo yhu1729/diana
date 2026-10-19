@@ -128,8 +128,10 @@ The package mirrors the C API:
 
 - `diana.Bisection` and `diana.Newton` are the state machines, and `diana.bisection` and
   `diana.newton` run them over a Python callable.
-- `diana.trapezoidal`, `diana.simpson`, `diana.euler_step`, `diana.rk4_stage` and
-  `diana.rk4_step` call the array kernels, and `diana.euler` and `diana.rk4` loop over a
+- `diana.trapezoidal`, `diana.simpson`, `diana.euler_step`, `diana.rk4_stage`,
+  `diana.rk4_step`, `diana.cholesky`, `diana.forward_substitution`,
+  `diana.transpose_substitution`, `diana.lu`, `diana.lu_solve`, `diana.norm_1`, `diana.norm_2`
+  and `diana.norm_inf` call the array kernels, and `diana.euler` and `diana.rk4` loop over a
   callable.
 - `diana.version()` (also `diana.__version__`), `diana.status_str` and the constants `diana.OK`,
   `CONTINUE`, `ERR_ARG`, `ERR_BRACKET`, `ERR_MAXITER`, `ERR_SINGULAR`, `ERR_OVERFLOW` and
@@ -170,6 +172,10 @@ trapezoidal input is not finite: a sample or h
 An array argument accepts any iterable of numbers. A buffer of native `float64` values — a NumPy
 array, an `array.array("d")`, a `memoryview` — that is one-dimensional and contiguous is read in
 place without a copy; anything else iterable is copied first.
+
+Every call holds the GIL, and the extension does not declare free-threading support: a
+free-threaded interpreter (`python3.13t`) re-enables the GIL when it imports `diana`, with a
+`RuntimeWarning`. A `Bisection` or `Newton` object must not be stepped from two threads at once.
 
 ```python
 >>> import array
@@ -218,4 +224,4 @@ subinterpreters).
 [API-020](../../note/api/API-020.md) array arguments,
 [API-021](../../note/api/API-021.md) scalar arguments,
 [API-022](../../note/api/API-022.md) exceptions,
-[PYTHON-003](../../note/python/PYTHON-003.md) one interpreter per process.
+[PYTHON-003](../../note/python/PYTHON-003.md) one interpreter per process, no free threading.

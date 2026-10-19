@@ -185,7 +185,8 @@ The subject is `<type>[(scope)]: <summary>`, with the type one of
 the `pre-push` hook runs it on the commits the remote does not have yet, and the `style_git` CI job
 on the commits since the previous pipeline of the branch (the merge request's commits in a merge
 request pipeline, the whole history when there is no previous pipeline; on the GitHub mirror, the
-commits of the push). It rejects:
+commits of the push on the default branch and every commit since the merge base with it on any
+other branch). It rejects:
 
 - a merge commit: rebase onto the target instead, so history stays linear;
 - a subject not of the form above, longer than 50 characters, or containing `a`, `an` or `the`;
