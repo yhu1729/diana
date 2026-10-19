@@ -1,6 +1,6 @@
 #!/bin/sh
 # Build the benchmark suite in Release with each compiler given and run it;
-# a full run is recorded in benchmark/result/, a filtered one only printed.
+# a full run is written under the result directory, a filtered one only printed.
 set -eu
 cd "$(dirname "$0")/.."
 
@@ -9,11 +9,14 @@ usage() {
 usage: script/benchmark.sh [cc...]
 
   builds the library and benchmark/ in Release with each compiler (default
-  cc), runs the suite and writes benchmark/result/<date>-<machine>-<compiler>.txt
+  cc), runs the suite and writes <dir>/<date>-<machine>-<compiler>.txt, the
+  table under a header naming the machine, compiler and commit; results are
+  local and not committed
 
 environment:
+  DIANA_BENCHMARK_DIR      result directory (default build/benchmark/result)
   DIANA_BENCHMARK_CASE     case names (prefixes) to run; the output is printed,
-                           not recorded
+                           not written
   DIANA_BENCHMARK_MACHINE  machine name in the result file name (default: from
                            the CPU brand string)
 USAGE
@@ -100,7 +103,7 @@ compiler_name() {
 }
 
 result_file() {
-    base="benchmark/result/$1"
+    base="$result_dir/$1"
     out="$base.txt"
     n=1
     while [ -e "$out" ]; do
@@ -110,6 +113,7 @@ result_file() {
     echo "$out"
 }
 
+result_dir=${DIANA_BENCHMARK_DIR:-build/benchmark/result}
 date=$(date +%Y-%m-%d)
 commit=$(git rev-parse --short HEAD 2>/dev/null || echo unknown)
 if ! git diff --quiet HEAD 2>/dev/null; then
@@ -130,6 +134,7 @@ for cc in "$@"; do
         "$build/benchmark/benchmark" $DIANA_BENCHMARK_CASE
         continue
     fi
+    mkdir -p "$result_dir"
     out=$(result_file "$date-$machine-$name")
     {
         echo "date: $date"
@@ -142,5 +147,5 @@ for cc in "$@"; do
     } >"$out"
     "$build/benchmark/benchmark" >>"$out"
     cat "$out"
-    echo "recorded in $out"
+    echo "written to $out"
 done
