@@ -17,7 +17,8 @@ Each method is described three times, and proofs connect the descriptions:
 Layer A is proved twice, independently, in Lean and in Rocq. CompCert's floating-point
 operations are Flocq's, so layers B and C-VST compose inside one Rocq development with no
 translation step. Every function of the verified kernels has both a VST proof and a Frama-C proof;
-the VST proofs leave the argument-error paths (`NULL` pointers, `d = 0` and the like) to Frama-C.
+the VST proofs leave the argument-error paths (`NULL` pointers, `d = 0` and the like) and the
+empty vector of the norms to Frama-C.
 The opt-in `_unchecked` kernels have no layer A of their own: their layer B shows that a written
 component is finite exactly when the checked kernel would have accepted it.
 
@@ -31,7 +32,8 @@ component is finite exactly when the checked kernel would have accepted it.
   functions it cannot prove, the bisection midpoint `diana_bisection_mid` and the square root
   `diana_fp_sqrt`; Flocq and VST prove those functions instead, and the WP script fails if any
   other contract would be assumed.
-- **CompCert's semantics of `__builtin_sqrt`.** `diana_fp_sqrt` calls the compiler builtin, and
+- **CompCert's semantics of `__builtin_sqrt`.** `diana_fp_sqrt`, the square root of the Cholesky
+  factorization and the Euclidean norm, calls the compiler builtin, and
   VST has no rule for a builtin call, so its VST proof assumes the funspec "returns
   `Float.sqrt x`", the semantics CompCert gives the builtin. It is the one funspec no VST proof
   discharges. The Flocq contract of `Float.sqrt` (correctly rounded) is proved, and the compiler
