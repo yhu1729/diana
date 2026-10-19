@@ -237,6 +237,44 @@ def test_pivot_type(piv, error):
         diana.lu_solve(LU3, piv, B3)
 
 
+def test_pivot_not_iterable_message():
+    with pytest.raises(TypeError, match="piv must be an iterable of int"):
+        diana.lu_solve(LU3, 5, B3)
+
+
+class Boom(Exception):
+    pass
+
+
+class RaisingIter:
+    def __init__(self, exc):
+        self.exc = exc
+
+    def __iter__(self):
+        raise self.exc
+
+
+def raise_midway(exc):
+    yield 1
+    raise exc
+
+
+@pytest.mark.parametrize("exc", [Boom, TypeError])
+def test_pivot_iter_error_propagates(exc):
+    # An error from piv's own __iter__ or iteration is raised as is: the message of a TypeError is
+    # kept, out is untouched, and the three buffers are released (the next call gets them).
+    lu = array.array("d", LU3)
+    b = array.array("d", B3)
+    out = array.array("d", [0.0] * 3)
+    with pytest.raises(exc, match="from piv"):
+        diana.lu_solve(lu, RaisingIter(exc("from piv")), b)
+    with pytest.raises(exc, match="from piv"):
+        diana._diana.lu_solve(lu, raise_midway(exc("from piv")), b, out)
+    assert out.tobytes() == bytes(24)
+    diana._diana.lu_solve(lu, PIV3, b, out)
+    assert list(out) == X3
+
+
 def test_pivot_snapshot():
     # The extension converts a copy of piv, so an __index__ that empties the list reads no freed
     # item and the solve uses the rows piv held when it was called.

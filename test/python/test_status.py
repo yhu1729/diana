@@ -30,6 +30,13 @@ def test_status_str():
     assert diana.status_str(12345) == "unknown status"
     with pytest.raises(OverflowError):
         diana.status_str(2**32)
+    with pytest.raises(OverflowError):
+        diana.status_str(-(2**31) - 1)
+    assert diana.status_str(-(2**31)) == "unknown status"
+    with pytest.raises(TypeError):
+        diana.status_str("ok")
+    with pytest.raises(TypeError):
+        diana.status_str(1.0)
 
 
 def test_status_value():

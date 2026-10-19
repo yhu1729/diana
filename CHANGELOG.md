@@ -74,6 +74,8 @@ All notable changes to this project are documented here. The format follows
   the GIL and is not free-threading safe; `doc/api/cholesky.md` no longer claims to be the only
   kernel that writes before it can fail; `CONTRIBUTING.md` and `CLAUDE.md` describe the GitHub
   `style_git` range as note CI-019 does, and `CLAUDE.md` records that `v1.0.0` is tagged.
+- Tests cover `Bisection.step` with a non-finite value, `status_str` with a non-integer and a value
+  below `INT_MIN`, and `lu_solve` with a non-iterable `piv` and a `piv` whose iterator raises.
 
 ## [1.0.0] - 2026-10-18
 

@@ -224,3 +224,15 @@ def test_callback_exception_propagates():
 def test_nonfinite_callback():
     with pytest.raises(ValueError):
         diana.bisection(lambda x: math.inf if x == 0.5 else x - 0.3, 0.0, 1.0)
+
+
+@pytest.mark.parametrize("fx", [math.nan, math.inf, -math.inf])
+def test_step_nonfinite_keeps_state(fx):
+    s = diana.Bisection(0.0, 1.0, -1.0, 1.0, 0.0)
+    before = (s.a, s.b, s.fa, s.fb, s.iter, s.status, s.result())
+    with pytest.raises(ValueError, match="f\\(x\\) must be finite") as info:
+        s.step(fx)
+    assert not isinstance(info.value, diana.FloatOverflowError)
+    assert (s.a, s.b, s.fa, s.fb, s.iter, s.status, s.result()) == before
+    assert s.step(-0.1) == diana.CONTINUE
+    assert s.a == 0.5
