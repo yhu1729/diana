@@ -54,9 +54,10 @@ All notable changes to this project are documented here. The format follows
 ### Changed
 
 - `script/benchmark.sh [cc...]` builds and runs the suite in Release with each compiler and
-  writes the output to `build/benchmark/result/<date>-<machine>-<compiler>.txt`
-  (`DIANA_BENCHMARK_DIR`), never overwriting a file, with the date, commit, system, CPU, memory
-  and compiler in a header (`DIANA_BENCHMARK_CASE` selects cases and prints only;
+  writes the output to `build/benchmark/result/<date>-<commit>-<machine>-<compiler>.txt`
+  (`DIANA_BENCHMARK_DIR`; `<commit>` the short hash, `-dirty` when the tree has uncommitted
+  changes), never overwriting a file, with the date, commit, system, CPU, memory and compiler in
+  a header (`DIANA_BENCHMARK_CASE` selects cases and prints only;
   `DIANA_BENCHMARK_MACHINE` names the machine). It replaces the driver
   `test/benchmark/unchecked.c`. Benchmark results are no longer committed: the two notes that
   recorded tables are removed and the `BENCHMARK` notes renumbered, and `doc/api/euler.md`,

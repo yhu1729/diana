@@ -186,7 +186,7 @@ note/                 technical notes per topic, index by topic and by path (REA
 - Benchmark: `script/benchmark.sh [cc...]` builds Release with each compiler and runs the suite
   `benchmark/` (every kernel and wrapper, the checked against the unchecked ODE kernels; CMake
   option `DIANA_BUILD_BENCHMARK`, on in `script/dev.sh config`, never in CI), writing
-  `build/benchmark/result/<date>-<machine>-<compiler>.txt` (`DIANA_BENCHMARK_DIR`); results stay
+  `build/benchmark/result/<date>-<commit>-<machine>-<compiler>.txt` (`DIANA_BENCHMARK_DIR`); results stay
   local and no timing is quoted in `doc/` or `note/` (note BENCHMARK-002)
 - Coverage: `uv sync --group test --group coverage && uv run pytest --cov=diana`; C and extension coverage via gcovr as in the `coverage_c`/`coverage_python` CI jobs
 - Lean: `cd verification/lean && lake exe cache get && lake build` (Mathlib pinned by `lake-manifest.json`)

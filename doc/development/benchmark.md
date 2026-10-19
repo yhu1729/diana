@@ -12,7 +12,8 @@ script/benchmark.sh
 ```
 
 builds the library and the suite in Release with `cc` in a temporary directory, runs every case
-and writes `build/benchmark/result/<date>-<machine>-<compiler>.txt`, printing it as well. Pass
+and writes `build/benchmark/result/<date>-<commit>-<machine>-<compiler>.txt`, printing it as
+well. Pass
 compilers to compare them in one run, each built the same way:
 
 ```bash
@@ -27,9 +28,10 @@ After `script/dev.sh build`, `build/benchmark/benchmark --list` names every case
 `build/benchmark/benchmark euler_step` runs one, from the Debug build with sanitizers, which is
 for checking the drivers, not for timing.
 
-The file starts with a header naming the date, commit, system, CPU, memory and compiler, so a
-result can be compared with another later; to see what a change did, run the script before and
-after it on a quiet machine and compare rows at equal `n`.
+The file name carries the short commit hash, with `-dirty` when the tree has uncommitted
+changes, and the file starts with a header naming the date, commit, system, CPU, memory and
+compiler, so a result can be compared with another later; to see what a change did, run the
+script before and after it on a quiet machine and compare rows at equal `n`.
 
 ## Read the table
 

@@ -9,8 +9,9 @@ usage() {
 usage: script/benchmark.sh [cc...]
 
   builds the library and benchmark/ in Release with each compiler (default
-  cc), runs the suite and writes <dir>/<date>-<machine>-<compiler>.txt, the
-  table under a header naming the machine, compiler and commit; results are
+  cc), runs the suite and writes <dir>/<date>-<commit>-<machine>-<compiler>.txt
+  (<commit> the short hash, with -dirty when the tree has uncommitted changes),
+  the table under a header naming the machine, compiler and commit; results are
   local and not committed
 
 environment:
@@ -117,7 +118,7 @@ result_dir=${DIANA_BENCHMARK_DIR:-build/benchmark/result}
 date=$(date +%Y-%m-%d)
 commit=$(git rev-parse --short HEAD 2>/dev/null || echo unknown)
 if ! git diff --quiet HEAD 2>/dev/null; then
-    commit="$commit, uncommitted changes"
+    commit="$commit-dirty"
 fi
 machine=$(machine_name)
 [ -n "$machine" ] || machine=unknown
@@ -135,7 +136,7 @@ for cc in "$@"; do
         continue
     fi
     mkdir -p "$result_dir"
-    out=$(result_file "$date-$machine-$name")
+    out=$(result_file "$date-$commit-$machine-$name")
     {
         echo "date: $date"
         echo "commit: $commit"
