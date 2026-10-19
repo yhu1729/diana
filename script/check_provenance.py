@@ -26,7 +26,10 @@ INCLUDE_DIR = ("include", "src")
 INPUT = (
     "include/",
     "script/axiom_allow.yaml",
+    "script/check_frama_c.sh",
+    "script/check_spec.py",
     "script/run_frama_c.sh",
+    "script/verify_frama_c.sh",
     "spec/",
     "src/",
     "verification/",

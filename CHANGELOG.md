@@ -53,6 +53,8 @@ All notable changes to this project are documented here. The format follows
 - `script/check_spec.py --run` runs `lake build` before `lake env lean CheckSpec.lean`, so the
   Lean check sees the current proofs instead of whatever `.olean` files are on disk (note
   GATE-004).
+- The report stamp also digests `script/check_spec.py`, `script/check_frama_c.sh` and
+  `script/verify_frama_c.sh`, since they too decide what an `ok` means (note GATE-009).
 
 ## [1.0.0] - 2026-10-18
 

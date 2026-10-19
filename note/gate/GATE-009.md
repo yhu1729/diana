@@ -5,6 +5,8 @@ kind: fact
 path:
   - script/axiom_allow.yaml
   - script/run_frama_c.sh
+  - script/check_frama_c.sh
+  - script/verify_frama_c.sh
   - script/check_spec.py
   - script/check_provenance.py
   - doc/verification/report.md
@@ -13,9 +15,11 @@ related: [GATE-005, GATE-006, VST-009, WP-003, CI-016, VERIFY-002]
 When the spec gate rewrites `doc/verification/report.md` (GATE-006), `write_report` puts two
 tables from `script/check_provenance.py` between the marker and the theorem table:
 
-- Input digests of `include/`, `script/axiom_allow.yaml`, `script/run_frama_c.sh`, `spec/`,
-  `src/` and `verification/` (`INPUT`): the two scripts because they set what an `ok` means, the
-  allowed axioms (GATE-005) and the contracts WP may assume (WP-003). Each digest is the SHA-256
+- Input digests of `include/`, `script/axiom_allow.yaml`, `script/check_frama_c.sh`,
+  `script/check_spec.py`, `script/run_frama_c.sh`, `script/verify_frama_c.sh`, `spec/`, `src/`
+  and `verification/` (`INPUT`): the scripts because they set what an `ok` means, the allowed
+  axioms (GATE-005), the contracts WP may assume (WP-003), the goal-count gate (WP-007) and the
+  gate's own parsing and layer rules (GATE-004, GATE-007). Each digest is the SHA-256
   of a `sha256sum` listing (`<hex>  <path>` per line), sorted by path, of the existing files that
   git tracks or would track at or under the input (`git ls-files --cached --others
   --exclude-standard`). Ignored build output (`*.vo`, `.lake/`, WP sessions and caches,

@@ -182,7 +182,10 @@ def test_write_manifest_rejects_misnamed_ast(prov):
     [
         ("include/diana/status.h", "include/"),
         ("script/axiom_allow.yaml", "script/axiom_allow.yaml"),
+        ("script/check_frama_c.sh", "script/check_frama_c.sh"),
+        ("script/check_spec.py", "script/check_spec.py"),
         ("script/run_frama_c.sh", "script/run_frama_c.sh"),
+        ("script/verify_frama_c.sh", "script/verify_frama_c.sh"),
         ("spec/kernel.md", "spec/"),
         ("src/kernel.c", "src/"),
     ],
@@ -218,7 +221,8 @@ def test_missing_stamp_fails(prov):
     prov.check_report(errors)
     assert errors == [
         "doc/verification/report.md: no stamp with exactly the inputs include/, "
-        "script/axiom_allow.yaml, script/run_frama_c.sh, spec/, src/, verification/"
+        "script/axiom_allow.yaml, script/check_frama_c.sh, script/check_spec.py, "
+        "script/run_frama_c.sh, script/verify_frama_c.sh, spec/, src/, verification/"
     ]
 
 
