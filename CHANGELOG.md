@@ -60,6 +60,11 @@ All notable changes to this project are documented here. The format follows
   the Alt-Ergo pin, so a verdict cache from another prover version is never restored (notes
   CI-022, CI-026).
 
+### Fixed
+
+- `diana.lu_solve` leaves a `TypeError` raised by `piv`'s own `__iter__` intact; only an argument
+  that is not iterable at all gets the message `piv must be an iterable of int`.
+
 ## [1.0.0] - 2026-10-18
 
 The first stable release. The classical Runge–Kutta step joins the ODE methods, and linear algebra

@@ -52,11 +52,14 @@ PyObject *diana_py_lu_solve(PyObject *Py_UNUSED(self), PyObject *args,
     PyErr_SetString(PyExc_ValueError, "out must not overlap lu or b");
     goto cleanup;
   }
+  /* The test PyObject_GetIter applies, so a TypeError raised by piv's own
+     __iter__ is kept, with its context. */
+  if (Py_TYPE(piv)->tp_iter == NULL && !PySequence_Check(piv)) {
+    PyErr_SetString(PyExc_TypeError, "piv must be an iterable of int");
+    goto cleanup;
+  }
   iter = PyObject_GetIter(piv);
   if (iter == NULL) {
-    if (PyErr_ExceptionMatches(PyExc_TypeError)) {
-      PyErr_SetString(PyExc_TypeError, "piv must be an iterable of int");
-    }
     goto cleanup;
   }
   seq = PySequence_Tuple(iter);
