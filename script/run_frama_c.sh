@@ -95,6 +95,7 @@ fi
 mkdir -p "verification/frama-c/session/$row" "verification/frama-c/cache/$row"
 exec frama-c \
     -cpp-extra-args="-Iinclude -Isrc" \
+    -machdep x86_64 \
     -warn-special-float none \
     -wp -wp-rte -wp-model "+float" \
     -wp-prover alt-ergo \

@@ -40,6 +40,9 @@ component is finite exactly when the checked kernel would have accepted it.
   comparison checks gcc and clang against CompCert bit for bit.
 - **`clightgen`**, which translates the C source into the Clight AST the VST proofs are about. The
   ASTs are generated on AArch64 macOS and committed.
+- **A 64-bit `size_t`.** WP runs with `-machdep x86_64` and the ASTs are AArch64, so the `n·n`
+  overflow guards of the matrix kernels are proved for `SIZE_MAX = 2⁶⁴ − 1`. A 32-bit build
+  compiles the same guard correctly, but no proof covers it (note WP-015).
 - **The compiler** of the shipped library; see below.
 - **The statements.** The gate checks that each named theorem exists and is proved, not that its
   formal statement says what its informal text says; that correspondence is reviewed.

@@ -403,6 +403,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [WP-012](wp/WP-012.md) | rationale | LU computes the pivot magnitude in line rather than with diana_fp_abs |
 | [WP-013](wp/WP-013.md) | rule | WP runs only with the pinned Alt-Ergo 2.6.4, in CI too |
 | [WP-014](wp/WP-014.md) | fact | Monotonicity of rounding needs \round_double, not a double cast |
+| [WP-015](wp/WP-015.md) | fact | Layer C is proved for a 64-bit size_t |
 
 ## By path
 
@@ -434,6 +435,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `doc/api/rk4.md` | BENCHMARK-004 |
 | `doc/roadmap.md` | STYLE-004 |
 | `doc/verification/report.md` | CI-016, GATE-006, GATE-009 |
+| `doc/verification/trust.md` | WP-015 |
 | `include/diana/*.h` | KERNEL-001 |
 | `include/diana/bisection.h` | API-007 |
 | `include/diana/cholesky.h` | API-028 |
@@ -514,7 +516,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `script/benchmark.sh` | BENCHMARK-001, BENCHMARK-002, BENCHMARK-003, BENCHMARK-004, BENCHMARK-005, COMPILER-003 |
 | `script/check_commit.sh` | CI-005, CI-019, GIT-001, GIT-002, GIT-003, GIT-004, GIT-007 |
 | `script/check_doc.py` | CI-007, STYLE-003 |
-| `script/check_frama_c.sh` | WP-007, WP-010, WP-013 |
+| `script/check_frama_c.sh` | GATE-009, WP-007, WP-010, WP-013 |
 | `script/check_provenance.py` | CI-016, GATE-009, TEST-042, VST-009 |
 | `script/check_spec.py` | CI-007, CI-012, CI-013, GATE-001, GATE-002, GATE-003, GATE-004, GATE-006, GATE-007, GATE-008, GATE-009, TEST-005, VERIFY-005 |
 | `script/check_wheel.py` | BUILD-004, BUILD-007, BUILD-010, CI-003, CI-009, CI-023, TEST-004 |
@@ -523,8 +525,8 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `script/dev.sh` | BENCHMARK-005, BUILD-002, BUILD-003, BUILD-007, BUILD-010, COMPILER-002, COMPILER-004, GATE-007, PROVER-003, PROVER-008, PYTHON-005, STYLE-008, TEST-001, VERIFY-001, VERIFY-002, VERIFY-003, VERIFY-004, VST-001, VST-002, VST-003, VST-009 |
 | `script/fetch_alt_ergo.sh` | CI-011, WP-013 |
 | `script/job_count.sh` | CI-011, VERIFY-003, WP-008 |
-| `script/run_frama_c.sh` | GATE-009, PROVER-004, WP-003, WP-004, WP-007, WP-009, WP-010 |
-| `script/verify_frama_c.sh` | CI-011, WP-008 |
+| `script/run_frama_c.sh` | GATE-009, PROVER-004, WP-003, WP-004, WP-007, WP-009, WP-010, WP-015 |
+| `script/verify_frama_c.sh` | CI-011, GATE-009, WP-008 |
 | `spec/*.md` | GATE-001, GATE-002, GATE-008, PROOF-007, VST-004, VST-006 |
 | `spec/bisection.md` | PROOF-001, TEST-008 |
 | `spec/cholesky.md` | PROOF-009 |
@@ -548,17 +550,17 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `src/bisection_mid.h` | KERNEL-005, WP-002, WP-003, WP-004, WP-005 |
 | `src/bisection_result.c` | API-004, API-008, PROOF-001, WP-001 |
 | `src/bisection_step.c` | API-007, API-008, PROOF-001, TEST-041, WP-006 |
-| `src/cholesky.c` | API-003, API-004, API-028, FP-001, KERNEL-001, KERNEL-002, WP-011 |
+| `src/cholesky.c` | API-003, API-004, API-028, FP-001, KERNEL-001, KERNEL-002, WP-011, WP-015 |
 | `src/euler.c` | API-006, API-017, KERNEL-004, TEST-019 |
 | `src/euler_step*.c` | FP-001, KERNEL-001 |
 | `src/euler_step.c` | API-004, API-015, API-036, KERNEL-002, PROOF-005, TEST-016 |
 | `src/euler_step_unchecked.c` | API-018, API-019, KERNEL-003, PROOF-005, TEST-018 |
-| `src/forward_substitution.c` | API-003, API-004, API-030, FP-001, KERNEL-001, KERNEL-002, WP-011 |
+| `src/forward_substitution.c` | API-003, API-004, API-030, FP-001, KERNEL-001, KERNEL-002, WP-011, WP-015 |
 | `src/fp.h` | API-001, FP-001, FP-002, FP-003, FP-005, KERNEL-005, VST-006 |
 | `src/fp_sqrt.c` | FP-006, KERNEL-001, KERNEL-005 |
 | `src/fp_sqrt.h` | FP-006, KERNEL-005, WP-003 |
-| `src/lu.c` | API-003, API-004, API-032, FP-001, KERNEL-001, KERNEL-002, WP-011, WP-012 |
-| `src/lu_solve.c` | API-003, API-004, API-034, FP-001, KERNEL-001, KERNEL-002, WP-011 |
+| `src/lu.c` | API-003, API-004, API-032, FP-001, KERNEL-001, KERNEL-002, WP-011, WP-012, WP-015 |
+| `src/lu_solve.c` | API-003, API-004, API-034, FP-001, KERNEL-001, KERNEL-002, WP-011, WP-015 |
 | `src/newton.c` | API-006, API-012, KERNEL-004, TEST-032 |
 | `src/newton_*.c` | FP-001, KERNEL-001 |
 | `src/newton_acsl.h` | API-010, KERNEL-007, WP-001, WP-002 |
@@ -578,7 +580,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `src/simpson.c` | API-004, API-014, API-036, FP-001, KERNEL-001, KERNEL-002, PROOF-004, TEST-013 |
 | `src/status_str.c` | API-002 |
 | `src/substitution_acsl.h` | KERNEL-007, WP-011 |
-| `src/transpose_substitution.c` | API-003, API-004, API-030, FP-001, KERNEL-001, KERNEL-002, WP-011 |
+| `src/transpose_substitution.c` | API-003, API-004, API-030, FP-001, KERNEL-001, KERNEL-002, WP-011, WP-015 |
 | `src/trapezoidal.c` | API-004, API-013, API-036, FP-001, KERNEL-001, KERNEL-002, PROOF-003, TEST-010 |
 | `src/version.c` | API-002 |
 | `test/benchmark/unchecked.c` | API-019, BENCHMARK-001, BENCHMARK-002, BENCHMARK-003, BENCHMARK-005 |
