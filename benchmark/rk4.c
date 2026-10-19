@@ -84,6 +84,61 @@ static int rhs(double t, const double *y, double *dy, size_t d, void *ctx) {
   return 0;
 }
 
+/* NSTEP steps of the loop a caller writes: four right-hand sides, stages 2
+   to 4 into work, the step, y and out swapped; a unit is one component of
+   one step. */
+static size_t loop(void *data) {
+  struct data *d = data;
+  double *swap;
+  unsigned k;
+  int s;
+
+  for (k = 0; k < NSTEP; ++k) {
+    rhs(0.0, d->y, d->k[0], d->d, NULL);
+    for (s = 2; s <= 4; ++s) {
+      if (diana_rk4_stage(d->y, d->k[s - 2], d->d, H_LOOP, s, d->work) !=
+          DIANA_OK) {
+        return 0;
+      }
+      rhs(0.0, d->work, d->k[s - 1], d->d, NULL);
+    }
+    if (diana_rk4_step(d->y, d->k[0], d->k[1], d->k[2], d->k[3], d->d, H_LOOP,
+                       d->out) != DIANA_OK) {
+      return 0;
+    }
+    swap = d->y;
+    d->y = d->out;
+    d->out = swap;
+  }
+  return d->d * NSTEP;
+}
+
+static size_t loop_unchecked(void *data) {
+  struct data *d = data;
+  double *swap;
+  unsigned k;
+  int s;
+
+  for (k = 0; k < NSTEP; ++k) {
+    rhs(0.0, d->y, d->k[0], d->d, NULL);
+    for (s = 2; s <= 4; ++s) {
+      if (diana_rk4_stage_unchecked(d->y, d->k[s - 2], d->d, H_LOOP, s,
+                                    d->work) != DIANA_OK) {
+        return 0;
+      }
+      rhs(0.0, d->work, d->k[s - 1], d->d, NULL);
+    }
+    if (diana_rk4_step_unchecked(d->y, d->k[0], d->k[1], d->k[2], d->k[3], d->d,
+                                 H_LOOP, d->out) != DIANA_OK) {
+      return 0;
+    }
+    swap = d->y;
+    d->y = d->out;
+    d->out = swap;
+  }
+  return d->d * NSTEP;
+}
+
 /* NSTEP steps of the wrapper, in place; a unit is one component of one step. */
 static size_t wrapper(void *data) {
   struct data *d = data;
@@ -118,6 +173,10 @@ static const struct diana_benchmark_case item[] = {
      DIANA_BENCHMARK_NSIZE, setup, step, teardown},
     {"rk4_step_unchecked", "component", diana_benchmark_vector_size,
      DIANA_BENCHMARK_NSIZE, setup, step_unchecked, teardown},
+    {"rk4_loop", "component", diana_benchmark_vector_size,
+     DIANA_BENCHMARK_NSIZE, setup, loop, teardown},
+    {"rk4_loop_unchecked", "component", diana_benchmark_vector_size,
+     DIANA_BENCHMARK_NSIZE, setup, loop_unchecked, teardown},
     {"rk4", "component", diana_benchmark_vector_size, DIANA_BENCHMARK_NSIZE,
      setup, wrapper, teardown}};
 

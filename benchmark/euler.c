@@ -60,6 +60,43 @@ static int rhs(double t, const double *y, double *dy, size_t d, void *ctx) {
   return 0;
 }
 
+/* NSTEP steps of the loop a caller writes, right-hand side then step, with
+   y and out swapped; a unit is one component of one step. */
+static size_t loop(void *data) {
+  struct data *d = data;
+  double *swap;
+  unsigned k;
+
+  for (k = 0; k < NSTEP; ++k) {
+    rhs(0.0, d->y, d->f, d->d, NULL);
+    if (diana_euler_step(d->y, d->f, d->d, H_LOOP, d->out) != DIANA_OK) {
+      return 0;
+    }
+    swap = d->y;
+    d->y = d->out;
+    d->out = swap;
+  }
+  return d->d * NSTEP;
+}
+
+static size_t loop_unchecked(void *data) {
+  struct data *d = data;
+  double *swap;
+  unsigned k;
+
+  for (k = 0; k < NSTEP; ++k) {
+    rhs(0.0, d->y, d->f, d->d, NULL);
+    if (diana_euler_step_unchecked(d->y, d->f, d->d, H_LOOP, d->out) !=
+        DIANA_OK) {
+      return 0;
+    }
+    swap = d->y;
+    d->y = d->out;
+    d->out = swap;
+  }
+  return d->d * NSTEP;
+}
+
 /* NSTEP steps of the wrapper, in place; a unit is one component of one step. */
 static size_t wrapper(void *data) {
   struct data *d = data;
@@ -87,6 +124,10 @@ static const struct diana_benchmark_case item[] = {
      DIANA_BENCHMARK_NSIZE, setup, step, teardown},
     {"euler_step_unchecked", "component", diana_benchmark_vector_size,
      DIANA_BENCHMARK_NSIZE, setup, step_unchecked, teardown},
+    {"euler_loop", "component", diana_benchmark_vector_size,
+     DIANA_BENCHMARK_NSIZE, setup, loop, teardown},
+    {"euler_loop_unchecked", "component", diana_benchmark_vector_size,
+     DIANA_BENCHMARK_NSIZE, setup, loop_unchecked, teardown},
     {"euler", "component", diana_benchmark_vector_size, DIANA_BENCHMARK_NSIZE,
      setup, wrapper, teardown}};
 
