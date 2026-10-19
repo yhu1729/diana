@@ -19,7 +19,10 @@ hashes no longer match the commit or a status is not `ok`.
 |---|---|
 | `include/` | `6325820a92719a389197e6af9e957582aa021ede418ec1c7b1abf06fcc5bae85` |
 | `script/axiom_allow.yaml` | `8803f7c820be21b1f381da50165e037f7ae297fbb3ae3a060acca7d34e678181` |
-| `script/run_frama_c.sh` | `0d8f4ba6b49f2b8393c52ecca92217af8945074c4f01393acc02cd5ac730715b` |
+| `script/check_frama_c.sh` | `2caa5b5f2586b81b83be1c217883eafe274d185c96027b6e79e5dd892a1de712` |
+| `script/check_spec.py` | `dbb781141add02ad01f43a9ccc087b6511f3db65e2f9a894af9533c7ab01ba12` |
+| `script/run_frama_c.sh` | `1089cc2d88deaf8fa7da4e4c52404ae8e008ee0ff4450dfd6df6268fb9150d79` |
+| `script/verify_frama_c.sh` | `2e15cb10bf3c4b20f1cd480e6efd72489edcbc270ed40e19a882471e0c4ec77a` |
 | `spec/` | `330dd4e2ca5b745d0776b081e878875c2ca7784e9ff2cde064babca817c89504` |
 | `src/` | `c70c6b2ab9ad7230f3f5c92a89ea1265233b769278a5ece0e39b2d87073d5209` |
 | `verification/` | `f84f65b97be3bf116a56d91dd5e945df15e5a3065dc0d9921a47a74c1c33cb0d` |
