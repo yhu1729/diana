@@ -6,8 +6,11 @@ path:
   - script/check_spec.py
 related: [GATE-003, GATE-005, GATE-007, PROVER-007]
 ---
-With `--run`, the gate runs `lake env lean CheckSpec.lean` in `verification/lean` and
-`make -s <target>` in `verification/rocq`, and gives each listed constant a status per prover.
+With `--run`, the gate runs `lake build` and then `lake env lean CheckSpec.lean` in
+`verification/lean` (`lake env lean` loads the `.olean` files on disk without rebuilding them, so
+a standalone gate would otherwise check stale proofs) and `make -s <target>` in
+`verification/rocq`, whose target rebuilds what it checks, and gives each listed constant a status
+per prover.
 The target follows the highest selected layer (GATE-007, PROVER-007): `check_real` for A alone,
 `check_float` for B, and `check`, which builds everything including VST, for C or no `--layer`.
 

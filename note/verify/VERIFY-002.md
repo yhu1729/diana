@@ -17,7 +17,8 @@ related: [VERIFY-003, VST-003, VST-009, WP-008, GATE-007, GATE-009]
    (`script/verify_frama_c.sh`, WP-008). It waits for all four, prints their logs, and fails if
    any failed; the spec gate then does not run.
 3. The spec gate, `script/check_spec.py --run --strict`, last because it reads the Lean and Rocq
-   builds: it writes the check files, runs `lake env lean CheckSpec.lean` and `make -s check`,
+   builds: it writes the check files, runs `lake build` (a no-op after stage 2) and
+   `lake env lean CheckSpec.lean`, then `make -s check`,
    and rewrites `doc/verification/report.md` with its stamp (GATE-006, GATE-009).
 4. It takes the digests again and fails if any differs from step 1, since a file changed while
    the provers ran, then runs `script/check_provenance.py`, the check of CI `verify_provenance`

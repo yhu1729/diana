@@ -50,6 +50,9 @@ All notable changes to this project are documented here. The format follows
 - `script/run_frama_c.sh` passes `-machdep x86_64`, the Frama-C default, explicitly: the ACSL
   contracts write the `size_t` overflow guards as 64-bit literals, and the trust statement now
   says that layer C is proved for a 64-bit `size_t` only (notes WP-007, WP-015).
+- `script/check_spec.py --run` runs `lake build` before `lake env lean CheckSpec.lean`, so the
+  Lean check sees the current proofs instead of whatever `.olean` files are on disk (note
+  GATE-004).
 
 ## [1.0.0] - 2026-10-18
 

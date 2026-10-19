@@ -175,9 +175,10 @@ def run_prover(
     provers: tuple[str, ...],
     layers: tuple[str, ...] = LAYERS,
 ) -> None:
-    for prover, directory, cmd in (
-        ("lean", LEAN_DIR, ["lake", "env", "lean", "CheckSpec.lean"]),
-        ("rocq", ROCQ_DIR, ["make", "-s", ROCQ_TARGET[max(layers)]]),
+    # Lean: build first, since `lake env lean` loads whatever .olean files are on disk.
+    for prover, directory, cmds in (
+        ("lean", LEAN_DIR, [["lake", "build"], ["lake", "env", "lean", "CheckSpec.lean"]]),
+        ("rocq", ROCQ_DIR, [["make", "-s", ROCQ_TARGET[max(layers)]]]),
     ):
         if prover not in provers:
             continue
@@ -192,19 +193,22 @@ def run_prover(
             for t in pending:
                 t.result[prover] = "no project"
             continue
-        try:
-            proc = subprocess.run(cmd, cwd=directory, capture_output=True, text=True)
-        except FileNotFoundError as exc:
+        proc = None
+        for cmd in cmds:
+            try:
+                proc = subprocess.run(cmd, cwd=directory, capture_output=True, text=True)
+            except FileNotFoundError as exc:
+                proc = None
+                print(f"error: {prover}: cannot run {cmd[0]!r}: {exc.strerror}", file=sys.stderr)
+                break
+            if proc.returncode != 0:
+                sys.stderr.write(proc.stdout + proc.stderr)
+                break
+        if proc is None or proc.returncode != 0:
             for t in pending:
                 t.result[prover] = "check failed"
-            print(f"error: {prover}: cannot run {cmd[0]!r}: {exc.strerror}", file=sys.stderr)
             continue
         out = proc.stdout + proc.stderr
-        if proc.returncode != 0:
-            for t in pending:
-                t.result[prover] = "check failed"
-            sys.stderr.write(out)
-            continue
         try:
             found = (
                 parse_lean_axiom(out) if prover == "lean" else parse_rocq_axiom(proc.stdout, names)
