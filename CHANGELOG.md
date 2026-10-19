@@ -6,6 +6,46 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+#### C library
+
+- Vector norms `diana_norm_1(x, n, &result)`, `diana_norm_2(x, n, &result)` and
+  `diana_norm_inf(x, n, &result)` in `diana/norm.h`: the 1-norm added left to right, the Euclidean
+  norm computed as `m·√s` with `m` the largest magnitude, at its first index `k`, and
+  `s = 1 + Σ_{i≠k} (x[i]/m)²` in index order, so that it overflows or underflows only when the
+  norm itself does, and the exact maximum norm. `n = 0` gives `+0`; a NULL pointer or a NaN or
+  infinite entry is `DIANA_ERR_ARG`, an overflowing 1- or 2-norm of finite entries
+  `DIANA_ERR_OVERFLOW`, and no error writes `result`. The 2-norm takes its square root from
+  `diana_fp_sqrt`, as the Cholesky factorization does. Frama-C WP proves the ACSL contracts (53,
+  90 and 54 goals, NORM-C1 to C3, `spec/norm.md`), the maximum norm's value included;
+  `test/c/test_norm.c` covers the three sources at 100% line and branch coverage, and the compiler
+  corpus has 252 cases per kernel, every gcc and clang build matching CompCert bitwise.
+
+#### Python binding
+
+- `diana.norm_1(x)`, `diana.norm_2(x)` and `diana.norm_inf(x)` return the norms as `float`, `x` a
+  float64 buffer read in place or an iterable copied first, of any length (module `diana._norm`;
+  extension functions `diana._diana.norm_1`, `norm_2` and `norm_inf`, sharing
+  `python/ext/norm.c`). A non-finite entry raises `ValueError`, an overflow
+  `diana.FloatOverflowError`. `test/python/test_norm.py` checks bitwise agreement with the
+  operations in Python floats and the NORM-B bounds in exact rationals.
+
+#### Verification
+
+- `spec/norm.md`: layer A in Lean and Rocq (the scaled 2-norm formula, the equivalence
+  `‖x‖∞ ≤ ‖x‖₂ ≤ ‖x‖₁ ≤ n·‖x‖∞`, the Cauchy–Schwarz bounds and the norm axioms of all three),
+  layer B in Flocq (the maximum norm exact; `|r − ‖x‖₁| ≤ γₙ₋₁·‖x‖₁`;
+  `|r − ‖x‖₂| ≤ γₙ₊₅·‖x‖₂ + 2⁻¹⁰⁷⁵`; neither norm overflows below `DBL_MAX/(1 + γ)`; the 2-norm
+  at least the maximum norm), and layer C by WP and by VST against the Flocq model for `n ≥ 1`,
+  with the `diana_fp_finite` and `diana_fp_abs` copies of each AST.
+
+### Changed
+
+- The Python array check `diana_py_get_array` skips the alignment test for an empty buffer, whose
+  pointer may be a dummy: an empty `array.array` is accepted where the minimum length is 0, which
+  only the norms allow.
+
 ## [1.0.0] - 2026-10-18
 
 The first stable release. The classical Runge–Kutta step joins the ODE methods, and linear algebra
