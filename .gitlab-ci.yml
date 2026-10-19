@@ -75,6 +75,7 @@ stages:
   - test/c/**/*
   - test/install/**/*
   - python/ext/**/*
+  - benchmark/**/*
 
 .change_any: &change_any
   - .gitlab-ci.yml
@@ -240,7 +241,7 @@ style_c:
   script:
     - uv sync --only-group lint
     - uv run --no-sync clang-format --version
-    - find include src test/c test/install python/ext -name '*.[ch]' -print0 | xargs -0 uv run --no-sync clang-format --dry-run --Werror
+    - find include src test/c test/install python/ext benchmark -name '*.[ch]' -print0 | xargs -0 uv run --no-sync clang-format --dry-run --Werror
 
 style_python:
   stage: style

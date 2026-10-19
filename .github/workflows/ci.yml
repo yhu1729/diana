@@ -107,7 +107,7 @@ jobs:
       - run: uv --version
       - run: uv sync --only-group lint
       - run: uv run --no-sync clang-format --version
-      - run: find include src test/c test/install python/ext -name '*.[ch]' -print0 | xargs -0 uv run --no-sync clang-format --dry-run --Werror
+      - run: find include src test/c test/install python/ext benchmark -name '*.[ch]' -print0 | xargs -0 uv run --no-sync clang-format --dry-run --Werror
 
   style_python:
     needs: change
