@@ -393,8 +393,8 @@ jobs:
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: verification/frama-c/cache
-          key: wp-${{ hashFiles('src/**', 'include/**', 'verification/frama-c/expectation.txt', 'script/run_frama_c.sh') }}
-          restore-keys: wp-
+          key: wp-${{ env.FRAMA_C_IMAGE }}-${{ hashFiles('script/fetch_alt_ergo.sh') }}-${{ hashFiles('src/**', 'include/**', 'verification/frama-c/expectation.txt', 'script/run_frama_c.sh') }}
+          restore-keys: wp-${{ env.FRAMA_C_IMAGE }}-${{ hashFiles('script/fetch_alt_ergo.sh') }}-
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .cache/alt-ergo
@@ -443,7 +443,7 @@ jobs:
         run: |
           export ELAN_HOME="$GITHUB_WORKSPACE/.cache/elan"
           if [ ! -x "$ELAN_HOME/bin/elan" ]; then
-            curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain "$(cat verification/lean/lean-toolchain)"
+            curl -sSf https://raw.githubusercontent.com/leanprover/elan/v4.2.4/elan-init.sh | sh -s -- -y --default-toolchain "$(cat verification/lean/lean-toolchain)"
           fi
           echo "ELAN_HOME=$ELAN_HOME" >> "$GITHUB_ENV"
           echo "$ELAN_HOME/bin" >> "$GITHUB_PATH"

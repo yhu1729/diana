@@ -55,6 +55,10 @@ All notable changes to this project are documented here. The format follows
   GATE-004).
 - The report stamp also digests `script/check_spec.py`, `script/check_frama_c.sh` and
   `script/verify_frama_c.sh`, since they too decide what an `ok` means (note GATE-009).
+- Both pipelines and `ci/docker/lean.Dockerfile` fetch `elan-init.sh` from the elan release tag
+  `v4.2.4` instead of `master`, and the GitHub WP cache key carries the Frama-C image digest and
+  the Alt-Ergo pin, so a verdict cache from another prover version is never restored (notes
+  CI-022, CI-026).
 
 ## [1.0.0] - 2026-10-18
 
