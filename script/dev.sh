@@ -11,8 +11,9 @@ usage() {
 usage: script/dev.sh config [cmake option...]
        script/dev.sh build | test | verify
 
-  config  configure CMake in the build directory and sync the uv environment
-  build   build the C library and tests, rebuild the Python extension
+  config  configure CMake in the build directory (tests and benchmark on) and
+          sync the uv environment
+  build   build the C library, tests and benchmark, rebuild the Python extension
   test    run ctest and pytest, then the ruff, clang-format, clang-tidy and
           documentation checks
   verify  check the Clight ASTs and record their sources in
@@ -72,7 +73,7 @@ dev_config() {
     fi
     uv_sync
     cmake -S . -B "$build_dir" -DCMAKE_BUILD_TYPE="$build_type" -DDIANA_BUILD_TEST=ON \
-        -DDIANA_SANITIZER="$sanitizer" -DDIANA_WERROR=ON \
+        -DDIANA_BUILD_BENCHMARK=ON -DDIANA_SANITIZER="$sanitizer" -DDIANA_WERROR=ON \
         -DPython_EXECUTABLE="$PWD/.venv/bin/python" "$@"
 }
 
@@ -89,7 +90,7 @@ dev_test() {
     uv run --no-sync pytest -q -v
     uv run --no-sync ruff check python test/python test/doc script
     uv run --no-sync ruff format --check python test/python test/doc script
-    find include src test/c test/install python/ext -name '*.[ch]' -print0 |
+    find include src test/c test/install python/ext benchmark -name '*.[ch]' -print0 |
         xargs -0 uv run --no-sync clang-format --dry-run --Werror
     run_tidy
     uv run --no-sync script/check_doc.py
@@ -125,7 +126,7 @@ run_tidy() {
             "reconfigure with DIANA_BUILD_PYTHON=ON (script/dev.sh config)"
     "$tidy" --version | head -n 1
     git ls-files 'src/*.c' 'test/c/*.c' 'test/install/*.c' \
-        'python/ext/*.c' |
+        'python/ext/*.c' 'benchmark/*.c' |
         xargs "$tidy" --quiet -p "$build_dir" --warnings-as-errors='*'
 }
 
