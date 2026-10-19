@@ -21,7 +21,8 @@ private modules, so `diana.<name>` is the whole API.
 - One private driver module per kernel: `_bisection.py` (`bisection`), `_newton.py` (`newton`),
   `_trapezoidal.py`, `_simpson.py`, `_euler.py` (`euler_step`, `euler`), `_rk4.py` (`rk4_stage`,
   `rk4_step`, `rk4`), `_cholesky.py` (`cholesky`), `_substitution.py` (`forward_substitution`,
-  `transpose_substitution`), `_lu.py` (`lu`), `_lu_solve.py` (`lu_solve`). The single-call array
+  `transpose_substitution`), `_lu.py` (`lu`), `_lu_solve.py` (`lu_solve`), `_norm.py`
+  (`norm_1`, `norm_2`, `norm_inf`). The single-call array
   functions pass a buffer through
   and copy any other iterable into `array.array("d")`; `euler` and `rk4` copy `y0` element by
   element.

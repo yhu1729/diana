@@ -14,13 +14,14 @@ Code that several kernel files share is an external `diana_` function in a sourc
 own, with its ACSL contract on the declaration in a private header under `src/`:
 `diana_bisection_mid` (`src/bisection_mid.c`, `src/bisection_mid.h`), which
 `diana_bisection_init`, `diana_bisection_step` and `diana_bisection_result` call, and
-`diana_fp_sqrt` (`src/fp_sqrt.c`, `src/fp_sqrt.h`), which `diana_cholesky` calls; the latter has
-one caller, but its call of `__builtin_sqrt` needs an assumed contract in WP and an assumed
-funspec in VST, so it is isolated in a function of its own (FP-006).
+`diana_fp_sqrt` (`src/fp_sqrt.c`, `src/fp_sqrt.h`), which `diana_cholesky` and `diana_norm_2`
+call; its call of `__builtin_sqrt` needs an assumed contract in WP and an assumed funspec in VST,
+so it is isolated in a function of its own (FP-006).
 
 - Not `static inline`: `clightgen` emits a `static inline` function into the AST of every source
   that includes it, and each copy needs its own listed VST theorem (for the `src/fp.h` helpers
-  BISECTION-C5/C6/C13, NEWTON-C8 to C10, EULER-C3, RK4-C7/C8, TRAPEZOIDAL-C3, SIMPSON-C3). An
+  BISECTION-C5/C6/C13, NEWTON-C8 to C10, EULER-C3, RK4-C7/C8, TRAPEZOIDAL-C3, SIMPSON-C3,
+  NORM-C7 to C12). An
   external function is proved once (BISECTION-C1) and its callers import that funspec
   (`Diana.VST.BisectionMid.mid_spec`).
 - `src/fp.h` remains the only header with `static inline` helpers (FP-002).

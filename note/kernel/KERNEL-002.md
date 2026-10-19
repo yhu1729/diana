@@ -13,6 +13,9 @@ path:
   - src/transpose_substitution.c
   - src/lu.c
   - src/lu_solve.c
+  - src/norm_1.c
+  - src/norm_2.c
+  - src/norm_inf.c
 related: [KERNEL-003, API-003, API-036, FP-002]
 ---
 A checked kernel writes its output only once it knows the call succeeds, so `DIANA_ERR_ARG`
@@ -25,6 +28,8 @@ below. The vector kernels do this in two passes without a scratch buffer.
   recomputes each component with the same expression (so the same bits) and stores it in `y_out`.
 - `diana_trapezoidal`, `diana_simpson`: the scalar is computed into a local, tested (classified
   as above on failure), then written to `*result`.
+- `diana_norm_1`, `diana_norm_2`, `diana_norm_inf`: the scalar is accumulated in a local and
+  written to `*result` only on `DIANA_OK`; each entry is tested as it is read (API-037).
 - The state machines check every argument before they assign to the struct.
 - `diana_cholesky` is the exception: it checks its arguments and every input entry before
   writing (so `DIANA_ERR_ARG` leaves `l` untouched), but column `j` needs columns `0` to `j - 1`,

@@ -26,5 +26,5 @@ itself show up in the comparison.
   4096 steps at most.
 - The last line is `end <case count>`; `script/compare_compiler.sh` treats an output without it
   as truncated. `main` returns non-zero only if flushing stdout fails.
-- Current size: 3804 cases in 8794 lines. `tail -n 1` of the output gives the case count, and the
+- Current size: 4560 cases in 9550 lines. `tail -n 1` of the output gives the case count, and the
   comparison script prints the line count of the `ccomp` reference.

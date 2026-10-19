@@ -10,7 +10,7 @@ Besides seeded random inputs (COMPILER-007), the corpus runs every public kernel
 cases below. Current case lines: `bisection_*` 161, `trapezoidal` 283, `simpson` 284, `euler`
 and `euler_unchecked` 248 each, `rk4_stage*` 274 each, `rk4_step*` 270 each, `newton_*` 152,
 `cholesky` 248, `forward_substitution` and `transpose_substitution` 270 each, `lu` 260,
-`lu_solve` 292.
+`lu_solve` 292, `norm_1`, `norm_2` and `norm_inf` 252 each.
 
 - Bisection `init`: NULL state; NaN and an infinity in each argument, a signalling NaN `fa`;
   `a > b`; negative `tol`; `max_iter = 0`; `|a|` or `|b|` one ulp past `DBL_MAX/2` and
@@ -66,3 +66,9 @@ and `euler_unchecked` 248 each, `rk4_stage*` 274 each, `rk4_step*` 270 each, `ne
   without a NaN in `b` or a pivot row of `n`, pivot rows `n` and `SIZE_MAX` at each position, and
   NaN, sNaN and `±inf` at each position of a 3×3 `lu` and of `b`; the random systems (`n` from 1
   to 8) alternate raw factors and pivot rows with the output of `diana_lu` on bounded matrices.
+- Norms, the three kernels on the same inputs: each NULL pointer, `n` from 0 to 5, the
+  Pythagorean triple, a tie of the largest magnitude, `±0` vectors, the ctest summation-order pin,
+  subnormal entries, `DBL_MAX` entries that overflow, the halfway case `DBL_MAX + 2⁹⁷⁰`, the
+  2-norm edge `DBL_MAX·√(1 + 2⁻⁵²)`, wide magnitude ranges, both orders of the 2-norm's
+  sum-of-squares pin, and NaN, sNaN and `±inf` at each position, also after an overflowing sum;
+  the random vectors (`n` from 0 to 40) alternate raw and plain entries.

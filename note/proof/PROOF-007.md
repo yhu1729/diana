@@ -14,7 +14,8 @@ definitions under "Model correspondence".
 - Layer A: the exact method (`step`, `iterate`, `rk4` with `incT`, the quadrature sums), proved
   separately in Lean 4 with Mathlib and in Rocq with Stdlib reals (Coquelicot where needed).
 - Layer B, Rocq only: Flocq models (`fstep`, `ftrap`, `fsimpson`, `feuler`, `frk4_stage`,
-  `frk4_step`, `fchol`, `ffwd`, `fbwd`, `fstate` of LU, `fsolution` of the LU solve) from
+  `frk4_step`, `fchol`, `ffwd`, `fbwd`, `fstate` of LU, `fsolution` of the LU solve, `fnorm1`,
+  `fnorm2`, `fnorm_inf`) from
   `Bplus`, `Bmult`, `Bdiv`,
   `Bminus` and `Bsqrt` in
   `mode_NE`, over NaN-payload functions.
@@ -26,15 +27,18 @@ definitions under "Model correspondence".
   Cholesky's `c_l` and the substitution models `c_fwd`, `c_bwd` are the Flocq `fchol`, `ffwd`,
   `fbwd` at CompCert's NaN functions, equal by conversion; LU's `c_state` is one model, defined
   over any number type, at those operations, whose layer A is the same definition at the reals;
-  the LU solve's `c_y`, `c_x` are its Flocq `fforward`, `fsolution` at CompCert's NaN functions.
+  the LU solve's `c_y`, `c_x` are its Flocq `fforward`, `fsolution` at CompCert's NaN functions;
+  the norms' `c_norm1`, `c_norm2`, `c_norm_inf` are written in CompCert's operations and equal
+  the Flocq ones by `c_norm1_model`, `c_norm2_model`, `c_norm_inf_model`.
 - C to B: CompCert's `Float.add`, `Float.mul`, `Float.div`, `Float.sub` are Flocq's `Bplus`,
   `Bmult`, `Bdiv`, `Bminus` at CompCert's NaN-payload function, so a model theorem
   (`c_trap_model`, `c_simpson_model`, `c_euler_model`, BISECTION-C10, NEWTON-C7, RK4-C5, C6)
   identifies the C-order model with the Flocq one inside one Rocq development, with no
   translation step, and the layer-B theorems apply to what the C writes.
 - B to A: the forward-error theorems (TRAPEZOIDAL-B2, SIMPSON-B2, EULER-B2, NEWTON-B2, RK4-B3,
-  RK4-B5, SUBSTITUTION-B2, B4) bound the binary64 result against the exact evaluation of the same
-  formula on the same inputs, the layer-A rule, step or solve. Bisection's layer B instead restates
+  RK4-B5, SUBSTITUTION-B2, B4, NORM-B2, B4) bound the binary64 result against the exact
+  evaluation of the same formula on the same inputs, the layer-A rule, step, solve or norm;
+  NORM-B4 uses NORM-A1 to identify the scaled sum with the 2-norm. Bisection's layer B instead restates
   the A1 invariant for its own `fstep`. The unchecked kernels have layer-B finiteness theorems and
   no layer A.
 - Not composed: no listed theorem chains A and B end to end. The trapezoidal "Composition"

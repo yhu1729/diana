@@ -16,8 +16,8 @@ The C tests are ctest executables in `test/c/`; the Python tests are pytest modu
   `test_<name>`, links `diana::diana` and `m`, applies `diana_set_strict_flag` (the library's
   warning and floating-point flags, plus `-Werror` with `DIANA_WERROR`) and registers ctest test
   `<name>`. The tests are `status`, `bisection`, `cholesky`, `compiler` (the corpus driver,
-  COMPILER-010), `euler`, `lu`, `lu_solve`, `newton`, `rk4`, `simpson`, `substitution` and
-  `trapezoidal`; the CMake script test `configure` (`test_configure.cmake`, TEST-043) reconfigures
+  COMPILER-010), `euler`, `lu`, `lu_solve`, `newton`, `norm`, `rk4`, `simpson`, `substitution`
+  and `trapezoidal`; the CMake script test `configure` (`test_configure.cmake`, TEST-043) reconfigures
   the project to check the compiler refusal and the floating-point flag guard;
   outside scikit-build ctest also has `install` and `find_package` (TEST-002). `test/c/` is built
   only with `-DDIANA_BUILD_TEST=ON` (default OFF; the wheel build passes OFF).

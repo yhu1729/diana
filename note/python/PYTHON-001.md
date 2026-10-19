@@ -35,10 +35,11 @@ each named after its function without `diana_py_` (STYLE-002); all are listed in
   state `s` (its `status` field is the attribute, API-023); the array functions are `trapezoidal.c`,
   `simpson.c`, `euler_step.c`, `rk4_stage.c`, `rk4_step.c`, `cholesky.c`,
   `forward_substitution.c`, `transpose_substitution.c`, `lu.c` and `lu_solve.c`, the two that
-  allocate (the pivot rows, with `PyMem_New`). `forward_substitution.c` and
-  `transpose_substitution.c` pass their kernel to
+  allocate (the pivot rows, with `PyMem_New`), and `norm_1.c`, `norm_2.c`, `norm_inf.c`.
+  `forward_substitution.c` and `transpose_substitution.c` pass their kernel to
   `substitution.c` (`diana_py_substitution`, the shared argument checks), registered with them by
-  `substitution_exec.c`; the kernel type `diana_py_solve_fn` is in `module.h`.
+  `substitution_exec.c`; the norms pass theirs to `norm.c` (`diana_py_norm`), registered by
+  `norm_exec.c`; the kernel types `diana_py_solve_fn` and `diana_py_norm_fn` are in `module.h`.
 
 The extension is ordinary tested code, not verified; it may use libm (no file of it includes
 `<math.h>` today) and is compiled with the strict flags (BUILD-001).

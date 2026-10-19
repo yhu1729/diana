@@ -122,6 +122,8 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [API-034](api/API-034.md) | fact | LU solve evaluation order, exits and what each exit writes |
 | [API-035](api/API-035.md) | fact | Python lu_solve and the extension function lu_solve(lu, piv, b, out) |
 | [API-036](api/API-036.md) | fact | Non-finite input versus overflow, classified only on the error path |
+| [API-037](api/API-037.md) | fact | Norm evaluation order, exits and the n = 0 vector |
+| [API-038](api/API-038.md) | fact | Python norm_1, norm_2, norm_inf and the extension function diana_py_norm |
 
 ### benchmark
 
@@ -265,6 +267,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [PROOF-010](proof/PROOF-010.md) | fact | Substitution theorems, their hypotheses and the error bounds |
 | [PROOF-011](proof/PROOF-011.md) | fact | LU theorems, their hypotheses and the backward error bounds |
 | [PROOF-012](proof/PROOF-012.md) | fact | LU solve theorems, their hypotheses and the residual bounds |
+| [PROOF-013](proof/PROOF-013.md) | fact | Norm theorems, their hypotheses and the error bounds |
 
 ### prover
 
@@ -355,6 +358,8 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [TEST-041](test/TEST-041.md) | fact | Bisection and Newton status field and the rejection of a finished state |
 | [TEST-042](test/TEST-042.md) | fact | Provenance check unit tests run check_provenance.py on a temporary tree |
 | [TEST-043](test/TEST-043.md) | fact | ctest configure checks the compiler refusal and the flag guard |
+| [TEST-044](test/TEST-044.md) | fact | Norm C test values, rounding pins and failure cases |
+| [TEST-045](test/TEST-045.md) | fact | Norm Python tests against a binary64 model and the B bounds |
 
 ### verify
 
@@ -397,6 +402,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [WP-011](wp/WP-011.md) | rationale | Nonlinear index bounds proved through the column_end lemma and assertions |
 | [WP-012](wp/WP-012.md) | rationale | LU computes the pivot magnitude in line rather than with diana_fp_abs |
 | [WP-013](wp/WP-013.md) | rule | WP runs only with the pinned Alt-Ergo 2.6.4, in CI too |
+| [WP-014](wp/WP-014.md) | fact | Monotonicity of rounding needs \round_double, not a double cast |
 
 ## By path
 
@@ -436,6 +442,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `include/diana/lu.h` | API-032 |
 | `include/diana/lu_solve.h` | API-034 |
 | `include/diana/newton.h` | API-010 |
+| `include/diana/norm.h` | API-037 |
 | `include/diana/ode.h` | API-006, API-017, KERNEL-004 |
 | `include/diana/rk4.h` | API-016, API-018 |
 | `include/diana/scalar.h` | API-006, KERNEL-004 |
@@ -472,6 +479,11 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `python/ext/newton_new.c` | PYTHON-008 |
 | `python/ext/newton_result.c` | PYTHON-008 |
 | `python/ext/newton_step.c` | PYTHON-008 |
+| `python/ext/norm.c` | API-022, API-038 |
+| `python/ext/norm_1.c` | API-038 |
+| `python/ext/norm_2.c` | API-038 |
+| `python/ext/norm_exec.c` | API-038 |
+| `python/ext/norm_inf.c` | API-038 |
 | `python/ext/raise.c` | API-022 |
 | `python/ext/rk4_stage.c` | API-021, API-026, PYTHON-004 |
 | `python/ext/rk4_step.c` | API-026, PYTHON-004 |
@@ -492,6 +504,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `python/src/diana/_lu.py` | API-020, API-033 |
 | `python/src/diana/_lu_solve.py` | API-020, API-035 |
 | `python/src/diana/_newton.py` | API-011, API-022, API-025 |
+| `python/src/diana/_norm.py` | API-020, API-038 |
 | `python/src/diana/_rk4.py` | API-003, API-020, API-026, PYTHON-004 |
 | `python/src/diana/_simpson.py` | API-020 |
 | `python/src/diana/_substitution.py` | API-020, API-031 |
@@ -520,6 +533,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `spec/lu.md` | PROOF-011 |
 | `spec/lu_solve.md` | PROOF-012 |
 | `spec/newton.md` | PROOF-002 |
+| `spec/norm.md` | PROOF-013 |
 | `spec/rk4.md` | PROOF-006, PROOF-008 |
 | `spec/rk4_unchecked.md` | KERNEL-003, PROOF-008 |
 | `spec/simpson.md` | PROOF-004, TEST-014 |
@@ -551,6 +565,10 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `src/newton_init.c` | API-010, PROOF-002 |
 | `src/newton_result.c` | API-004, API-010, PROOF-002 |
 | `src/newton_step.c` | API-010, API-011, PROOF-002, TEST-027, TEST-029, TEST-031, TEST-041 |
+| `src/norm_*.c` | KERNEL-001 |
+| `src/norm_1.c` | API-004, API-037, FP-001, KERNEL-002, PROOF-013 |
+| `src/norm_2.c` | API-004, API-037, FP-001, FP-006, KERNEL-002, PROOF-013, WP-003, WP-014 |
+| `src/norm_inf.c` | API-004, API-037, FP-001, KERNEL-002, PROOF-013 |
 | `src/rk4.c` | API-006, API-017, KERNEL-004, TEST-025 |
 | `src/rk4_st*.c` | FP-001, KERNEL-001 |
 | `src/rk4_stage.c` | API-004, API-016, API-036, KERNEL-002, PROOF-008, TEST-021 |
@@ -576,6 +594,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `test/c/test_lu.c` | TEST-037 |
 | `test/c/test_lu_solve.c` | TEST-039 |
 | `test/c/test_newton.c` | API-011, API-012, TEST-027, TEST-028, TEST-029, TEST-030, TEST-031, TEST-032, TEST-041 |
+| `test/c/test_norm.c` | TEST-044 |
 | `test/c/test_rk4.c` | API-017, TEST-021, TEST-022, TEST-023, TEST-024, TEST-025 |
 | `test/c/test_simpson.c` | TEST-013, TEST-014 |
 | `test/c/test_substitution.c` | TEST-035 |
@@ -593,6 +612,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `test/python/test_lu.py` | TEST-038 |
 | `test/python/test_lu_solve.py` | TEST-040 |
 | `test/python/test_newton.py` | API-025, TEST-027, TEST-028, TEST-029, TEST-030, TEST-031 |
+| `test/python/test_norm.py` | TEST-045 |
 | `test/python/test_rk4.py` | TEST-022, TEST-023, TEST-025, TEST-026 |
 | `test/python/test_simpson.py` | TEST-013, TEST-014, TEST-015 |
 | `test/python/test_status.py` | API-027, BUILD-006 |
