@@ -26,6 +26,7 @@ theory/Float/EulerUnchecked.v
 theory/Float/LU.v
 theory/Float/LUSolve.v
 theory/Float/Newton.v
+theory/Float/Norm.v
 theory/Float/RK4.v
 theory/Float/RK4Unchecked.v
 theory/Float/Simpson.v
