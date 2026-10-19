@@ -13,6 +13,7 @@ diana_newton
 diana_newton_init
 diana_newton_result
 diana_newton_step
+diana_norm_1
 diana_norm_inf
 diana_rk4
 diana_rk4_stage

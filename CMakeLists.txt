@@ -84,6 +84,7 @@ add_library(diana ${diana_library_type}
     src/newton_init.c
     src/newton_result.c
     src/newton_step.c
+    src/norm_1.c
     src/norm_inf.c
     src/rk4.c
     src/rk4_stage.c
