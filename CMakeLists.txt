@@ -215,6 +215,11 @@ if(DIANA_BUILD_PYTHON)
         python/ext/newton_new.c
         python/ext/newton_result.c
         python/ext/newton_step.c
+        python/ext/norm.c
+        python/ext/norm_1.c
+        python/ext/norm_2.c
+        python/ext/norm_exec.c
+        python/ext/norm_inf.c
         python/ext/raise.c
         python/ext/rk4_exec.c
         python/ext/rk4_stage.c
