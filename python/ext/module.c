@@ -23,6 +23,9 @@ PyMODINIT_FUNC PyInit__diana(void) {
       diana_py_newton_exec(m) < 0 || diana_py_norm_exec(m) < 0 ||
       diana_py_rk4_exec(m) < 0 || diana_py_simpson_exec(m) < 0 ||
       diana_py_substitution_exec(m) < 0 || diana_py_trapezoidal_exec(m) < 0) {
+    Py_CLEAR(diana_py_bracket_error);
+    Py_CLEAR(diana_py_singular_error);
+    Py_CLEAR(diana_py_float_overflow_error);
     Py_DECREF(m);
     return NULL;
   }

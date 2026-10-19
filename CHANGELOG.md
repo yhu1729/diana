@@ -64,6 +64,8 @@ All notable changes to this project are documented here. The format follows
 
 - `diana.lu_solve` leaves a `TypeError` raised by `piv`'s own `__iter__` intact; only an argument
   that is not iterable at all gets the message `piv must be an iterable of int`.
+- `PyInit__diana` releases the exception classes it has created when a later step of the
+  initialization fails.
 
 ## [1.0.0] - 2026-10-18
 
