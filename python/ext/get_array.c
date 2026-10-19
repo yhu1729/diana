@@ -41,7 +41,7 @@ int diana_py_get_array(PyObject *obj, Py_buffer *view, const char *name,
     PyErr_Format(PyExc_ValueError, "%s must be C-contiguous", name);
     goto fail;
   }
-  if ((uintptr_t)view->buf % _Alignof(double) != 0u) {
+  if (view->shape[0] != 0 && (uintptr_t)view->buf % _Alignof(double) != 0u) {
     PyErr_Format(PyExc_ValueError, "%s is not aligned for float64", name);
     goto fail;
   }
