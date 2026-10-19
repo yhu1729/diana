@@ -17,7 +17,6 @@ else.
 
 Closing the tooling gaps of 1.0.
 
-- `high` Benchmark suite covering every kernel
 - `high` GIL released in the Python array functions
 - `high` Dot product, `axpy`
 - `medium` pkg-config file
