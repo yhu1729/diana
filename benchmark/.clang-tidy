@@ -1,0 +1,8 @@
+---
+# The drivers report with printf and exit, so the return value of a stream
+# call carries nothing to act on, and a callback keeps the signature of the
+# callback type whether or not it writes every parameter.
+InheritParentConfig: true
+Checks: >
+  -cert-err33-c,
+  -readability-non-const-parameter

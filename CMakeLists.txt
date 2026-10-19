@@ -15,6 +15,7 @@ if(DEFINED SKBUILD)
 endif()
 
 option(DIANA_BUILD_TEST "Build the C test suite" OFF)
+option(DIANA_BUILD_BENCHMARK "Build the benchmark suite" OFF)
 option(DIANA_SANITIZER "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 option(DIANA_WERROR "Treat warnings as errors" OFF)
 option(DIANA_BUILD_SHARED_LIB "Build Diana as a shared library" OFF)
@@ -188,6 +189,10 @@ if(DIANA_BUILD_TEST)
                     --test-command consume)
         set_tests_properties(find_package PROPERTIES FIXTURES_REQUIRED diana_install)
     endif()
+endif()
+
+if(DIANA_BUILD_BENCHMARK)
+    add_subdirectory(benchmark)
 endif()
 
 option(DIANA_BUILD_PYTHON "Build the CPython extension module" ON)
