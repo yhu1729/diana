@@ -37,7 +37,7 @@ listed in `spec/<method>.md`.
 - [Format and lint](development/style.md)
 - [Python binding](development/python.md): how the extension and the package are organized
 - [CI](development/ci.md): the pipeline and what it leaves to local runs
-- [Benchmark](development/benchmark.md): checked against unchecked kernels
+- [Benchmark](development/benchmark.md): timing every kernel locally, and the recorded runs
 
 ## Project
 

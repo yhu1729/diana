@@ -92,11 +92,12 @@ infinite. Where the checked function succeeds, both write the same bits, and che
 finiteness afterwards rejects exactly what the checked function rejects. `diana_rk4` uses the
 checked functions.
 
-Use them only when the kernel itself is a measured cost and you check the state yourself: in the
-project's [benchmark](../development/benchmark.md) the unchecked stage ran 2.9 to 4.8 times and
-the unchecked step 2.2 to 4.6 times faster, saving 1.4 to 2.0 ns per component on a whole RK4
-step. That saving is small next to four evaluations of a right-hand side that costs a few
-nanoseconds per component.
+Use them only when the kernel itself is a measured cost and you check the state yourself: the
+unchecked stage and step run several times faster, which on the machines measured so far saved
+about two nanoseconds per component on a whole RK4 step. That saving is small next to four
+evaluations of a right-hand side that costs a few nanoseconds per component. The project's
+[benchmark](../development/benchmark.md) measures the kernels, alone and in a whole step, on your
+machine.
 
 ## Callback wrapper
 

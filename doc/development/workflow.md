@@ -5,8 +5,8 @@ commands and the environment variables that steer them.
 
 | Command | What it does |
 |---|---|
-| `config [cmake option...]` | syncs the uv environment, then configures a Debug build with tests and sanitizers in `build/` |
-| `build` | builds the C library and tests, and rebuilds the Python extension |
+| `config [cmake option...]` | syncs the uv environment, then configures a Debug build with tests, the benchmark and sanitizers in `build/` |
+| `build` | builds the C library, tests and benchmark, and rebuilds the Python extension |
 | `test` | runs ctest and pytest, then `ruff`, the `clang-format` check, `clang-tidy` (skipped when it is not installed) and the documentation check `script/check_doc.py` |
 | `verify` | runs the proofs and the compiler comparison, then the spec gate ([local verification](../verification/local.md)) |
 

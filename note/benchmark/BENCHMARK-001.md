@@ -1,33 +1,33 @@
 ---
 id: BENCHMARK-001
-title: What script/benchmark.sh builds and test/benchmark/unchecked.c times
+title: What script/benchmark.sh builds, runs and writes
 kind: fact
 path:
   - script/benchmark.sh
-  - test/benchmark/unchecked.c
-related: [BENCHMARK-002, BENCHMARK-004, BENCHMARK-005, KERNEL-002]
+  - benchmark/CMakeLists.txt
+related: [BENCHMARK-003, BENCHMARK-004, BENCHMARK-007, COMPILER-003]
 ---
-`script/benchmark.sh [cc...]` (default `cc`) times the checked against the unchecked Euler and RK4
-kernels, through the static library, once per compiler given.
+`script/benchmark.sh [cc...]` (default `cc`) builds the library and the suite in `benchmark/` in
+Release with each compiler given, runs the suite and writes its output to a local file.
 
-- Build: for each compiler a CMake build in a temporary directory with `CC=<cc>`,
-  `CMAKE_BUILD_TYPE=Release`, `DIANA_BUILD_PYTHON=OFF`, `DIANA_BUILD_SHARED_LIB=OFF`: the library
-  gets CMake's Release flags (`-O3 -DNDEBUG` with gcc and clang) plus the project's
-  `-ffp-contract=off -fno-fast-math -fno-math-errno` (and `-fexcess-precision=standard` with
-  GCC). The driver is compiled separately at `-O2 -ffp-contract=off` with `-Werror` warnings and
-  linked against `libdiana.a`. On macOS an unset `MACOSX_DEPLOYMENT_TARGET` is set to
-  `sw_vers -productVersion`. The script prints `uname -sm` first and removes its temporary
-  directory on exit.
-- Cases: `euler step`, `rk4 stage` (stage 2) and `rk4 step`, each called alone with `h = 0.01`
-  on fixed inputs; `euler + rhs` (right-hand side then step) and `rk4 + rhs` (four right-hand
-  sides, stages 2 to 4, step), which advance the state with `h = 1e-9` and swap `y` and `out`.
-  The right-hand side is the driver's own `y' = -y/2`, chosen as the cheapest one.
-- Measure: for `d` = 64, 1024 and 16384, each case runs `2e8 / d` calls (about `2e8` components),
-  timed with `CLOCK_MONOTONIC` after an untimed refill of the inputs (values in `[-0.5, 0.5)`).
-  It reports the best of 7 runs as nanoseconds per component of one call (one loop step for the
-  `+ rhs` cases), checked and unchecked, and their ratio. Seven vectors of `d` doubles, at most
-  896 KiB, are in use.
-- Kernels are called through function pointers into the static library, without LTO, so nothing
-  is inlined across the library boundary. A status other than `DIANA_OK` aborts the run.
-- The driver prints `compiler: __VERSION__` before each table (`Apple LLVM 21.0.0 (...)` for
-  Apple clang, only `15.3.0` for GCC).
+- Build: per compiler a CMake build in a temporary directory with `CC=<cc>`,
+  `CMAKE_BUILD_TYPE=Release`, `DIANA_BUILD_PYTHON=OFF`, `DIANA_BUILD_SHARED_LIB=OFF`,
+  `DIANA_BUILD_BENCHMARK=ON` and `DIANA_WERROR=ON`, target `benchmark`. The library and the
+  drivers get CMake's Release flags (`-O3 -DNDEBUG` with gcc and clang) and the strict warning
+  and floating-point flags of `diana_set_strict_flag` (BUILD-001); `benchmark/CMakeLists.txt`
+  defines `_POSIX_C_SOURCE=200809L` for `clock_gettime`. The static library is linked without
+  LTO, so no kernel is inlined into a driver. On macOS an unset `MACOSX_DEPLOYMENT_TARGET` is set
+  from `sw_vers` (COMPILER-003). The temporary directory is removed on exit.
+- Run: `<build>/benchmark/benchmark` without argument, every case (BENCHMARK-004). With
+  `DIANA_BENCHMARK_CASE` set to case-name prefixes, the script runs only those and prints the
+  output without writing a file.
+- Write: `<DIANA_BENCHMARK_DIR>/<date>-<machine>-<compiler>.txt`, the directory
+  `build/benchmark/result` by default, under the ignored `build/` (BENCHMARK-007, BENCHMARK-002);
+  never overwriting:
+  an existing name gets the suffix `-2`, `-3`, ... The machine name is `DIANA_BENCHMARK_MACHINE`,
+  else the CPU brand string (`sysctl -n machdep.cpu.brand_string` on macOS, `model name` of
+  `/proc/cpuinfo` on Linux) without `(R)`, `(TM)`, ` CPU` and the clock, lowercased, each run of
+  other characters replaced by `-` (`apple-m4`). The compiler name is `apple-clang-<major>`,
+  `clang-<major>` or `gcc-<major>` from the first line of `<cc> --version`, else the command's
+  base name. The file is also printed, followed by `written to <path>`.
+- `-h` or `--help` prints the usage; any other option exits with status 2.

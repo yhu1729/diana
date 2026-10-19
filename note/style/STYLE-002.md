@@ -20,7 +20,7 @@ wrapper `diana_rk4` in `src/rk4.c`.
   header: `diana_bisection_mid` in `src/bisection_mid.c` and `src/bisection_mid.h`,
   `diana_py_get_array` in `python/ext/get_array.c` and `python/ext/module.h`.
 - `PyInit__diana` is in `python/ext/module.c`, the one file not named after its function.
-- Test sources are exempt.
+- Test and benchmark sources (`test/`, `benchmark/`) are exempt.
 
 A verified source file also has its own Frama-C expectation row, Clight AST and VST file
 (WP-007, VST-005); a variant such as an `_unchecked` kernel is a separate source file with its own

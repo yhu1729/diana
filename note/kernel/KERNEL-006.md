@@ -8,6 +8,7 @@ path:
   - include/diana/diana.h
   - test/c/CMakeLists.txt
   - test/c/test_compiler.c
+  - benchmark/CMakeLists.txt
   - verification/frama-c/expectation.txt
   - verification/rocq/_CoqProject
   - verification/rocq/Makefile
@@ -37,7 +38,10 @@ A method touches the library, its tests, the binding, every proof layer and the 
    `verification/frama-c/expectation.txt` (WP-007).
 4. `test/c/test_<method>.c` with `diana_add_test(<method>)` in `test/c/CMakeLists.txt`; cases in
    the compiler corpus `test/c/test_compiler.c` (COMPILER-001).
-5. The Python binding and `test/python/test_<method>.py` (PYTHON-007).
+5. The Python binding and `test/python/test_<method>.py` (PYTHON-007), and a benchmark suite
+   `benchmark/<method>.c` listed in `benchmark/CMakeLists.txt`, `benchmark/benchmark.h` and
+   `benchmark/main.c` (BENCHMARK-004); run `script/benchmark.sh` once to see it work
+   (BENCHMARK-002).
 6. `spec/<method>.md` with the theorem IDs and prover constants (GATE-001).
 7. Layer A: `verification/lean/Diana/Real/<Method>.lean`, imported in
    `verification/lean/Diana.lean`; `verification/rocq/theory/Real/<Method>.v` in `_CoqProject`

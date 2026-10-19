@@ -65,9 +65,11 @@ both write the same bits, and checking `y_out` for finiteness afterwards rejects
 `diana_euler_step` rejects.
 
 Use it only when the step itself is a measured cost and you check the state yourself: without
-the check pass the compiler vectorizes the loop, which made the kernel 2.9 to 4.8 times faster in
-the project's [benchmark](../development/benchmark.md), a saving of 0.3 to 0.4 ns per component.
-That saving is small next to a right-hand side that costs a few nanoseconds per component.
+the check pass the compiler vectorizes the loop, which makes the kernel several times faster, a
+saving of a fraction of a nanosecond per component on the machines measured so far. That saving
+is small next to a right-hand side that costs a few nanoseconds per component. The project's
+[benchmark](../development/benchmark.md) measures both kernels, alone and in a whole step, on
+your machine.
 
 ## Callback wrapper
 

@@ -28,7 +28,7 @@ theorems; `CLAUDE.md` is the condensed convention sheet.
 | `fp/` | floating-point semantics: compiler settings, `src/fp.h`, verified versus shipped binary |
 | `build/` | CMake options, install and wheel layout, source distribution, platform |
 | `test/` | test suites, the doc example check, and why each expected value is what it is |
-| `benchmark/` | `script/benchmark.sh` and its recorded output |
+| `benchmark/` | the benchmark suite `benchmark/`, `script/benchmark.sh`, the result files and the figures quoted from them |
 | `wp/` | Frama-C WP and ACSL: conventions, the `SKIP` trust boundary, goal counts, sessions |
 | `vst/` | VST proofs and the Clight AST: layout, regeneration, scope |
 | `gate/` | the spec gate `script/check_spec.py` and the generated report |
@@ -129,11 +129,13 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 
 | ID | Kind | Title |
 |---|---|---|
-| [BENCHMARK-001](benchmark/BENCHMARK-001.md) | fact | What script/benchmark.sh builds and test/benchmark/unchecked.c times |
-| [BENCHMARK-002](benchmark/BENCHMARK-002.md) | fact | Recorded benchmark output with Apple clang 21 on an Apple M4 Mac |
-| [BENCHMARK-003](benchmark/BENCHMARK-003.md) | fact | Recorded benchmark output with GCC 15.3 on an Apple M4 Mac |
-| [BENCHMARK-004](benchmark/BENCHMARK-004.md) | rule | Quoted performance figures come from the recorded benchmark run |
-| [BENCHMARK-005](benchmark/BENCHMARK-005.md) | fact | Only script/benchmark.sh compiles the benchmark driver |
+| [BENCHMARK-001](benchmark/BENCHMARK-001.md) | fact | What script/benchmark.sh builds, runs and writes |
+| [BENCHMARK-002](benchmark/BENCHMARK-002.md) | rule | Benchmark results stay local; the docs say how to measure, not what was measured |
+| [BENCHMARK-003](benchmark/BENCHMARK-003.md) | fact | The benchmark is built and linted locally and never run in CI |
+| [BENCHMARK-004](benchmark/BENCHMARK-004.md) | fact | How the driver times a case and what its table shows |
+| [BENCHMARK-005](benchmark/BENCHMARK-005.md) | fact | Scalar, quadrature and ODE benchmark cases and their inputs |
+| [BENCHMARK-006](benchmark/BENCHMARK-006.md) | fact | Linear algebra and norm benchmark cases and their inputs |
+| [BENCHMARK-007](benchmark/BENCHMARK-007.md) | fact | The result file a benchmark run writes |
 
 ### build
 
@@ -418,12 +420,28 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `.github/workflows/c_test.yml` | CI-017, CI-020 |
 | `.github/workflows/ci.yml` | CI-016, CI-017, CI-018, CI-019, CI-020, CI-021, CI-022, CI-023, CI-024, CI-026, WP-013 |
 | `.gitignore` | BUILD-011, VERIFY-005, WP-009 |
-| `.gitlab-ci.yml` | BENCHMARK-005, BUILD-007, CI-001, CI-002, CI-003, CI-004, CI-005, CI-006, CI-007, CI-008, CI-009, CI-010, CI-011, CI-012, CI-013, CI-014, CI-016, CI-018, COMPILER-004, GATE-007, PROVER-001, PROVER-005, PROVER-006, TEST-004, TEST-006, VERIFY-001, WP-013 |
+| `.gitlab-ci.yml` | BENCHMARK-003, BUILD-007, CI-001, CI-002, CI-003, CI-004, CI-005, CI-006, CI-007, CI-008, CI-009, CI-010, CI-011, CI-012, CI-013, CI-014, CI-016, CI-018, COMPILER-004, GATE-007, PROVER-001, PROVER-005, PROVER-006, TEST-004, TEST-006, VERIFY-001, WP-013 |
 | `.python-version` | CI-024 |
-| `CHANGELOG.md` | BENCHMARK-004, CI-014, STYLE-004 |
+| `CHANGELOG.md` | CI-014, STYLE-004 |
 | `CLAUDE.md` | PROVER-001, STYLE-004 |
 | `CMakeLists.txt` | API-005, BUILD-002, BUILD-003, BUILD-004, BUILD-005, BUILD-006, BUILD-007, BUILD-008, BUILD-009, BUILD-010, BUILD-012, BUILD-013, CI-003, CI-008, CI-023, FP-004, FP-007, KERNEL-006, PYTHON-007, STYLE-008, STYLE-010, TEST-002, TEST-043 |
 | `CONTRIBUTING.md` | GIT-008, PROVER-002, PROVER-003, PROVER-005, VERIFY-001 |
+| `benchmark/.clang-tidy` | BENCHMARK-003, STYLE-007 |
+| `benchmark/CMakeLists.txt` | BENCHMARK-001, BENCHMARK-003, KERNEL-006 |
+| `benchmark/benchmark.h` | BENCHMARK-004 |
+| `benchmark/bisection.c` | BENCHMARK-005 |
+| `benchmark/cholesky.c` | BENCHMARK-006 |
+| `benchmark/euler.c` | API-019, BENCHMARK-005 |
+| `benchmark/harness.c` | BENCHMARK-004 |
+| `benchmark/lu.c` | BENCHMARK-006 |
+| `benchmark/lu_solve.c` | BENCHMARK-006 |
+| `benchmark/main.c` | BENCHMARK-004 |
+| `benchmark/newton.c` | BENCHMARK-005 |
+| `benchmark/norm.c` | BENCHMARK-006 |
+| `benchmark/rk4.c` | API-019, BENCHMARK-005 |
+| `benchmark/simpson.c` | BENCHMARK-005 |
+| `benchmark/substitution.c` | BENCHMARK-006 |
+| `benchmark/trapezoidal.c` | BENCHMARK-005 |
 | `ci/docker/lean.Dockerfile` | CI-015 |
 | `cmake/check_symbol.cmake` | BUILD-012 |
 | `cmake/dianaConfig.cmake.in` | API-005, BUILD-009, TEST-002 |
@@ -431,8 +449,9 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `cmake/warning.cmake` | BUILD-001, BUILD-007, BUILD-013, CI-008, COMPILER-001, FP-004, FP-005, STYLE-010, TEST-003 |
 | `doc/README.md` | STYLE-003 |
 | `doc/api/*.md` | TEST-003 |
-| `doc/api/euler.md` | BENCHMARK-004 |
-| `doc/api/rk4.md` | BENCHMARK-004 |
+| `doc/api/euler.md` | BENCHMARK-002 |
+| `doc/api/rk4.md` | BENCHMARK-002 |
+| `doc/development/benchmark.md` | BENCHMARK-002 |
 | `doc/roadmap.md` | STYLE-004 |
 | `doc/verification/report.md` | CI-016, GATE-006, GATE-009 |
 | `doc/verification/trust.md` | WP-015 |
@@ -453,6 +472,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `include/diana/substitution.h` | API-030 |
 | `include/diana/trapezoidal.h` | API-013 |
 | `note/README.md` | STYLE-003 |
+| `note/api/API-019.md` | BENCHMARK-002 |
 | `pyproject.toml` | BUILD-002, BUILD-004, BUILD-006, BUILD-011, CI-012, CI-024, PROVER-006, PYTHON-005, PYTHON-006, STYLE-005, STYLE-009, TEST-001 |
 | `python/ext/*.c` | PYTHON-001, PYTHON-006, STYLE-002 |
 | `python/ext/*.h` | PYTHON-001 |
@@ -513,7 +533,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `python/src/diana/_trapezoidal.py` | API-020 |
 | `python/src/diana/py.typed` | PYTHON-002 |
 | `script/axiom_allow.yaml` | CI-012, GATE-005, GATE-009 |
-| `script/benchmark.sh` | BENCHMARK-001, BENCHMARK-002, BENCHMARK-003, BENCHMARK-004, BENCHMARK-005, COMPILER-003 |
+| `script/benchmark.sh` | BENCHMARK-001, BENCHMARK-002, BENCHMARK-007, COMPILER-003 |
 | `script/check_commit.sh` | CI-005, CI-019, GIT-001, GIT-002, GIT-003, GIT-004, GIT-007 |
 | `script/check_doc.py` | CI-007, STYLE-003 |
 | `script/check_frama_c.sh` | GATE-009, WP-007, WP-010, WP-013 |
@@ -522,7 +542,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `script/check_wheel.py` | BUILD-004, BUILD-007, BUILD-010, CI-003, CI-009, CI-023, TEST-004 |
 | `script/ci_change.py` | CI-018 |
 | `script/compare_compiler.sh` | COMPILER-001, COMPILER-002, COMPILER-003, COMPILER-004, COMPILER-008, COMPILER-011, FP-004, FP-005 |
-| `script/dev.sh` | BENCHMARK-005, BUILD-002, BUILD-003, BUILD-007, BUILD-010, COMPILER-002, COMPILER-004, GATE-007, PROVER-003, PROVER-008, PYTHON-005, STYLE-008, TEST-001, VERIFY-001, VERIFY-002, VERIFY-003, VERIFY-004, VST-001, VST-002, VST-003, VST-009 |
+| `script/dev.sh` | BENCHMARK-003, BUILD-002, BUILD-003, BUILD-007, BUILD-010, COMPILER-002, COMPILER-004, GATE-007, PROVER-003, PROVER-008, PYTHON-005, STYLE-008, TEST-001, VERIFY-001, VERIFY-002, VERIFY-003, VERIFY-004, VST-001, VST-002, VST-003, VST-009 |
 | `script/fetch_alt_ergo.sh` | CI-011, WP-013 |
 | `script/job_count.sh` | CI-011, VERIFY-003, WP-008 |
 | `script/run_frama_c.sh` | GATE-009, PROVER-004, WP-003, WP-004, WP-007, WP-009, WP-010, WP-015 |
@@ -583,7 +603,6 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `src/transpose_substitution.c` | API-003, API-004, API-030, FP-001, KERNEL-001, KERNEL-002, WP-011, WP-015 |
 | `src/trapezoidal.c` | API-004, API-013, API-036, FP-001, KERNEL-001, KERNEL-002, PROOF-003, TEST-010 |
 | `src/version.c` | API-002 |
-| `test/benchmark/unchecked.c` | API-019, BENCHMARK-001, BENCHMARK-002, BENCHMARK-003, BENCHMARK-005 |
 | `test/c/.clang-tidy` | STYLE-007 |
 | `test/c/CMakeLists.txt` | BUILD-001, COMPILER-010, KERNEL-006, TEST-001, TEST-043 |
 | `test/c/check.h` | TEST-001 |

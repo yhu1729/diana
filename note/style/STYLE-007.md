@@ -7,6 +7,7 @@ path:
   - python/ext/.clang-tidy
   - test/c/.clang-tidy
   - test/install/.clang-tidy
+  - benchmark/.clang-tidy
 related: [STYLE-008, STYLE-005, FP-002]
 ---
 `.clang-tidy` enables `bugprone-*`, `cert-*`, `clang-analyzer-*`, `misc-*`, `performance-*` and
@@ -38,4 +39,6 @@ The subdirectory files inherit the root (`InheritParentConfig: true`) and drop m
 `clang-analyzer-optin.core.EnumCastOutOfRange` (`test_status.c` casts an out-of-range value to
 reach `diana_status_str`'s default branch) and `readability-non-const-parameter` (a callback in
 `test_newton.c` leaves an output unwritten but keeps the callback type's signature);
-`test/install/` drops only `cert-err33-c`.
+`test/install/` drops only `cert-err33-c`; `benchmark/` drops `cert-err33-c` (the drivers report
+with `printf` and exit) and `readability-non-const-parameter` (a right-hand side keeps the
+signature of `diana_ode_fn` whether or not it reads every parameter).

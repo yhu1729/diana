@@ -15,6 +15,7 @@ cmake --install build --prefix <prefix>
 | Option | Default | Effect |
 |---|---|---|
 | `DIANA_BUILD_TEST` | OFF | build the C tests and register them with ctest |
+| `DIANA_BUILD_BENCHMARK` | OFF | build the [benchmark](benchmark.md) suite; `script/dev.sh config` turns it on, CI never does |
 | `DIANA_BUILD_PYTHON` | ON | also build the CPython extension; needs the Python development headers, so turn it off on a machine without them |
 | `DIANA_BUILD_SHARED_LIB` | OFF | build a shared instead of a static library (the generic `BUILD_SHARED_LIBS` is ignored) |
 | `DIANA_WERROR` | OFF | treat warnings as errors; CI and `script/dev.sh` turn it on |

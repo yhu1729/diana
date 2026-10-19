@@ -23,6 +23,8 @@ Actions](#github-actions)).
   `verify_provenance` only checks, from hashes, that its committed output is current.
 - macOS: GitLab never runs the macOS-only build paths; the GitHub mirror does (below).
 - `clang-tidy` and EditorConfig: local only.
+- The [benchmark](benchmark.md): CI formats its sources but never builds or runs it; run
+  `script/benchmark.sh` locally, its results are not committed.
 
 ## Path filters
 
