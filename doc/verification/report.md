@@ -17,12 +17,12 @@ hashes no longer match the commit or a status is not `ok`.
 
 | Input | SHA-256 |
 |---|---|
-| `include/` | `e795618767e2e60c043a11ed4f5097a4948668161b16a6231b3bc8587ea61730` |
+| `include/` | `6325820a92719a389197e6af9e957582aa021ede418ec1c7b1abf06fcc5bae85` |
 | `script/axiom_allow.yaml` | `8803f7c820be21b1f381da50165e037f7ae297fbb3ae3a060acca7d34e678181` |
 | `script/run_frama_c.sh` | `0d8f4ba6b49f2b8393c52ecca92217af8945074c4f01393acc02cd5ac730715b` |
-| `spec/` | `75e2bd58da032b4bac6a6e6c18f665ae2cf8d5caf6982d18c5ef90edefafcaf2` |
-| `src/` | `f02253502d28163eb3b2917101e93b8bd2c7c8a27b860607a2193b198557e57d` |
-| `verification/` | `3425bfb082e310b109badaa6b46592503ae3849527e57c666ff1e95a63334100` |
+| `spec/` | `330dd4e2ca5b745d0776b081e878875c2ca7784e9ff2cde064babca817c89504` |
+| `src/` | `c70c6b2ab9ad7230f3f5c92a89ea1265233b769278a5ece0e39b2d87073d5209` |
+| `verification/` | `f84f65b97be3bf116a56d91dd5e945df15e5a3065dc0d9921a47a74c1c33cb0d` |
 
 | Tool | Version |
 |---|---|
@@ -115,6 +115,30 @@ hashes no longer match the commit or a status is not `ok`.
 | newton | NEWTON-C8 | C | – | ok | – | the copy of diana_fp_finite in the Clight AST of newton_init implements its IEEE semantics, as BISECTION-C5 for the copy in bisection_init (VST, AArch64 macOS Clight AST). |
 | newton | NEWTON-C9 | C | – | ok | – | the copy of diana_fp_finite in the Clight AST of newton_step implements its IEEE semantics, as BISECTION-C5 for the copy in bisection_init (VST, AArch64 macOS Clight AST). |
 | newton | NEWTON-C10 | C | – | ok | – | the copy of diana_fp_abs in the Clight AST of newton_step returns, for finite input, the conditional negation the C performs, as BISECTION-C6 for the copy in bisection_init (VST, AArch64 macOS Clight AST). |
+| norm | NORM-A1 | A | ok | ok | – | the scaled 2-norm is the 2-norm: for k < n with xₖ ≠ 0 and m = \|xₖ\|, m·√(1 + Σ_{i≠k} (xᵢ/m)²) = √(Σ xᵢ²), the exact-arithmetic value of diana_norm_2 |
+| norm | NORM-A2 | A | ok | ok | – | equivalence: ‖x‖∞ ≤ ‖x‖₂ ≤ ‖x‖₁ ≤ n·‖x‖∞ |
+| norm | NORM-A3 | A | ok | ok | – | Cauchy–Schwarz bounds: ‖x‖₁ ≤ √n·‖x‖₂ and ‖x‖₂ ≤ √n·‖x‖∞ |
+| norm | NORM-A4 | A | ok | ok | – | triangle inequality: ‖x + y‖ ≤ ‖x‖ + ‖y‖ for each of the three norms, x and y of equal length |
+| norm | NORM-A5 | A | ok | ok | – | absolute homogeneity: ‖c·x‖ = \|c\|·‖x‖ for each of the three norms |
+| norm | NORM-A6 | A | ok | ok | – | definiteness: each of the three norms is 0 exactly when every xᵢ is 0 |
+| norm | NORM-B1 | B | – | ok | – | the maximum norm is exact: with every entry finite, the binary64 model returns a finite value r with r = max \|xᵢ\| (0 for n = 0), so diana_norm_inf never overflows. |
+| norm | NORM-B2 | B | – | ok | – | forward error of the 1-norm: with every entry finite, a finite result r and (n − 1)·u < 1, \|r − ‖x‖₁\| ≤ γₙ₋₁·‖x‖₁, γₖ = k·u/(1 − k·u), u = 2⁻⁵³. The first addition is exact and a sum of binary64 values has relative error u also below the normal range, so there is no absolute term. |
+| norm | NORM-B3 | B | – | ok | – | no spurious overflow in the 1-norm: with every entry finite and (n − 1)·u < 1, the result is finite whenever (1 + γₙ₋₁)·‖x‖₁ ≤ DBL_MAX; DIANA_ERR_OVERFLOW means ‖x‖₁ is within that factor of DBL_MAX or above it. |
+| norm | NORM-B4 | B | – | ok | – | forward error of the 2-norm: with every entry finite, a finite result r and (n + 5)·u < 1, \|r − ‖x‖₂\| ≤ γₙ₊₅·‖x‖₂ + η, η = 2⁻¹⁰⁷⁵ (underflow in the final product m·√s; the underflow of the quotients and squares is absorbed into γ because s ≥ 1). |
+| norm | NORM-B5 | B | – | ok | – | no spurious overflow in the 2-norm: with every entry finite and (n + 4)·u < 1, the result is finite whenever (1 + γₙ₊₄)·‖x‖₂ ≤ DBL_MAX; no quotient, square or partial sum can overflow, only the final product. |
+| norm | NORM-B6 | B | – | ok | – | the 2-norm is at least the largest magnitude: with every entry finite and a finite result r, ‖x‖∞ ≤ r, so a nonzero vector never has a zero 2-norm (no underflow to zero). |
+| norm | NORM-C1 | C | – | – | ok (53/53) | ACSL contract in src/norm_1.c, Frama-C WP float model with RTE: memory safety (only x[0 .. n−1] is read, only *result is written), no UB, termination, a status in {DIANA_OK, DIANA_ERR_ARG, DIANA_ERR_OVERFLOW}; DIANA_OK only for non-NULL pointers and every x[q] finite, and then *result finite and ≥ 0, and 0 for n = 0; DIANA_ERR_OVERFLOW only for non-NULL pointers and every x[q] finite; DIANA_ERR_ARG only for a NULL pointer or a non-finite x[q]; *result untouched on both errors. No assumed contract. |
+| norm | NORM-C2 | C | – | – | ok (90/90) | ACSL contract in src/norm_2.c with the clauses of C1 except the sign, and on DIANA_OK \|x[q]\| ≤ *result for every q < n. The sum of squares starts at 1 and stays ≥ 1 (an IEEE comparison in the loop invariant), which meets the precondition of diana_fp_sqrt, the only assumed contract (src/fp_sqrt.h, SKIP), discharged by CHOLESKY-B1. |
+| norm | NORM-C3 | C | – | – | ok (54/54) | ACSL contract in src/norm_inf.c, the full functional contract: memory safety, no UB, termination, a status in {DIANA_OK, DIANA_ERR_ARG}, DIANA_ERR_ARG exactly for a NULL pointer or a non-finite x[q] with *result untouched, and on DIANA_OK every x[q] finite, *result finite, ≥ 0, ≥ \|x[q]\| for every q < n and equal to 0 or to some \|x[q]\|. No assumed contract. |
+| norm | NORM-C4 | C | – | ok | – | diana_norm_1 computes the binary64 model (VST, AArch64 macOS Clight AST): for x pointing to n ≥ 1 readable doubles and a writable *result separate from them, it returns DIANA_OK, writing the model value, when every entry and that value are finite; DIANA_ERR_OVERFLOW when every entry is finite and the value is not; DIANA_ERR_ARG when an entry is not finite; *result unchanged on both errors. The NULL and n = 0 paths are C1. |
+| norm | NORM-C5 | C | – | ok | – | diana_norm_2 computes the binary64 model with the statuses of C4 (VST, AArch64 macOS Clight AST), importing the funspec of diana_fp_sqrt proved in CHOLESKY-C2. The NULL and n = 0 paths are C2. |
+| norm | NORM-C6 | C | – | ok | – | diana_norm_inf computes the binary64 model (VST, AArch64 macOS Clight AST): DIANA_OK with the model value written when every entry is finite, otherwise DIANA_ERR_ARG with *result unchanged. The NULL and n = 0 paths are C3. |
+| norm | NORM-C7 | C | – | ok | – | the copy of diana_fp_finite in the Clight AST of norm_1 implements its IEEE semantics, as BISECTION-C5 for the copy in bisection_init (VST, AArch64 macOS Clight AST). |
+| norm | NORM-C8 | C | – | ok | – | the copy of diana_fp_abs in the Clight AST of norm_1 returns x < 0.0 ? −x : x (VST, AArch64 macOS Clight AST), which is \|x\| for finite x. |
+| norm | NORM-C9 | C | – | ok | – | the copy of diana_fp_finite in the Clight AST of norm_2, as C7 |
+| norm | NORM-C10 | C | – | ok | – | the copy of diana_fp_abs in the Clight AST of norm_2, as C8 |
+| norm | NORM-C11 | C | – | ok | – | the copy of diana_fp_finite in the Clight AST of norm_inf, as C7 |
+| norm | NORM-C12 | C | – | ok | – | the copy of diana_fp_abs in the Clight AST of norm_inf, as C8 |
 | rk4 | RK4-A1 | A | ok | ok | – | step-size derivatives of the increment: under H1, for the autonomous increment Φ(s) = inc G y s and every s, the jet components d₁, d₂, d₃ of incJet (explicit sums of G′, G″, G‴ along the three stage curves y + (s/2)·k₁(s), y + (s/2)·k₂(s), y + s·k₃(s)) are the first, second and third derivatives of Φ in s. |
 | rk4 | RK4-A2 | A | ok | ok | – | order conditions: under H1, Φ(0) = G(y), Φ′(0) = E₂(y)/2, Φ″(0) = E₃(y)/3 and Φ‴(0) = E₄(y)/4, so the Taylor polynomial of y + s·Φ(s) agrees with that of the solution through s⁴. Only linearity is used, not the symmetry of G″. |
 | rk4 | RK4-A3 | A | ok | ok | – | local truncation of order 4: under H1, H2 and H3 with h ≥ 0, ‖Y(t + h) − Y(t) − h·Φ(h)‖ ≤ (M₅/120 + N₄/24)·h⁵ (Rocq also takes 0 ≤ M₅ and 0 ≤ N₄). |
