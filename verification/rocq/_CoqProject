@@ -65,6 +65,9 @@ theory/VST/NewtonInit.v
 theory/VST/NewtonResult.v
 ../clight/newton_step_aarch64_macos.v
 theory/VST/NewtonStep.v
+../clight/norm_1_aarch64_macos.v
+../clight/norm_2_aarch64_macos.v
+../clight/norm_inf_aarch64_macos.v
 theory/VST/RK4.v
 ../clight/rk4_stage_aarch64_macos.v
 theory/VST/RK4Stage.v
