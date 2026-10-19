@@ -39,9 +39,11 @@ makes a release. `ci.yml` holds every GitLab job but `release`, with the same jo
 names, images, commands and `needs`: the C builds wait for `style_c`, `test_install` and
 `verify_frama_c` for `test_gcc_release`, and each coverage job for its tests. Its first job,
 `change`, reads the `.change_*` lists of `.gitlab-ci.yml` with `script/ci_change.py`, so a job runs
-for the same changed files as on GitLab and the path lists exist once. `style_git` checks every
-commit of a branch, as for a merge request, and on the default branch each push, whose runs are
-never cancelled.
+for the same changed files as on GitLab and the path lists exist once. On a branch the changed
+files are those since the merge base with the default branch, as for a merge request, and on the
+default branch those of each push, whose runs are never cancelled; `style_git` checks the commits
+of the same ranges. A newer push to a branch cancels the run it supersedes, and the merge base
+keeps that run's changes in the next one.
 
 It closes two gaps GitLab leaves: macOS jobs (`test_macos_{debug,release}`, `test_install_macos`,
 `test_python_macos`) build and test on AArch64 macOS with Apple clang, and `test_python` runs every
