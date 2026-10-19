@@ -10,6 +10,9 @@ src/lu_solve.c 180
 src/newton_init.c 38
 src/newton_result.c 13
 src/newton_step.c 75
+src/norm_1.c 53
+src/norm_2.c 90
+src/norm_inf.c 54
 src/rk4_stage.c 78
 src/rk4_stage_unchecked.c 21
 src/rk4_step.c 105
