@@ -6,6 +6,7 @@ public import Diana.Real.Euler
 public import Diana.Real.LU
 public import Diana.Real.LUSolve
 public import Diana.Real.Newton
+public import Diana.Real.Norm
 public import Diana.Real.OneStep
 public import Diana.Real.Quadrature
 public import Diana.Real.RK4
