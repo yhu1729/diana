@@ -40,8 +40,28 @@ All notable changes to this project are documented here. The format follows
   at least the maximum norm), and layer C by WP and by VST against the Flocq model for `n ≥ 1`,
   with the `diana_fp_finite` and `diana_fp_abs` copies of each AST.
 
+#### Tests and tooling
+
+- The benchmark suite `benchmark/`: one case file per method over a shared harness, timing every
+  kernel and callback wrapper on in-cache data (the scalar solvers per step, the quadrature rules
+  per sample, the ODE kernels per component, checked and unchecked, alone, in a hand-written loop
+  and through the wrapper, the factorizations and solves per flop, the norms per component) at
+  three sizes each, as the best of seven trials of at least 50 ms. The CMake option
+  `DIANA_BUILD_BENCHMARK` (OFF) builds it; `script/dev.sh config` turns it on, so the drivers
+  build with the sanitizers and pass `clang-tidy` and `clang-format` locally. No CI job builds or
+  runs it. `doc/development/benchmark.md` and notes BENCHMARK-001 to BENCHMARK-007.
+
 ### Changed
 
+- `script/benchmark.sh [cc...]` builds and runs the suite in Release with each compiler and
+  writes the output to `build/benchmark/result/<date>-<machine>-<compiler>.txt`
+  (`DIANA_BENCHMARK_DIR`), never overwriting a file, with the date, commit, system, CPU, memory
+  and compiler in a header (`DIANA_BENCHMARK_CASE` selects cases and prints only;
+  `DIANA_BENCHMARK_MACHINE` names the machine). It replaces the driver
+  `test/benchmark/unchecked.c`. Benchmark results are no longer committed: the two notes that
+  recorded tables are removed and the `BENCHMARK` notes renumbered, and `doc/api/euler.md`,
+  `doc/api/rk4.md`, `doc/development/benchmark.md` and note API-019 quote no timing but say how
+  to measure one (note BENCHMARK-002).
 - The Python array check `diana_py_get_array` skips the alignment test for an empty buffer, whose
   pointer may be a dummy: an empty `array.array` is accepted where the minimum length is 0, which
   only the norms allow.
