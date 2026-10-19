@@ -17,8 +17,8 @@ listed in `spec/<method>.md`.
   differential equations
 - [Cholesky factorization](api/cholesky.md),
   [forward and transpose substitution](api/substitution.md),
-  [LU factorization with partial pivoting](api/lu.md) and [LU solve](api/lu_solve.md): linear
-  algebra
+  [LU factorization with partial pivoting](api/lu.md), [LU solve](api/lu_solve.md) and
+  [vector norms](api/norm.md): linear algebra
 
 ## Understand the proofs
 

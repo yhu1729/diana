@@ -6,7 +6,7 @@ kernels. This page covers what every method shares. Each method has its own page
 [composite trapezoidal rule](trapezoidal.md), [composite Simpson rule](simpson.md),
 [explicit Euler step](euler.md), [classical Runge–Kutta step](rk4.md),
 [Cholesky factorization](cholesky.md), [forward and transpose substitution](substitution.md),
-[LU factorization](lu.md) and [LU solve](lu_solve.md).
+[LU factorization](lu.md), [LU solve](lu_solve.md) and [vector norms](norm.md).
 
 ## Floating-point environment
 

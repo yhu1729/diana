@@ -25,11 +25,13 @@ states precisely what is proven, by which tool, and what is only tested.
 - Explicit Euler step, with a loop over a callback.
 - Classical Runge–Kutta (RK4) step, with a loop over a callback.
 - Newton's method, as a state machine the caller drives, and as a function taking a callback.
+- Vector norms: the 1-norm, the Euclidean norm, scaled so that it overflows or underflows only
+  when the norm itself does, and the maximum norm.
 
 Each is available from C (`include/diana/`) and from Python (`import diana`). The C kernels
 allocate nothing, call no libm function, and use no function pointer; the convenience wrappers
 and the Python package drive those kernels and are tested rather than proven. The one square
-root, in the Cholesky factorization, is a compiler builtin.
+root, shared by the Cholesky factorization and the Euclidean norm, is a compiler builtin.
 
 ## Quick start
 
