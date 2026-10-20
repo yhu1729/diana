@@ -40,6 +40,7 @@ theory/VST/Matrix.v
 ../clight/axpy_aarch64_macos.v
 theory/VST/Axpy.v
 ../clight/axpy_unchecked_aarch64_macos.v
+theory/VST/AxpyUnchecked.v
 theory/VST/Bisection.v
 ../clight/bisection_init_aarch64_macos.v
 theory/VST/BisectionInit.v
