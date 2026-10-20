@@ -24,6 +24,7 @@ theory/Float/Cholesky.v
 theory/Float/Sum.v
 theory/Float/Euler.v
 theory/Float/Axpy.v
+theory/Float/AxpyUnchecked.v
 theory/Float/EulerUnchecked.v
 theory/Float/LU.v
 theory/Float/LUSolve.v
