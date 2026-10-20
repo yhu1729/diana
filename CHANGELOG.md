@@ -18,7 +18,17 @@ All notable changes to this project are documented here. The format follows
   contract (75 goals, AXPY-C1, `spec/axpy.md`), the exact condition of each status included;
   `test/c/test_axpy.c` covers the source at 100% line and branch coverage, and the compiler corpus
   has 257 cases, every gcc and clang build matching CompCert bitwise.
-- Benchmark case `axpy` in the suite (`benchmark/axpy.c`).
+- `diana_axpy_unchecked(a, x, n, y)` in `diana/axpy.h`, the opt-in update without the finiteness
+  check, in its own source file `src/axpy_unchecked.c`: it rejects NULL pointers like
+  `diana_axpy`, then writes every component in one pass in the same operation order, NaN and ±∞
+  included, and returns `DIANA_OK`; it does not test `a`. Where the checked kernel succeeds the
+  two write the same bits. Its theorems are in `spec/axpy_unchecked.md`: Frama-C WP proves its
+  ACSL contract (AXPY-UNCHECKED-C1, 19 goals), VST that it writes the binary64 model
+  unconditionally (AXPY-UNCHECKED-C2), and Flocq that a written component is finite exactly when
+  its inputs are finite and neither operation overflows (AXPY-UNCHECKED-B1). `test/c/test_axpy.c`
+  covers it at 100% line and branch coverage, and the compiler corpus runs both kernels on every
+  axpy case.
+- Benchmark cases `axpy` and `axpy_unchecked` in the suite (`benchmark/axpy.c`).
 
 - Vector norms `diana_norm_1(x, n, &result)`, `diana_norm_2(x, n, &result)` and
   `diana_norm_inf(x, n, &result)` in `diana/norm.h`: the 1-norm added left to right, the Euclidean
