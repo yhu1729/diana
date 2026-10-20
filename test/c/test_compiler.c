@@ -1991,8 +1991,10 @@ static void test_norm(void) {
   }
 }
 
-static void axpy_case(const char *label, double a, const double *x,
-                      const double *y, size_t n) {
+typedef diana_status (*axpy_fn)(double a, const double *x, size_t n, double *y);
+
+static void axpy_run(const char *kernel, const char *label, axpy_fn update,
+                     double a, const double *x, const double *y, size_t n) {
   static double out[CAPACITY];
   size_t i;
   diana_status st;
@@ -2003,14 +2005,20 @@ static void axpy_case(const char *label, double a, const double *x,
   if (y != (const double *)0) {
     memcpy(out, y, n * sizeof *out);
   }
-  st = diana_axpy(a, x, n, y == (const double *)0 ? (double *)0 : out);
-  put_head("axpy", label);
+  st = update(a, x, n, y == (const double *)0 ? (double *)0 : out);
+  put_head(kernel, label);
   put_double(a);
   put_array(x, x == (const double *)0 ? 0u : n);
   put_array(y, y == (const double *)0 ? 0u : n);
   put_status(st);
   put_array(out, n < CAPACITY ? n : CAPACITY);
   printf("\n");
+}
+
+static void axpy_case(const char *label, double a, const double *x,
+                      const double *y, size_t n) {
+  axpy_run("axpy", label, diana_axpy, a, x, y, n);
+  axpy_run("axpy_unchecked", label, diana_axpy_unchecked, a, x, y, n);
 }
 
 static void test_axpy(void) {
