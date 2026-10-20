@@ -88,7 +88,9 @@ for bit the same, and writes it over `y[i]`. Each `y[i]` is read before it is wr
 separate from `y`, so the second pass reads what the first read. Only after a failure does the
 kernel test `x[j]` and `y[j]` for every `j`: a NaN or infinite one is `DIANA_ERR_ARG`, and an
 overflow in either operation on finite inputs `DIANA_ERR_OVERFLOW`; underflow is not an error.
-`n = 0` with non-NULL pointers and a finite `a` is `DIANA_OK` and touches nothing.
+`n = 0` with non-NULL pointers and a finite `a` is `DIANA_OK` and touches nothing. The opt-in
+one-pass update without the check, `diana_axpy_unchecked`, has its own spec,
+`spec/axpy_unchecked.md`.
 
 ## Proof sketch
 
