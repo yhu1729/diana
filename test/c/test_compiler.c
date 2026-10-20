@@ -1991,6 +1991,111 @@ static void test_norm(void) {
   }
 }
 
+static void axpy_case(const char *label, double a, const double *x,
+                      const double *y, size_t n) {
+  static double out[CAPACITY];
+  size_t i;
+  diana_status st;
+
+  for (i = 0u; i < CAPACITY; ++i) {
+    out[i] = SENTINEL;
+  }
+  if (y != (const double *)0) {
+    memcpy(out, y, n * sizeof *out);
+  }
+  st = diana_axpy(a, x, n, y == (const double *)0 ? (double *)0 : out);
+  put_head("axpy", label);
+  put_double(a);
+  put_array(x, x == (const double *)0 ? 0u : n);
+  put_array(y, y == (const double *)0 ? 0u : n);
+  put_status(st);
+  put_array(out, n < CAPACITY ? n : CAPACITY);
+  printf("\n");
+}
+
+static void test_axpy(void) {
+  static const double x4[4] = {0.5, 0.25, -1.0, 3.0};
+  static const double y4[4] = {1.0, -2.0, 0.5, 0.0};
+  static const double fma_x[1] = {0x1.ffffffffffffep-1};
+  static const double fma_y[1] = {-1.0};
+  static const double zeros[4] = {0.0, -0.0, 0.0, -0.0};
+  static const double signed_zero[4] = {-0.0, -0.0, 0.0, 0.0};
+  static const double tiny[1] = {VAL_TRUE_MIN};
+  static const double zero1[1] = {0.0};
+  static const double one1[1] = {1.0};
+  static const double max1[1] = {VAL_MAX};
+  static const double neg_max1[1] = {-VAL_MAX};
+  static const double fail_last_x[3] = {1.0, 1.0, VAL_MAX};
+  static const double fail_last_y[3] = {1.0, 2.0, VAL_MAX};
+  static const double fail_first_x[3] = {VAL_MAX, 2.0, 3.0};
+  static const double fail_first_y[3] = {VAL_MAX, 1.0, 1.0};
+  static double x[CAPACITY];
+  static double y[CAPACITY];
+  unsigned k;
+  size_t i;
+  size_t n;
+
+  axpy_case("null_x", 1.0, (const double *)0, y4, 4u);
+  axpy_case("null_y", 1.0, x4, (const double *)0, 4u);
+  axpy_case("all_null", 1.0, (const double *)0, (const double *)0, 0u);
+  for (n = 0u; n <= 4u; ++n) {
+    axpy_case("length", 0.5, x4, y4, n);
+  }
+  axpy_case("a_nan_empty", VAL_QNAN, x4, y4, 0u);
+  axpy_case("a_inf_empty", VAL_INF, x4, y4, 0u);
+  axpy_case("exact", 0.5, x4, y4, 4u);
+  axpy_case("exact_negative", -2.0, x4, y4, 4u);
+  axpy_case("fma", 0x1.0000000000001p0, fma_x, fma_y, 1u);
+  axpy_case("third", 1.0 / 3.0, x4, y4, 4u);
+  axpy_case("a_zero", 0.0, zeros, signed_zero, 4u);
+  axpy_case("a_negative_zero", -0.0, zeros, signed_zero, 4u);
+  axpy_case("a_zero_one", 0.0, x4, signed_zero, 4u);
+  axpy_case("a_negative_zero_one", -0.0, x4, signed_zero, 4u);
+  axpy_case("underflow_tie", 0.5, tiny, zero1, 1u);
+  axpy_case("underflow_up", 1.5, tiny, zero1, 1u);
+  axpy_case("subnormal_sum", -1.0, tiny, tiny, 1u);
+  axpy_case("max_plus_one", 1.0, one1, max1, 1u);
+  axpy_case("product_over", 2.0, max1, zero1, 1u);
+  axpy_case("sum_over", 1.0, max1, max1, 1u);
+  axpy_case("sum_over_negative", -1.0, max1, neg_max1, 1u);
+  axpy_case("cancel", -1.0, max1, max1, 1u);
+  axpy_case("fail_last", 1.0, fail_last_x, fail_last_y, 3u);
+  axpy_case("fail_first", 1.0, fail_first_x, fail_first_y, 3u);
+  axpy_case("a_nan", VAL_QNAN, x4, y4, 4u);
+  axpy_case("a_snan", VAL_SNAN, x4, y4, 4u);
+  axpy_case("a_inf", VAL_INF, x4, y4, 4u);
+  axpy_case("a_inf_zero", VAL_INF, zeros, y4, 4u);
+  axpy_case("a_negative_inf", -VAL_INF, x4, y4, 4u);
+  for (i = 0u; i < 4u; ++i) {
+    memcpy(x, x4, sizeof x4);
+    memcpy(y, y4, sizeof y4);
+    x[i] = VAL_QNAN;
+    axpy_case("x_nan", 1.0, x, y, 4u);
+    x[i] = VAL_INF;
+    axpy_case("x_inf", 1.0, x, y, 4u);
+    x[i] = -VAL_INF;
+    axpy_case("x_inf_zero", 0.0, x, y, 4u);
+    x[i] = x4[i];
+    y[i] = VAL_SNAN;
+    axpy_case("y_snan", 1.0, x, y, 4u);
+    y[i] = -VAL_INF;
+    axpy_case("y_inf", 1.0, x, y, 4u);
+    x[i] = VAL_INF;
+    axpy_case("x_y_inf", 1.0, x, y, 4u);
+  }
+
+  for (k = 0u; k < RANDOM_ARRAY; ++k) {
+    int mixed = (int)(k % 2u);
+    double a = random_value(mixed);
+    n = (size_t)rng_below(CAPACITY);
+    for (i = 0u; i < n; ++i) {
+      x[i] = random_value(mixed);
+      y[i] = random_value(mixed);
+    }
+    axpy_case("random", a, x, y, n);
+  }
+}
+
 int main(void) {
   test_bisection();
   test_trapezoidal();
@@ -2003,6 +2108,7 @@ int main(void) {
   test_lu();
   test_lu_solve();
   test_norm();
+  test_axpy();
   printf("end %u\n", case_count);
   if (fflush(stdout) != 0 || ferror(stdout)) {
     return 1;
