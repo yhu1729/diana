@@ -1,3 +1,4 @@
+diana_axpy
 diana_bisection
 diana_bisection_init
 diana_bisection_result

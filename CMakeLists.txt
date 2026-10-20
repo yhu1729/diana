@@ -69,6 +69,7 @@ else()
 endif()
 add_library(diana ${diana_library_type}
     src/status_str.c
+    src/axpy.c
     src/bisection.c
     src/bisection_init.c
     src/bisection_mid.c
