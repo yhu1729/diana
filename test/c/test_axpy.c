@@ -1,26 +1,75 @@
 #include <float.h>
 #include <math.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "check.h"
 #include "diana/diana.h"
 
 #define SENTINEL 42.0
+#define DIM 12
+
+typedef diana_status (*axpy_fn)(double, const double *, size_t, double *);
 
 static int same(double a, double b) {
   return a == b && signbit(a) == signbit(b);
 }
 
+static uint64_t bits(double d) {
+  uint64_t u;
+
+  memcpy(&u, &d, sizeof u);
+  return u;
+}
+
+/* Both kernels succeed, agree bit for bit, and write only y[0 .. n-1]. */
 static void check_ok(double a, const double *x, const double *y0, size_t n,
                      const double *want) {
-  double y[8];
+  double y[DIM];
+  double raw[DIM];
   size_t i;
 
+  for (i = 0; i < DIM; ++i) {
+    y[i] = SENTINEL;
+    raw[i] = SENTINEL;
+  }
   memcpy(y, y0, n * sizeof *y);
+  memcpy(raw, y0, n * sizeof *raw);
   CHECK_EQ_STATUS(diana_axpy(a, x, n, y), DIANA_OK);
+  CHECK_EQ_STATUS(diana_axpy_unchecked(a, x, n, raw), DIANA_OK);
   for (i = 0; i < n; ++i) {
     CHECK(same(y[i], want[i]));
+  }
+  for (i = 0; i < DIM; ++i) {
+    CHECK(bits(raw[i]) == bits(y[i]));
+  }
+  for (i = n; i < DIM; ++i) {
+    CHECK(y[i] == SENTINEL);
+  }
+}
+
+/* The unchecked kernel returns DIANA_OK and writes each component as
+   computed; want[i] NaN accepts any NaN. */
+static void check_raw(double a, const double *x, const double *y0, size_t n,
+                      const double *want) {
+  double y[DIM];
+  size_t i;
+
+  for (i = 0; i < DIM; ++i) {
+    y[i] = SENTINEL;
+  }
+  memcpy(y, y0, n * sizeof *y);
+  CHECK_EQ_STATUS(diana_axpy_unchecked(a, x, n, y), DIANA_OK);
+  for (i = 0; i < n; ++i) {
+    if (isnan(want[i])) {
+      CHECK(isnan(y[i]));
+    } else {
+      CHECK(same(y[i], want[i]));
+    }
+  }
+  for (i = n; i < DIM; ++i) {
+    CHECK(y[i] == SENTINEL);
   }
 }
 
@@ -28,23 +77,30 @@ static void check_ok(double a, const double *x, const double *y0, size_t n,
 static void check_fail(double a, const double *x, const double *y0, size_t n,
                        diana_status want) {
   double y[8];
+  size_t i;
 
   memcpy(y, y0, n * sizeof *y);
   CHECK_EQ_STATUS(diana_axpy(a, x, n, y), want);
-  CHECK(memcmp(y, y0, n * sizeof *y) == 0);
+  for (i = 0; i < n; ++i) {
+    CHECK(bits(y[i]) == bits(y0[i]));
+  }
 }
 
 static void test_argument(void) {
+  static const axpy_fn update[2] = {diana_axpy, diana_axpy_unchecked};
   const double x[2] = {1.0, 2.0};
   double y[2] = {SENTINEL, SENTINEL};
+  size_t k;
 
-  CHECK_EQ_STATUS(diana_axpy(1.0, (const double *)0, 2u, y), DIANA_ERR_ARG);
-  CHECK_EQ_STATUS(diana_axpy(1.0, (const double *)0, 0u, y), DIANA_ERR_ARG);
-  CHECK_EQ_STATUS(diana_axpy(1.0, x, 2u, (double *)0), DIANA_ERR_ARG);
-  CHECK_EQ_STATUS(diana_axpy(1.0, x, 0u, (double *)0), DIANA_ERR_ARG);
-  CHECK_EQ_STATUS(diana_axpy(1.0, (const double *)0, 2u, (double *)0),
-                  DIANA_ERR_ARG);
-  CHECK(y[0] == SENTINEL && y[1] == SENTINEL);
+  for (k = 0; k < 2u; ++k) {
+    CHECK_EQ_STATUS(update[k](1.0, (const double *)0, 2u, y), DIANA_ERR_ARG);
+    CHECK_EQ_STATUS(update[k](1.0, (const double *)0, 0u, y), DIANA_ERR_ARG);
+    CHECK_EQ_STATUS(update[k](1.0, x, 2u, (double *)0), DIANA_ERR_ARG);
+    CHECK_EQ_STATUS(update[k](1.0, x, 0u, (double *)0), DIANA_ERR_ARG);
+    CHECK_EQ_STATUS(update[k](1.0, (const double *)0, 2u, (double *)0),
+                    DIANA_ERR_ARG);
+    CHECK(y[0] == SENTINEL && y[1] == SENTINEL);
+  }
   /* a is tested before the loop, so also for the empty vector */
   check_fail((double)NAN, x, y, 2u, DIANA_ERR_ARG);
   check_fail(HUGE_VAL, x, y, 2u, DIANA_ERR_ARG);
@@ -52,12 +108,15 @@ static void test_argument(void) {
   check_fail((double)NAN, x, y, 0u, DIANA_ERR_ARG);
 }
 
-/* n = 0 with finite a succeeds and touches nothing. */
+/* n = 0 with finite a succeeds and touches nothing; the unchecked kernel
+   also with a non-finite a, which it never tests. */
 static void test_empty(void) {
   const double x[1] = {(double)NAN};
   double y[1] = {SENTINEL};
 
   CHECK_EQ_STATUS(diana_axpy(1.0, x, 0u, y), DIANA_OK);
+  CHECK_EQ_STATUS(diana_axpy_unchecked(1.0, x, 0u, y), DIANA_OK);
+  CHECK_EQ_STATUS(diana_axpy_unchecked((double)NAN, x, 0u, y), DIANA_OK);
   CHECK(y[0] == SENTINEL);
 }
 
@@ -161,6 +220,41 @@ static void test_nonfinite(void) {
   check_fail(1.0, x3_inf, y3_ok, 3u, DIANA_ERR_ARG);
 }
 
+/* Inputs the checked kernel rejects: the unchecked kernel writes the IEEE
+   result of each operation, finite components included. */
+static void test_unchecked_nonfinite(void) {
+  const double zero[1] = {0.0};
+  const double one[1] = {1.0};
+  const double max[1] = {DBL_MAX};
+  const double neg[1] = {-DBL_MAX};
+  const double inf[1] = {HUGE_VAL};
+  const double ninf[1] = {-HUGE_VAL};
+  const double nan1[1] = {(double)NAN};
+  const double x3[3] = {1.0, 1.0, DBL_MAX};
+  const double y3[3] = {1.0, 2.0, DBL_MAX};
+  const double partial[3] = {2.0, 3.0, HUGE_VAL};
+  const double g[3] = {2.0, 1.0, -HUGE_VAL};
+  const double e[3] = {-1.0, (double)NAN, 0.5};
+  const double mixed[3] = {1.0, (double)NAN, -HUGE_VAL};
+  const double nan3[3] = {(double)NAN, (double)NAN, (double)NAN};
+  const double inf3[3] = {HUGE_VAL, HUGE_VAL, HUGE_VAL};
+  const double one3[3] = {1.0, 1.0, 1.0};
+
+  /* overflow in the product, then in the sum */
+  check_raw(2.0, max, zero, 1u, inf);
+  check_raw(-2.0, max, zero, 1u, ninf);
+  check_raw(1.0, max, max, 1u, inf);
+  check_raw(-1.0, max, neg, 1u, ninf);
+  /* inf - inf is NaN; 0 * inf is NaN */
+  check_raw(1.0, ninf, inf, 1u, nan1);
+  check_raw(0.0, inf, one, 1u, nan1);
+  check_raw(1.0, x3, y3, 3u, partial);
+  check_raw(1.0, g, e, 3u, mixed);
+  check_raw((double)NAN, one3, one3, 3u, nan3);
+  check_raw(HUGE_VAL, one, zero, 1u, inf);
+  check_raw(HUGE_VAL, one3, one3, 3u, inf3);
+}
+
 /* A longer vector against the same expression evaluated here, which the
    build also compiles without contraction. */
 static void test_sequential(void) {
@@ -187,6 +281,7 @@ int main(void) {
   test_underflow();
   test_overflow();
   test_nonfinite();
+  test_unchecked_nonfinite();
   test_sequential();
   return check_report("axpy");
 }
