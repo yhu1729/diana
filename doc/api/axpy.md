@@ -51,6 +51,20 @@ int main(void) {
 y(1) = (0.841892, 0.540573)
 ```
 
+### Unchecked update
+
+`diana_axpy_unchecked(a, x, n, y)` is the same update without the finiteness check. It rejects
+only a `NULL` pointer; otherwise it writes every component in one pass and returns `DIANA_OK`,
+even when a component is NaN or infinite, and it does not look at `a`. Where `diana_axpy`
+succeeds, both write the same bits, and checking `y` for finiteness afterwards rejects exactly
+what `diana_axpy` rejects (for `n ≥ 1`; `diana_axpy` also rejects a non-finite `a` with
+`n = 0`).
+
+Use it only when the update itself is a measured cost and you check the result yourself, as for
+the unchecked [Euler step](euler.md#unchecked-step): the one branch-free pass vectorizes, which
+saves a fraction of a nanosecond per component. The project's
+[benchmark](../development/benchmark.md) measures both kernels on your machine.
+
 ## Python
 
 `diana.axpy(a, x, y)` updates `y` in place and returns `None`. `y` must be a writable
@@ -106,4 +120,6 @@ behaviour, with `y` untouched on every error. Theorems: `spec/axpy.md`; status: 
 [API-039](../../note/api/API-039.md) evaluation order and exits,
 [API-040](../../note/api/API-040.md) the Python function,
 [PROOF-014](../../note/proof/PROOF-014.md) what is proved, with the exact bound,
-[KERNEL-002](../../note/kernel/KERNEL-002.md) the two-pass check that leaves `y` untouched.
+[KERNEL-002](../../note/kernel/KERNEL-002.md) the two-pass check that leaves `y` untouched,
+[API-018](../../note/api/API-018.md) and [API-019](../../note/api/API-019.md) the unchecked
+kernels and when to use them.
