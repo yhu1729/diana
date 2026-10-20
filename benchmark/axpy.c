@@ -34,6 +34,15 @@ static size_t axpy(void *data) {
   return d->n;
 }
 
+static size_t axpy_unchecked(void *data) {
+  struct data *d = data;
+
+  if (diana_axpy_unchecked(A, d->x, d->n, d->y) != DIANA_OK) {
+    return 0;
+  }
+  return d->n;
+}
+
 static void teardown(void *data) {
   struct data *d = data;
 
@@ -44,7 +53,9 @@ static void teardown(void *data) {
 
 static const struct diana_benchmark_case item[] = {
     {"axpy", "component", diana_benchmark_vector_size, DIANA_BENCHMARK_NSIZE,
-     setup, axpy, teardown}};
+     setup, axpy, teardown},
+    {"axpy_unchecked", "component", diana_benchmark_vector_size,
+     DIANA_BENCHMARK_NSIZE, setup, axpy_unchecked, teardown}};
 
 const struct diana_benchmark_suite diana_benchmark_axpy = {
     item, sizeof item / sizeof item[0]};
