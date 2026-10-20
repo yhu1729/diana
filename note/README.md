@@ -103,7 +103,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [API-015](api/API-015.md) | fact | Euler step evaluation order, two-pass check and exits |
 | [API-016](api/API-016.md) | fact | RK4 stage and step evaluation order and exits |
 | [API-017](api/API-017.md) | fact | ODE wrappers diana_euler and diana_rk4 |
-| [API-018](api/API-018.md) | fact | Unchecked Euler and RK4 kernels write non-finite values |
+| [API-018](api/API-018.md) | fact | Unchecked Euler, RK4 and axpy kernels write non-finite values |
 | [API-019](api/API-019.md) | rationale | When to use the unchecked kernels |
 | [API-020](api/API-020.md) | fact | Python array argument rules and check order |
 | [API-021](api/API-021.md) | fact | Python scalar and integer argument conversion |
@@ -433,7 +433,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `CONTRIBUTING.md` | GIT-008, PROVER-002, PROVER-003, PROVER-005, VERIFY-001 |
 | `benchmark/.clang-tidy` | BENCHMARK-003, STYLE-007 |
 | `benchmark/CMakeLists.txt` | BENCHMARK-001, BENCHMARK-003, KERNEL-006 |
-| `benchmark/axpy.c` | BENCHMARK-006 |
+| `benchmark/axpy.c` | API-019, BENCHMARK-006 |
 | `benchmark/benchmark.h` | BENCHMARK-004 |
 | `benchmark/bisection.c` | BENCHMARK-005 |
 | `benchmark/cholesky.c` | BENCHMARK-006 |
@@ -462,7 +462,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `doc/verification/report.md` | CI-016, GATE-006, GATE-009 |
 | `doc/verification/trust.md` | WP-015 |
 | `include/diana/*.h` | KERNEL-001 |
-| `include/diana/axpy.h` | API-039 |
+| `include/diana/axpy.h` | API-018, API-039 |
 | `include/diana/bisection.h` | API-007 |
 | `include/diana/cholesky.h` | API-028 |
 | `include/diana/diana.h` | API-001, API-002, BUILD-006, KERNEL-006 |
@@ -559,6 +559,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `script/verify_frama_c.sh` | CI-011, GATE-009, WP-008 |
 | `spec/*.md` | GATE-001, GATE-002, GATE-008, PROOF-007, VST-004, VST-006 |
 | `spec/axpy.md` | PROOF-014 |
+| `spec/axpy_unchecked.md` | KERNEL-003, PROOF-014 |
 | `spec/bisection.md` | PROOF-001, TEST-008 |
 | `spec/cholesky.md` | PROOF-009 |
 | `spec/euler.md` | PROOF-005 |
@@ -573,7 +574,9 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `spec/substitution.md` | PROOF-010 |
 | `spec/trapezoidal.md` | PROOF-003 |
 | `src/*.c` | API-003, STYLE-002, TEST-006 |
-| `src/axpy.c` | API-004, API-036, API-039, FP-001, KERNEL-001, KERNEL-002, PROOF-014 |
+| `src/axpy*.c` | KERNEL-001 |
+| `src/axpy.c` | API-004, API-036, API-039, FP-001, KERNEL-002, PROOF-014 |
+| `src/axpy_unchecked.c` | API-018, API-019, KERNEL-003, PROOF-014, TEST-046 |
 | `src/bisection.c` | API-006, API-009, KERNEL-004 |
 | `src/bisection_*.c` | FP-001, KERNEL-001 |
 | `src/bisection_acsl.h` | API-007, KERNEL-007, WP-001, WP-002, WP-006 |

@@ -4,8 +4,10 @@ title: Axpy theorems, their hypotheses and the Euler lemmas they reuse
 kind: fact
 path:
   - spec/axpy.md
+  - spec/axpy_unchecked.md
   - src/axpy.c
-related: [PROOF-005, PROOF-007, PROOF-013, API-039, VST-004]
+  - src/axpy_unchecked.c
+related: [PROOF-005, PROOF-007, PROOF-013, API-018, API-039, VST-004]
 ---
 Axpy is proved through every layer (`spec/axpy.md`), the vectors as lists as for the norms.
 
@@ -24,6 +26,12 @@ Axpy is proved through every layer (`spec/axpy.md`), the vectors as lists as for
   input on `DIANA_ERR_ARG`) and `y` untouched on both errors (C1, 75 goals, no assumed
   contract). VST (C2) proves for `n ≥ 1` that the kernel computes `c_axpy a xs ys`, equal to the
   Flocq `faxpy`, with the exact status `axpy_status`; C3 is the `diana_fp_finite` copy.
+- Unchecked (`spec/axpy_unchecked.md`): AXPY-UNCHECKED-B1 a component is finite exactly when
+  `a`, `xᵢ`, `yᵢ` are finite, `|∘(a·xᵢ)| < 2¹⁰²⁴` and `|∘(yᵢ + ∘(a·xᵢ))| < 2¹⁰²⁴`
+  (EULER-UNCHECKED-B1 with `a` as the step); AXPY-UNCHECKED-C1 (WP, 19 goals) `DIANA_OK`
+  exactly for non-NULL pointers, `y` untouched on `DIANA_ERR_ARG`, no value statement;
+  AXPY-UNCHECKED-C2 (VST) it always writes `c_euler a ys xs`, the C-order model `c_axpy` of the
+  checked kernel, so AXPY-B1 and B2 hold for each finite component.
 - Limits: the bound is per component and relative to `|a·xᵢ + yᵢ|` and `|a·xᵢ|`, so it says
   nothing about cancellation between `a·xᵢ` and `yᵢ` beyond `u` times the exact result; the
   VST funspec takes `x` and `y` disjoint, as the ACSL precondition requires.

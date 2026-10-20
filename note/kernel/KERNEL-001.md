@@ -15,7 +15,7 @@ path:
   - src/lu.c
   - src/lu_solve.c
   - src/norm_*.c
-  - src/axpy.c
+  - src/axpy*.c
   - src/fp_sqrt.c
   - include/diana/*.h
 related: [KERNEL-002, KERNEL-004, KERNEL-005, FP-001, STYLE-002]

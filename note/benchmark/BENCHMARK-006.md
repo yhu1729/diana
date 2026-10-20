@@ -25,8 +25,9 @@ per-flop time, and a per-flop figure is comparable only at equal `n`.
   units `2n³/3`. `lu_solve`: the factors of that `A` from `diana_lu` in `setup`, `b` random;
   units `2n²`.
 - `norm_1`, `norm_2`, `norm_inf`: `x` random, `n` = 64, 1024, 16384; units `n`.
-- `axpy`: `x` and `y` random, `n` = 64, 1024, 16384, `a = 1e-9` so that `y`, updated in place on
-  every call, stays far from overflow over a run; units `n`.
+- `axpy`, `axpy_unchecked`: `x` and `y` random, `n` = 64, 1024, 16384, `a = 1e-9` so that `y`,
+  updated in place on every call, stays far from overflow over a run; units `n`. The two rows
+  differ only in the kernel called (API-019).
 
 Every input is finite and far from overflow, so each call returns `DIANA_OK`; a status other than
 that aborts the run (BENCHMARK-004).
