@@ -10,6 +10,16 @@ All notable changes to this project are documented here. The format follows
 
 #### C library
 
+- Axpy `diana_axpy(a, x, n, y)` in `diana/axpy.h`: the in-place update `y[i] = y[i] + a·x[i]`,
+  the product rounded before the sum, the first Diana kernel that writes over an input (the
+  out-of-place form is `diana_euler_step`). It tests `a`, then every component before writing any,
+  so a NaN or infinite input (`DIANA_ERR_ARG`) or an overflowing component of finite inputs
+  (`DIANA_ERR_OVERFLOW`) leaves `y` untouched; `n = 0` does nothing. Frama-C WP proves the ACSL
+  contract (75 goals, AXPY-C1, `spec/axpy.md`), the exact condition of each status included;
+  `test/c/test_axpy.c` covers the source at 100% line and branch coverage, and the compiler corpus
+  has 257 cases, every gcc and clang build matching CompCert bitwise.
+- Benchmark case `axpy` in the suite (`benchmark/axpy.c`).
+
 - Vector norms `diana_norm_1(x, n, &result)`, `diana_norm_2(x, n, &result)` and
   `diana_norm_inf(x, n, &result)` in `diana/norm.h`: the 1-norm added left to right, the Euclidean
   norm computed as `m·√s` with `m` the largest magnitude, at its first index `k`, and
@@ -24,6 +34,13 @@ All notable changes to this project are documented here. The format follows
 
 #### Python binding
 
+- `diana.axpy(a, x, y)` updates the writable float64 buffer `y` in place, `x` a buffer read in
+  place or an iterable copied first, of equal length, empty included (module `diana._axpy`;
+  extension function `diana._diana.axpy`). It is the first Python function of the package that
+  takes an output argument. Lengths that differ or an overlap raise `ValueError`, as does a
+  non-finite input; an overflow raises `diana.FloatOverflowError`. `test/python/test_axpy.py`
+  checks bitwise agreement with the operations in Python floats and the AXPY-B2 bound in exact
+  rationals.
 - `diana.norm_1(x)`, `diana.norm_2(x)` and `diana.norm_inf(x)` return the norms as `float`, `x` a
   float64 buffer read in place or an iterable copied first, of any length (module `diana._norm`;
   extension functions `diana._diana.norm_1`, `norm_2` and `norm_inf`, sharing
@@ -33,6 +50,11 @@ All notable changes to this project are documented here. The format follows
 
 #### Verification
 
+- `spec/axpy.md`: layer A in Lean and Rocq (`‖a·x + y‖ ≤ |a|·‖x‖ + ‖y‖` in each norm, the
+  composition of two updates along the same `x`, and the inverse update), layer B in Flocq (the
+  Euler-step theorems EULER-B1 and B2 with `a` as the step size, through `fupdate a x y =
+  fstep a y x`), and layer C by WP and by VST against the Flocq model for `n ≥ 1`, the first VST
+  proof in Diana of a loop that writes over the array it reads.
 - `spec/norm.md`: layer A in Lean and Rocq (the scaled 2-norm formula, the equivalence
   `‖x‖∞ ≤ ‖x‖₂ ≤ ‖x‖₁ ≤ n·‖x‖∞`, the Cauchy–Schwarz bounds and the norm axioms of all three),
   layer B in Flocq (the maximum norm exact; `|r − ‖x‖₁| ≤ γₙ₋₁·‖x‖₁`;
