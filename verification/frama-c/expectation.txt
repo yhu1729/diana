@@ -1,4 +1,5 @@
 src/axpy.c 75
+src/axpy_unchecked.c 19
 src/bisection_init.c 93
 src/bisection_result.c 19
 src/bisection_step.c 81
