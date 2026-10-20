@@ -17,15 +17,15 @@ hashes no longer match the commit or a status is not `ok`.
 
 | Input | SHA-256 |
 |---|---|
-| `include/` | `6325820a92719a389197e6af9e957582aa021ede418ec1c7b1abf06fcc5bae85` |
+| `include/` | `947c98019a5ba3dbd212ed1bd2f196129282053054fcfa2438fcad68955ad3d1` |
 | `script/axiom_allow.yaml` | `8803f7c820be21b1f381da50165e037f7ae297fbb3ae3a060acca7d34e678181` |
 | `script/check_frama_c.sh` | `2caa5b5f2586b81b83be1c217883eafe274d185c96027b6e79e5dd892a1de712` |
 | `script/check_spec.py` | `dbb781141add02ad01f43a9ccc087b6511f3db65e2f9a894af9533c7ab01ba12` |
 | `script/run_frama_c.sh` | `1089cc2d88deaf8fa7da4e4c52404ae8e008ee0ff4450dfd6df6268fb9150d79` |
 | `script/verify_frama_c.sh` | `2e15cb10bf3c4b20f1cd480e6efd72489edcbc270ed40e19a882471e0c4ec77a` |
-| `spec/` | `330dd4e2ca5b745d0776b081e878875c2ca7784e9ff2cde064babca817c89504` |
-| `src/` | `c70c6b2ab9ad7230f3f5c92a89ea1265233b769278a5ece0e39b2d87073d5209` |
-| `verification/` | `f84f65b97be3bf116a56d91dd5e945df15e5a3065dc0d9921a47a74c1c33cb0d` |
+| `spec/` | `c25202bdf2faa6504602d68c27071c8a55103ada5171bcabfa70fed63c20a7d2` |
+| `src/` | `fcad95ff29aa1ec956e42dd890768749470fd071f9942c6e2e535ef69e308547` |
+| `verification/` | `5610dab401cf78957cba84950bac87ff0035d87a48496783b3793bee28517bf7` |
 
 | Tool | Version |
 |---|---|
@@ -41,6 +41,14 @@ hashes no longer match the commit or a status is not `ok`.
 
 | Spec | ID | Layer | Lean | Rocq | Frama-C | Statement |
 |---|---|---|---|---|---|---|
+| axpy | AXPY-A1 | A | ok | ok | – | norm bound: ‖a·x + y‖ ≤ \|a\|·‖x‖ + ‖y‖ for each of the 1-, 2- and maximum norms of spec/norm.md, x and y of equal length |
+| axpy | AXPY-A2 | A | ok | ok | – | composition: two updates along the same x add their coefficients, axpy a x (axpy b x y) = axpy (a + b) x y |
+| axpy | AXPY-A3 | A | ok | ok | – | inverse: axpy 0 x y = y, so the update by −a undoes the update by a, axpy (−a) x (axpy a x y) = y, x and y of equal length |
+| axpy | AXPY-B1 | B | – | ok | – | a finite component certifies its evaluation: if the binary64 model fl(yᵢ + fl(a·xᵢ)) is finite, then a, xᵢ, yᵢ and the product fl(a·xᵢ) are finite, so neither operation overflowed (EULER-B1 with a as the step size). This is why the kernel checks only each computed component, after a. |
+| axpy | AXPY-B2 | B | – | ok | – | error per component: if the binary64 model rᵢ = fl(yᵢ + fl(a·xᵢ)) is finite, then \|rᵢ − (a·xᵢ + yᵢ)\| ≤ u·\|a·xᵢ + yᵢ\| + (1 + u)·(u·\|a·xᵢ\| + η), with u = 2⁻⁵³ and η = 2⁻¹⁰⁷⁵ (underflow in the product); EULER-B2 with a as the step size. |
+| axpy | AXPY-C1 | C | – | – | ok (75/75) | ACSL contract in src/axpy.c, Frama-C WP float model with RTE: memory safety (only x[0 .. n−1] and y[0 .. n−1] are read, only y[0 .. n−1] is written, y separate from x), no UB, termination of the three loops, a status in {DIANA_OK, DIANA_ERR_ARG, DIANA_ERR_OVERFLOW}; DIANA_OK and DIANA_ERR_OVERFLOW only for non-NULL pointers and a finite a; DIANA_ERR_OVERFLOW only with every x[j] and y[j] finite; DIANA_ERR_ARG only for a NULL pointer, a non-finite a or a non-finite x[j] or y[j]; and y untouched on both errors. No assumed contract; that y is finite on DIANA_OK is left to VST. |
+| axpy | AXPY-C2 | C | – | ok | – | diana_axpy computes the binary64 model (VST, AArch64 macOS Clight AST): for x pointing to n ≥ 1 readable doubles and y to n writable doubles, the two disjoint, it returns axpy_status a xs ys: DIANA_ERR_ARG with y unchanged when a is not finite; else DIANA_OK, writing the model values over y, when every component is finite; otherwise, leaving y unchanged, DIANA_ERR_OVERFLOW when every x[j] and y[j] is finite and DIANA_ERR_ARG when not. The NULL and n = 0 paths are AXPY-C1. |
+| axpy | AXPY-C3 | C | – | ok | – | the copy of diana_fp_finite in the Clight AST of axpy implements its IEEE semantics, as BISECTION-C5 for the copy in bisection_init (VST, AArch64 macOS Clight AST). |
 | bisection | BISECTION-A1 | A | ok | ok | – | bracket invariant: ∀n, aₙ ≤ bₙ, f(aₙ)·f(bₙ) < 0 or aₙ = bₙ with f(aₙ) = 0, and bₙ − aₙ ≤ (b − a)/2ⁿ |
 | bisection | BISECTION-A2 | A | ok | ok | – | ∃ x* ∈ [aₙ, bₙ] with f(x*) = 0, hence \|mₙ − x*\| ≤ (b − a)/2ⁿ⁺¹ |
 | bisection | BISECTION-B1 | B | – | ok | – | binary64 model: with \|a\|,\|b\| ≤ DBL_MAX/2 and a ≤ b, the midpoint fl(0.5·fl(a+b)) is finite and lies in [a, b] (round-to-nearest-even; parameterised by the NaN-payload functions so it instantiates to CompCert's Float.add/Float.mul). |
