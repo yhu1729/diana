@@ -1,5 +1,6 @@
 module
 
+public import Diana.Real.Axpy
 public import Diana.Real.Bisection
 public import Diana.Real.Cholesky
 public import Diana.Real.Euler
