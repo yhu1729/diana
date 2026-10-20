@@ -10,12 +10,14 @@ explicit Euler step and :func:`euler` loops over it with a callable; :func:`rk4_
 :func:`cholesky` factors a symmetric positive definite matrix stored column-major, and
 :func:`forward_substitution` and :func:`transpose_substitution` solve with its triangular factor.
 :func:`lu` factors a square matrix with partial pivoting, and :func:`lu_solve` solves with its
-factors. :func:`norm_1`, :func:`norm_2` and :func:`norm_inf` return the vector norms.
+factors. :func:`norm_1`, :func:`norm_2` and :func:`norm_inf` return the vector norms, and
+:func:`axpy` updates a vector in place to ``a*x + y``.
 """
 
 from __future__ import annotations
 
 from diana import _diana
+from diana._axpy import axpy
 from diana._bisection import bisection
 from diana._cholesky import cholesky
 from diana._diana import (
@@ -57,6 +59,7 @@ __all__ = [
     "MaxIterError",
     "Newton",
     "SingularError",
+    "axpy",
     "bisection",
     "cholesky",
     "euler",
