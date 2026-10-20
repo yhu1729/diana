@@ -18,7 +18,7 @@ else.
 Closing the tooling gaps of 1.0.
 
 - `high` GIL released in the Python array functions
-- `high` Dot product, `axpy`
+- `high` Dot product
 - `medium` pkg-config file
 - `medium` `CITATION.cff`
 
