@@ -18,7 +18,7 @@ Layer A is proved twice, independently, in Lean and in Rocq. CompCert's floating
 operations are Flocq's, so layers B and C-VST compose inside one Rocq development with no
 translation step. Every function of the verified kernels has both a VST proof and a Frama-C proof;
 the VST proofs leave the argument-error paths (`NULL` pointers, `d = 0` and the like) and the
-empty vector of the norms to Frama-C.
+empty vector of the norms and of axpy to Frama-C.
 The opt-in `_unchecked` kernels have no layer A of their own: their layer B shows that a written
 component is finite exactly when the checked kernel would have accepted it.
 
