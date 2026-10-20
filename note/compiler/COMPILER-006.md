@@ -10,7 +10,7 @@ Besides seeded random inputs (COMPILER-007), the corpus runs every public kernel
 cases below. Current case lines: `bisection_*` 161, `trapezoidal` 283, `simpson` 284, `euler`
 and `euler_unchecked` 248 each, `rk4_stage*` 274 each, `rk4_step*` 270 each, `newton_*` 152,
 `cholesky` 248, `forward_substitution` and `transpose_substitution` 270 each, `lu` 260,
-`lu_solve` 292, `norm_1`, `norm_2` and `norm_inf` 252 each.
+`lu_solve` 292, `norm_1`, `norm_2` and `norm_inf` 252 each, `axpy` 257.
 
 - Bisection `init`: NULL state; NaN and an infinity in each argument, a signalling NaN `fa`;
   `a > b`; negative `tol`; `max_iter = 0`; `|a|` or `|b|` one ulp past `DBL_MAX/2` and
@@ -72,3 +72,8 @@ and `euler_unchecked` 248 each, `rk4_stage*` 274 each, `rk4_step*` 270 each, `ne
   2-norm edge `DBL_MAX·√(1 + 2⁻⁵²)`, wide magnitude ranges, both orders of the 2-norm's
   sum-of-squares pin, and NaN, sNaN and `±inf` at each position, also after an overflowing sum;
   the random vectors (`n` from 0 to 40) alternate raw and plain entries.
+- Axpy: each NULL pointer, `n` from 0 to 4, NaN and `+∞` as `a` for `n = 0`, exact and inexact
+  `a`, the FMA case, `a = ±0` with signed-zero `y`, underflow ties, `DBL_MAX + 1`, product and
+  sum overflow, cancellation, first and last component failing, NaN, sNaN and infinities as `a`
+  and in each position of `x` and `y`; the random vectors (`n` from 0 to 40, random `a`)
+  alternate raw and plain entries, and the output buffer starts as a copy of `y`.

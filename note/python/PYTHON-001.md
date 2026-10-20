@@ -35,7 +35,9 @@ each named after its function without `diana_py_` (STYLE-002); all are listed in
   state `s` (its `status` field is the attribute, API-023); the array functions are `trapezoidal.c`,
   `simpson.c`, `euler_step.c`, `rk4_stage.c`, `rk4_step.c`, `cholesky.c`,
   `forward_substitution.c`, `transpose_substitution.c`, `lu.c` and `lu_solve.c`, the two that
-  allocate (the pivot rows, with `PyMem_New`), and `norm_1.c`, `norm_2.c`, `norm_inf.c`.
+  allocate (the pivot rows, with `PyMem_New`), `norm_1.c`, `norm_2.c`, `norm_inf.c`, and
+  `axpy.c`, the one that takes its `y` writable and updates it in place (API-040), registered by
+  `axpy_exec.c`.
   `forward_substitution.c` and `transpose_substitution.c` pass their kernel to
   `substitution.c` (`diana_py_substitution`, the shared argument checks), registered with them by
   `substitution_exec.c`; the norms pass theirs to `norm.c` (`diana_py_norm`), registered by

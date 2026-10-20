@@ -124,6 +124,8 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [API-036](api/API-036.md) | fact | Non-finite input versus overflow, classified only on the error path |
 | [API-037](api/API-037.md) | fact | Norm evaluation order, exits and the n = 0 vector |
 | [API-038](api/API-038.md) | fact | Python norm_1, norm_2, norm_inf and the extension function diana_py_norm |
+| [API-039](api/API-039.md) | fact | Axpy evaluation order, two-pass check and exits |
+| [API-040](api/API-040.md) | fact | Python axpy and the extension function diana_py_axpy |
 
 ### benchmark
 
@@ -134,7 +136,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [BENCHMARK-003](benchmark/BENCHMARK-003.md) | fact | The benchmark is built and linted locally and never run in CI |
 | [BENCHMARK-004](benchmark/BENCHMARK-004.md) | fact | How the driver times a case and what its table shows |
 | [BENCHMARK-005](benchmark/BENCHMARK-005.md) | fact | Scalar, quadrature and ODE benchmark cases and their inputs |
-| [BENCHMARK-006](benchmark/BENCHMARK-006.md) | fact | Linear algebra and norm benchmark cases and their inputs |
+| [BENCHMARK-006](benchmark/BENCHMARK-006.md) | fact | Linear algebra, norm and axpy benchmark cases and their inputs |
 | [BENCHMARK-007](benchmark/BENCHMARK-007.md) | fact | The result file a benchmark run writes |
 
 ### build
@@ -270,6 +272,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [PROOF-011](proof/PROOF-011.md) | fact | LU theorems, their hypotheses and the backward error bounds |
 | [PROOF-012](proof/PROOF-012.md) | fact | LU solve theorems, their hypotheses and the residual bounds |
 | [PROOF-013](proof/PROOF-013.md) | fact | Norm theorems, their hypotheses and the error bounds |
+| [PROOF-014](proof/PROOF-014.md) | fact | Axpy theorems, their hypotheses and the Euler lemmas they reuse |
 
 ### prover
 
@@ -362,6 +365,8 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | [TEST-043](test/TEST-043.md) | fact | ctest configure checks the compiler refusal and the flag guard |
 | [TEST-044](test/TEST-044.md) | fact | Norm C test values, rounding pins and failure cases |
 | [TEST-045](test/TEST-045.md) | fact | Norm Python tests against a binary64 model and the B bounds |
+| [TEST-046](test/TEST-046.md) | fact | Axpy C test values, rounding pins and failure cases |
+| [TEST-047](test/TEST-047.md) | fact | Axpy Python tests against binary64 evaluation and the B2 bound |
 
 ### verify
 
@@ -428,6 +433,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `CONTRIBUTING.md` | GIT-008, PROVER-002, PROVER-003, PROVER-005, VERIFY-001 |
 | `benchmark/.clang-tidy` | BENCHMARK-003, STYLE-007 |
 | `benchmark/CMakeLists.txt` | BENCHMARK-001, BENCHMARK-003, KERNEL-006 |
+| `benchmark/axpy.c` | BENCHMARK-006 |
 | `benchmark/benchmark.h` | BENCHMARK-004 |
 | `benchmark/bisection.c` | BENCHMARK-005 |
 | `benchmark/cholesky.c` | BENCHMARK-006 |
@@ -456,6 +462,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `doc/verification/report.md` | CI-016, GATE-006, GATE-009 |
 | `doc/verification/trust.md` | WP-015 |
 | `include/diana/*.h` | KERNEL-001 |
+| `include/diana/axpy.h` | API-039 |
 | `include/diana/bisection.h` | API-007 |
 | `include/diana/cholesky.h` | API-028 |
 | `include/diana/diana.h` | API-001, API-002, BUILD-006, KERNEL-006 |
@@ -477,6 +484,8 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `python/ext/*.c` | PYTHON-001, PYTHON-006, STYLE-002 |
 | `python/ext/*.h` | PYTHON-001 |
 | `python/ext/.clang-tidy` | STYLE-007 |
+| `python/ext/axpy.c` | API-022, API-040 |
+| `python/ext/axpy_exec.c` | API-040 |
 | `python/ext/bisection_*.c` | API-023 |
 | `python/ext/bisection_exec.c` | PYTHON-003 |
 | `python/ext/bisection_init.c` | API-021, API-024, PYTHON-008, TEST-008, TEST-009 |
@@ -517,6 +526,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `python/ext/version.c` | API-027 |
 | `python/src/diana/*.py` | PYTHON-002 |
 | `python/src/diana/__init__.py` | API-027, PYTHON-007 |
+| `python/src/diana/_axpy.py` | API-020, API-040 |
 | `python/src/diana/_bisection.py` | API-022, API-024, TEST-008 |
 | `python/src/diana/_cholesky.py` | API-020, API-029 |
 | `python/src/diana/_convert.py` | API-021 |
@@ -548,6 +558,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `script/run_frama_c.sh` | GATE-009, PROVER-004, WP-003, WP-004, WP-007, WP-009, WP-010, WP-015 |
 | `script/verify_frama_c.sh` | CI-011, GATE-009, WP-008 |
 | `spec/*.md` | GATE-001, GATE-002, GATE-008, PROOF-007, VST-004, VST-006 |
+| `spec/axpy.md` | PROOF-014 |
 | `spec/bisection.md` | PROOF-001, TEST-008 |
 | `spec/cholesky.md` | PROOF-009 |
 | `spec/euler.md` | PROOF-005 |
@@ -562,6 +573,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `spec/substitution.md` | PROOF-010 |
 | `spec/trapezoidal.md` | PROOF-003 |
 | `src/*.c` | API-003, STYLE-002, TEST-006 |
+| `src/axpy.c` | API-004, API-036, API-039, FP-001, KERNEL-001, KERNEL-002, PROOF-014 |
 | `src/bisection.c` | API-006, API-009, KERNEL-004 |
 | `src/bisection_*.c` | FP-001, KERNEL-001 |
 | `src/bisection_acsl.h` | API-007, KERNEL-007, WP-001, WP-002, WP-006 |
@@ -607,6 +619,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `test/c/CMakeLists.txt` | BUILD-001, COMPILER-010, KERNEL-006, TEST-001, TEST-043 |
 | `test/c/check.h` | TEST-001 |
 | `test/c/test_*.c` | TEST-006 |
+| `test/c/test_axpy.c` | TEST-046 |
 | `test/c/test_bisection.c` | API-009, API-024, TEST-007, TEST-008, TEST-009, TEST-041 |
 | `test/c/test_cholesky.c` | TEST-033 |
 | `test/c/test_compiler.c` | COMPILER-001, COMPILER-005, COMPILER-006, COMPILER-007, COMPILER-008, COMPILER-009, COMPILER-010, COMPILER-011, FP-005, KERNEL-006 |
@@ -624,6 +637,7 @@ lines wrapped at 100 columns. It names theorem IDs (`BISECTION-C3`) where a proo
 | `test/install/.clang-tidy` | STYLE-007 |
 | `test/install/CMakeLists.txt` | API-005, BUILD-009, CI-009, TEST-002 |
 | `test/install/main.c` | API-005, BUILD-006, BUILD-009, TEST-002 |
+| `test/python/test_axpy.py` | TEST-047 |
 | `test/python/test_bisection.py` | API-024, TEST-007, TEST-008, TEST-009 |
 | `test/python/test_check_commit.py` | GIT-007 |
 | `test/python/test_check_provenance.py` | TEST-042 |

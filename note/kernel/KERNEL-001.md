@@ -15,6 +15,7 @@ path:
   - src/lu.c
   - src/lu_solve.c
   - src/norm_*.c
+  - src/axpy.c
   - src/fp_sqrt.c
   - include/diana/*.h
 related: [KERNEL-002, KERNEL-004, KERNEL-005, FP-001, STYLE-002]
@@ -22,7 +23,7 @@ related: [KERNEL-002, KERNEL-004, KERNEL-005, FP-001, STYLE-002]
 A verified kernel is a reverse-communication state machine on a caller-owned struct (`init` / `step`
 / `result`: bisection, Newton) or one function over caller-supplied arrays (trapezoidal, Simpson,
 Euler step, RK4 stage and step, Cholesky, forward and transpose substitution, LU, LU solve, the
-three norms). It
+three norms, axpy). It
 allocates nothing, calls no libm function, neither takes nor calls a function pointer, and every
 public function returns `diana_status`.
 

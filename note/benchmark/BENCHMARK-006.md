@@ -1,6 +1,6 @@
 ---
 id: BENCHMARK-006
-title: Linear algebra and norm benchmark cases and their inputs
+title: Linear algebra, norm and axpy benchmark cases and their inputs
 kind: fact
 path:
   - benchmark/cholesky.c
@@ -8,6 +8,7 @@ path:
   - benchmark/lu.c
   - benchmark/lu_solve.c
   - benchmark/norm.c
+  - benchmark/axpy.c
 related: [BENCHMARK-004, BENCHMARK-005]
 ---
 Matrices are column-major `n × n` as the kernels take them, `n` = 16, 64 and 256; the largest
@@ -24,6 +25,8 @@ per-flop time, and a per-flop figure is comparable only at equal `n`.
   units `2n³/3`. `lu_solve`: the factors of that `A` from `diana_lu` in `setup`, `b` random;
   units `2n²`.
 - `norm_1`, `norm_2`, `norm_inf`: `x` random, `n` = 64, 1024, 16384; units `n`.
+- `axpy`: `x` and `y` random, `n` = 64, 1024, 16384, `a = 1e-9` so that `y`, updated in place on
+  every call, stays far from overflow over a run; units `n`.
 
 Every input is finite and far from overflow, so each call returns `DIANA_OK`; a status other than
 that aborts the run (BENCHMARK-004).

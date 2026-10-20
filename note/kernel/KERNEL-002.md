@@ -16,6 +16,7 @@ path:
   - src/norm_1.c
   - src/norm_2.c
   - src/norm_inf.c
+  - src/axpy.c
 related: [KERNEL-003, API-003, API-036, FP-002]
 ---
 A checked kernel writes its output only once it knows the call succeeds, so `DIANA_ERR_ARG`
@@ -26,6 +27,9 @@ below. The vector kernels do this in two passes without a scratch buffer.
   into a local, tests it with `diana_fp_finite` and returns at the first non-finite one,
   `DIANA_ERR_ARG` or `DIANA_ERR_OVERFLOW` after testing the inputs (API-036); the second loop
   recomputes each component with the same expression (so the same bits) and stores it in `y_out`.
+- `diana_axpy`: the same two passes, after a test of `a`; the second pass writes each component
+  over `y[i]`, which it has just read, and `x` is separate from `y`, so both passes read the
+  same values (API-039). `DIANA_ERR_ARG` and `DIANA_ERR_OVERFLOW` leave `y` untouched.
 - `diana_trapezoidal`, `diana_simpson`: the scalar is computed into a local, tested (classified
   as above on failure), then written to `*result`.
 - `diana_norm_1`, `diana_norm_2`, `diana_norm_inf`: the scalar is accumulated in a local and
@@ -49,7 +53,8 @@ below. The vector kernels do this in two passes without a scratch buffer.
   an overflowing entry of either solve (`DIANA_ERR_OVERFLOW`) is found with `x` partly written
   (API-034).
 - Proved: `y_out` untouched on `DIANA_ERR_ARG` and `DIANA_ERR_OVERFLOW` by WP (EULER-C1, RK4-C1,
-  RK4-C2) and unchanged unless every component is finite by VST (EULER-C2, RK4-C3, RK4-C4).
+  RK4-C2, and `y` of axpy by AXPY-C1) and unchanged unless every component is finite by VST
+  (EULER-C2, RK4-C3, RK4-C4, AXPY-C2).
 
 Keep the check in every build configuration: there is no `NDEBUG` or other conditional
 compilation in `src/`, and none may be added. The status code and the Python `ValueError` are

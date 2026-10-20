@@ -22,8 +22,8 @@ private modules, so `diana.<name>` is the whole API.
   `_trapezoidal.py`, `_simpson.py`, `_euler.py` (`euler_step`, `euler`), `_rk4.py` (`rk4_stage`,
   `rk4_step`, `rk4`), `_cholesky.py` (`cholesky`), `_substitution.py` (`forward_substitution`,
   `transpose_substitution`), `_lu.py` (`lu`), `_lu_solve.py` (`lu_solve`), `_norm.py`
-  (`norm_1`, `norm_2`, `norm_inf`). The single-call array
-  functions pass a buffer through
+  (`norm_1`, `norm_2`, `norm_inf`), `_axpy.py` (`axpy`, which updates its `y` in place). The
+  single-call array functions pass a buffer through
   and copy any other iterable into `array.array("d")`; `euler` and `rk4` copy `y0` element by
   element.
 - `__init__.py` also takes `Bisection`, `Newton` and the status constants from `_diana`, aliases
