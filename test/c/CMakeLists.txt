@@ -6,6 +6,7 @@ function(diana_add_test name)
 endfunction()
 
 diana_add_test(status)
+diana_add_test(axpy)
 diana_add_test(bisection)
 diana_add_test(cholesky)
 diana_add_test(compiler)
