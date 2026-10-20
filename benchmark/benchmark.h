@@ -48,5 +48,6 @@ extern const struct diana_benchmark_suite diana_benchmark_substitution;
 extern const struct diana_benchmark_suite diana_benchmark_lu;
 extern const struct diana_benchmark_suite diana_benchmark_lu_solve;
 extern const struct diana_benchmark_suite diana_benchmark_norm;
+extern const struct diana_benchmark_suite diana_benchmark_axpy;
 
 #endif

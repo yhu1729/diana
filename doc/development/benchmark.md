@@ -58,6 +58,7 @@ read the largest `n` for the kernel alone.
 | `cholesky`, `forward_substitution`, `transpose_substitution` | one factorization or solve with a well-conditioned positive definite matrix | flop (`n³/3`, `n²`) | 16, 64, 256 |
 | `lu`, `lu_solve` | one factorization or solve with a random matrix, so rows are interchanged | flop (`2n³/3`, `2n²`) | 16, 64, 256 |
 | `norm_1`, `norm_2`, `norm_inf` | one norm | component | 64, 1024, 16384 |
+| `axpy` | one in-place update `y ← a·x + y` | component | 64, 1024, 16384 |
 
 The `_unchecked` rows against their checked ones show what the opt-in
 [Euler](../api/euler.md#unchecked-step) and [RK4](../api/rk4.md#unchecked-stage-and-step)

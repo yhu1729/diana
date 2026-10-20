@@ -10,7 +10,7 @@ static const struct diana_benchmark_suite *const suite[] = {
     &diana_benchmark_euler,       &diana_benchmark_rk4,
     &diana_benchmark_cholesky,    &diana_benchmark_substitution,
     &diana_benchmark_lu,          &diana_benchmark_lu_solve,
-    &diana_benchmark_norm};
+    &diana_benchmark_norm,        &diana_benchmark_axpy};
 
 #define NSUITE (sizeof suite / sizeof suite[0])
 
