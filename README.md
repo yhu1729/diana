@@ -27,6 +27,7 @@ states precisely what is proven, by which tool, and what is only tested.
 - Newton's method, as a state machine the caller drives, and as a function taking a callback.
 - Vector norms: the 1-norm, the Euclidean norm, scaled so that it overflows or underflows only
   when the norm itself does, and the maximum norm.
+- Axpy, the in-place update `y ← a·x + y`.
 
 Each is available from C (`include/diana/`) and from Python (`import diana`). The C kernels
 allocate nothing, call no libm function, and use no function pointer; the convenience wrappers

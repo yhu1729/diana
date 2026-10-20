@@ -6,7 +6,7 @@ kernels. This page covers what every method shares. Each method has its own page
 [composite trapezoidal rule](trapezoidal.md), [composite Simpson rule](simpson.md),
 [explicit Euler step](euler.md), [classical Runge–Kutta step](rk4.md),
 [Cholesky factorization](cholesky.md), [forward and transpose substitution](substitution.md),
-[LU factorization](lu.md), [LU solve](lu_solve.md) and [vector norms](norm.md).
+[LU factorization](lu.md), [LU solve](lu_solve.md), [vector norms](norm.md) and [axpy](axpy.md).
 
 ## Floating-point environment
 
@@ -130,9 +130,9 @@ The package mirrors the C API:
   `diana.newton` run them over a Python callable.
 - `diana.trapezoidal`, `diana.simpson`, `diana.euler_step`, `diana.rk4_stage`,
   `diana.rk4_step`, `diana.cholesky`, `diana.forward_substitution`,
-  `diana.transpose_substitution`, `diana.lu`, `diana.lu_solve`, `diana.norm_1`, `diana.norm_2`
-  and `diana.norm_inf` call the array kernels, and `diana.euler` and `diana.rk4` loop over a
-  callable.
+  `diana.transpose_substitution`, `diana.lu`, `diana.lu_solve`, `diana.norm_1`, `diana.norm_2`,
+  `diana.norm_inf` and `diana.axpy` call the array kernels, and `diana.euler` and `diana.rk4`
+  loop over a callable.
 - `diana.version()` (also `diana.__version__`), `diana.status_str` and the constants `diana.OK`,
   `CONTINUE`, `ERR_ARG`, `ERR_BRACKET`, `ERR_MAXITER`, `ERR_SINGULAR`, `ERR_OVERFLOW` and
   `ERR_CALLBACK` (only the C wrappers return it; Python callables raise their own exceptions).
