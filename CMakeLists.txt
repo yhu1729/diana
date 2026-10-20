@@ -201,6 +201,8 @@ if(DIANA_BUILD_PYTHON)
     find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
     Python_add_library(_diana MODULE WITH_SOABI
         python/ext/module.c
+        python/ext/axpy.c
+        python/ext/axpy_exec.c
         python/ext/bisection_exec.c
         python/ext/bisection_init.c
         python/ext/bisection_new.c
