@@ -17,15 +17,15 @@ hashes no longer match the commit or a status is not `ok`.
 
 | Input | SHA-256 |
 |---|---|
-| `include/` | `947c98019a5ba3dbd212ed1bd2f196129282053054fcfa2438fcad68955ad3d1` |
+| `include/` | `e0a589a019c2e9b5a14acf58f1db825b539511b3d41999a6c21e829d3a456dcc` |
 | `script/axiom_allow.yaml` | `8803f7c820be21b1f381da50165e037f7ae297fbb3ae3a060acca7d34e678181` |
 | `script/check_frama_c.sh` | `2caa5b5f2586b81b83be1c217883eafe274d185c96027b6e79e5dd892a1de712` |
 | `script/check_spec.py` | `dbb781141add02ad01f43a9ccc087b6511f3db65e2f9a894af9533c7ab01ba12` |
 | `script/run_frama_c.sh` | `1089cc2d88deaf8fa7da4e4c52404ae8e008ee0ff4450dfd6df6268fb9150d79` |
 | `script/verify_frama_c.sh` | `2e15cb10bf3c4b20f1cd480e6efd72489edcbc270ed40e19a882471e0c4ec77a` |
-| `spec/` | `c25202bdf2faa6504602d68c27071c8a55103ada5171bcabfa70fed63c20a7d2` |
-| `src/` | `fcad95ff29aa1ec956e42dd890768749470fd071f9942c6e2e535ef69e308547` |
-| `verification/` | `5610dab401cf78957cba84950bac87ff0035d87a48496783b3793bee28517bf7` |
+| `spec/` | `7feca1e571c006814a6bbc7f1ebd3a5da1cd22121ef1d64741b3b4f0c5ba2823` |
+| `src/` | `e8c10645a73f9efb5ad24fc29fb8092a2bb827de76e1dae2721decbf956e768c` |
+| `verification/` | `bed1b13c6249b29ad678919fdf3d38c8a53ac6158a38d566f6cbc77902eb7464` |
 
 | Tool | Version |
 |---|---|
@@ -49,6 +49,9 @@ hashes no longer match the commit or a status is not `ok`.
 | axpy | AXPY-C1 | C | – | – | ok (75/75) | ACSL contract in src/axpy.c, Frama-C WP float model with RTE: memory safety (only x[0 .. n−1] and y[0 .. n−1] are read, only y[0 .. n−1] is written, y separate from x), no UB, termination of the three loops, a status in {DIANA_OK, DIANA_ERR_ARG, DIANA_ERR_OVERFLOW}; DIANA_OK and DIANA_ERR_OVERFLOW only for non-NULL pointers and a finite a; DIANA_ERR_OVERFLOW only with every x[j] and y[j] finite; DIANA_ERR_ARG only for a NULL pointer, a non-finite a or a non-finite x[j] or y[j]; and y untouched on both errors. No assumed contract; that y is finite on DIANA_OK is left to VST. |
 | axpy | AXPY-C2 | C | – | ok | – | diana_axpy computes the binary64 model (VST, AArch64 macOS Clight AST): for x pointing to n ≥ 1 readable doubles and y to n writable doubles, the two disjoint, it returns axpy_status a xs ys: DIANA_ERR_ARG with y unchanged when a is not finite; else DIANA_OK, writing the model values over y, when every component is finite; otherwise, leaving y unchanged, DIANA_ERR_OVERFLOW when every x[j] and y[j] is finite and DIANA_ERR_ARG when not. The NULL and n = 0 paths are AXPY-C1. |
 | axpy | AXPY-C3 | C | – | ok | – | the copy of diana_fp_finite in the Clight AST of axpy implements its IEEE semantics, as BISECTION-C5 for the copy in bisection_init (VST, AArch64 macOS Clight AST). |
+| axpy_unchecked | AXPY-UNCHECKED-B1 | B | – | ok | – | a finite component is exactly a successful evaluation: the binary64 model fl(yᵢ + fl(a·xᵢ)) is finite if and only if a, xᵢ and yᵢ are finite and neither operation overflows, \|∘(a·xᵢ)\| < 2¹⁰²⁴ and \|∘(yᵢ + ∘(a·xᵢ))\| < 2¹⁰²⁴, with ∘ the rounding to nearest-even over the reals (EULER-UNCHECKED-B1 with a as the step size). So a NaN or infinite input or an overflow always leaves a non-finite component, and a finiteness check of y afterwards catches every such case. |
+| axpy_unchecked | AXPY-UNCHECKED-C1 | C | – | – | ok (19/19) | ACSL contract in src/axpy_unchecked.c, Frama-C WP float model with RTE: memory safety (only x[0 .. n−1] and y[0 .. n−1] are read, only y[0 .. n−1] is written, y separate from x), no UB, termination of the loop, DIANA_OK exactly for non-NULL pointers, and y untouched on DIANA_ERR_ARG. No assumed contract and no statement about the written values. |
+| axpy_unchecked | AXPY-UNCHECKED-C2 | C | – | ok | – | diana_axpy_unchecked computes the binary64 model unconditionally (VST, AArch64 macOS Clight AST): for x pointing to n ≥ 1 readable doubles and y to n writable doubles, the two disjoint, it returns DIANA_OK and writes c_euler a ys xs over y, finite or not. That list is the C-order model c_axpy a xs ys of AXPY-C2 (c_axpy_euler), equal to the Flocq model faxpy, so AXPY-B1 and B2 hold for every finite component and AXPY-UNCHECKED-B1 for every component. The NULL and n = 0 paths are AXPY-UNCHECKED-C1. |
 | bisection | BISECTION-A1 | A | ok | ok | – | bracket invariant: ∀n, aₙ ≤ bₙ, f(aₙ)·f(bₙ) < 0 or aₙ = bₙ with f(aₙ) = 0, and bₙ − aₙ ≤ (b − a)/2ⁿ |
 | bisection | BISECTION-A2 | A | ok | ok | – | ∃ x* ∈ [aₙ, bₙ] with f(x*) = 0, hence \|mₙ − x*\| ≤ (b − a)/2ⁿ⁺¹ |
 | bisection | BISECTION-B1 | B | – | ok | – | binary64 model: with \|a\|,\|b\| ≤ DBL_MAX/2 and a ≤ b, the midpoint fl(0.5·fl(a+b)) is finite and lies in [a, b] (round-to-nearest-even; parameterised by the NaN-payload functions so it instantiates to CompCert's Float.add/Float.mul). |
