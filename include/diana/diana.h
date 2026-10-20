@@ -6,6 +6,7 @@
 #define DIANA_VERSION_PATCH 0
 #define DIANA_VERSION_STRING "1.0.0"
 
+#include "diana/axpy.h"
 #include "diana/bisection.h"
 #include "diana/cholesky.h"
 #include "diana/euler.h"
