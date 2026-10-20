@@ -11,6 +11,7 @@ theory/Real/OneStep.v
 theory/Real/Euler.v
 theory/Real/Newton.v
 theory/Real/Norm.v
+theory/Real/Axpy.v
 theory/Real/Taylor.v
 theory/Real/RK4.v
 theory/Real/Simpson.v
