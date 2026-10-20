@@ -68,7 +68,8 @@ one line per idea, no design (a design is written only when an item is picked up
   each method or function in its own file such as `bisection_step.c`; declarations and the
   `static inline` `diana_py_overlap` and `diana_py_square_side` in `module.h`, object structs in
   `bisection_object.h` and
-  `newton_object.h`; shared argument handling in `substitution.c` and `norm.c`); pure-Python
+  `newton_object.h`; shared argument handling in `substitution.c` and `norm.c`; `axpy.c` takes
+  `y` as a writable buffer and updates it in place); pure-Python
   package in `python/src/diana/`
   with one private driver module per kernel (`_bisection.py`, `_newton.py`) re-exported by `__init__.py`, and
   `_convert.py` (`real`, the scalar check the bisection, Euler and RK4 drivers apply: a string is
@@ -79,7 +80,8 @@ one line per idea, no design (a design is written only when an item is picked up
   without a default (no parameter-free stopping rule; `tol = 0` commonly ends in a two-cycle of adjacent doubles).
   An array kernel reads a buffer in place (`PyBUF_RECORDS_RO`, the extension's `out` buffer `PyBUF_RECORDS`; native float64, one-dimensional,
   C-contiguous, aligned, checked in the extension by `diana_py_get_array` in `python/ext/get_array.c`) and its driver copies any non-buffer iterable
-  into `array.array("d")`; no NumPy in the package, only in tests.
+  into `array.array("d")`; `diana.axpy` is the one public function with an output argument, its
+  `y` a writable buffer passed through; no NumPy in the package, only in tests.
 - **ACSL:** arithmetic on doubles is exact real arithmetic, write rounded values with casts
   `(double)(...)`; no hexadecimal float literal anywhere in ACSL (WP 32.1 and 33.0 reject them in
   lemmas and mistranslate them in predicates), use exact integer expressions such as
@@ -202,7 +204,7 @@ note/                 technical notes per topic, index by topic and by path (REA
   rows at a time, each row in its own `verification/frama-c/session/<row>` and `cache/<row>`,
   one `report.txt` in row order; all goals must prove and each count must match;
   `script/dev.sh verify` and CI both call it)
-- Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/<kernel>_aarch64_macos.v src/<kernel>.c` (today `bisection_init`, `bisection_mid`, `bisection_result`, `bisection_step`, `cholesky`, `euler_step`, `euler_step_unchecked`, `forward_substitution`, `fp_sqrt`, `lu`, `lu_solve`, `newton_init`, `newton_result`, `newton_step`, `norm_1`, `norm_2`, `norm_inf`, `rk4_stage`, `rk4_stage_unchecked`, `rk4_step`, `rk4_step_unchecked`, `simpson`, `transpose_substitution` and `trapezoidal`) **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not regenerated in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others, then records the hash of each AST, its source and every header it includes from `include/` or `src/` in `verification/clight/manifest.txt` (note VST-009); commit it with the AST
+- Clight regeneration: `clightgen -normalize -Iinclude -Isrc -o verification/clight/<kernel>_aarch64_macos.v src/<kernel>.c` (today `axpy`, `bisection_init`, `bisection_mid`, `bisection_result`, `bisection_step`, `cholesky`, `euler_step`, `euler_step_unchecked`, `forward_substitution`, `fp_sqrt`, `lu`, `lu_solve`, `newton_init`, `newton_result`, `newton_step`, `norm_1`, `norm_2`, `norm_inf`, `rk4_stage`, `rk4_stage_unchecked`, `rk4_step`, `rk4_step_unchecked`, `simpson`, `transpose_substitution` and `trapezoidal`) **on AArch64 macOS only** (the AST is named after its CompCert target, `<kernel>_<arch>_<system>.v`; never overwrite it from another platform), after a change to the kernel or a header it includes, then `make` in `verification/rocq`; committed, not regenerated in CI. `script/dev.sh verify` checks the ASTs of the current target and skips the others, then records the hash of each AST, its source and every header it includes from `include/` or `src/` in `verification/clight/manifest.txt` (note VST-009); commit it with the AST
 - Compiler comparison: `opam exec -- script/compare_compiler.sh` builds `src/*.c` with the corpus
   driver `test/c/test_compiler.c` once with `ccomp` and with each gcc/clang found
   (`DIANA_COMPARE_CC` to choose) at `-O0`/`-O2`/`-O3`, and fails on any byte of difference in the
@@ -250,6 +252,7 @@ by VST against the Flocq model.
 | Substitution | `diana_forward_substitution`, `diana_transpose_substitution` | `substitution` |
 | LU | `diana_lu`, `diana_lu_solve` | `lu`, `lu_solve` |
 | Norm | `diana_norm_1`, `diana_norm_2`, `diana_norm_inf`; the 2-norm calls `diana_fp_sqrt` | `norm` |
+| Axpy | `diana_axpy`, in place over `y` | `axpy` |
 
 The opt-in `_unchecked` Euler and RK4 kernels have layers B and C only (`euler_unchecked`,
 `rk4_unchecked`). The callback wrappers and the Python binding are tested, not verified.
