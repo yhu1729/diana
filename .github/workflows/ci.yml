@@ -53,7 +53,7 @@ jobs:
   style_git:
     if: ${{ !github.event.deleted }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -78,7 +78,7 @@ jobs:
     needs: change
     if: ${{ needs.change.outputs.any == 'true' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -91,7 +91,7 @@ jobs:
     needs: change
     if: ${{ needs.change.outputs.style_c == 'true' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 10
     container: ghcr.io/astral-sh/uv:python3.13-bookworm-slim@sha256:531f855bda2c73cd6ef67d56b733b357cea384185b3022bd09f05e002cd144ca
     env:
       UV_CACHE_DIR: .cache/uv
@@ -113,7 +113,7 @@ jobs:
     needs: change
     if: ${{ needs.change.outputs.style == 'true' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 10
     container: ghcr.io/astral-sh/uv:python3.13-bookworm-slim@sha256:531f855bda2c73cd6ef67d56b733b357cea384185b3022bd09f05e002cd144ca
     env:
       UV_CACHE_DIR: .cache/uv
@@ -178,7 +178,7 @@ jobs:
     needs: [change, style_c]
     if: ${{ !failure() && !cancelled() && needs.change.outputs.c == 'true' }}
     runs-on: macos-15
-    timeout-minutes: 60
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -211,7 +211,7 @@ jobs:
     needs: [change, test_gcc_release]
     if: ${{ !failure() && !cancelled() && needs.change.outputs.c == 'true' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 10
     container: gcc:14@sha256:6f37e44a9b41181de5dd97366ec732652f5d895a72b5549c64694efed50a97e8
     env:
       CC: gcc
@@ -231,7 +231,7 @@ jobs:
     needs: [change, test_macos]
     if: ${{ !failure() && !cancelled() && needs.change.outputs.c == 'true' }}
     runs-on: macos-15
-    timeout-minutes: 60
+    timeout-minutes: 10
     env:
       CC: clang
     steps:
@@ -250,7 +250,7 @@ jobs:
     needs: change
     if: ${{ needs.change.outputs.python == 'true' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 10
     container: ${{ matrix.image }}
     strategy:
       fail-fast: false
@@ -292,7 +292,7 @@ jobs:
     needs: change
     if: ${{ needs.change.outputs.python == 'true' }}
     runs-on: macos-15
-    timeout-minutes: 60
+    timeout-minutes: 10
     env:
       SKBUILD_CMAKE_DEFINE: DIANA_WERROR=ON
     steps:
@@ -322,7 +322,7 @@ jobs:
     needs: [change, test_gcc_debug]
     if: ${{ !failure() && !cancelled() && needs.change.outputs.c == 'true' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 10
     container: ghcr.io/astral-sh/uv:python3.13-bookworm-slim@sha256:531f855bda2c73cd6ef67d56b733b357cea384185b3022bd09f05e002cd144ca
     env:
       UV_CACHE_DIR: .cache/uv
@@ -352,7 +352,7 @@ jobs:
     needs: [change, test_python]
     if: ${{ !failure() && !cancelled() && needs.change.outputs.python == 'true' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 10
     container: ghcr.io/astral-sh/uv:python3.13-bookworm-slim@sha256:531f855bda2c73cd6ef67d56b733b357cea384185b3022bd09f05e002cd144ca
     env:
       UV_CACHE_DIR: .cache/uv
@@ -383,7 +383,7 @@ jobs:
     needs: [change, test_gcc_release]
     if: ${{ !failure() && !cancelled() && needs.change.outputs.frama_c == 'true' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 10
     env:
       FRAMA_C_IMAGE: framac/frama-c:32.1@sha256:4f0b7a2bd600c4daabfdcdfa393a3c18301e0db18f3b2739f1d9650193462d36
     steps:
@@ -419,7 +419,7 @@ jobs:
     needs: change
     if: ${{ needs.change.outputs.lean == 'true' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 10
     container: debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587
     steps:
       - run: apt-get update -qq && apt-get install -y -qq --no-install-recommends curl git ca-certificates zstd python3 python3-yaml > /dev/null
@@ -454,7 +454,7 @@ jobs:
     needs: change
     if: ${{ needs.change.outputs.rocq == 'true' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 10
     env:
       ROCQ_IMAGE: mathcomp/mathcomp:2.6.0-rocq-prover-9.2@sha256:a4e066dbe94d40fbbefc2ab7692abb905011a053d1a5434ababee659ffe293e8
       COQUELICOT_VERSION: 3.4.5
@@ -478,7 +478,7 @@ jobs:
     needs: change
     if: ${{ needs.change.outputs.provenance == 'true' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
