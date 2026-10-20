@@ -10,6 +10,8 @@ extern "C" {
 #endif
 
 diana_status diana_axpy(double a, const double *x, size_t n, double *y);
+diana_status diana_axpy_unchecked(double a, const double *x, size_t n,
+                                  double *y);
 
 #ifdef __cplusplus
 }
